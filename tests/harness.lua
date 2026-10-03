@@ -1247,6 +1247,7 @@ do
 	check(W2("Tailor LFW, pst") == "tailoring" and W2("BS lfw cheap") == "blacksmithing", "short names count too")
 	check(W2("LF enchanter") == nil and W2("WTB enchants cheap") == nil and W2("any tailor can make bags?") == nil, "buyers asking for a crafter are not clues")
 	check(W2("lfw bs and lw") == nil and W2("selling linen cloth") == nil, "two professions or no offer means no guess")
+	check(W2("my enchanter alt just hit 225") == nil, "naming a profession without offering isn't a clue")
 	local tries0 = LI.test.built.tries
 	W.guids["Player-1-HHH"] = { class = "ROGUE", name = "Words Guy", realm = "" }
 	W.linkData["trade:Player-1-HHH:3908:197"] = { linkedName = "Words Guy", prof = TAILORING, recipes = TAILOR_RECIPES }

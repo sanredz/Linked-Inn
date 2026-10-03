@@ -25,6 +25,7 @@ local toastBusy = false
 local toastSerial = 0
 local ShowNext
 local view = "foryou"
+local sample
 
 local function Text(parent, template, justify)
 	local fs = parent:CreateFontString(nil, "OVERLAY", template or "GameFontHighlight")
@@ -494,6 +495,46 @@ local function ChipMenu(chip)
 	end)
 end
 
+local CAP = 0.1875
+
+local function Slices(frame, file, layer)
+	local cap = CHIP_HEIGHT / 2
+	local left = frame:CreateTexture(nil, layer)
+	left:SetTexture(file)
+	left:SetTexCoord(0, CAP, 0, 0.75)
+	left:SetPoint("TOPLEFT")
+	left:SetPoint("BOTTOMLEFT")
+	left:SetWidth(cap)
+	local right = frame:CreateTexture(nil, layer)
+	right:SetTexture(file)
+	right:SetTexCoord(1 - CAP, 1, 0, 0.75)
+	right:SetPoint("TOPRIGHT")
+	right:SetPoint("BOTTOMRIGHT")
+	right:SetWidth(cap)
+	local middle = frame:CreateTexture(nil, layer)
+	middle:SetTexture(file)
+	middle:SetTexCoord(CAP, 1 - CAP, 0, 0.75)
+	middle:SetPoint("TOPLEFT", left, "TOPRIGHT")
+	middle:SetPoint("BOTTOMRIGHT", right, "BOTTOMLEFT")
+	local parts = { left, middle, right }
+	return {
+		parts = parts,
+		SetVertexColor = function(_, ...)
+			for _, t in ipairs(parts) do
+				t:SetVertexColor(...)
+			end
+		end,
+		SetAlpha = function(_, alpha)
+			for _, t in ipairs(parts) do
+				t:SetAlpha(alpha)
+			end
+		end,
+		GetAlpha = function()
+			return left:GetAlpha()
+		end,
+	}
+end
+
 local function Chip(row, i)
 	local chip = row.chips[i]
 	if chip then
@@ -502,14 +543,8 @@ local function Chip(row, i)
 	chip = CreateFrame("Button", nil, row)
 	chip:SetHeight(CHIP_HEIGHT)
 	chip:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-	chip.fill = chip:CreateTexture(nil, "BACKGROUND")
-	chip.fill:SetAllPoints()
-	chip.fill:SetTexture(ART .. "pill")
-	chip.fill:SetTexCoord(0, 1, 0, 0.75)
-	chip.edge = chip:CreateTexture(nil, "BORDER")
-	chip.edge:SetAllPoints()
-	chip.edge:SetTexture(ART .. "pill_edge")
-	chip.edge:SetTexCoord(0, 1, 0, 0.75)
+	chip.fill = Slices(chip, ART .. "pill", "BACKGROUND")
+	chip.edge = Slices(chip, ART .. "pill_edge", "BORDER")
 	chip.dot = chip:CreateTexture(nil, "ARTWORK")
 	chip.dot:SetSize(12, 12)
 	chip.dot:SetPoint("LEFT", 7, 0)
@@ -881,8 +916,8 @@ function WorkUI.Refresh()
 		return
 	end
 	RefreshHeader()
-	local foryou = LI.Work.Received(true)
-	local mine = LI.Work.Mine()
+	local foryou = sample and sample.foryou or LI.Work.Received(true)
+	local mine = sample and sample.mine or LI.Work.Mine()
 	for _, b in ipairs(page.views) do
 		local label = b.name
 		if b.key == "foryou" and #foryou > 0 then
@@ -920,7 +955,144 @@ function WorkUI.Refresh()
 			page.emptyText:SetText("Post a request and crafters who can make it get a notice.")
 		end
 	end
-	LI.Work.MarkSeen()
+	if not sample then
+		LI.Work.MarkSeen()
+	end
+end
+
+local SAMPLE_OWNERS = { "Thalia Brightwood", "Brannoc Ironfoot", "Mira Fennick", "Odo Quillmane" }
+local SAMPLE_OFFERERS = { "Garrick Stonehand", "Lysa Dawnmere", "Pip Tinkerton" }
+
+local function SampleIds(own)
+	local ids, seen = {}, {}
+	local function Add(id)
+		local meta = LI.db.recipes[id]
+		if not seen[id] and meta and meta.n and meta.i and meta.item then
+			seen[id] = true
+			ids[#ids + 1] = id
+		end
+	end
+	if own then
+		local c = LI.crafters[LI.playerKey]
+		for _, p in pairs(c and c.profs or {}) do
+			for id in pairs(p.recipes or {}) do
+				Add(id)
+			end
+		end
+	else
+		for id in pairs(LI.db.recipes) do
+			Add(id)
+		end
+	end
+	table.sort(ids)
+	return ids
+end
+
+local function Knowers(recipe)
+	local keys = {}
+	for key, c in pairs(LI.crafters) do
+		if key ~= LI.playerKey then
+			for _, p in pairs(c.profs) do
+				if p.recipes and p.recipes[recipe] then
+					keys[#keys + 1] = key
+					break
+				end
+			end
+		end
+	end
+	table.sort(keys, function(a, b)
+		local sa, sb = LI.Status(a) == "online", LI.Status(b) == "online"
+		if sa ~= sb then
+			return sa
+		end
+		return a < b
+	end)
+	return keys
+end
+
+local function BuildSample()
+	local now = time()
+	local foryou, mine = {}, {}
+	local own = SampleIds(true)
+	local shape = {
+		{ qty = 1, mats = "all", price = 25000, note = "", left = 50 },
+		{ qty = 2, mats = "some", price = 120000, note = "Need it before the raid tonight", left = 95, offered = true },
+		{ qty = 1, mats = "none", price = 0, note = "", left = 30 },
+		{ qty = 5, mats = "all", price = 8000, note = "Will tip", left = 110 },
+	}
+	for i, s in ipairs(shape) do
+		local id = own[1 + math.floor((i - 1) * #own / #shape)]
+		if not id or (i > 1 and id == foryou[#foryou].recipe) then
+			break
+		end
+		local meta = LI.db.recipes[id]
+		foryou[#foryou + 1] = {
+			id = "s" .. i, key = "sample:" .. i, owner = SAMPLE_OWNERS[i], item = meta.item, recipe = id,
+			qty = s.qty, mats = s.mats, price = s.price, note = s.note,
+			expires = now + s.left * 60, heard = now - i * 90, posted = now - i * 90,
+			canMake = true, offered = s.offered,
+		}
+	end
+	local mineIn = {}
+	for _, id in ipairs(own) do
+		mineIn[id] = true
+	end
+	local others = {}
+	for _, id in ipairs(SampleIds(false)) do
+		if not mineIn[id] and #Knowers(id) > 0 then
+			others[#others + 1] = id
+		end
+	end
+	local mineShape = {
+		{ qty = 1, mats = "all", price = 50000, offers = 3, left = 100 },
+		{ qty = 4, mats = "none", price = 0, offers = 1, left = 40 },
+		{ qty = 1, mats = "some", price = 15000, offers = 0, left = 115 },
+	}
+	for i, s in ipairs(mineShape) do
+		local id = others[1 + math.floor((i - 1) * #others / #mineShape)]
+		if not id or (i > 1 and id == mine[#mine].recipe) then
+			break
+		end
+		local meta = LI.db.recipes[id]
+		local offers = {}
+		local knowers = Knowers(id)
+		for k = 1, s.offers do
+			local key = knowers[k] or LI.FullName(SAMPLE_OFFERERS[k])
+			offers[key] = now - k * 70
+		end
+		mine[#mine + 1] = {
+			id = "m" .. i, key = "mine:" .. i, owner = LI.playerKey, item = meta.item, recipe = id,
+			qty = s.qty, mats = s.mats, price = s.price, note = "",
+			expires = now + s.left * 60, posted = now - i * 300, heard = now - i * 300,
+			offers = offers,
+		}
+	end
+	return { foryou = foryou, mine = mine }
+end
+
+function WorkUI.Sample()
+	if sample then
+		sample = nil
+		LI.Print("Sample requests off.")
+		WorkUI.Refresh()
+		return
+	end
+	sample = BuildSample()
+	view = "foryou"
+	LI.UI.Open(LI.UI.TAB.work)
+	local main = LI.UI.Main()
+	if main and not main.sampleHooked then
+		main.sampleHooked = true
+		main:HookScript("OnHide", function()
+			sample = nil
+		end)
+	end
+	LI.Print(string.format("Showing %d sample requests for you and %d of your own. Nothing is sent. Type /li sample again or close the window to stop.", #sample.foryou, #sample.mine))
+	WorkUI.Refresh()
+end
+
+function WorkUI.SampleOn()
+	return sample ~= nil
 end
 
 local function SearchItems(query)

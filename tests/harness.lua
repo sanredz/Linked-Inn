@@ -1707,6 +1707,18 @@ do
 	post.a()
 	check(LinkedInnRequest:IsShown() and LinkedInnRequest.recipe == bookRow.data.id and not LinkedInnBook:IsShown(), "it opens the panel with that recipe picked")
 	LinkedInnRequest:Hide()
+	local sentBefore, mineBefore = #W.sent, #Work.Mine()
+	SlashCmdList.LINKEDINN("sample")
+	check(LI.WorkUI.SampleOn() and LI.WorkUI.View() == "foryou" and #page.list.__rows >= 1 and page.list.__rows[1].req.owner == "Thalia Brightwood", "/li sample fills For you with sample requests", #page.list.__rows)
+	page.views[2].__scripts.OnClick(page.views[2])
+	local sampleMine = page.list.__rows[1]
+	check(sampleMine and sampleMine.req.key == "mine:1" and sampleMine.chips[1] and sampleMine.chips[1]:IsShown(), "and My requests with offers", sampleMine and sampleMine.req.key)
+	page.views[1].__scripts.OnClick(page.views[1])
+	page.list.__rows[1].offer.__scripts.OnClick(page.list.__rows[1].offer)
+	Advance(3)
+	check(#W.sent == sentBefore and #Work.Mine() == mineBefore, "nothing is sent or saved")
+	LinkedInnFrame:Hide()
+	check(not LI.WorkUI.SampleOn(), "closing the window ends the samples")
 	check(#W.errors == 0, "the Work tab runs without errors", W.errors[1])
 end
 

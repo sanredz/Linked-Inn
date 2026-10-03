@@ -1409,7 +1409,7 @@ do
 	check(t and t:IsShown() and t.head.__text == "Someone needs something you can make" and t.title.__text:find("Minor Healing Potion", 1, true), "a toast pops up", t and t.title.__text)
 	Addon(Req("8", 18560, 14155, 1, "n", 0, 3600, ""), "Other Guy-TestRealm")
 	Advance(0.2)
-	check(#Work.Received(true) == 1 and #Work.Received(false) == 2, "requests you can't make only show under All")
+	check(#Work.Received(true) == 1 and #Work.Received(false) == 1 and not Work.Get("Other Guy-TestRealm:8"), "requests you can't make aren't kept at all")
 	check(Work.UnseenCount() == 1, "and give no notice")
 	Addon(Req("7", 2330, 118, 5, "a", 20000, 3600, "need pots"), "Other Guy-TestRealm")
 	check(Work.UnseenCount() == 1, "a resent request isn't new again")
@@ -1450,8 +1450,10 @@ do
 	check(sawOffer, "an offer pops a toast")
 	Addon("O1|99", "Crafty Pal-TestRealm", "WHISPER")
 	check(true, "offers on unknown requests are ignored")
-	Addon("X1|8", "Other Guy-TestRealm")
-	check(not Work.Get("Other Guy-TestRealm:8"), "a cancel from the requester removes it")
+	Addon(Req("c1", 2330, 118, 1, "n", 0, 3600, ""), "Other Guy-TestRealm")
+	check(Work.Get("Other Guy-TestRealm:c1"), "another request arrives")
+	Addon("X1|c1", "Other Guy-TestRealm")
+	check(not Work.Get("Other Guy-TestRealm:c1"), "a cancel from the requester removes it")
 	Addon("X1|7", "Somebody Else-TestRealm")
 	check(Work.Get("Other Guy-TestRealm:7"), "nobody can cancel someone else's request")
 
@@ -1461,7 +1463,7 @@ do
 	Addon(Req("5", 2330, 118, 1, "z", 0, 3600, ""), "Bad Guy-TestRealm")
 	check(not Work.Get("Bad Guy-TestRealm:bad!") and not Work.Get("Bad Guy-TestRealm:3") and not Work.Get("Bad Guy-TestRealm:4") and not Work.Get("Bad Guy-TestRealm:5"), "malformed requests are ignored")
 	for i = 1, 8 do
-		Addon(Req("s" .. i, 3914, 4343, 1, "a", 0, 3600, ""), "Spam Mer-TestRealm")
+		Addon(Req("s" .. i, 2330, 118, 1, "a", 0, 3600, ""), "Spam Mer-TestRealm")
 	end
 	local spam = 0
 	for _, r in ipairs(Work.Received(false)) do
@@ -1503,10 +1505,8 @@ do
 	row.__scripts.OnClick(row, "LeftButton")
 	check(W.tells[#W.tells] == "Other Guy" and W.editBox.text:find("I can make", 1, true), "clicking a request whispers the requester", W.editBox.text)
 	W.typing = false
+	check(#page.views == 2, "the tab has two views, For you and My requests")
 	page.views[2].__scripts.OnClick(page.views[2])
-	check(LI.WorkUI.View() == "all" and #page.list.__rows == 2, "All shows every request", #page.list.__rows)
-	check(not page.list.__rows[2].accent:IsShown() and not page.list.__rows[2].offer:IsShown(), "requests you can't make have no offer button")
-	page.views[3].__scripts.OnClick(page.views[3])
 	check(#page.list.__rows == 1 and page.list.__rows[1].state.__text:find("1 offer", 1, true), "My requests shows offers", page.list.__rows[1].state.__text)
 	check(page.list.__rows[1].line.__text:find("1 crafter knows it", 1, true), "and how many crafters know it", page.list.__rows[1].line.__text)
 	page.list.__rows[1].__scripts.OnClick(page.list.__rows[1], "RightButton")
@@ -1515,11 +1515,27 @@ do
 	local menuText = table.concat(entries, ",")
 	check(menuText:find("Whisper Crafty Pal", 1, true) and menuText:find("Cancel request", 1, true), "right-click lists offers and cancel", menuText)
 
-	page.gear.__scripts.OnClick(page.gear)
-	entries = {}
-	for _, e in ipairs(W.lastMenu.entries) do entries[#entries + 1] = e.text end
-	menuText = table.concat(entries, ",")
-	check(menuText:find("Pop up a notice", 1, true) and menuText:find("Minimum price", 1, true) and menuText:find("Professions", 1, true), "the gear opens notification settings", menuText)
+	local hdr = main.workHeader
+	check(hdr:IsShown() and hdr.notify:GetChecked() and hdr.sound:GetChecked() and hdr.glow:GetChecked() and not hdr.allMats:GetChecked(), "notification settings sit above the list")
+	check(hdr.price.__text == "Any price" and hdr.profs.__text == "All my professions", "the dropdowns say what's chosen", hdr.profs.__text)
+	hdr.allMats:SetChecked(true)
+	hdr.allMats.__scripts.OnClick(hdr.allMats)
+	check(Work.Settings().allMats == true, "ticking a box changes the setting")
+	hdr.allMats:SetChecked(false)
+	hdr.allMats.__scripts.OnClick(hdr.allMats)
+	hdr.price.__scripts.OnClick(hdr.price)
+	W.lastMenu.entries[3].b()
+	LI.WorkUI.Refresh()
+	check(Work.Settings().minPrice == 50000 and hdr.price.__text:find("^From"), "the price dropdown sets a minimum", hdr.price.__text)
+	Work.Settings().minPrice = 0
+	hdr.profs.__scripts.OnClick(hdr.profs)
+	check(W.lastMenu.entries[1] and W.lastMenu.entries[1].text == "Alchemy", "the profession dropdown lists your professions")
+	W.lastMenu.entries[1].b()
+	LI.WorkUI.Refresh()
+	check(hdr.profs.__text == "0 professions" or hdr.profs.__text == "All my professions", "toggling your only profession resets to all", hdr.profs.__text)
+	LI.UI.Open(LI.UI.TAB.find)
+	check(not hdr:IsShown() and main.search:IsShown(), "the Crafters tab has its own controls there")
+	LI.UI.Open(LI.UI.TAB.work)
 
 	page.post.__scripts.OnClick(page.post)
 	local dlg = LinkedInnRequest

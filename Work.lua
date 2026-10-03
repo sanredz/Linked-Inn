@@ -407,7 +407,7 @@ end
 
 function Work.OnRequest(owner, parts)
 	local req = Work.Decode(owner, parts)
-	if not req then
+	if not req or not Work.CanMake(req) then
 		return
 	end
 	local old = received[req.key]

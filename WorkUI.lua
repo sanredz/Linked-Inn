@@ -10,7 +10,6 @@ local GREEN = { 0.35, 0.95, 0.45 }
 local GOLD = { 1, 0.82, 0 }
 local VIEWS = {
 	{ key = "foryou", name = "For you" },
-	{ key = "all", name = "All requests" },
 	{ key = "mine", name = "My requests" },
 }
 
@@ -516,59 +515,133 @@ local function MyProfessions()
 	return list
 end
 
-function WorkUI.SettingsMenu(owner)
+local header
+
+local function ToggleProfession(key)
 	local s = LI.Work.Settings()
-	Menu(owner, function(root)
-		if root.CreateTitle then
-			root:CreateTitle("Requests you can make")
+	local mine = MyProfessions()
+	if not next(s.profs) then
+		for _, other in ipairs(mine) do
+			s.profs[other.key] = true
 		end
-		root:CreateCheckbox("Pop up a notice", function() return s.notify end, function() s.notify = not s.notify end)
-		root:CreateCheckbox("Play a sound", function() return s.sound end, function() s.sound = not s.sound end)
-		root:CreateCheckbox("Make the minimap button glow", function() return s.glow end, function() s.glow = not s.glow end)
-		root:CreateCheckbox("Only when they have all mats", function() return s.allMats end, function()
-			s.allMats = not s.allMats
-			WorkUI.Refresh()
-		end)
-		local prices = root:CreateButton("Minimum price")
-		if prices then
+	end
+	s.profs[key] = not s.profs[key] or nil
+	local all = true
+	for _, other in ipairs(mine) do
+		if not s.profs[other.key] then
+			all = false
+		end
+	end
+	if all or not next(s.profs) then
+		s.profs = {}
+	end
+	WorkUI.Refresh()
+end
+
+local function HeaderCheck(parent, label, field, after)
+	local box = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
+	box:SetSize(24, 24)
+	box.field = field
+	box.label = Text(parent, "GameFontHighlightSmall")
+	box.label:SetPoint("LEFT", box, "RIGHT", 0, 0)
+	box.label:SetText(label)
+	if after then
+		box:SetPoint("LEFT", after.label, "RIGHT", 12, 0)
+	end
+	box:SetScript("OnClick", function(self)
+		local s = LI.Work.Settings()
+		s[self.field] = self:GetChecked() and true or false
+		Sound(s[self.field] and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
+		WorkUI.Refresh()
+	end)
+	return box
+end
+
+local function PriceText()
+	local min = LI.Work.Settings().minPrice or 0
+	if min == 0 then
+		return "Any price"
+	end
+	return "From " .. WorkUI.Money(min)
+end
+
+local function ProfText()
+	local s = LI.Work.Settings()
+	if not next(s.profs) then
+		return "All my professions"
+	end
+	local names = {}
+	for _, prof in ipairs(MyProfessions()) do
+		if s.profs[prof.key] then
+			names[#names + 1] = prof.name
+		end
+	end
+	return #names == 1 and names[1] or string.format("%d professions", #names)
+end
+
+function WorkUI.BuildHeader(main)
+	header = CreateFrame("Frame", nil, main)
+	header:SetPoint("TOPLEFT", 66, -28)
+	header:SetPoint("TOPRIGHT", -10, -28)
+	header:SetHeight(68)
+	header.title = Text(header, "GameFontNormal")
+	header.title:SetPoint("TOPLEFT", 4, -8)
+	header.title:SetText("Notify me")
+	header.notify = HeaderCheck(header, "Pop-up", "notify")
+	header.notify:SetPoint("LEFT", header.title, "RIGHT", 10, 0)
+	header.sound = HeaderCheck(header, "Sound", "sound", header.notify)
+	header.glow = HeaderCheck(header, "Minimap glow", "glow", header.sound)
+	header.allMats = HeaderCheck(header, "Only with all mats", "allMats")
+	header.allMats:SetPoint("TOPLEFT", header.title, "BOTTOMLEFT", -4, -10)
+	header.price = Button(header, PriceText(), 116, function(self)
+		local s = LI.Work.Settings()
+		Menu(self, function(root)
 			for _, copper in ipairs(LI.Work.MIN_PRICES) do
-				prices:CreateRadio(copper == 0 and "Any price" or WorkUI.Money(copper), function()
+				root:CreateRadio(copper == 0 and "Any price" or ("From " .. WorkUI.Money(copper)), function()
 					return (s.minPrice or 0) == copper
 				end, function()
 					s.minPrice = copper
 					WorkUI.Refresh()
 				end)
 			end
-		end
-		local mine = MyProfessions()
-		if #mine > 0 then
-			local profs = root:CreateButton("Professions")
-			if profs then
-				for _, prof in ipairs(mine) do
-					profs:CreateCheckbox(prof.name, function()
-						return not next(s.profs) or s.profs[prof.key] == true
-					end, function()
-						if not next(s.profs) then
-							for _, other in ipairs(mine) do
-								s.profs[other.key] = true
-							end
-						end
-						s.profs[prof.key] = not s.profs[prof.key] or nil
-						local all = true
-						for _, other in ipairs(mine) do
-							if not s.profs[other.key] then
-								all = false
-							end
-						end
-						if all or not next(s.profs) then
-							s.profs = {}
-						end
-						WorkUI.Refresh()
-					end)
-				end
-			end
-		end
+		end)
 	end)
+	header.price:SetPoint("LEFT", header.allMats.label, "RIGHT", 14, 0)
+	header.profs = Button(header, ProfText(), 140, function(self)
+		local s = LI.Work.Settings()
+		Menu(self, function(root)
+			local mine = MyProfessions()
+			if #mine == 0 and root.CreateTitle then
+				root:CreateTitle("Open your professions once to set this")
+			end
+			for _, prof in ipairs(mine) do
+				root:CreateCheckbox(prof.name, function()
+					return not next(s.profs) or s.profs[prof.key] == true
+				end, function()
+					ToggleProfession(prof.key)
+				end)
+			end
+		end)
+	end)
+	header.profs:SetPoint("LEFT", header.price, "RIGHT", 6, 0)
+	header:Hide()
+	return header
+end
+
+function WorkUI.Header()
+	return header
+end
+
+local function RefreshHeader()
+	if not header then
+		return
+	end
+	local s = LI.Work.Settings()
+	for _, box in ipairs({ header.notify, header.sound, header.glow, header.allMats }) do
+		box:SetChecked(s[box.field] and true or false)
+	end
+	header.price:SetText(PriceText())
+	header.profs:SetText(ProfText())
 end
 
 function WorkUI.Build(parent)
@@ -577,25 +650,7 @@ function WorkUI.Build(parent)
 	page.post = Button(page, "Post a request", 128, function()
 		WorkUI.OpenDialog()
 	end)
-	page.post:SetPoint("TOPRIGHT", -36, -8)
-	page.gear = CreateFrame("Button", nil, page)
-	page.gear:SetSize(20, 20)
-	page.gear:SetPoint("LEFT", page.post, "RIGHT", 6, 0)
-	page.gear.icon = page.gear:CreateTexture(nil, "ARTWORK")
-	page.gear.icon:SetAllPoints()
-	page.gear.icon:SetTexture("Interface\\Buttons\\UI-OptionsButton")
-	page.gear:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
-	page.gear:SetScript("OnClick", function(self)
-		WorkUI.SettingsMenu(self)
-	end)
-	page.gear:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_TOP")
-		GameTooltip:SetText("Notifications", 1, 0.82, 0)
-		GameTooltip:Show()
-	end)
-	page.gear:SetScript("OnLeave", function()
-		GameTooltip:Hide()
-	end)
+	page.post:SetPoint("TOPRIGHT", -12, -8)
 	page.rule = page:CreateTexture(nil, "ARTWORK")
 	page.rule:SetHeight(1)
 	page.rule:SetPoint("TOPLEFT", 8, -36)
@@ -649,6 +704,7 @@ function WorkUI.Refresh()
 	if not page or not page:IsShown() then
 		return
 	end
+	RefreshHeader()
 	local foryou = LI.Work.Received(true)
 	local mine = LI.Work.Mine()
 	for _, b in ipairs(page.views) do
@@ -673,8 +729,7 @@ function WorkUI.Refresh()
 			list[#list + 1] = { req = req, mine = true, index = i }
 		end
 	else
-		local source = view == "foryou" and foryou or LI.Work.Received(false)
-		for i, req in ipairs(source) do
+		for i, req in ipairs(foryou) do
 			list[#list + 1] = { req = req, index = i }
 		end
 	end
@@ -684,9 +739,6 @@ function WorkUI.Refresh()
 		if view == "foryou" then
 			page.emptyHead:SetText("Nothing for you right now")
 			page.emptyText:SetText("When a Linked Inn user asks for something you can craft, it shows up here and you get a notice.")
-		elseif view == "all" then
-			page.emptyHead:SetText("No open requests")
-			page.emptyText:SetText("Requests from other Linked Inn users appear here while they're online.")
 		else
 			page.emptyHead:SetText("You haven't asked for anything")
 			page.emptyText:SetText("Post a request and crafters who can make it get a notice.")

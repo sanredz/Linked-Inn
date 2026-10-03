@@ -996,6 +996,7 @@ function UI.Refresh()
 	local workShown = main.selectedTab == TAB.work
 	main.findPage:SetShown(findShown)
 	main.workPage:SetShown(workShown)
+	main.workHeader:SetShown(workShown)
 	main.testPage:SetShown(main.selectedTab == TAB.test)
 	local unseen = LI.Work.UnseenCount()
 	local workTab = _G["LinkedInnFrameTab" .. TAB.work]
@@ -1192,6 +1193,7 @@ local function CreateMain()
 	main.workPage = CreateFrame("Frame", nil, main.Inset)
 	main.workPage:SetAllPoints()
 	LI.WorkUI.Build(main.workPage)
+	main.workHeader = LI.WorkUI.BuildHeader(main)
 	main.workPage:Hide()
 
 	main.count = Text(main, "GameFontDisableSmall", "RIGHT")

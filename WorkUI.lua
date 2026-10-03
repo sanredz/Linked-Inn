@@ -27,6 +27,12 @@ local ShowNext
 local view = "foryou"
 local sample
 
+local function WhoColor(key)
+	local c = LI.crafters[key]
+	local class = (c and c.class) or (sample and sample.classes[key])
+	return LI.ClassColor(class) or LI.COLOR.WHITE
+end
+
 local function Text(parent, template, justify)
 	local fs = parent:CreateFontString(nil, "OVERLAY", template or "GameFontHighlight")
 	fs:SetJustifyH(justify or "LEFT")
@@ -268,8 +274,7 @@ local function Details(req, mine)
 			end
 		end
 	else
-		local c = LI.crafters[req.owner]
-		local color = LI.ClassColor(c and c.class) or LI.COLOR.WHITE
+		local color = WhoColor(req.owner)
 		parts[#parts + 1] = LI.Colorize(LI.ShortName(req.owner), color)
 	end
 	parts[#parts + 1] = LI.Work.MATS[req.mats].name
@@ -439,7 +444,7 @@ local function ChipTooltip(chip)
 		return
 	end
 	local c = LI.crafters[key]
-	local color = LI.ClassColor(c and c.class) or LI.COLOR.WHITE
+	local color = WhoColor(key)
 	GameTooltip:SetOwner(chip, "ANCHOR_RIGHT")
 	GameTooltip:SetText(LI.ShortName(key), color[1], color[2], color[3])
 	local at = req.offers and req.offers[key]
@@ -583,8 +588,7 @@ local function UpdateChips(row, req, show)
 		if offer and i <= CHIP_MAX then
 			chip = Chip(row, i)
 			chip.key = offer.key
-			local c = LI.crafters[offer.key]
-			local color = LI.ClassColor(c and c.class) or LI.COLOR.WHITE
+			local color = WhoColor(offer.key)
 			chip.text:SetText(LI.ShortName(offer.key))
 			chip.text:SetTextColor(color[1], color[2], color[3])
 			local online = LI.Status(offer.key) == "online"
@@ -962,6 +966,10 @@ end
 
 local SAMPLE_OWNERS = { "Thalia Brightwood", "Brannoc Ironfoot", "Mira Fennick", "Odo Quillmane" }
 local SAMPLE_OFFERERS = { "Garrick Stonehand", "Lysa Dawnmere", "Pip Tinkerton" }
+local SAMPLE_CLASSES = {
+	["Thalia Brightwood"] = "DRUID", ["Brannoc Ironfoot"] = "WARRIOR", ["Mira Fennick"] = "MAGE", ["Odo Quillmane"] = "ROGUE",
+	["Garrick Stonehand"] = "PALADIN", ["Lysa Dawnmere"] = "HUNTER", ["Pip Tinkerton"] = "WARLOCK",
+}
 
 local function SampleIds(own)
 	local ids, seen = {}, {}
@@ -991,7 +999,7 @@ end
 local function Knowers(recipe)
 	local keys = {}
 	for key, c in pairs(LI.crafters) do
-		if key ~= LI.playerKey then
+		if key ~= LI.playerKey and c.class then
 			for _, p in pairs(c.profs) do
 				if p.recipes and p.recipes[recipe] then
 					keys[#keys + 1] = key
@@ -1027,7 +1035,7 @@ local function BuildSample()
 		end
 		local meta = LI.db.recipes[id]
 		foryou[#foryou + 1] = {
-			id = "s" .. i, key = "sample:" .. i, owner = SAMPLE_OWNERS[i], item = meta.item, recipe = id,
+			id = "s" .. i, key = "sample:" .. i, owner = LI.FullName(SAMPLE_OWNERS[i]), item = meta.item, recipe = id,
 			qty = s.qty, mats = s.mats, price = s.price, note = s.note,
 			expires = now + s.left * 60, heard = now - i * 90, posted = now - i * 90,
 			canMake = true, offered = s.offered,
@@ -1067,7 +1075,11 @@ local function BuildSample()
 			offers = offers,
 		}
 	end
-	return { foryou = foryou, mine = mine }
+	local classes = {}
+	for name, class in pairs(SAMPLE_CLASSES) do
+		classes[LI.FullName(name)] = class
+	end
+	return { foryou = foryou, mine = mine, classes = classes }
 end
 
 function WorkUI.Sample()

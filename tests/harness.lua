@@ -1709,7 +1709,7 @@ do
 	LinkedInnRequest:Hide()
 	local sentBefore, mineBefore = #W.sent, #Work.Mine()
 	SlashCmdList.LINKEDINN("sample")
-	check(LI.WorkUI.SampleOn() and LI.WorkUI.View() == "foryou" and #page.list.__rows >= 1 and page.list.__rows[1].req.owner == "Thalia Brightwood", "/li sample fills For you with sample requests", #page.list.__rows)
+	check(LI.WorkUI.SampleOn() and LI.WorkUI.View() == "foryou" and #page.list.__rows >= 1 and page.list.__rows[1].req.owner == "Thalia Brightwood-TestRealm", "/li sample fills For you with sample requests", #page.list.__rows)
 	page.views[2].__scripts.OnClick(page.views[2])
 	local sampleMine = page.list.__rows[1]
 	check(sampleMine and sampleMine.req.key == "mine:1" and sampleMine.chips[1] and sampleMine.chips[1]:IsShown(), "and My requests with offers", sampleMine and sampleMine.req.key)

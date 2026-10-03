@@ -1057,7 +1057,8 @@ main.search:SetText("")
 main.search.__scripts.OnTextChanged(main.search)
 Advance(1)
 SlashCmdList.LINKEDINN("test")
-check(main.selectedTab == 3 and main.testPage:IsShown() and not main.findPage:IsShown(), "/li test opens the test tab")
+check(main.selectedTab == 3 and main.testPage:IsShown() and not main.findPage:IsShown(), "/li test still opens the test page")
+check(_G["LinkedInnFrameTab2"] ~= nil and _G["LinkedInnFrameTab3"] == nil, "only Crafters and Work have tabs")
 check(main.testPage.head.__text == "Chat alone is enough", "one clean automatic read gives the good verdict", main.testPage.head.__text)
 check(#W.errors == uiErrors, "the window builds without errors", W.errors[uiErrors + 1])
 
@@ -1696,14 +1697,6 @@ local inCombat = #W.sent
 W.combat = false
 Advance(5)
 check(inCombat == sentBefore and #W.sent > inCombat, "nothing is sent in combat, it waits", inCombat - sentBefore)
-LI.settings.share = false
-Advance(20 * 60)
-check(#Sent("H1") == 3, "no hellos when sharing is off", #Sent("H1"))
-local answered = LI.test.sync.answered
-Addon("Q1|" .. ver, "Sixth Man-TestRealm", "WHISPER")
-Advance(90)
-check(LI.test.sync.answered == answered, "no answers when sharing is off")
-LI.settings.share = true
 
 Setup()
 W.name, W.surname = "Other", "Person"

@@ -57,7 +57,6 @@ local KIND_BY_CLASS = { [0] = "consumable", [1] = "bag", [2] = "weapon", [4] = "
 
 local DEFAULTS = {
 	autoRead = true,
-	share = true,
 	secondary = false,
 	maxOnly = false,
 	compact = false,

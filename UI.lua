@@ -4,7 +4,7 @@ local UI = {}
 LI.UI = UI
 
 local TAB = { find = 1, work = 2, test = 3 }
-local TABS = { "Crafters", "Work", "Test" }
+local TABS = { "Crafters", "Work" }
 local TITLE_FONT = "Fonts\\MORPHEUS.TTF"
 local ROW_HEIGHT = 46
 local BOOK_SIZE = 30
@@ -854,9 +854,7 @@ local function SharingLines()
 		channel = "not joined yet"
 	end
 	local own
-	if not LI.settings.share then
-		own = "not shared (off)"
-	elseif LI.Sync and LI.Sync.Version() then
+	if LI.Sync and LI.Sync.Version() then
 		local c = LI.crafters and LI.crafters[LI.playerKey]
 		local n = 0
 		for key in pairs(c and c.profs or {}) do
@@ -908,7 +906,6 @@ local function RefreshTest()
 	end
 	page.log:SetText(#log > 0 and table.concat(log, "\n") or "Nothing yet.")
 	page.auto:SetChecked(LI.settings.autoRead and true or false)
-	page.share:SetChecked(LI.settings.share and true or false)
 	page.retry:SetShown(LI.Reader.IsBroken())
 end
 
@@ -970,10 +967,6 @@ local function BuildTestPage(page)
 	page.log:SetPoint("TOPLEFT", logHead, "BOTTOMLEFT", 0, -4)
 	page.log:SetWidth(440)
 	page.log:SetSpacing(2)
-	page.share = Check(page, "Share my professions with other Linked Inn users", function(on)
-		LI.settings.share = on
-	end)
-	page.share:SetPoint("BOTTOMLEFT", 34, 32)
 	page.auto = Check(page, "Read links automatically", function(on)
 		LI.settings.autoRead = on
 	end)

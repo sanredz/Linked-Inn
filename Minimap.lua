@@ -41,7 +41,7 @@ local function ShowTooltip(self)
 		end
 	end
 	GameTooltip:AddLine(" ")
-	GameTooltip:AddLine("Click: open   Right-click: test   Drag: move", 0.5, 0.5, 0.5)
+	GameTooltip:AddLine("Click: open   Drag: move", 0.5, 0.5, 0.5)
 	GameTooltip:Show()
 end
 
@@ -99,9 +99,7 @@ local function Create()
 		icon:SetPoint("TOPLEFT", 7, -6)
 	end)
 	button:SetScript("OnClick", function(_, mouseButton)
-		if mouseButton == "RightButton" then
-			LI.UI.Open(LI.UI.TAB.test)
-		elseif LI.Work.UnseenCount() > 0 then
+		if LI.Work.UnseenCount() > 0 then
 			LI.WorkUI.SetView("foryou")
 			LI.UI.Open(LI.UI.TAB.work)
 		else

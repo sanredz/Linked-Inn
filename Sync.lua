@@ -268,7 +268,7 @@ end
 
 function Sync.Hello()
 	local own = OwnState()
-	if not LI.settings.share or not own.payload or not own.ver then
+	if not own.payload or not own.ver then
 		return nil
 	end
 	local c = Own()
@@ -297,7 +297,7 @@ end
 
 local function SendData()
 	local own = OwnState()
-	if not LI.settings.share or not own.payload or not own.ver then
+	if not own.payload or not own.ver then
 		return
 	end
 	local payload = own.payload

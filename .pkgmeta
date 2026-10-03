@@ -1,0 +1,14 @@
+package-as: LinkedInn
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
+ignore:
+  - tests
+  - scripts
+  - media
+  - node_modules
+  - package.json
+  - package-lock.json
+  - README.md

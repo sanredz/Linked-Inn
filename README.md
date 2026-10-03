@@ -61,25 +61,36 @@ them first.
 ## Work
 
 A reverse auction house. Post what you want made and let the crafters come to
-you.
+you, or pick up requests you can make yourself.
 
-- **Post a request:** pick the item and amount, choose which materials you
-  bring, set a price and a note, and how long it stays up.
-- **For you:** requests from other players that you can actually make. Click
-  **I can make it** to send an offer.
-- **My requests:** your posts, with everyone who offered shown as a name tag.
-  Click a name to whisper, right-click to invite or remove them.
-- **Alerts:** a pop-up, a sound and a glowing minimap button when a request
-  you can make shows up. Limit them to requests where the buyer brings all
-  mats, pays at least a set price, or matches certain professions.
+### Requests for you
 
-<p>
-  <img src="media/post-request.png" alt="Posting a request" width="38%">
-  <img src="media/work-request.png" alt="Your requests with an offer" width="60%">
+- **For you** lists requests from other players that you can actually make,
+  with the price, the mats they bring and any note.
+- Click **I can make it** to send an offer, or click the request to whisper
+  them.
+- **Alerts:** a pop-up, a sound and a glowing minimap button when a new one
+  shows up. Limit them to requests where the buyer brings all mats, pays at
+  least a set price, or matches certain professions.
+
+<p align="center">
+  <img src="media/for-you.png" alt="Requests you can make" width="62%">
 </p>
 
-![Pop-up for a request you can make](media/toast.png)
-![Pop-up when someone offers](media/toast-2.png)
+<p align="center">
+  <img src="media/toast.png" alt="Pop-up for a request you can make" width="49%">
+  <img src="media/toast-2.png" alt="Pop-up when someone offers" width="49%">
+</p>
+
+### Your requests
+
+- **Post a request:** pick the item and amount, set how many of each material
+  you bring, a price, a note, and how long it stays up. You see right away how
+  many crafters on your list can make it.
+- **My requests** shows everyone who offered as a name tag. Click a name to
+  whisper them, right-click to invite or remove them.
+
+![Your requests with offers, and a new request being posted](media/work-request.png)
 
 ## Usage
 

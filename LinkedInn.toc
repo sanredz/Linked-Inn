@@ -1,6 +1,6 @@
 ## Interface: 16001
 ## Title: Linked Inn: Profession Finder
-## Notes: Remembers everyone who links a profession in chat. Search for the item you need and whisper a crafter who can make it.
+## Notes: Builds a list of crafters from profession links in chat and from other Linked Inn users. Search for the item you need and whisper someone who can make it.
 ## Author: sanredz
 ## Version: @project-version@
 ## X-Website: https://github.com/sanredz/Linked-Inn

@@ -2,9 +2,12 @@
 
 Find someone who can craft what you need.
 
-Linked Inn quietly remembers everyone who links a profession in a chat you can
-see: Trade, General, guild, party, raid and whispers. Over time it builds your
-own list of crafters on your realm.
+Linked Inn builds a list of crafters on your realm in two ways:
+
+- It remembers everyone who links a profession in a chat you can see: Trade,
+  General, guild, party, raid and whispers.
+- Players who use Linked Inn share their own professions with each other
+  automatically, in the background.
 
 - **Search** for an item, a profession or a name. Crafters who can make it are
   listed with online players first.

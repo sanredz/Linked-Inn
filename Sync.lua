@@ -29,6 +29,9 @@ local queue = {}
 local channelName
 local joined = false
 local nextHello
+local GREET_GAP = 20
+local sessionHeard = {}
+local lastGreet = -GREET_GAP
 local lastChangeHello = 0
 local answerAt
 local lastAnswer = 0
@@ -185,6 +188,14 @@ local function Enqueue(kind, message, chatType, target)
 	queue[#queue + 1] = { kind = kind, message = message, chatType = chatType, target = target }
 end
 
+local lastFailLog = -60
+
+local function Count(field, chatType)
+	local sync = LI.test.sync
+	sync[field] = type(sync[field]) == "table" and sync[field] or {}
+	sync[field][chatType] = (sync[field][chatType] or 0) + 1
+end
+
 local function Deliver(q)
 	local chatType, target = q.chatType, q.target
 	if chatType == "CHANNEL" then
@@ -194,11 +205,69 @@ local function Deliver(q)
 		end
 		target = tostring(target)
 	end
-	local ok = pcall(C_ChatInfo.SendAddonMessage, PREFIX, q.message, chatType, target)
-	if ok then
+	local ok, result = pcall(C_ChatInfo.SendAddonMessage, PREFIX, q.message, chatType, target)
+	result = LI.Safe(result)
+	if ok and (result == nil or result == 0 or result == true) then
 		LI.test.sync.sent = LI.test.sync.sent + 1
+		Count("tx", chatType)
+		return true
+	end
+	LI.test.sync.failed = (LI.test.sync.failed or 0) + 1
+	LI.test.sync.lastError = string.format("%s on %s", ok and ("code " .. tostring(result)) or tostring(result):sub(1, 60), chatType)
+	if Now() - lastFailLog > 60 then
+		lastFailLog = Now()
+		LI.Log("Send failed: " .. LI.test.sync.lastError)
 	end
 	return ok
+end
+
+local function Routes(withGuild)
+	local routes = { "CHANNEL" }
+	if withGuild and IsInGuild and LI.Safe(LI.Try(IsInGuild)) then
+		routes[#routes + 1] = "GUILD"
+	end
+	local members = LI.Safe(LI.Try(GetNumGroupMembers)) or 0
+	if members > 0 then
+		routes[#routes + 1] = (IsInRaid and LI.Safe(LI.Try(IsInRaid))) and "RAID" or "PARTY"
+	end
+	return routes
+end
+
+local MAX_FRIENDS = 20
+local MAX_ASKERS = 5
+local askers = {}
+
+local function OnlineFriends()
+	local list = {}
+	local api = C_FriendList
+	if not api or not api.GetNumFriends then
+		return list
+	end
+	local count = LI.Safe(LI.Try(api.GetNumFriends)) or 0
+	for i = 1, count do
+		local info = LI.Try(api.GetFriendInfoByIndex, i)
+		if type(info) == "table" and LI.Safe(info.connected) and type(LI.Safe(info.name)) == "string" then
+			local key = LI.FullName(LI.Safe(info.name))
+			if key and key ~= LI.playerKey then
+				list[#list + 1] = LI.WhisperTarget(key)
+				if #list >= MAX_FRIENDS then
+					break
+				end
+			end
+		end
+	end
+	return list
+end
+
+local function Broadcast(kind, message, withGuild, withFriends)
+	for _, route in ipairs(Routes(withGuild)) do
+		Enqueue(kind, message, route)
+	end
+	if withFriends then
+		for _, target in ipairs(OnlineFriends()) do
+			Enqueue(kind, message, "WHISPER", target)
+		end
+	end
 end
 
 local function Pump()
@@ -215,7 +284,12 @@ local function Pump()
 end
 
 function Sync.Send(message, chatType, target)
-	if type(message) == "string" and #message <= 250 then
+	if type(message) ~= "string" or #message > 250 then
+		return
+	end
+	if chatType == "CHANNEL" then
+		Broadcast("work", message, true, true)
+	else
 		Enqueue("work", message, chatType, target)
 	end
 end
@@ -291,7 +365,7 @@ end
 local function SendHello()
 	local message = Sync.Hello()
 	if message and #message <= 250 then
-		Enqueue("hello", message, "CHANNEL")
+		Broadcast("hello", message, true, true)
 	end
 end
 
@@ -306,8 +380,17 @@ local function SendData()
 		LI.Log("Your profession list is too long to share")
 		return
 	end
+	local targets = {}
+	for key in pairs(askers) do
+		targets[#targets + 1] = LI.WhisperTarget(key)
+	end
+	askers = {}
 	for i = 1, total do
-		Enqueue("data", string.format("D1|%s|%s|%s|%s", own.ver, B36(i), B36(total), payload:sub((i - 1) * CHUNK + 1, i * CHUNK)), "CHANNEL")
+		local chunk = string.format("D1|%s|%s|%s|%s", own.ver, B36(i), B36(total), payload:sub((i - 1) * CHUNK + 1, i * CHUNK))
+		Broadcast("data", chunk, false)
+		for _, target in ipairs(targets) do
+			Enqueue("data", chunk, "WHISPER", target)
+		end
 	end
 	lastAnswer = Now()
 	LI.test.sync.answered = LI.test.sync.answered + 1
@@ -389,6 +472,20 @@ local function OnHello(key, parts)
 		LI.test.sync.heard = LI.test.sync.heard + 1
 	end
 	LI.NoteHeard(key)
+	if not sessionHeard[key] then
+		sessionHeard[key] = true
+		LI.Log("Heard " .. LI.ShortName(key) .. " (Linked Inn)")
+		if Now() - lastGreet >= GREET_GAP then
+			lastGreet = Now()
+			LI.After(2 + math.random() * 3, function()
+				Sync.Refresh()
+				SendHello()
+				if LI.Work and LI.Work.Resend then
+					LI.Work.Resend()
+				end
+			end)
+		end
+	end
 	local c = LI.Crafter(key, true)
 	if class and class ~= "" and class:match("^%u+$") then
 		c.class = class
@@ -493,6 +590,13 @@ end
 
 local function OnAsk(key, parts)
 	LI.NoteHeard(key)
+	local n = 0
+	for _ in pairs(askers) do
+		n = n + 1
+	end
+	if n < MAX_ASKERS then
+		askers[key] = true
+	end
 	if not OwnState().ver or answerAt then
 		return
 	end
@@ -518,8 +622,24 @@ function Sync.OnMessage(prefix, text, chatType, sender)
 	if #text > 255 or not Allow(key) then
 		return
 	end
+	Count("rx", chatType or "?")
 	local parts = Split(text, "|")
 	local kind = parts[1]
+	if kind == "P1" then
+		local reply = "P2|" .. tostring(parts[2] or "")
+		if chatType == "WHISPER" then
+			Enqueue("pong", reply, "WHISPER", LI.WhisperTarget(key))
+		else
+			Enqueue("pong", reply, chatType == "CHANNEL" and "CHANNEL" or chatType)
+		end
+		return
+	elseif kind == "P2" then
+		local sent = tonumber(parts[2] or "")
+		local took = sent and string.format(" (%.1fs)", math.max(0, GetTime() - sent / 10)) or ""
+		LI.Print(string.format("Pong from %s via %s%s", LI.ShortName(key), tostring(chatType), took))
+		LI.Log(string.format("Pong from %s via %s", LI.ShortName(key), tostring(chatType)))
+		return
+	end
 	if kind == "H1" then
 		OnHello(key, parts)
 	elseif kind == "D1" and #parts == 5 then
@@ -585,6 +705,57 @@ local function Join()
 	end
 end
 
+function Sync.Ping(target)
+	local token = tostring(math.floor(GetTime() * 10))
+	if target and target ~= "" then
+		Enqueue("ping", "P1|" .. token, "WHISPER", LI.WhisperTarget(LI.FullName(target)))
+		LI.Print("Pinging " .. target .. " by whisper...")
+	else
+		Broadcast("ping", "P1|" .. token, true, true)
+		LI.Print("Pinging every Linked Inn user on " .. table.concat(Routes(true), ", ") .. "...")
+	end
+end
+
+local function OwnCount()
+	local n = 0
+	local c = Own()
+	for key, p in pairs(c and c.profs or {}) do
+		if not LI.GATHERING[key] and p.recipes then
+			n = n + 1
+		end
+	end
+	return n
+end
+
+function Sync.Status()
+	local sync = LI.test.sync or {}
+	local function Counts(field)
+		local parts = {}
+		for route, n in pairs(sync[field] or {}) do
+			parts[#parts + 1] = route .. " " .. n
+		end
+		table.sort(parts)
+		return #parts > 0 and table.concat(parts, ", ") or "none"
+	end
+	local heard = {}
+	for key in pairs(sessionHeard) do
+		heard[#heard + 1] = LI.ShortName(key)
+	end
+	table.sort(heard)
+	local lines = {
+		string.format("Channel: %s%s", joined and "joined" or "NOT joined", ChannelId() and (" (#" .. ChannelId() .. ")") or ""),
+		string.format("Your list: version %s, %d professions", tostring(OwnState().ver), OwnCount()),
+		"Sent: " .. Counts("tx") .. ((sync.failed or 0) > 0 and string.format("  |cffff6060failed %d (%s)|r", sync.failed, tostring(sync.lastError)) or ""),
+		"Received: " .. Counts("rx"),
+		"Users heard: " .. (#heard > 0 and table.concat(heard, ", ") or "none yet"),
+		"Waiting to send: " .. #queue,
+	}
+	for _, line in ipairs(lines) do
+		LI.Print(line)
+	end
+	return lines
+end
+
 function Sync.IsJoined()
 	return joined
 end
@@ -625,6 +796,37 @@ local function ReadOwnBasics()
 	end
 	c.class = c.class or select(2, LI.Try(UnitClass, "player"))
 end
+
+local grouped = {}
+LI.On("GROUP_ROSTER_UPDATE", function()
+	if not LI.ready then
+		return
+	end
+	local count = LI.Safe(LI.Try(GetNumGroupMembers)) or 0
+	local prefix = (IsInRaid and LI.Safe(LI.Try(IsInRaid))) and "raid" or "party"
+	local fresh = false
+	local now = {}
+	for i = 1, count do
+		local key = LI.UnitKey(prefix .. i)
+		if key and key ~= LI.playerKey then
+			now[key] = true
+			if not grouped[key] then
+				fresh = true
+			end
+		end
+	end
+	grouped = now
+	if fresh and Now() - lastGreet >= GREET_GAP then
+		lastGreet = Now()
+		LI.After(2, function()
+			Sync.Refresh()
+			SendHello()
+			if LI.Work and LI.Work.Resend then
+				LI.Work.Resend()
+			end
+		end)
+	end
+end)
 
 LI.On("CHAT_MSG_ADDON", function(prefix, text, chatType, sender)
 	Sync.OnMessage(LI.Safe(prefix), LI.Safe(text), LI.Safe(chatType), LI.Safe(sender))

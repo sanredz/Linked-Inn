@@ -272,6 +272,11 @@ local function InstallStubs()
 		SendAddonMessage = function(prefix, msg, chatType, target)
 			assert(#msg <= 255, "addon message too long: " .. #msg)
 			table.insert(W.sent, { prefix = prefix, msg = msg, chatType = chatType, target = target, at = W.clock })
+			if W.sendResult then
+				local r = W.sendResult
+				W.sendResult = nil
+				return r
+			end
 			return 0
 		end,
 		InChatMessagingLockdown = function() return W.lockdown == true end,
@@ -320,8 +325,8 @@ local function InstallStubs()
 	_G.C_GuildInfo = { GuildRoster = function() W.rosterRequests = (W.rosterRequests or 0) + 1 end }
 	W.who = W.who or {}
 	_G.C_FriendList = {
-		GetNumFriends = function() return 0 end,
-		GetFriendInfoByIndex = function() return nil end,
+		GetNumFriends = function() return #(W.friends or {}) end,
+		GetFriendInfoByIndex = function(i) return W.friends and W.friends[i] or nil end,
 		ShowFriends = function() end,
 		SendWho = function(filter, origin) table.insert(W.who, { filter = filter, origin = origin }) end,
 		GetNumWhoResults = function() return #(W.whoResults or {}) end,
@@ -331,7 +336,8 @@ local function InstallStubs()
 	_G.WHO_TAG_EXACT = "x-"
 	_G.WHO_NUM_RESULTS = "%d |4player:players; total"
 	_G.Enum = { SocialWhoOrigin = { Item = 3 } }
-	_G.GetNumGroupMembers = function() return 0 end
+	_G.GetNumGroupMembers = function() return W.groupSize or 0 end
+	_G.IsInRaid = function() return false end
 	_G.ERR_CHAT_PLAYER_NOT_FOUND_S = "No player named '%s' is currently playing."
 	_G.C_TradeSkillUI = {
 		GetBaseProfessionInfo = function()
@@ -1775,6 +1781,82 @@ LI.UI.Open(LI.UI.TAB.test)
 local sv = LinkedInnFrame.testPage.syncValues
 check(sv[1].__text == "joined, waiting for an echo" and sv[3].__text == "3" and sv[4].__text == "1", "the test tab shows sharing", sv[1].__text .. " / " .. sv[3].__text)
 check(#W.errors == errorsBefore, "sharing runs without errors", W.errors[errorsBefore + 1])
+
+do
+	Setup()
+	W.profs = { { name = "Tailoring", rank = 260, max = 300 } }
+	Boot()
+	Advance(50)
+	W.sent = {}
+	local function SentOn(kind)
+		local routes = {}
+		for _, m in ipairs(W.sent) do
+			if m.msg:sub(1, #kind) == kind then routes[#routes + 1] = m.chatType .. (m.target and ("@" .. m.target) or "") end
+		end
+		table.sort(routes)
+		return table.concat(routes, ",")
+	end
+	Addon("H1|abc|ROGUE|tailoring~5~a~-", "New Friend-TestRealm")
+	Advance(8)
+	check(SentOn("H1") == "CHANNEL@5", "hearing a new Linked Inn user answers with your hello right away", SentOn("H1"))
+	local logged = false
+	for _, e in ipairs(LI.db.log) do
+		if e.m:find("Heard New Friend", 1, true) then logged = true end
+	end
+	check(logged, "a new user is logged")
+	Addon("H1|abc|ROGUE|tailoring~5~a~-", "New Friend-TestRealm")
+	Addon("H1|abd|MAGE|tailoring~5~a~-", "Second Friend-TestRealm")
+	Advance(8)
+	check(SentOn("H1") == "CHANNEL@5", "but only once, and not more than every 20 seconds", SentOn("H1"))
+	W.sent = {}
+	Advance(15)
+	W.groupSize = 1
+	W.units = { party1 = { name = "Pal", surname = "Friend", guid = "Player-1-PAL" } }
+	Fire("GROUP_ROSTER_UPDATE")
+	Advance(8)
+	check(SentOn("H1") == "CHANNEL@5,PARTY", "grouping with someone sends your hello on the channel and to the party", SentOn("H1"))
+	W.sent = {}
+	Addon("P1|123", "Ping Guy-TestRealm", "PARTY")
+	Addon("P1|124", "Ping Gal-TestRealm", "WHISPER")
+	Advance(4)
+	check(SentOn("P2") == "PARTY,WHISPER@Ping Gal", "a ping is answered the way it came", SentOn("P2"))
+	Addon("P2|" .. math.floor(W.clock * 10), "Ping Guy-TestRealm", "PARTY")
+	check(W.chat[#W.chat]:find("Pong from Ping Guy via PARTY", 1, true), "a pong is printed with its route", W.chat[#W.chat])
+	W.sent = {}
+	SlashCmdList.LINKEDINN("ping")
+	Advance(4)
+	check(SentOn("P1") == "CHANNEL@5,PARTY", "/li ping asks on every route", SentOn("P1"))
+	W.sent = {}
+	SlashCmdList.LINKEDINN("ping Pal Friend")
+	Advance(3)
+	check(SentOn("P1") == "WHISPER@Pal Friend", "/li ping Name whispers that person", SentOn("P1"))
+	W.sendResult = 3
+	SlashCmdList.LINKEDINN("ping")
+	Advance(4)
+	check(LI.test.sync.failed == 1 and LI.test.sync.lastError == "code 3 on CHANNEL", "a send the game refuses is counted with its code", LI.test.sync.lastError)
+	local chat0 = #W.chat
+	SlashCmdList.LINKEDINN("status")
+	local report = table.concat({ table.unpack(W.chat, chat0 + 1) }, "\n")
+	check(report:find("Channel: joined", 1, true) and report:find("Sent:", 1, true) and report:find("PARTY", 1, true) and report:find("failed 1", 1, true) and report:find("New Friend", 1, true), "/li status prints a full report", report)
+	W.groupSize = nil
+	W.units = nil
+
+	W.friends = { { name = "Buddy Pal", connected = true }, { name = "Away Guy", connected = false }, { name = "Brew Master", connected = true } }
+	W.sent = {}
+	Advance(15 * 60)
+	check(SentOn("H1"):find("WHISPER@Buddy Pal", 1, true) and not SentOn("H1"):find("Away Guy", 1, true), "your hello is also whispered to online friends", SentOn("H1"))
+	W.trade = { linked = false, prof = TAILORING, recipes = TAILOR_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	Advance(1)
+	C_TradeSkillUI.CloseTradeSkill()
+	Advance(20)
+	W.sent = {}
+	Addon("Q1|" .. LI.Sync.Version(), "Buddy Pal-TestRealm", "WHISPER")
+	Advance(70)
+	local whispered = SentOn("D1")
+	check(whispered:find("CHANNEL@5", 1, true) and whispered:find("WHISPER@Buddy Pal", 1, true), "someone who asks gets your list by whisper too, not only on the channel", whispered)
+	W.friends = nil
+end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

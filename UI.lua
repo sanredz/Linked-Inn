@@ -1312,9 +1312,15 @@ LI.Listen("ScanDone", QueueRefresh)
 SLASH_LINKEDINN1 = "/linkedinn"
 SLASH_LINKEDINN2 = "/li"
 SlashCmdList.LINKEDINN = function(msg)
-	msg = LI.Trim(msg):lower()
-	if msg == "test" then
+	local raw = LI.Trim(msg)
+	local cmd, rest = raw:match("^(%S*)%s*(.-)$")
+	cmd = (cmd or ""):lower()
+	if cmd == "test" then
 		UI.Open(TAB.test)
+	elseif cmd == "ping" then
+		LI.Sync.Ping(rest)
+	elseif cmd == "status" then
+		LI.Sync.Status()
 	else
 		UI.Toggle()
 	end

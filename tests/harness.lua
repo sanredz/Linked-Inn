@@ -189,7 +189,11 @@ local function InstallStubs()
 		return nil
 	end
 	_G.UnitIsPlayer = function(u) return u == "player" or (W.units and W.units[u] and not W.units[u].npc) or false end
-	_G.UnitGUID = function(u) return W.units and W.units[u] and W.units[u].guid or nil end
+	_G.UnitGUID = function(u)
+		if u == "player" then return W.playerGUID end
+		return W.units and W.units[u] and W.units[u].guid or nil
+	end
+	_G.C_SpellBook = { GetSpellBookItemInfo = function(index) return W.spellbook and W.spellbook[index] and { spellID = W.spellbook[index] } or nil end }
 	_G.UnitIsFriend = function(_, u) return not (W.units and W.units[u] and W.units[u].enemy) end
 	W.cvars = W.cvars or {}
 	_G.C_CVar = {
@@ -283,7 +287,7 @@ local function InstallStubs()
 	end
 	_G.GetProfessionInfo = function(i)
 		local p = W.profs[i]
-		return p.name, p.icon or 777, p.rank, p.max
+		return p.name, p.icon or 777, p.rank, p.max, 0, p.offset, p.line
 	end
 	_G.C_Item = {
 		GetItemInfoInstant = function(id)
@@ -1339,6 +1343,38 @@ do
 	main:Hide()
 	W.units = nil
 	W.autoWorks = false
+end
+
+do
+	Setup()
+	W.profs = { { name = "Alchemy", rank = 150, max = 225, offset = 10, line = 171 }, { name = "Mining", rank = 100, max = 150, offset = 20, line = 186 } }
+	W.spellbook = { [11] = 2259, [21] = 2575 }
+	W.playerGUID = "Player-1-ME"
+	W.linkData["trade:Player-1-ME:2259:171"] = { linkedName = "Brew Master", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	W.autoWorks = true
+	Boot()
+	check(LI.db.profLinks.alchemy and LI.db.profLinks.alchemy.spell == 2259 and LI.db.profLinks.alchemy.line == 171, "your own profession link numbers come from your spellbook")
+	check(not LI.db.profLinks.mining, "gathering skills are left out")
+	local hyper0 = #W.hyperlinks
+	Advance(10)
+	check(#W.hyperlinks == hyper0, "nothing is read in the first seconds after login")
+	Advance(10)
+	check(W.hyperlinks[hyper0 + 1] == "trade:Player-1-ME:2259:171" and #W.hyperlinks == hyper0 + 1, "your own profession is read quietly after login", W.hyperlinks[hyper0 + 1])
+	local mine = LI.crafters[LI.playerKey].profs.alchemy
+	check(mine.recipes and mine.recipes[2330] and mine.via == "own", "without opening any window, your recipes are known", mine.via)
+	check(LI.test.click == 0 and LI.test.auto.tries == 0 and LI.test.own == 0, "it doesn't count as a click or an automatic read")
+	check(LI.Work.CanMake({ recipe = 2330 }), "so the Work tab knows what you can make")
+	Advance(30)
+	local ver = LI.Sync.Version()
+	W.linkData["trade:Player-1-ME:2259:171"] = { linkedName = "Brew Master", prof = ALCHEMY, recipes = { ALCHEMY_RECIPES[1], { id = 2331, name = "Minor Mana Potion", item = 2455 } } }
+	Fire("NEW_RECIPE_LEARNED", 2331)
+	Advance(10)
+	check(LI.crafters[LI.playerKey].profs.alchemy.recipes[2331], "learning a recipe re-reads that profession")
+	check(LI.Sync.Version() ~= ver, "and your shared list gets a new version")
+	W.autoWorks = false
+	W.playerGUID = nil
+	W.profs = nil
+	W.spellbook = nil
 end
 
 local function Sent(kind, chatType)

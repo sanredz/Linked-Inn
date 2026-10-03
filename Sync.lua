@@ -598,10 +598,22 @@ local function ReadOwnBasics()
 	for i = 1, 6 do
 		local index = LI.Safe(indices[i])
 		if type(index) == "number" then
-			local name, icon, rank, maxRank = LI.Try(GetProfessionInfo, index)
+			local name, icon, rank, maxRank, _, spellOffset, skillLine = LI.Try(GetProfessionInfo, index)
 			name, icon, rank, maxRank = LI.Safe(name), LI.Safe(icon), LI.Safe(rank), LI.Safe(maxRank)
+			spellOffset, skillLine = LI.Safe(spellOffset), LI.Safe(skillLine)
 			local key = LI.ProfKey(name)
 			if key and not LI.GATHERING[key] then
+				local spellID
+				if type(spellOffset) == "number" and C_SpellBook and C_SpellBook.GetSpellBookItemInfo then
+					local bank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player or 0
+					local item = LI.Try(C_SpellBook.GetSpellBookItemInfo, spellOffset + 1, bank)
+					spellID = type(item) == "table" and LI.Safe(item.spellID) or nil
+				end
+				if type(spellID) == "number" and type(skillLine) == "number" then
+					LI.ownLinks = LI.ownLinks or {}
+					LI.ownLinks[key] = { spell = spellID, line = skillLine }
+					LI.NoteProfLink(key, { spellID, skillLine })
+				end
 				local p = c.profs[key] or {}
 				c.profs[key] = p
 				p.name = name

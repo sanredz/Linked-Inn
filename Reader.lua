@@ -364,6 +364,38 @@ function Reader.Scan(candidates)
 	return true
 end
 
+function Reader.ReadOwn(only)
+	local guid = UnitGUID and LI.Safe(LI.Try(UnitGUID, "player"))
+	if not LI.ready or not LI.playerKey or type(guid) ~= "string" then
+		return 0
+	end
+	local added = 0
+	for profKey, nums in pairs(LI.ownLinks or {}) do
+		if not only or only == profKey then
+			local queued = pending and pending.own and pending.prof == profKey
+			for _, job in ipairs(probes) do
+				if job.own and job.prof == profKey then
+					queued = true
+				end
+			end
+			if not queued then
+				probes[#probes + 1] = {
+					key = LI.playerKey,
+					link = string.format("trade:%s:%d:%d", guid, nums.spell, nums.line),
+					prof = profKey,
+					probe = true,
+					own = true,
+				}
+				added = added + 1
+			end
+		end
+	end
+	if added > 0 then
+		Kick()
+	end
+	return added
+end
+
 function Reader.Busy(key)
 	return pending ~= nil and pending.key == key and Now() - (pending.started or 0) < PROBE_MAX + 1
 end
@@ -500,10 +532,16 @@ function Reader.Read()
 			return
 		end
 		local job = pending
+		if job and job.own then
+			via = "own"
+		end
 		local count = LI.SetRecipes(key, info, list, via)
 		if job then
 			lastAuto = { key = key, at = Now() }
-			if job.built or job.scan then
+			if job.own then
+				LI.Fire("OwnRecipesChanged")
+				LI.Log(string.format("Read your own %s (%d recipes)", name, count))
+			elseif job.built or job.scan then
 				local c = LI.crafters[key]
 				if c then
 					c.class = c.class or job.class
@@ -531,7 +569,10 @@ function Reader.Read()
 			end
 		end
 	else
-		Reveal()
+		local ownJob = pending and pending.own and pending or nil
+		if not ownJob then
+			Reveal()
+		end
 		if #list == 0 or not LI.playerKey then
 			return
 		end
@@ -550,6 +591,11 @@ function Reader.Read()
 		if first then
 			LI.test.own = LI.test.own + 1
 			LI.Log(string.format("Saved your own %s (%d recipes)", name, count))
+		end
+		if ownJob then
+			lastAuto = { key = LI.playerKey, at = Now() }
+			CloseHidden()
+			Finish(ownJob, "ok")
 		end
 	end
 	LI.Fire("TestChanged")
@@ -652,7 +698,21 @@ LI.On("ADDON_LOADED", function(name)
 	end
 end)
 
+LI.On("NEW_RECIPE_LEARNED", function(recipeID)
+	recipeID = LI.Safe(recipeID)
+	if not LI.ready then
+		return
+	end
+	local prof = type(recipeID) == "number" and LI.ProfessionOfRecipe(recipeID) or nil
+	LI.After(3, function()
+		Reader.ReadOwn(prof)
+	end)
+end)
+
 LI.Listen("Ready", function()
+	LI.After(15, function()
+		Reader.ReadOwn()
+	end)
 	if hooksecurefunc then
 		hooksecurefunc("SetItemRef", function(link)
 			link = LI.Safe(link)

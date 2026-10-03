@@ -751,7 +751,7 @@ function WorkUI.BuildHeader(main)
 	header.price:SetAutoFocus(false)
 	header.price:SetNumeric(true)
 	header.price:SetMaxLetters(5)
-	header.price:SetJustifyH("RIGHT")
+	header.price:SetJustifyH("CENTER")
 	header.price:SetScript("OnTextChanged", function(self, user)
 		if user then
 			local gold = tonumber(self:GetText()) or 0
@@ -1185,8 +1185,7 @@ local function MoneyBox(parent, letters, width)
 	box:SetAutoFocus(false)
 	box:SetNumeric(true)
 	box:SetMaxLetters(letters)
-	box:SetJustifyH("RIGHT")
-	box:SetTextInsets(0, 4, 0, 0)
+	box:SetJustifyH("CENTER")
 	return box
 end
 

@@ -148,6 +148,11 @@ LI.On("ADDON_LOADED", function(name)
 		end
 	end
 	db.test = type(db.test) == "table" and db.test or NewTest()
+	for k, v in pairs(NewTest()) do
+		if db.test[k] == nil then
+			db.test[k] = v
+		end
+	end
 	db.log = type(db.log) == "table" and db.log or {}
 	LI.db = db
 	LI.settings = db.settings

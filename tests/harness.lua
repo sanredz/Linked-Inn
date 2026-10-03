@@ -224,7 +224,35 @@ local function InstallStubs()
 		if not g then return nil end
 		return g.class, g.class, "Human", "Human", 2, g.name, g.realm
 	end
-	_G.C_Spell = { GetSpellTexture = function(id) return 100000 + id end }
+	_G.C_Spell = {
+		GetSpellTexture = function(id) return 100000 + id end,
+		GetSpellName = function(id) return W.spellNames and W.spellNames[id] or nil end,
+	}
+	W.sent = {}
+	W.channels = W.channels or {}
+	_G.NUM_CHAT_WINDOWS = 10
+	_G.C_ChatInfo = {
+		RegisterAddonMessagePrefix = function(prefix) W.prefix = prefix return true end,
+		SendAddonMessage = function(prefix, msg, chatType, target)
+			assert(#msg <= 255, "addon message too long: " .. #msg)
+			table.insert(W.sent, { prefix = prefix, msg = msg, chatType = chatType, target = target, at = W.clock })
+			return 0
+		end,
+		InChatMessagingLockdown = function() return W.lockdown == true end,
+	}
+	_G.JoinTemporaryChannel = function(name) if not W.noJoin then W.channels[name] = 5 end end
+	_G.GetChannelName = function(name) local id = W.channels[name] if id then return id, name end return 0, nil end
+	_G.RemoveChatWindowChannel = function(i, name) W.hidden = (W.hidden or 0) + 1 end
+	_G.IsInInstance = function() return W.inInstance == true end
+	_G.GetProfessions = function()
+		local list = {}
+		for i = 1, #(W.profs or {}) do list[i] = i end
+		return list[1], list[2], list[3], list[4], list[5], list[6]
+	end
+	_G.GetProfessionInfo = function(i)
+		local p = W.profs[i]
+		return p.name, p.icon or 777, p.rank, p.max
+	end
 	_G.C_Item = { GetItemInfoInstant = function(id)
 		local classID = W.items[id]
 		return id, "x", "y", "", 1, classID, 0
@@ -275,6 +303,7 @@ local function InstallStubs()
 			end
 		end,
 		GetRecipeOutputItemData = function(id)
+			if W.recipeItems and W.recipeItems[id] then return { icon = 7000 + id, itemID = W.recipeItems[id] } end
 			for _, r in ipairs(W.trade and W.trade.recipes or {}) do
 				if r.id == id then return { icon = 7000 + id, itemID = r.item } end
 			end
@@ -867,5 +896,154 @@ LI.ResetTest()
 check(LI.test.links == 0 and LI.test.auto.tries == 0 and #LI.db.log == 0, "the test can be reset")
 
 check(#W.errors == 0, "no errors", W.errors[1])
+local function Sent(kind, chatType)
+	local out = {}
+	for _, m in ipairs(W.sent) do
+		if m.msg:sub(1, #kind) == kind and (not chatType or m.chatType == chatType) then out[#out + 1] = m end
+	end
+	return out
+end
+local function Addon(msg, sender, chatType)
+	Fire("CHAT_MSG_ADDON", "LinkedInn", msg, chatType or "CHANNEL", sender, "", 0, 5, "LinkedInnSync", 0)
+end
+
+local errorsBefore = #W.errors
+Setup()
+W.spellNames = { [18560] = "Mooncloth Bag", [3914] = "Brown Linen Pants" }
+W.profs = { { name = "Tailoring", rank = 260, max = 300 }, { name = "Mining", rank = 100, max = 150 } }
+Boot()
+local Sync = LI.Sync
+local enc = Sync.Encode({ tailoring = { rank = 260, max = 300, link = "trade:Player-1-ME:3908:197", recipes = { [3914] = true, [18560] = true } }, ["first aid"] = { rank = 75, max = 150 } })
+local dec = Sync.Decode(enc)
+check(dec and #dec == 2 and dec[1].key == "first aid" and dec[1].ids == nil and dec[2].key == "tailoring" and dec[2].ids[1] == 3914 and dec[2].ids[2] == 18560 and dec[2].link == "trade:Player-1-ME:3908:197" and dec[2].rank == 260, "a profession list survives encoding", enc)
+check(Sync.Decode("tailoring~1~1~~zz.-1") == nil and Sync.Decode("tai|loring~1~1~~1") == nil and Sync.Decode("mining~1~1~~1") == nil, "broken or gathering lists are rejected")
+check(W.prefix == "LinkedInn", "the addon message prefix is registered")
+check(LI.crafters[LI.playerKey].profs.tailoring.rank == 260 and not LI.crafters[LI.playerKey].profs.mining, "your crafting professions are read at login, gathering ones skipped")
+Advance(5)
+check(not Sync.IsJoined(), "the hidden channel waits a moment after login")
+Advance(10)
+check(Sync.IsJoined() and W.hidden == 10, "it joins the hidden channel and keeps it out of every chat window", W.hidden)
+check(#Sent("H1") == 0, "no hello right away")
+Advance(35)
+local hellos = Sent("H1", "CHANNEL")
+check(#hellos == 1 and hellos[1].target == "5", "a hello goes to the hidden channel", #hellos)
+local hello = hellos[1] and hellos[1].msg or ""
+check(hello:find("tailoring~", 1, true) and not hello:find("mining", 1, true) and hello:find("|MAGE|", 1, true), "the hello lists crafting professions and class", hello)
+Addon(hello, "Brew Master-TestRealm")
+check(LI.test.sync.echo == true, "hearing your own hello proves the channel works")
+Advance(13 * 60 + 200)
+check(#Sent("H1") == 2, "hellos repeat every 12 to 15 minutes", #Sent("H1"))
+
+W.trade = { linked = false, prof = TAILORING, recipes = TAILOR_RECIPES }
+Fire("TRADE_SKILL_SHOW")
+Advance(1)
+C_TradeSkillUI.CloseTradeSkill()
+Advance(12)
+check(#Sent("H1") == 3, "learning recipes sends a hello soon", #Sent("H1"))
+local newHello = Sent("H1")[3].msg
+check(newHello:find("tailoring~78~8c~2", 1, true), "the new hello counts your recipes", newHello)
+local ver = newHello:match("^H1|([^|]+)|")
+
+Addon("Q1|" .. ver, "Other Person-TestRealm", "WHISPER")
+Advance(1)
+check(#Sent("D1") == 0, "answers wait a few seconds to gather requests")
+Addon("Q1|" .. ver, "Third Guy-TestRealm", "WHISPER")
+Advance(5)
+local data = Sent("D1", "CHANNEL")
+check(#data >= 1 and LI.test.sync.answered == 1, "two requests are answered with one broadcast", #data)
+local chunks = {}
+for _, m in ipairs(data) do chunks[#chunks + 1] = m.msg end
+Addon("Q1|" .. ver, "Fourth Gal-TestRealm", "WHISPER")
+Advance(30)
+check(LI.test.sync.answered == 1, "answers are spaced at least a minute apart")
+Advance(40)
+check(LI.test.sync.answered == 2, "a later request is still answered", LI.test.sync.answered)
+
+local sentBefore = #W.sent
+W.combat = true
+Addon("Q1|" .. ver, "Fifth One-TestRealm", "WHISPER")
+Advance(90)
+local inCombat = #W.sent
+W.combat = false
+Advance(5)
+check(inCombat == sentBefore and #W.sent > inCombat, "nothing is sent in combat, it waits", inCombat - sentBefore)
+LI.settings.share = false
+Advance(20 * 60)
+check(#Sent("H1") == 3, "no hellos when sharing is off", #Sent("H1"))
+local answered = LI.test.sync.answered
+Addon("Q1|" .. ver, "Sixth Man-TestRealm", "WHISPER")
+Advance(90)
+check(LI.test.sync.answered == answered, "no answers when sharing is off")
+LI.settings.share = true
+
+Setup()
+W.name, W.surname = "Other", "Person"
+W.spellNames = { [18560] = "Mooncloth Bag", [3914] = "Brown Linen Pants" }
+W.items = { [14155] = 1, [4343] = 4 }
+W.recipeItems = { [18560] = 14155, [3914] = 4343 }
+W.trade = nil
+Boot()
+Advance(50)
+W.sent = {}
+Addon(newHello, "Brew Master-TestRealm")
+local brew = LI.crafters["Brew Master-TestRealm"]
+check(brew and brew.profs.tailoring and brew.profs.tailoring.rank == 260 and brew.profs.tailoring.recipes == nil, "a hello adds the crafter with their skill right away")
+check(LI.Status("Brew Master-TestRealm") == "online", "a hello marks them online")
+check(LI.test.sync.heard == 1, "the test counts Linked Inn users")
+Advance(2)
+local asks = Sent("Q1", "WHISPER")
+check(#asks == 1 and asks[1].target == "Brew Master" and asks[1].msg == "Q1|" .. ver, "it asks for the full list by whisper, without the realm", asks[1] and asks[1].target)
+Addon(newHello, "Brew Master-TestRealm")
+Advance(2)
+check(#Sent("Q1") == 1, "it doesn't ask twice")
+for i = #chunks, 1, -1 do
+	Addon(chunks[i], "Brew Master-TestRealm")
+end
+brew = LI.crafters["Brew Master-TestRealm"]
+local tail = brew.profs.tailoring
+check(tail.recipes and tail.recipes[18560] and tail.recipes[3914] and tail.via == "shared" and tail.count == 2, "the shared list arrives even with chunks out of order")
+check(tail.link ~= nil, "the shared profession can be opened")
+check(LI.db.recipes[18560].n == "Mooncloth Bag" and LI.db.recipes[18560].k == "bag", "unknown recipes get their names and types locally", LI.db.recipes[18560].n)
+local found = LI.Search("mooncloth")
+check(#found == 1 and found[1].key == "Brew Master-TestRealm" and found[1].makes == 1, "shared recipes are searchable")
+check(LI.test.sync.lists == 1, "the test counts lists received")
+Addon(newHello, "Brew Master-TestRealm")
+Advance(130)
+check(#Sent("Q1") == 1, "a hello with a version you have asks nothing")
+for i = #chunks, 1, -1 do
+	Addon(chunks[i], "Brew Master-TestRealm")
+end
+check(LI.test.sync.lists == 1, "a list you already have is not applied again", LI.test.sync.lists)
+local tiny = "tailoring~1~1~~" .. string.rep("1.", 13) .. "1"
+check(#tiny == 42 and Sync.Decode(tiny) ~= nil, "test list is valid", #tiny)
+for i = 1, 42 do
+	Addon(string.format("D1|abc|%s|%s|%s", Sync.B36(i), Sync.B36(42), tiny:sub(i, i)), "Chunky Monk-TestRealm")
+end
+check(not (LI.crafters["Chunky Monk-TestRealm"] and LI.crafters["Chunky Monk-TestRealm"].profs.tailoring), "lists split into too many pieces are refused")
+local long = "tailoring~1~1~~" .. string.rep("1.", 105) .. "1"
+check(#long > 200 and #long < 240 and Sync.Decode(long) ~= nil, "long test list is valid", #long)
+Addon("D1|abc|1|1|" .. long, "Long John-TestRealm")
+check(not (LI.crafters["Long John-TestRealm"] and LI.crafters["Long John-TestRealm"].profs.tailoring), "oversized pieces are refused")
+
+Addon("H1|zzzz|ROGUE|tailoring~5~a~-;mining~1~1~-", "Mallory Bad-TestRealm")
+check(LI.crafters["Mallory Bad-TestRealm"].profs.mining == nil, "gathering skills in a hello are ignored")
+Addon("D1|zzzz|1|1|tailoring~~~~zz.-5", "Mallory Bad-TestRealm")
+check(LI.crafters["Mallory Bad-TestRealm"].profs.tailoring.recipes == nil, "a broken list is ignored")
+Addon("D1|zzzz|1|zz|abc", "Mallory Bad-TestRealm")
+Addon("D1|zzzz|1|1|" .. string.rep("a", 230), "Mallory Bad-TestRealm")
+check(LI.crafters["Brew Master-TestRealm"].profs.tailoring.via == "shared", "nobody can change someone else's list")
+for i = 1, 80 do
+	Addon(string.format("H1|%s|ROGUE|tailoring~%s~a~-", Sync.B36(1000 + i), Sync.B36(i)), "Flood Er-TestRealm")
+end
+check(LI.crafters["Flood Er-TestRealm"].profs.tailoring.rank == 60, "a flood of messages is cut off", LI.crafters["Flood Er-TestRealm"].profs.tailoring.rank)
+Advance(61)
+Addon("H1|zzzz|ROGUE|tailoring~1z~a~-", "Flood Er-TestRealm")
+check(LI.crafters["Flood Er-TestRealm"].profs.tailoring.rank == 71, "the cut-off lifts after a minute")
+
+LI.UI.Open(LI.UI.TAB.test)
+local sv = LinkedInnFrame.testPage.syncValues
+check(sv[1].__text == "joined, waiting for an echo" and sv[3].__text == "3" and sv[4].__text == "1", "the test tab shows sharing", sv[1].__text .. " / " .. sv[3].__text)
+check(#W.errors == errorsBefore, "sharing runs without errors", W.errors[errorsBefore + 1])
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

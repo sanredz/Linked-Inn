@@ -16,5 +16,6 @@ Data.lua
 Online.lua
 Capture.lua
 Reader.lua
+Sync.lua
 UI.lua
 Minimap.lua

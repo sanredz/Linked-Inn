@@ -784,6 +784,47 @@ local function Verdict()
 	return "Not enough data yet", LI.COLOR.GRAY, "Stay in a city with Trade chat for a while, or ask someone to link a profession. Results show up here."
 end
 
+local function SharingLines()
+	local sync = LI.test.sync or {}
+	local channel
+	if sync.echo then
+		channel = "working"
+	elseif sync.joined then
+		channel = "joined, waiting for an echo"
+	else
+		channel = "not joined yet"
+	end
+	local own
+	if not LI.settings.share then
+		own = "not shared (off)"
+	elseif LI.Sync and LI.Sync.Version() then
+		local c = LI.crafters and LI.crafters[LI.playerKey]
+		local n = 0
+		for key in pairs(c and c.profs or {}) do
+			if not LI.GATHERING[key] then
+				n = n + 1
+			end
+		end
+		own = string.format("shared (%d %s)", n, n == 1 and "profession" or "professions")
+	else
+		own = "nothing to share yet"
+	end
+	return {
+		{ "Hidden channel", channel },
+		{ "Your professions", own },
+		{ "Linked Inn users heard", tostring(sync.heard or 0) },
+		{ "Profession lists received", tostring(sync.lists or 0) },
+		{ "Your list sent", string.format("%d %s", sync.answered or 0, (sync.answered or 0) == 1 and "time" or "times") },
+	}
+end
+
+local function FillLines(labels, values, lines)
+	for i, pair in ipairs(lines) do
+		labels[i]:SetText(pair[1])
+		values[i]:SetText(pair[2])
+	end
+end
+
 local function RefreshTest()
 	local page = main.testPage
 	local t = LI.test
@@ -792,77 +833,95 @@ local function RefreshTest()
 	page.head:SetTextColor(color[1], color[2], color[3])
 	page.body:SetText(body)
 	local auto = t.auto
-	local lines = {
+	FillLines(page.labels, page.values, {
 		{ "Profession links seen in chat", tostring(t.links) },
-		{ "Waiting to be read", tostring(LI.Reader.QueueSize()) },
 		{ "Read automatically", string.format("%d of %d tries", auto.ok, auto.tries) },
 		{ "No reply / error", string.format("%d / %d", auto.timeout, auto.err) },
 		{ "Window popped up while reading", tostring(auto.flashed) },
 		{ "Read by clicking a link", tostring(t.click) },
-		{ "Your own professions saved", tostring(t.own) },
-	}
-	for i, pair in ipairs(lines) do
-		page.labels[i]:SetText(pair[1])
-		page.values[i]:SetText(pair[2])
-	end
-	local formats = {}
-	for _, f in ipairs(t.formats) do
-		formats[#formats + 1] = string.format("%s  (%s, seen %d)", f.text or "?", f.shape, f.count or 1)
-	end
-	page.formats:SetText(#formats > 0 and table.concat(formats, "\n") or "No profession links seen yet.")
+	})
+	FillLines(page.syncLabels, page.syncValues, SharingLines())
 	local log = {}
 	local entries = LI.db.log
-	for i = #entries, math.max(1, #entries - 5), -1 do
+	for i = #entries, math.max(1, #entries - 4), -1 do
 		log[#log + 1] = date("%H:%M", entries[i].t) .. "  " .. entries[i].m
 	end
 	page.log:SetText(#log > 0 and table.concat(log, "\n") or "Nothing yet.")
 	page.auto:SetChecked(LI.settings.autoRead and true or false)
+	page.share:SetChecked(LI.settings.share and true or false)
 	page.retry:SetShown(LI.Reader.IsBroken())
+end
+
+local function Lines(page, top, count)
+	local labels, values = {}, {}
+	for i = 1, count do
+		local label = Text(page, "GameFontNormal")
+		label:SetPoint("TOPLEFT", 40, top - (i - 1) * 18)
+		local value = Text(page, "GameFontHighlight", "RIGHT")
+		value:SetPoint("TOPRIGHT", -40, top - (i - 1) * 18)
+		labels[i], values[i] = label, value
+	end
+	return labels, values
+end
+
+local function SectionHead(page, top, text)
+	local head = Text(page, "GameFontNormalSmall")
+	head:SetPoint("TOPLEFT", 40, top)
+	head:SetText(text)
+	head:SetTextColor(SOFT[1], SOFT[2], SOFT[3])
+	local line = page:CreateTexture(nil, "ARTWORK")
+	line:SetHeight(1)
+	line:SetPoint("TOPLEFT", 40, top - 14)
+	line:SetPoint("TOPRIGHT", -40, top - 14)
+	line:SetColorTexture(1, 0.82, 0, 0.25)
+end
+
+local function Check(page, label, onClick)
+	local box = CreateFrame("CheckButton", nil, page, "UICheckButtonTemplate")
+	box:SetSize(24, 24)
+	box:SetScript("OnClick", function(self)
+		LI.SafeCall(onClick, self:GetChecked() and true or false)
+		UI.Refresh()
+	end)
+	local text = Text(page, "GameFontHighlightSmall")
+	text:SetPoint("LEFT", box, "RIGHT", 2, 0)
+	text:SetText(label)
+	box.label = text
+	return box
 end
 
 local function BuildTestPage(page)
 	page.head = page:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
 	page.head:SetFont(TITLE_FONT, 26, "")
-	page.head:SetPoint("TOP", 0, -22)
+	page.head:SetPoint("TOP", 0, -18)
 	page.body = Text(page, "GameFontHighlight", "CENTER")
-	page.body:SetPoint("TOP", page.head, "BOTTOM", 0, -8)
+	page.body:SetPoint("TOP", page.head, "BOTTOM", 0, -6)
 	page.body:SetWidth(440)
 	page.body:SetSpacing(2)
-	page.labels, page.values = {}, {}
-	for i = 1, 7 do
-		local label = Text(page, "GameFontNormal")
-		label:SetPoint("TOPLEFT", 40, -100 - (i - 1) * 20)
-		local value = Text(page, "GameFontHighlight", "RIGHT")
-		value:SetPoint("TOPRIGHT", -40, -100 - (i - 1) * 20)
-		page.labels[i], page.values[i] = label, value
-	end
-	local formatsHead = Text(page, "GameFontNormalSmall")
-	formatsHead:SetPoint("TOPLEFT", 40, -250)
-	formatsHead:SetText("Link formats")
-	page.formats = Text(page, "GameFontHighlightSmall")
-	page.formats:SetPoint("TOPLEFT", formatsHead, "BOTTOMLEFT", 0, -4)
-	page.formats:SetWidth(440)
+	SectionHead(page, -84, "Reading links")
+	page.labels, page.values = Lines(page, -104, 5)
+	SectionHead(page, -200, "Sharing with other Linked Inn users")
+	page.syncLabels, page.syncValues = Lines(page, -220, 5)
 	local logHead = Text(page, "GameFontNormalSmall")
-	logHead:SetPoint("TOPLEFT", 40, -320)
+	logHead:SetPoint("TOPLEFT", 40, -318)
 	logHead:SetText("Latest")
+	logHead:SetTextColor(SOFT[1], SOFT[2], SOFT[3])
 	page.log = Text(page, "GameFontDisableSmall")
 	page.log:SetPoint("TOPLEFT", logHead, "BOTTOMLEFT", 0, -4)
 	page.log:SetWidth(440)
 	page.log:SetSpacing(2)
-	page.auto = CreateFrame("CheckButton", nil, page, "UICheckButtonTemplate")
-	page.auto:SetSize(24, 24)
-	page.auto:SetPoint("BOTTOMLEFT", 34, 10)
-	page.auto:SetScript("OnClick", function(self)
-		LI.settings.autoRead = self:GetChecked() and true or false
-		UI.Refresh()
+	page.share = Check(page, "Share my professions with other Linked Inn users", function(on)
+		LI.settings.share = on
 	end)
-	local autoLabel = Text(page, "GameFontHighlightSmall")
-	autoLabel:SetPoint("LEFT", page.auto, "RIGHT", 2, 0)
-	autoLabel:SetText("Read links automatically")
+	page.share:SetPoint("BOTTOMLEFT", 34, 32)
+	page.auto = Check(page, "Read links automatically", function(on)
+		LI.settings.autoRead = on
+	end)
+	page.auto:SetPoint("BOTTOMLEFT", 34, 8)
 	page.retry = Button(page, "Try again", 100, function()
 		LI.Reader.Retry()
 	end)
-	page.retry:SetPoint("LEFT", autoLabel, "RIGHT", 10, 0)
+	page.retry:SetPoint("LEFT", page.auto.label, "RIGHT", 10, 0)
 	page.reset = Button(page, "Reset test", 100, function()
 		LI.ResetTest()
 	end)

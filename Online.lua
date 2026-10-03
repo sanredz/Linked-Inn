@@ -7,10 +7,12 @@ local CHECK_VALID = 10 * 60
 local CHECK_TIMEOUT = 5
 
 local SIGHT_QUIET = 60
+local HEARD_ONLINE = 20 * 60
 
 local roster = {}
 local offlineAt = {}
 local checked = {}
+local heardAt = {}
 local pendingCheck
 
 local function SetRoster(source, fullName, online)
@@ -88,6 +90,9 @@ function LI.Status(key)
 	if key == LI.playerKey then
 		return "online", time()
 	end
+	if heardAt[key] and time() - heardAt[key] <= HEARD_ONLINE then
+		return "online", seen
+	end
 	local entry = roster[key]
 	if entry then
 		if entry.group or entry.guild or entry.friend then
@@ -127,6 +132,22 @@ function LI.MarkSeen(key, where)
 	end
 	offlineAt[key] = nil
 	return fresh
+end
+
+function LI.NoteHeard(key)
+	if not key then
+		return
+	end
+	local fresh = not heardAt[key] or time() - heardAt[key] >= SIGHT_QUIET
+	heardAt[key] = time()
+	LI.MarkSeen(key)
+	if fresh then
+		LI.Fire("StatusChanged")
+	end
+end
+
+function LI.Heard(key)
+	return heardAt[key] ~= nil and time() - heardAt[key] <= HEARD_ONLINE
 end
 
 local function Sighted(unit)

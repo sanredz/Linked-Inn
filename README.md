@@ -7,7 +7,8 @@ Linked Inn builds a list of crafters on your realm in two ways:
 - It remembers everyone who links a profession in a chat you can see: Trade,
   General, guild, party, raid and whispers.
 - Players who use Linked Inn share their own professions with each other
-  automatically, in the background.
+  automatically, in the background, and show as online to each other. You can
+  turn sharing off on the Test tab.
 
 - **Search** for an item, a profession or a name. Crafters who can make it are
   listed with online players first.

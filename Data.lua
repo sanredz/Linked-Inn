@@ -28,6 +28,7 @@ LI.PROFESSION_ORDER = {
 LI.PRIMARY = { "alchemy", "blacksmithing", "enchanting", "engineering", "leatherworking", "tailoring" }
 LI.SECONDARY = { "cooking", "first aid", "fishing" }
 LI.SECONDARY_SET = { cooking = true, ["first aid"] = true, fishing = true }
+LI.GATHERING = { mining = true, herbalism = true, skinning = true }
 
 LI.PROFESSION_NAMES = {
 	alchemy = "Alchemy",
@@ -56,6 +57,7 @@ local KIND_BY_CLASS = { [0] = "consumable", [1] = "bag", [2] = "weapon", [4] = "
 
 local DEFAULTS = {
 	autoRead = true,
+	share = true,
 	secondary = false,
 	profs = {},
 	kind = "all",
@@ -70,6 +72,7 @@ local function NewTest()
 		click = 0,
 		own = 0,
 		formats = {},
+		sync = { sent = 0, heard = 0, lists = 0, answered = 0 },
 	}
 end
 

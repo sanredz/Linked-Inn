@@ -338,6 +338,7 @@ function Reader.Read()
 		end
 		local first = not (LI.crafters[LI.playerKey] and LI.crafters[LI.playerKey].profs[profKey] and LI.crafters[LI.playerKey].profs[profKey].recipes)
 		local count = LI.SetRecipes(LI.playerKey, info, list, "own")
+		LI.Fire("OwnRecipesChanged")
 		if first then
 			LI.test.own = LI.test.own + 1
 			LI.Log(string.format("Saved your own %s (%d recipes)", name, count))

@@ -1,27 +1,99 @@
 # Linked Inn: Profession Finder
 
-Find someone who can craft what you need.
+[![CI](https://github.com/sanredz/Linked-Inn/actions/workflows/ci.yml/badge.svg)](https://github.com/sanredz/Linked-Inn/actions/workflows/ci.yml)
 
-Linked Inn builds a list of crafters on your realm in two ways:
+Find someone who can make what you need, for **World of Warcraft: Forever**.
 
-- It remembers everyone who links a profession in a chat you can see: Trade,
-  General, guild, party, raid and whispers.
-- Players who use Linked Inn share their own professions with each other
-  automatically, in the background, and show as online to each other.
+Linked Inn keeps a list of crafters for you. Search for an item, see who can
+make it and when they were last around, and whisper them with one click. If
+nobody's online, post a request and the crafters who can make it get a
+notice.
 
-- **Search** for an item, a profession or a name. Crafters who can make it are
-  listed with online players first.
-- **Filter** by profession, item type, or online only.
-- **Click** a crafter to whisper them. Right-click to open their profession or
-  forget them.
-- **Work**: post what you want made (amount, mats, price, a note) and
-  crafters who can make it get a notice. See requests you can make, offer
-  with one click, and choose exactly which requests reach you.
+> **Official download:** this repository's
+> [Releases](https://github.com/sanredz/Linked-Inn/releases) and CurseForge.
+> Copies uploaded anywhere else aren't official and may be modified.
+
+> **Beta:** Linked Inn is new. If something looks off, please
+> [open an issue](https://github.com/sanredz/Linked-Inn/issues).
+
+![The crafters list, grouped by profession](media/crafters.png)
+
+## Where the list comes from
+
+You don't have to do anything. Linked Inn fills the list in the background:
+
+- **Profession links in chat.** Anyone who links a profession in Trade,
+  General, guild, party, raid or a whisper gets saved with their full recipe
+  list. You don't have to click the link.
+- **Recipe links.** A single linked recipe or crafted item is enough to read
+  that player's whole profession.
+- **Other Linked Inn users.** Players with the addon quietly share their own
+  professions with each other, including users on the other hidden realms of
+  your ruleset.
+- **What you see.** Someone crafting or disenchanting near you gets added
+  too. **Scan nearby** at the bottom of the window looks up the players
+  around you.
+
+Your own professions are read when you log in, so you never have to open
+them first.
+
+## Crafters
+
+- **Search** for an item, a profession or a name. Searching an item shows only
+  the people who can make it.
+- **Filter** by profession (pick several), item type, max skill only, and
+  optionally the secondary professions.
+- **Favorites** stay at the top. Star anyone you use a lot.
+- **Last seen** shows when a crafter was last around. Click it to check if
+  they're online right now.
+- **Recipe books:** click a profession icon to browse that player's recipes by
+  category, with reagents. Click a recipe to ask them to make it.
+- **Compact** mode fits about twice as many people on screen.
+
+<p>
+  <img src="media/crafters-search.png" alt="Searching for Copper Axe" width="49%">
+  <img src="media/crafters-compact.png" alt="Compact list" width="49%">
+</p>
+
+## Work
+
+A reverse auction house. Post what you want made and let the crafters come to
+you.
+
+- **Post a request:** pick the item and amount, choose which materials you
+  bring, set a price and a note, and how long it stays up.
+- **For you:** requests from other players that you can actually make. Click
+  **I can make it** to send an offer.
+- **My requests:** your posts, with everyone who offered shown as a name tag.
+  Click a name to whisper, right-click to invite or remove them.
+- **Alerts:** a pop-up, a sound and a glowing minimap button when a request
+  you can make shows up. Limit them to requests where the buyer brings all
+  mats, pays at least a set price, or matches certain professions.
+
+<p>
+  <img src="media/post-request.png" alt="Posting a request" width="38%">
+  <img src="media/work-request.png" alt="Your requests with an offer" width="60%">
+</p>
+
+![Pop-up for a request you can make](media/toast.png)
+![Pop-up when someone offers](media/toast-2.png)
+
+## Usage
 
 Open it with `/li`, the minimap button, or the addon menu.
 
-## Test build
+`/li status` prints what the addon is sending and receiving, which is handy if
+two friends with the addon can't see each other.
 
-This early build has a **Test** tab (`/li test`) that shows whether recipes can
-be read straight from links in chat, or only after clicking a link. Screenshots
-of that tab after a session in a city are very welcome.
+## What gets shared
+
+Only with other Linked Inn users, and only inside the game:
+
+- Your professions, skill levels and known recipes.
+- Your Work requests and offers.
+
+Nothing is sent outside the game, and there's no website or account.
+
+## License
+
+All rights reserved. See [LICENSE](LICENSE).

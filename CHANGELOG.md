@@ -1,14 +1,32 @@
 # Changelog
 
-## Unreleased
+## [Unreleased]
 
-- Remembers profession links from any chat you can see.
-- Search by item, profession or name; filter by profession and item type.
-- Click to whisper, right-click to open a crafter's profession.
-- Saves your own professions when you open them.
-- Test tab: shows whether recipes can be read from chat links without clicking.
-- Sharing: Linked Inn users quietly share their professions and recipes with each other, and see each other as online.
-- Profession filters (several at once), optional secondary professions, favorites, last seen with a quick online check.
-- Recipe books with categories and reagents, compact list, max skill filter, scan nearby.
-- Work: post crafting requests, get notified about requests you can make, send offers.
-- Reaches Linked Inn users on the other hidden realms of your ruleset too: one user per realm quietly passes messages across.
+## [1.0.0-beta1] - 2026-10-03
+
+First release.
+
+### Crafters
+- Saves everyone who links a profession in chat, with their full recipe list,
+  without clicking the link. One linked recipe or crafted item is enough too.
+- Adds players you see crafting or disenchanting, and Scan nearby looks up the
+  players around you.
+- Search by item, profession or name. Filter by several professions, item
+  type, max skill only, and optional secondary professions.
+- List grouped by profession and sorted by who's online, skill and recipes.
+- Favorites, last seen with a one-click online check, compact mode.
+- Recipe books with categories and reagents. Click a recipe to ask for it.
+
+### Sharing
+- Linked Inn users share their professions automatically, including with
+  users on the other hidden realms of the same ruleset.
+- Your own professions are read at login.
+- `/li status` shows what is sent and received.
+
+### Work
+- Post requests: item, amount, the materials you bring, price, note and how
+  long it stays up.
+- See requests you can make and offer with one click.
+- Offers on your requests show as name tags: whisper, invite or remove.
+- Alerts by pop-up, sound and minimap glow, with filters for mats, minimum
+  price and professions.

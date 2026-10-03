@@ -234,7 +234,7 @@ ShowNext = function()
 		if serial ~= toastSerial then
 			return
 		end
-		if not toast.done and (t.stay or (toast.hover and GetTime() - shown < 20)) then
+		if not toast.done and (toast.hover and GetTime() - shown < 20) then
 			LI.After(1, Close)
 			return
 		end
@@ -1515,80 +1515,6 @@ local function OfferToast(req, from)
 			Whisper(from, "Hi! About my request for " .. ItemLink(req) .. ":")
 		end,
 	}
-end
-
-local function PostedToast(req)
-	local count, online = LI.Work.KnownCrafters(req.recipe)
-	local name, icon = WorkUI.Name(req)
-	return {
-		icon = icon,
-		head = "Request posted",
-		title = name .. (req.qty > 1 and (" \195\151" .. req.qty) or ""),
-		sub = count > 0 and string.format("%d %s on your list %s it, %d online", count, count == 1 and "crafter" or "crafters", count == 1 and "knows" or "know", online) or "Linked Inn users who can make it get a notice",
-		onClick = function()
-			view = "mine"
-			LI.UI.Open(LI.UI.TAB.work)
-		end,
-	}
-end
-
-local function SampleRecipe()
-	local own = LI.crafters[LI.playerKey]
-	for _, p in pairs(own and own.profs or {}) do
-		for id in pairs(p.recipes or {}) do
-			local meta = LI.db.recipes[id]
-			if meta and meta.n and meta.i and meta.item then
-				return id
-			end
-		end
-	end
-	for id, meta in pairs(LI.db.recipes) do
-		if meta.n and meta.i and meta.item then
-			return id
-		end
-	end
-	return nil
-end
-
-local DEMO = { new = true, offer = true, posted = true }
-
-function WorkUI.Demo(which)
-	which = which ~= "" and which or nil
-	if which and not DEMO[which] then
-		LI.Print("Try /li toast, /li toast new, /li toast offer or /li toast posted")
-		return
-	end
-	local recipe = SampleRecipe()
-	local meta = recipe and LI.db.recipes[recipe]
-	local req = {
-		id = "demo",
-		owner = "Thalia Brightwood",
-		recipe = recipe or 0,
-		item = meta and meta.item,
-		qty = 2,
-		mats = "all",
-		price = 25000,
-	}
-	local list = {}
-	if not which or which == "new" then
-		list[#list + 1] = NewToast(req)
-	end
-	if not which or which == "offer" then
-		list[#list + 1] = OfferToast(req, "Garrick Stonehand")
-	end
-	if not which or which == "posted" then
-		list[#list + 1] = PostedToast(req)
-	end
-	for _, t in ipairs(list) do
-		t.stay = true
-		t.onClick = nil
-		if not recipe then
-			t.title = "Mooncloth Bag" .. (t.title:find("\195\151") and " \195\151 2" or "")
-			t.icon = "Interface\\Icons\\INV_Misc_Bag_10"
-		end
-		WorkUI.Toast(t)
-	end
-	LI.Print("Showing sample pop-ups. Each stays until you click it.")
 end
 
 LI.Listen("WorkNew", function(req)

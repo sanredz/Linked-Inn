@@ -557,13 +557,7 @@ local function HeaderCheck(parent, label, field, after)
 	return box
 end
 
-local function PriceText()
-	local min = LI.Work.Settings().minPrice or 0
-	if min == 0 then
-		return "Any price"
-	end
-	return "From " .. WorkUI.Money(min)
-end
+local LABEL_WIDTH = 104
 
 local function ProfText()
 	local s = LI.Work.Settings()
@@ -584,35 +578,55 @@ function WorkUI.BuildHeader(main)
 	header:SetPoint("TOPLEFT", 66, -28)
 	header:SetPoint("TOPRIGHT", -10, -28)
 	header:SetHeight(68)
-	header.title = Text(header, "GameFontNormal")
-	header.title:SetPoint("TOPLEFT", 4, -8)
-	header.title:SetText("Notify me")
+
+	header.howLabel = Text(header, "GameFontNormal", "RIGHT")
+	header.howLabel:SetWidth(LABEL_WIDTH)
+	header.howLabel:SetPoint("TOPLEFT", 0, -8)
+	header.howLabel:SetText("Alert me by")
 	header.notify = HeaderCheck(header, "Pop-up", "notify")
-	header.notify:SetPoint("LEFT", header.title, "RIGHT", 10, 0)
+	header.notify:SetPoint("LEFT", header.howLabel, "RIGHT", 8, 0)
 	header.sound = HeaderCheck(header, "Sound", "sound", header.notify)
 	header.glow = HeaderCheck(header, "Minimap glow", "glow", header.sound)
-	header.allMats = HeaderCheck(header, "Only with all mats", "allMats")
-	header.allMats:SetPoint("TOPLEFT", header.title, "BOTTOMLEFT", -4, -10)
-	header.price = Button(header, PriceText(), 116, function(self)
-		local s = LI.Work.Settings()
-		Menu(self, function(root)
-			for _, copper in ipairs(LI.Work.MIN_PRICES) do
-				root:CreateRadio(copper == 0 and "Any price" or ("From " .. WorkUI.Money(copper)), function()
-					return (s.minPrice or 0) == copper
-				end, function()
-					s.minPrice = copper
-					WorkUI.Refresh()
-				end)
-			end
-		end)
+
+	header.whatLabel = Text(header, "GameFontNormal", "RIGHT")
+	header.whatLabel:SetWidth(LABEL_WIDTH)
+	header.whatLabel:SetPoint("TOPRIGHT", header.howLabel, "BOTTOMRIGHT", 0, -20)
+	header.whatLabel:SetText("Only alert for")
+	header.allMats = HeaderCheck(header, "All mats", "allMats")
+	header.allMats:SetPoint("LEFT", header.whatLabel, "RIGHT", 8, 0)
+	header.atLeast = Text(header, "GameFontHighlightSmall")
+	header.atLeast:SetPoint("LEFT", header.allMats.label, "RIGHT", 14, 0)
+	header.atLeast:SetText("at least")
+	header.price = CreateFrame("EditBox", nil, header, "InputBoxTemplate")
+	header.price:SetSize(40, 20)
+	header.price:SetPoint("LEFT", header.atLeast, "RIGHT", 10, 0)
+	header.price:SetAutoFocus(false)
+	header.price:SetNumeric(true)
+	header.price:SetMaxLetters(5)
+	header.price:SetJustifyH("RIGHT")
+	header.price:SetScript("OnTextChanged", function(self, user)
+		if user then
+			local gold = tonumber(self:GetText()) or 0
+			LI.Work.Settings().minPrice = gold * 10000
+			WorkUI.Refresh()
+		end
 	end)
-	header.price:SetPoint("LEFT", header.allMats.label, "RIGHT", 14, 0)
-	header.profs = Button(header, ProfText(), 140, function(self)
+	header.price:SetScript("OnEnterPressed", function(self)
+		self:ClearFocus()
+	end)
+	header.price:SetScript("OnEscapePressed", function(self)
+		self:ClearFocus()
+	end)
+	header.coin = header:CreateTexture(nil, "ARTWORK")
+	header.coin:SetSize(13, 13)
+	header.coin:SetPoint("LEFT", header.price, "RIGHT", 3, 0)
+	header.coin:SetTexture("Interface\\MoneyFrame\\UI-GoldIcon")
+	header.profs = Button(header, ProfText(), 132, function(self)
 		local s = LI.Work.Settings()
 		Menu(self, function(root)
 			local mine = MyProfessions()
 			if #mine == 0 and root.CreateTitle then
-				root:CreateTitle("Open your professions once to set this")
+				root:CreateTitle("Your professions load shortly after login")
 			end
 			for _, prof in ipairs(mine) do
 				root:CreateCheckbox(prof.name, function()
@@ -623,7 +637,7 @@ function WorkUI.BuildHeader(main)
 			end
 		end)
 	end)
-	header.profs:SetPoint("LEFT", header.price, "RIGHT", 6, 0)
+	header.profs:SetPoint("LEFT", header.coin, "RIGHT", 12, 0)
 	header:Hide()
 	return header
 end
@@ -640,7 +654,10 @@ local function RefreshHeader()
 	for _, box in ipairs({ header.notify, header.sound, header.glow, header.allMats }) do
 		box:SetChecked(s[box.field] and true or false)
 	end
-	header.price:SetText(PriceText())
+	if not header.price:HasFocus() then
+		local gold = math.floor((s.minPrice or 0) / 10000)
+		header.price:SetText(gold > 0 and tostring(gold) or "")
+	end
 	header.profs:SetText(ProfText())
 end
 

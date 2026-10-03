@@ -901,6 +901,8 @@ end
 Advance(200)
 check(LI.test.auto.tries == 5 and LI.test.auto.timeout == 5, "reading stops after five links get no reply", LI.test.auto.tries)
 check(LI.Reader.IsBroken(), "the reader reports that automatic reading doesn't work")
+local st, _, sure = LI.Status("Mage6 Test-TestRealm")
+check(st == "offline" and sure == true, "a link that gets no reply marks its owner offline", st)
 Advance(200)
 check(LI.test.auto.tries == 5, "no more tries once it gave up")
 LI.UI.Open(LI.UI.TAB.test)

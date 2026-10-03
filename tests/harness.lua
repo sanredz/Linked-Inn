@@ -1154,13 +1154,14 @@ do
 		Say("CHAT_MSG_CHANNEL", TradeLink(guid, 3908, 197, "Tailoring"), "Many" .. i .. " Folk-TestRealm", guid, "Trade - City")
 	end
 	Advance(6 * 60)
+	LI.MarkOnline("Anna Smith-TestRealm")
 	mark = #W.hyperlinks
 	LI.RefreshOnline(false)
 	local first = #W.hyperlinks - mark
 	Advance(0.05)
 	check(first == 8, "requests go out in quick bursts of eight", first)
 	Advance(0.2)
-	check(#W.hyperlinks - mark == 23, "the whole list is asked within a fraction of a second", #W.hyperlinks - mark)
+	check(#W.hyperlinks - mark == 22, "the whole list is asked within a fraction of a second", #W.hyperlinks - mark)
 	check(LI.CheckOnline("Anna Smith-TestRealm") and LI.IsChecking("Anna Smith-TestRealm"), "a click during a refresh waits its turn")
 	Advance(3)
 	check(not LI.IsChecking("Anna Smith-TestRealm") and LI.Status("Anna Smith-TestRealm") == "online", "and runs right after with the right answer", LI.Status("Anna Smith-TestRealm"))

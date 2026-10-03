@@ -12,6 +12,7 @@ local BOOK_GAP = 6
 local ICON_X = 28
 local ICON_SIZE = 30
 local TEXT_X = ICON_X + ICON_SIZE + 10
+local NAME_X = ICON_X + 3
 local PILL_RIGHT = 10
 local PILL_WIDTH = 54
 local PILL_HEIGHT = 20
@@ -21,7 +22,6 @@ local FRESH = 15 * 60
 local WARM = 3 * 3600
 local HEADER_HEIGHT = 34
 local COMPACT_HEIGHT = 24
-local COMPACT_ICON = 18
 local COMPACT_BOOK = 18
 local COMPACT_PILL_WIDTH = 44
 local COMPACT_PILL_HEIGHT = 16
@@ -316,23 +316,18 @@ local function LayoutRow(row)
 		return
 	end
 	row.compact = compact
-	row.icon:ClearAllPoints()
 	row.name:ClearAllPoints()
 	row.line:ClearAllPoints()
 	if compact then
-		row.icon:SetSize(COMPACT_ICON, COMPACT_ICON)
-		row.icon:SetPoint("LEFT", ICON_X + (ICON_SIZE - COMPACT_ICON) / 2, 0)
 		row.name:SetFontObject("GameFontNormal")
-		row.name:SetPoint("LEFT", ICON_X + ICON_SIZE + 10, 0)
+		row.name:SetPoint("LEFT", NAME_X, 0)
 		row.line:SetPoint("LEFT", row.name, "RIGHT", 10, 0)
 		row.pill:SetSize(COMPACT_PILL_WIDTH, COMPACT_PILL_HEIGHT)
 	else
-		row.icon:SetSize(ICON_SIZE, ICON_SIZE)
-		row.icon:SetPoint("LEFT", ICON_X, 0)
 		row.name:SetFontObject("GameFontNormalLarge")
 		row.name:SetWidth(0)
-		row.name:SetPoint("TOPLEFT", row.icon, "TOPRIGHT", 10, 1)
-		row.line:SetPoint("BOTTOMLEFT", row.icon, "BOTTOMRIGHT", 10, 0)
+		row.name:SetPoint("BOTTOMLEFT", row, "LEFT", NAME_X, 1)
+		row.line:SetPoint("TOPLEFT", row, "LEFT", NAME_X, -3)
 		row.pill:SetSize(PILL_WIDTH, PILL_HEIGHT)
 	end
 end
@@ -410,14 +405,11 @@ local function BuildRow(row)
 	row.selBar:SetColorTexture(1, 0.82, 0.3, 0.9)
 	row.selBar:Hide()
 
-	row.icon = row:CreateTexture(nil, "ARTWORK")
-	row.icon:SetSize(ICON_SIZE, ICON_SIZE)
-	row.icon:SetPoint("LEFT", ICON_X, 0)
 	row.name = Text(row, "GameFontNormalLarge")
-	row.name:SetPoint("TOPLEFT", row.icon, "TOPRIGHT", 10, 1)
+	row.name:SetPoint("BOTTOMLEFT", row, "LEFT", NAME_X, 1)
 	row.name:SetWordWrap(false)
 	row.line = Text(row, "GameFontHighlightSmall")
-	row.line:SetPoint("BOTTOMLEFT", row.icon, "BOTTOMRIGHT", 10, 0)
+	row.line:SetPoint("TOPLEFT", row, "LEFT", NAME_X, -3)
 	row.line:SetWordWrap(false)
 
 	row.pill = CreateFrame("Button", nil, row)
@@ -503,7 +495,7 @@ local function BuildRow(row)
 		UpdateStar(self:GetParent())
 	end)
 
-	row.rowParts = { row.icon, row.name, row.line, row.pill, row.star }
+	row.rowParts = { row.name, row.line, row.pill, row.star }
 	row.headParts = { row.toggle, row.headIcon, row.headName, row.headCount, row.headLine }
 
 	row:SetScript("OnEnter", function(self)
@@ -557,16 +549,6 @@ local function ShowParts(parts, shown)
 	for _, part in ipairs(parts) do
 		part:SetShown(shown)
 	end
-end
-
-local function ClassIcon(texture, classFile)
-	if type(classFile) == "string" and texture.SetAtlas then
-		local ok = pcall(texture.SetAtlas, texture, "classicon-" .. classFile:lower())
-		if ok then
-			return true
-		end
-	end
-	return false
 end
 
 local function InitHeader(row, data)
@@ -663,13 +645,6 @@ local function InitRow(row, data)
 	local text, textColor = RowLine(data)
 	row.line:SetText(text)
 	row.line:SetTextColor(textColor[1], textColor[2], textColor[3])
-	if not ClassIcon(row.icon, c.class) then
-		local p = c.profs[data.prof] or {}
-		row.icon:SetTexture(LI.ProfIcon(data.prof, p.icon))
-		row.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-	end
-	row.icon:SetDesaturated(entry.status == "offline")
-	row.icon:SetAlpha(entry.status == "offline" and 0.6 or 1)
 	UpdateBooks(row, data)
 end
 

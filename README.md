@@ -15,7 +15,9 @@ Linked Inn builds a list of crafters on your realm in two ways:
 - **Filter** by profession, item type, or online only.
 - **Click** a crafter to whisper them. Right-click to open their profession or
   forget them.
-- Open your own profession window once and you're on the list too.
+- **Work**: post what you want made (amount, mats, price, a note) and
+  crafters who can make it get a notice. See requests you can make, offer
+  with one click, and choose exactly which requests reach you.
 
 Open it with `/li`, the minimap button, or the addon menu.
 

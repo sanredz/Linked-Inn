@@ -229,7 +229,7 @@ local function RowTooltip(row)
 	end
 	GameTooltip:AddLine(" ")
 	GameTooltip:AddLine("Click to ask " .. LI.ShortName(current.key) .. " to make it", 0.5, 0.5, 0.5)
-	GameTooltip:AddLine("Shift-click to link it in chat", 0.5, 0.5, 0.5)
+	GameTooltip:AddLine("Shift-click to link it in chat   Right-click for more", 0.5, 0.5, 0.5)
 	GameTooltip:Show()
 end
 
@@ -297,7 +297,7 @@ end
 
 local function InitRow(row, data)
 	if not row.built then
-		row:RegisterForClicks("LeftButtonUp")
+		row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 		row.hl = row:CreateTexture(nil, "HIGHLIGHT")
 		row.hl:SetAllPoints()
 		row.hl:SetColorTexture(1, 0.82, 0.3, 0.10)
@@ -322,11 +322,23 @@ local function InitRow(row, data)
 		row:SetScript("OnLeave", function()
 			GameTooltip:Hide()
 		end)
-		row:SetScript("OnClick", function(self)
+		row:SetScript("OnClick", function(self, button)
 			if not self.data or self.data.header then
 				return
 			end
-			if IsShiftKeyDown and IsShiftKeyDown() then
+			if button == "RightButton" then
+				local id = self.data.id
+				if MenuUtil and MenuUtil.CreateContextMenu then
+					MenuUtil.CreateContextMenu(self, function(_, root)
+						root:CreateButton("Ask " .. LI.ShortName(current.key) .. " to make it", function()
+							Book.Ask(current.key, id)
+						end)
+						root:CreateButton("Post a request for it", function()
+							LI.WorkUI.OpenDialog(id)
+						end)
+					end)
+				end
+			elseif IsShiftKeyDown and IsShiftKeyDown() then
 				LinkInChat(self.data.id)
 			else
 				Book.Ask(current.key, self.data.id)

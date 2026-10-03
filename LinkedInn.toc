@@ -18,6 +18,8 @@ Capture.lua
 Reader.lua
 Clues.lua
 Sync.lua
+Work.lua
 UI.lua
 Book.lua
+WorkUI.lua
 Minimap.lua

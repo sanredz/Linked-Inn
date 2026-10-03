@@ -97,6 +97,12 @@ end
 function methods:SetAlpha(a) self.__alpha = a end
 function methods:SetEnabled(v) self.__disabled = not v end
 function methods:SetSize(w, h) self.__w, self.__h = w, h end
+function methods:SetNumber(n) self.__text = tostring(n) end
+function methods:GetNumber() return tonumber(self.__text) or 0 end
+function methods:GetFontString()
+	if not self.__fs then self.__fs = NewMock("FontString") end
+	return self.__fs
+end
 function methods:SetElementExtentCalculator(fn) self.__extent = fn end
 function methods:IsEnabled() return not self.__disabled end
 function methods:GetAlpha() return self.__alpha or 1 end
@@ -202,9 +208,18 @@ local function InstallStubs()
 	_G.GetRealmName = function() return "Test Realm" end
 	_G.GetNormalizedRealmName = function() return "TestRealm" end
 	_G.MenuUtil = { CreateContextMenu = function(owner, gen)
-		local root = { entries = {} }
-		local function add(self, text, a, b) table.insert(self.entries, { text = text, a = a, b = b }) end
-		root.CreateRadio, root.CreateCheckbox, root.CreateButton, root.CreateTitle = add, add, add, add
+		local function NewMenu()
+			local m = { entries = {} }
+			local function add(self, text, a, b)
+				local entry = NewMenu()
+				entry.text, entry.a, entry.b = text, a, b
+				table.insert(self.entries, entry)
+				return entry
+			end
+			m.CreateRadio, m.CreateCheckbox, m.CreateButton, m.CreateTitle = add, add, add, add
+			return m
+		end
+		local root = NewMenu()
 		gen(owner, root)
 		W.lastMenu = root
 	end }
@@ -1038,7 +1053,7 @@ main.search:SetText("")
 main.search.__scripts.OnTextChanged(main.search)
 Advance(1)
 SlashCmdList.LINKEDINN("test")
-check(main.selectedTab == 2 and main.testPage:IsShown() and not main.findPage:IsShown(), "/li test opens the test tab")
+check(main.selectedTab == 3 and main.testPage:IsShown() and not main.findPage:IsShown(), "/li test opens the test tab")
 check(main.testPage.head.__text == "Chat alone is enough", "one clean automatic read gives the good verdict", main.testPage.head.__text)
 check(#W.errors == uiErrors, "the window builds without errors", W.errors[uiErrors + 1])
 
@@ -1297,7 +1312,7 @@ do
 	check(total == 6, "two friendly players times three known professions are asked; enemies, NPCs, duplicates are skipped", total)
 	Advance(0.1)
 	LI.UI.Refresh()
-	check(main.scan:GetText():find("^Scanning") and not main.scan:IsEnabled(), "the button shows progress", main.scan:GetText())
+	check(main.scan.text.__text:find("^Scanning") and not main.scan:IsEnabled(), "the button shows progress", main.scan.text.__text)
 	Advance(10)
 	check(not LI.Reader.Scanning(), "the scan finishes")
 	local one = LI.crafters["Scan One-TestRealm"]
@@ -1312,7 +1327,7 @@ do
 	local ready, why = LI.ScanReady()
 	check(not ready and why == "cooldown" and not LI.ScanNearby(), "then the scan has a cooldown")
 	LI.UI.Refresh()
-	check(not main.scan:IsEnabled() and main.scan:GetText() == "Scan nearby", "the button waits out the cooldown")
+	check(not main.scan:IsEnabled() and main.scan.text.__text == "Scan nearby", "the button waits out the cooldown")
 	Advance(301)
 	check(LI.ScanReady(), "and is ready again after five minutes")
 	W.cvars.nameplateShowFriendlyPlayers = "1"
@@ -1336,6 +1351,216 @@ end
 local function Addon(msg, sender, chatType)
 	Fire("CHAT_MSG_ADDON", "LinkedInn", msg, chatType or "CHANNEL", sender, "", 0, 5, "LinkedInnSync", 0)
 end
+
+do
+	Setup()
+	Boot()
+	local Work = LI.Work
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	W.autoWorks = true
+	Advance(10)
+	W.autoWorks = false
+	W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	Advance(1)
+	C_TradeSkillUI.CloseTradeSkill()
+	Advance(20)
+	check(LI.Sync.IsJoined(), "the hidden channel is joined")
+	W.sent = {}
+
+	local function Last(kind)
+		for i = #W.sent, 1, -1 do
+			if W.sent[i].msg:sub(1, #kind) == kind then return W.sent[i] end
+		end
+	end
+
+	local none, err = Work.Post({ qty = 1 })
+	check(not none and err == "Pick an item first.", "posting needs an item", err)
+	local req = Work.Post({ recipe = 18560, qty = 2, mats = "some", price = 150000, note = "pst | after 8", duration = 3600 })
+	check(req and req.id == "1" and req.item == 14155 and req.note == "pst after 8", "a request is posted", req and req.note)
+	Advance(2)
+	local r1 = Last("R1|")
+	check(r1 and r1.chatType == "CHANNEL" and r1.msg:find("^R1|1|" .. LI.Sync.B36(14155) .. "|" .. LI.Sync.B36(18560) .. "|2|s|" .. LI.Sync.B36(150000) .. "|"), "it goes out on the hidden channel", r1 and r1.msg)
+	check(r1 and r1.msg:find("|pst after 8$"), "with the note last", r1 and r1.msg)
+	for i = 2, 5 do
+		Work.Post({ recipe = 3914, qty = 1, mats = "none", price = 0 })
+	end
+	local sixth, why = Work.Post({ recipe = 3914 })
+	check(not sixth and why:find("5 open requests", 1, true), "at most five open requests", why)
+	for i = 2, 5 do Work.Cancel(tostring(i)) end
+	Advance(10)
+	check(#Work.Mine() == 1 and Last("X1|").msg == "X1|5", "cancelling sends a cancel", Last("X1|") and Last("X1|").msg)
+
+	local function Req(id, recipe, item, qty, mats, price, ttl, note)
+		return string.format("R1|%s|%s|%s|%d|%s|%s|%s|%s", id, LI.Sync.B36(item), LI.Sync.B36(recipe), qty, mats, LI.Sync.B36(price), LI.Sync.B36(ttl), note or "")
+	end
+	local toasts = 0
+	local glow
+	LI.Listen("WorkGlow", function(on) glow = on end)
+	Addon(Req("7", 2330, 118, 5, "a", 20000, 3600, "need pots"), "Other Guy-TestRealm")
+	Advance(0.2)
+	local forYou = Work.Received(true)
+	check(#forYou == 1 and forYou[1].recipe == 2330 and forYou[1].qty == 5 and forYou[1].note == "need pots", "a request you can make arrives")
+	check(Work.UnseenCount() == 1 and glow == true, "it counts as new and the minimap glows")
+	local t = LinkedInnToast
+	check(t and t:IsShown() and t.head.__text == "Someone needs something you can make" and t.title.__text:find("Minor Healing Potion", 1, true), "a toast pops up", t and t.title.__text)
+	Addon(Req("8", 18560, 14155, 1, "n", 0, 3600, ""), "Other Guy-TestRealm")
+	Advance(0.2)
+	check(#Work.Received(true) == 1 and #Work.Received(false) == 2, "requests you can't make only show under All")
+	check(Work.UnseenCount() == 1, "and give no notice")
+	Addon(Req("7", 2330, 118, 5, "a", 20000, 3600, "need pots"), "Other Guy-TestRealm")
+	check(Work.UnseenCount() == 1, "a resent request isn't new again")
+
+	local s2 = Work.Settings()
+	s2.minPrice = 50000
+	Addon(Req("9", 2330, 118, 1, "a", 10000, 3600, ""), "Cheap Skate-TestRealm")
+	check(Work.UnseenCount() == 1, "the minimum price filter holds back cheaper requests")
+	s2.minPrice = 0
+	s2.allMats = true
+	Addon(Req("1", 2330, 118, 1, "n", 90000, 3600, ""), "No Mats-TestRealm")
+	check(Work.UnseenCount() == 1, "the all-mats filter holds back requests without mats")
+	s2.allMats = false
+	s2.profs = { tailoring = true }
+	Addon(Req("1", 2330, 118, 1, "a", 90000, 3600, ""), "Prof Filter-TestRealm")
+	check(Work.UnseenCount() == 1, "the profession filter holds back other professions")
+	s2.profs = {}
+	s2.notify = false
+	Advance(10)
+	Addon(Req("2", 2330, 118, 1, "a", 90000, 3600, ""), "Quiet One-TestRealm")
+	Advance(0.2)
+	check(Work.UnseenCount() == 2 and not (LinkedInnToast:IsShown() and LinkedInnToast.title.__text:find("Quiet", 1, true)), "with notices off there's no toast, but it still counts")
+	s2.notify = true
+
+	local key = "Other Guy-TestRealm:7"
+	check(Work.Offer(key) and not Work.Offer(key), "you can offer once")
+	Advance(2)
+	local o1 = Last("O1|")
+	check(o1 and o1.msg == "O1|7" and o1.chatType == "WHISPER" and o1.target == "Other Guy", "the offer is a hidden whisper to the requester", o1 and o1.target)
+	Addon("O1|1", "Crafty Pal-TestRealm", "WHISPER")
+	local mineReq = Work.Mine()[1]
+	check(mineReq.offers["Crafty Pal-TestRealm"], "offers on your request are recorded")
+	local sawOffer = false
+	for _ = 1, 30 do
+		if LinkedInnToast:IsShown() and LinkedInnToast.head.__text == "Someone can make it for you" then sawOffer = true end
+		Advance(1)
+	end
+	check(sawOffer, "an offer pops a toast")
+	Addon("O1|99", "Crafty Pal-TestRealm", "WHISPER")
+	check(true, "offers on unknown requests are ignored")
+	Addon("X1|8", "Other Guy-TestRealm")
+	check(not Work.Get("Other Guy-TestRealm:8"), "a cancel from the requester removes it")
+	Addon("X1|7", "Somebody Else-TestRealm")
+	check(Work.Get("Other Guy-TestRealm:7"), "nobody can cancel someone else's request")
+
+	Addon("R1|bad!|1|1|1|a|0|10|x", "Bad Guy-TestRealm")
+	Addon(Req("3", 2330, 118, 500, "a", 0, 3600, ""), "Bad Guy-TestRealm")
+	Addon(Req("4", 2330, 118, 1, "a", 0, 999999, ""), "Bad Guy-TestRealm")
+	Addon(Req("5", 2330, 118, 1, "z", 0, 3600, ""), "Bad Guy-TestRealm")
+	check(not Work.Get("Bad Guy-TestRealm:bad!") and not Work.Get("Bad Guy-TestRealm:3") and not Work.Get("Bad Guy-TestRealm:4") and not Work.Get("Bad Guy-TestRealm:5"), "malformed requests are ignored")
+	for i = 1, 8 do
+		Addon(Req("s" .. i, 3914, 4343, 1, "a", 0, 3600, ""), "Spam Mer-TestRealm")
+	end
+	local spam = 0
+	for _, r in ipairs(Work.Received(false)) do
+		if r.owner == "Spam Mer-TestRealm" then spam = spam + 1 end
+	end
+	check(spam == 5, "at most five requests per person", spam)
+	Work.Hide("Spam Mer-TestRealm:s1")
+	check(not Work.Get("Spam Mer-TestRealm:s1") or Work.Get("Spam Mer-TestRealm:s1").hidden, "hidden requests stay hidden")
+
+	Addon(Req("6", 2330, 118, 1, "a", 0, 60, ""), "Short Lived-TestRealm")
+	check(Work.Get("Short Lived-TestRealm:6"), "a short request arrives")
+	Advance(61)
+	Work.Received(false)
+	check(not Work.Get("Short Lived-TestRealm:6"), "it disappears when it expires")
+	local sends = #W.sent
+	Advance(5 * 60)
+	check(#W.sent > sends and Last("R1|").msg:find("^R1|1|"), "your open requests are resent every few minutes")
+	Advance(13 * 60)
+	Work.Received(false)
+	check(not Work.Get("Other Guy-TestRealm:7"), "requests from someone gone quiet for 12 minutes are dropped")
+
+	Addon(Req("7", 2330, 118, 5, "a", 20000, 3600, "need pots"), "Other Guy-TestRealm")
+	Addon(Req("8", 18560, 14155, 1, "n", 0, 3600, ""), "Other Guy-TestRealm")
+	Advance(0.5)
+	LI.UI.Open(LI.UI.TAB.work)
+	local main = LinkedInnFrame
+	local page = main.workPage
+	check(page:IsShown() and not main.findPage:IsShown() and not main.search:IsShown(), "the Work tab shows its own page")
+	check(_G["LinkedInnFrameTab2"].__text == "Work", "opening the page clears the new count", _G["LinkedInnFrameTab2"].__text)
+	check(LI.WorkUI.View() == "foryou" and #page.list.__rows == 1, "For you lists what you can make", #page.list.__rows)
+	local row = page.list.__rows[1]
+	check(row.accent:IsShown() and row.offer:IsShown() and row.name.__text:find("Minor Healing Potion", 1, true) and row.name.__text:find("5", 1, true), "the row shows the item, amount and an offer button", row.name.__text)
+	check(row.line.__text:find("Other Guy", 1, true) and row.line.__text:find("Has all mats", 1, true) and row.line.__text:find("need pots", 1, true), "who, mats and note are shown", row.line.__text)
+	check(row.price.__text == "2g", "the price is shown", row.price.__text)
+	row.offer.__scripts.OnClick(row.offer)
+	Advance(0.2)
+	row = page.list.__rows[1]
+	check(not row.offer:IsShown() and row.state.__text:find("Offer sent", 1, true), "after offering the row says so")
+	row.__scripts.OnClick(row, "LeftButton")
+	check(W.tells[#W.tells] == "Other Guy" and W.editBox.text:find("I can make", 1, true), "clicking a request whispers the requester", W.editBox.text)
+	W.typing = false
+	page.views[2].__scripts.OnClick(page.views[2])
+	check(LI.WorkUI.View() == "all" and #page.list.__rows == 2, "All shows every request", #page.list.__rows)
+	check(not page.list.__rows[2].accent:IsShown() and not page.list.__rows[2].offer:IsShown(), "requests you can't make have no offer button")
+	page.views[3].__scripts.OnClick(page.views[3])
+	check(#page.list.__rows == 1 and page.list.__rows[1].state.__text:find("1 offer", 1, true), "My requests shows offers", page.list.__rows[1].state.__text)
+	check(page.list.__rows[1].line.__text:find("1 crafter knows it", 1, true), "and how many crafters know it", page.list.__rows[1].line.__text)
+	page.list.__rows[1].__scripts.OnClick(page.list.__rows[1], "RightButton")
+	local entries = {}
+	for _, e in ipairs(W.lastMenu.entries) do entries[#entries + 1] = e.text end
+	local menuText = table.concat(entries, ",")
+	check(menuText:find("Whisper Crafty Pal", 1, true) and menuText:find("Cancel request", 1, true), "right-click lists offers and cancel", menuText)
+
+	page.gear.__scripts.OnClick(page.gear)
+	entries = {}
+	for _, e in ipairs(W.lastMenu.entries) do entries[#entries + 1] = e.text end
+	menuText = table.concat(entries, ",")
+	check(menuText:find("Pop up a notice", 1, true) and menuText:find("Minimum price", 1, true) and menuText:find("Professions", 1, true), "the gear opens notification settings", menuText)
+
+	page.post.__scripts.OnClick(page.post)
+	local dlg = LinkedInnRequest
+	check(dlg and dlg:IsShown() and not dlg.post:IsEnabled(), "Post a request opens the panel, Post waits for an item")
+	dlg.search:SetText("moon")
+	dlg.search.__scripts.OnTextChanged(dlg.search)
+	check(dlg.results[1]:IsShown() and dlg.results[1].name.__text == "Mooncloth Bag", "typing finds known recipes", dlg.results[1].name.__text)
+	dlg.results[1].__scripts.OnClick(dlg.results[1])
+	check(dlg.pick:IsShown() and dlg.pick.name.__text == "Mooncloth Bag" and dlg.post:IsEnabled(), "picking an item shows it and enables Post")
+	check(dlg.info.__text:find("1 crafter on your list knows it", 1, true), "the panel says how many crafters know it", dlg.info.__text)
+	dlg.plus.__scripts.OnClick(dlg.plus)
+	dlg.plus.__scripts.OnClick(dlg.plus)
+	dlg.matButtons[3].__scripts.OnClick(dlg.matButtons[3])
+	dlg.gold:SetText("15")
+	dlg.silver:SetText("50")
+	dlg.note:SetText("thanks")
+	dlg.post.__scripts.OnClick(dlg.post)
+	local posted
+	for _, m in ipairs(Work.Mine()) do
+		if m.note == "thanks" then posted = m end
+	end
+	check(posted and posted.qty == 3 and posted.mats == "none" and posted.price == 155000 and posted.recipe == 18560, "Post creates the request from the panel", posted and posted.price)
+	check(not dlg:IsShown() and LI.WorkUI.View() == "mine", "the panel closes and shows My requests")
+	local sawPosted = false
+	for _ = 1, 30 do
+		if LinkedInnToast:IsShown() and LinkedInnToast.head.__text == "Request posted" then sawPosted = true end
+		Advance(1)
+	end
+	check(sawPosted, "a toast confirms it")
+
+	LI.Book.Open("Anna Smith-TestRealm", "tailoring", "")
+	local bookRow = LinkedInnBook.list.__rows[2]
+	bookRow.__scripts.OnClick(bookRow, "RightButton")
+	local post
+	for _, e in ipairs(W.lastMenu.entries) do
+		if e.text == "Post a request for it" then post = e end
+	end
+	check(post ~= nil, "a recipe in a book can be requested")
+	post.a()
+	check(LinkedInnRequest:IsShown() and LinkedInnRequest.recipe == bookRow.data.id and not LinkedInnBook:IsShown(), "it opens the panel with that recipe picked")
+	LinkedInnRequest:Hide()
+	check(#W.errors == 0, "the Work tab runs without errors", W.errors[1])
+end
+
 
 local errorsBefore = #W.errors
 Setup()

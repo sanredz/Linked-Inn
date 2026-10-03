@@ -34,6 +34,11 @@ local function ShowTooltip(self)
 			end
 		end
 		GameTooltip:AddDoubleLine("Crafters remembered", tostring(total), 0.7, 0.7, 0.7, 1, 1, 1)
+		local unseen = LI.Work.UnseenCount()
+		if unseen > 0 then
+			GameTooltip:AddLine(" ")
+			GameTooltip:AddLine(string.format("%d new %s you can make", unseen, unseen == 1 and "request" or "requests"), 0.35, 0.95, 0.45)
+		end
 	end
 	GameTooltip:AddLine(" ")
 	GameTooltip:AddLine("Click: open   Right-click: test   Drag: move", 0.5, 0.5, 0.5)
@@ -63,6 +68,25 @@ local function Create()
 	icon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
 	icon:SetPoint("TOPLEFT", 7, -6)
 
+	local glow = button:CreateTexture(nil, "OVERLAY", nil, 2)
+	glow:SetTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+	glow:SetBlendMode("ADD")
+	glow:SetVertexColor(0.4, 1, 0.5)
+	glow:SetSize(36, 36)
+	glow:SetPoint("CENTER", icon, "CENTER")
+	glow:Hide()
+	button.glow = glow
+	button.pulse = glow:CreateAnimationGroup()
+	if button.pulse then
+		local fade = button.pulse:CreateAnimation("Alpha")
+		if fade then
+			fade:SetFromAlpha(0.2)
+			fade:SetToAlpha(1)
+			fade:SetDuration(0.7)
+		end
+		button.pulse:SetLooping("BOUNCE")
+	end
+
 	local border = button:CreateTexture(nil, "OVERLAY")
 	border:SetSize(50, 50)
 	border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
@@ -77,6 +101,9 @@ local function Create()
 	button:SetScript("OnClick", function(_, mouseButton)
 		if mouseButton == "RightButton" then
 			LI.UI.Open(LI.UI.TAB.test)
+		elseif LI.Work.UnseenCount() > 0 then
+			LI.WorkUI.SetView("foryou")
+			LI.UI.Open(LI.UI.TAB.work)
 		else
 			LI.UI.Toggle()
 		end
@@ -100,3 +127,17 @@ local function Create()
 end
 
 LI.Listen("Ready", Create)
+
+LI.Listen("WorkGlow", function(on)
+	if not button or not button.glow then
+		return
+	end
+	button.glow:SetShown(on and true or false)
+	if button.pulse then
+		if on then
+			button.pulse:Play()
+		else
+			button.pulse:Stop()
+		end
+	end
+end)

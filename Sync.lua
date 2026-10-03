@@ -214,6 +214,12 @@ local function Pump()
 	end
 end
 
+function Sync.Send(message, chatType, target)
+	if type(message) == "string" and #message <= 250 then
+		Enqueue("work", message, chatType, target)
+	end
+end
+
 function Sync.QueueSize()
 	return #queue
 end
@@ -520,6 +526,12 @@ function Sync.OnMessage(prefix, text, chatType, sender)
 		OnData(key, parts)
 	elseif kind == "Q1" then
 		OnAsk(key, parts)
+	elseif kind == "R1" and LI.Work then
+		LI.Work.OnRequest(key, parts)
+	elseif kind == "X1" and LI.Work then
+		LI.Work.OnCancel(key, parts)
+	elseif kind == "O1" and LI.Work then
+		LI.Work.OnOffer(key, parts)
 	end
 end
 

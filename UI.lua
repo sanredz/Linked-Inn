@@ -3,8 +3,8 @@ local ADDON, LI = ...
 local UI = {}
 LI.UI = UI
 
-local TAB = { find = 1, test = 2 }
-local TABS = { "Crafters", "Test" }
+local TAB = { find = 1, work = 2, test = 3 }
+local TABS = { "Crafters", "Work", "Test" }
 local TITLE_FONT = "Fonts\\MORPHEUS.TTF"
 local ROW_HEIGHT = 46
 local BOOK_SIZE = 30
@@ -773,11 +773,20 @@ local function UpdateChips()
 	main.compactBox:SetChecked(LI.settings.compact and true or false)
 	local done, total = LI.Reader.ScanProgress()
 	if done then
-		main.scan:SetText(string.format("Scanning %d/%d", done, total))
+		main.scan.text:SetText(string.format("Scanning %d/%d", done, total))
 		main.scan:SetEnabled(false)
 	else
-		main.scan:SetText("Scan nearby")
+		main.scan.text:SetText("Scan nearby")
 		main.scan:SetEnabled((LI.ScanReady()))
+	end
+	if main.scan:IsEnabled() then
+		main.scan.text:SetTextColor(1, 0.82, 0)
+		main.scan.icon:SetDesaturated(false)
+		main.scan.icon:SetAlpha(1)
+	else
+		main.scan.text:SetTextColor(0.5, 0.5, 0.5)
+		main.scan.icon:SetDesaturated(true)
+		main.scan.icon:SetAlpha(0.5)
 	end
 end
 
@@ -984,8 +993,18 @@ function UI.Refresh()
 		return
 	end
 	local findShown = main.selectedTab == TAB.find
+	local workShown = main.selectedTab == TAB.work
 	main.findPage:SetShown(findShown)
-	main.testPage:SetShown(not findShown)
+	main.workPage:SetShown(workShown)
+	main.testPage:SetShown(main.selectedTab == TAB.test)
+	local unseen = LI.Work.UnseenCount()
+	local workTab = _G["LinkedInnFrameTab" .. TAB.work]
+	if workTab then
+		workTab:SetText(unseen > 0 and string.format("Work (%d)", unseen) or "Work")
+		if PanelTemplates_TabResize then
+			pcall(PanelTemplates_TabResize, workTab, 15)
+		end
+	end
 	main.search:SetShown(findShown)
 	main.kind:SetShown(findShown)
 	main.chipBar:SetShown(findShown)
@@ -999,6 +1018,8 @@ function UI.Refresh()
 	main.count:SetShown(findShown)
 	if findShown then
 		RefreshFind()
+	elseif workShown then
+		LI.WorkUI.Refresh()
 	else
 		RefreshTest()
 	end
@@ -1168,6 +1189,11 @@ local function CreateMain()
 	BuildTestPage(main.testPage)
 	main.testPage:Hide()
 
+	main.workPage = CreateFrame("Frame", nil, main.Inset)
+	main.workPage:SetAllPoints()
+	LI.WorkUI.Build(main.workPage)
+	main.workPage:Hide()
+
 	main.count = Text(main, "GameFontDisableSmall", "RIGHT")
 	main.count:SetPoint("RIGHT", main, "BOTTOMRIGHT", -12, 14)
 	main.compactBox = CreateFrame("CheckButton", nil, main, "UICheckButtonTemplate")
@@ -1181,17 +1207,30 @@ local function CreateMain()
 	main.compactLabel = Text(main, "GameFontHighlightSmall")
 	main.compactLabel:SetPoint("LEFT", main.compactBox, "RIGHT", 0, -1)
 	main.compactLabel:SetText("Compact")
-	main.scan = Button(main, "Scan nearby", 104, function()
+	main.scan = CreateFrame("Button", nil, main)
+	main.scan:SetSize(110, 20)
+	main.scan:SetPoint("LEFT", main.compactLabel, "RIGHT", 18, 0)
+	main.scan.icon = main.scan:CreateTexture(nil, "ARTWORK")
+	main.scan.icon:SetSize(14, 14)
+	main.scan.icon:SetPoint("LEFT", 0, 0)
+	if not pcall(main.scan.icon.SetAtlas, main.scan.icon, "common-search-magnifyingglass") then
+		main.scan.icon:SetTexture("Interface\\Common\\UI-Searchbox-Icon")
+	end
+	main.scan.text = Text(main.scan, "GameFontNormalSmall")
+	main.scan.text:SetPoint("LEFT", main.scan.icon, "RIGHT", 4, 0)
+	main.scan.text:SetText("Scan nearby")
+	main.scan:SetScript("OnClick", function()
 		if LI.ScanNearby() then
 			Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
 		end
 		UI.Refresh()
 	end)
-	main.scan:SetHeight(20)
-	main.scan:SetPoint("LEFT", main.compactLabel, "RIGHT", 14, 0)
 	main.scan:SetMotionScriptsWhileDisabled(true)
 	main.scan:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		if self:IsEnabled() then
+			self.text:SetTextColor(1, 1, 1)
+		end
 		GameTooltip:SetText("Scan nearby", 1, 0.82, 0)
 		local ready, why, left = LI.ScanReady()
 		if why == "cooldown" then
@@ -1201,8 +1240,9 @@ local function CreateMain()
 		end
 		GameTooltip:Show()
 	end)
-	main.scan:SetScript("OnLeave", function()
+	main.scan:SetScript("OnLeave", function(self)
 		GameTooltip:Hide()
+		UI.Refresh()
 	end)
 
 	for i, name in ipairs(TABS) do
@@ -1270,6 +1310,8 @@ UI.TAB = TAB
 LI.Listen("CraftersChanged", QueueRefresh)
 LI.Listen("StatusChanged", QueueRefresh)
 LI.Listen("TestChanged", QueueRefresh)
+LI.Listen("WorkChanged", QueueRefresh)
+LI.Listen("WorkSeen", QueueRefresh)
 LI.Listen("ScanDone", QueueRefresh)
 
 SLASH_LINKEDINN1 = "/linkedinn"

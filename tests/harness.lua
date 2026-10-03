@@ -1382,14 +1382,17 @@ do
 	local r1 = Last("R1|")
 	check(r1 and r1.chatType == "CHANNEL" and r1.msg:find("^R1|1|" .. LI.Sync.B36(14155) .. "|" .. LI.Sync.B36(18560) .. "|2|s|" .. LI.Sync.B36(150000) .. "|"), "it goes out on the hidden channel", r1 and r1.msg)
 	check(r1 and r1.msg:find("|pst after 8|$"), "with the note, then what you bring", r1 and r1.msg)
+	local over = Work.Post({ recipe = 18560, qty = 1, have = { [14342] = 99, [14256] = 2, [8343] = 2 } })
+	check(over and over.have[14342] == 4 and over.mats == "all", "bringing more than needed is capped and counts as all mats", over and over.have[14342])
+	Work.Cancel(over.id)
 	for i = 2, 5 do
 		Work.Post({ recipe = 3914, qty = 1, mats = "none", price = 0 })
 	end
 	local sixth, why = Work.Post({ recipe = 3914 })
 	check(not sixth and why:find("5 open requests", 1, true), "at most five open requests", why)
-	for i = 2, 5 do Work.Cancel(tostring(i)) end
+	for i = 3, 6 do Work.Cancel(tostring(i)) end
 	Advance(10)
-	check(#Work.Mine() == 1 and Last("X1|").msg == "X1|5", "cancelling sends a cancel", Last("X1|") and Last("X1|").msg)
+	check(#Work.Mine() == 1 and Last("X1|").msg == "X1|6", "cancelling sends a cancel", Last("X1|") and Last("X1|").msg)
 
 	local function Req(id, recipe, item, qty, mats, price, ttl, note)
 		return string.format("R1|%s|%s|%s|%d|%s|%s|%s|%s", id, LI.Sync.B36(item), LI.Sync.B36(recipe), qty, mats, LI.Sync.B36(price), LI.Sync.B36(ttl), note or "")

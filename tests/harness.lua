@@ -1199,6 +1199,41 @@ do
 	Advance(3)
 end
 
+do
+	Setup()
+	W.guids["Player-1-EEE"] = { class = "PALADIN", name = "Ench Guy", realm = "" }
+	W.linkData["trade:Player-1-EEE:3908:197"] = { linkedName = "Ench Guy", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Boot()
+	W.autoWorks = true
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Advance(10)
+	check(LI.db.profLinks.tailoring and LI.db.profLinks.tailoring.spell == 3908 and LI.db.profLinks.tailoring.line == 197, "the numbers of a seen profession link are remembered")
+	check(LI.RecipeForItem(14155) == 18560, "a crafted item maps back to its recipe")
+	local built0, auto0 = LI.test.built.tries, LI.test.auto.tries
+	Say("CHAT_MSG_CHANNEL", "LFW can make |cff0070dd|Hitem:14155::::::::60:::::|h[Mooncloth Bag]|h|r your mats", "Ench Guy-TestRealm", "Player-1-EEE", "Trade - City")
+	Advance(10)
+	check(W.hyperlinks[#W.hyperlinks] == "trade:Player-1-EEE:3908:197", "linking a craftable item builds that player's profession link", W.hyperlinks[#W.hyperlinks])
+	local guy = LI.crafters["Ench Guy-TestRealm"]
+	check(guy and guy.profs.tailoring and guy.profs.tailoring.count == 2 and guy.profs.tailoring.recipes[3914], "their full recipe list is read, not just the linked item")
+	check(guy and guy.class == "PALADIN" and guy.where == "Trade", "they get their class and where they were seen")
+	check(LI.test.built.tries == built0 + 1 and LI.test.built.ok == 1 and LI.test.auto.tries == auto0, "the test tab counts it separately from automatic reads")
+	Say("CHAT_MSG_CHANNEL", "selling |cff0070dd|Hitem:14155::::::::60:::::|h[Mooncloth Bag]|h|r", "Ench Guy-TestRealm", "Player-1-EEE", "Trade - City")
+	Advance(10)
+	check(LI.test.built.tries == built0 + 1, "a fresh list isn't read again")
+	W.guids["Player-1-GGG"] = { class = "WARRIOR", name = "Wtb Guy", realm = "" }
+	Say("CHAT_MSG_CHANNEL", "WTB |cff0070dd|Hitem:14155::::::::60:::::|h[Mooncloth Bag]|h|r", "Wtb Guy-TestRealm", "Player-1-GGG", "Trade - City")
+	Advance(10)
+	check(LI.test.built.timeout == 1 and LI.crafters["Wtb Guy-TestRealm"] == nil and LI.test.auto.streak == 0, "no reply adds nobody and doesn't count against automatic reading")
+	local tries = LI.test.built.tries
+	Say("CHAT_MSG_CHANNEL", "WTB |cff0070dd|Hitem:14155::::::::60:::::|h[Mooncloth Bag]|h|r pst", "Wtb Guy-TestRealm", "Player-1-GGG", "Trade - City")
+	Advance(10)
+	check(LI.test.built.tries == tries, "someone who didn't answer isn't tried again for a while")
+	C_TradeSkillUI.GetProfessionInfoByRecipeID = function(id) if id == 7418 then return { professionName = "Enchanting" } end end
+	Say("CHAT_MSG_CHANNEL", "|cffffd000|Henchant:7418|h[Enchant Bracer - Minor Health]|h|r", "Ench Guy-TestRealm", "Player-1-EEE", "Trade - City")
+	check(LI.db.log[#LI.db.log].m:find("no enchanting link to copy yet", 1, true), "without a seen link of that profession it says so", LI.db.log[#LI.db.log].m)
+	W.autoWorks = false
+end
+
 local function Sent(kind, chatType)
 	local out = {}
 	for _, m in ipairs(W.sent) do

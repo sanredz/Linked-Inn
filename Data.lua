@@ -75,6 +75,7 @@ local function NewTest()
 		own = 0,
 		formats = {},
 		sync = { sent = 0, heard = 0, lists = 0, answered = 0 },
+		built = { tries = 0, ok = 0, timeout = 0 },
 	}
 end
 
@@ -139,6 +140,7 @@ LI.On("ADDON_LOADED", function(name)
 	db.realms = type(db.realms) == "table" and db.realms or {}
 	db.recipes = type(db.recipes) == "table" and db.recipes or {}
 	db.cats = type(db.cats) == "table" and db.cats or {}
+	db.profLinks = type(db.profLinks) == "table" and db.profLinks or {}
 	db.settings = type(db.settings) == "table" and db.settings or {}
 	for k, v in pairs(DEFAULTS) do
 		if db.settings[k] == nil then
@@ -275,6 +277,52 @@ function LI.ToggleFavorite(key)
 	LI.favorites[key] = not LI.favorites[key] or nil
 	LI.Fire("CraftersChanged")
 	return LI.favorites[key] == true
+end
+
+local itemIndex, itemIndexSize = nil, -1
+
+function LI.RecipeForItem(itemID)
+	local size = 0
+	for _ in pairs(LI.db.recipes) do
+		size = size + 1
+	end
+	if not itemIndex or size ~= itemIndexSize then
+		itemIndex, itemIndexSize = {}, size
+		for id, meta in pairs(LI.db.recipes) do
+			if meta.item then
+				itemIndex[meta.item] = id
+			end
+		end
+	end
+	return itemIndex[itemID]
+end
+
+function LI.ProfessionOfRecipe(recipeID)
+	local meta = LI.db.recipes[recipeID]
+	if meta and meta.p then
+		return meta.p
+	end
+	local api = C_TradeSkillUI
+	if api and api.GetProfessionInfoByRecipeID then
+		local info = LI.Try(api.GetProfessionInfoByRecipeID, recipeID)
+		local name = type(info) == "table" and LI.Safe(info.parentProfessionName or info.professionName)
+		return LI.ProfKey(name)
+	end
+	return nil
+end
+
+function LI.NoteProfLink(profKey, numbers)
+	if profKey and type(numbers) == "table" and #numbers >= 2 then
+		LI.db.profLinks[profKey] = { spell = numbers[1], line = numbers[#numbers] }
+	end
+end
+
+function LI.BuildLink(guid, profKey)
+	local known = LI.db.profLinks[profKey]
+	if type(guid) ~= "string" or not guid:find("^Player%-") or not known then
+		return nil
+	end
+	return string.format("trade:%s:%d:%d", guid, known.spell, known.line)
 end
 
 function LI.Reagents(recipeID)

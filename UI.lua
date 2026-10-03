@@ -881,11 +881,12 @@ local function RefreshTest()
 		{ "No reply / error", string.format("%d / %d", auto.timeout, auto.err) },
 		{ "Window popped up while reading", tostring(auto.flashed) },
 		{ "Read by clicking a link", tostring(t.click) },
+		{ "Read from a recipe link", string.format("%d of %d tries", (t.built or {}).ok or 0, (t.built or {}).tries or 0) },
 	})
 	FillLines(page.syncLabels, page.syncValues, SharingLines())
 	local log = {}
 	local entries = LI.db.log
-	for i = #entries, math.max(1, #entries - 4), -1 do
+	for i = #entries, math.max(1, #entries - 3), -1 do
 		log[#log + 1] = date("%H:%M", entries[i].t) .. "  " .. entries[i].m
 	end
 	page.log:SetText(#log > 0 and table.concat(log, "\n") or "Nothing yet.")
@@ -941,11 +942,11 @@ local function BuildTestPage(page)
 	page.body:SetWidth(440)
 	page.body:SetSpacing(2)
 	SectionHead(page, -84, "Reading links")
-	page.labels, page.values = Lines(page, -104, 5)
-	SectionHead(page, -200, "Sharing with other Linked Inn users")
-	page.syncLabels, page.syncValues = Lines(page, -220, 5)
+	page.labels, page.values = Lines(page, -104, 6)
+	SectionHead(page, -216, "Sharing with other Linked Inn users")
+	page.syncLabels, page.syncValues = Lines(page, -236, 5)
 	local logHead = Text(page, "GameFontNormalSmall")
-	logHead:SetPoint("TOPLEFT", 40, -318)
+	logHead:SetPoint("TOPLEFT", 40, -334)
 	logHead:SetText("Latest")
 	logHead:SetTextColor(SOFT[1], SOFT[2], SOFT[3])
 	page.log = Text(page, "GameFontDisableSmall")

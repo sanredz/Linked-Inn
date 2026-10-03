@@ -97,6 +97,43 @@ local function Where(event, channelBase)
 	return "Chat"
 end
 
+local function RecipeLinks(msg)
+	local profs = {}
+	for kind, id in msg:gmatch("|H(%a+):(%d+)") do
+		id = tonumber(id)
+		local recipe
+		if kind == "enchant" or kind == "spell" then
+			recipe = id
+		elseif kind == "item" then
+			recipe = LI.RecipeForItem(id)
+		end
+		local profKey = recipe and LI.ProfessionOfRecipe(recipe)
+		if profKey and not LI.GATHERING[profKey] then
+			profs[profKey] = true
+		end
+	end
+	return profs
+end
+
+function LI.TryBuilt(msg, senderKey, senderGUID, event, channelBase)
+	if not msg:find("|H", 1, true) or msg:find("|Htrade:", 1, true) then
+		return
+	end
+	for profKey in pairs(RecipeLinks(msg)) do
+		local link = LI.BuildLink(senderGUID, profKey)
+		if link then
+			local _, classFile = KeyFromGUID(senderGUID)
+			LI.Reader.Want(senderKey, LI.PROFESSION_NAMES[profKey] or profKey, link, {
+				built = true,
+				class = classFile,
+				where = Where(event, channelBase),
+			})
+		else
+			LI.Log("Saw a " .. profKey .. " recipe from " .. LI.ShortName(senderKey) .. ", but no " .. profKey .. " link to copy yet")
+		end
+	end
+end
+
 function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 	if not LI.ready or type(msg) ~= "string" then
 		return
@@ -104,6 +141,9 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 	local senderKey = type(sender) == "string" and LI.FullName(sender) or nil
 	if senderKey and LI.crafters[senderKey] then
 		LI.MarkSeen(senderKey)
+	end
+	if senderKey and senderKey ~= LI.playerKey and senderGUID then
+		LI.TryBuilt(msg, senderKey, senderGUID, event, channelBase)
 	end
 	if not msg:find("|Htrade:", 1, true) then
 		return
@@ -126,6 +166,7 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 			if key then
 				local name = ProfessionName(text)
 				local spellID = parsed.numbers[1]
+				LI.NoteProfLink(LI.ProfKey(name), parsed.numbers)
 				local info = {
 					name = name,
 					icon = SpellIcon(spellID) or LI.PROFESSION_ICONS[LI.ProfKey(name) or ""],

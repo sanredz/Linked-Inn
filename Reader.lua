@@ -17,6 +17,8 @@ local CLICK_WINDOW = 20
 local AUTO_ECHO = 10
 
 local queue = {}
+local builtFailed = {}
+local BUILT_RETRY = 3600
 local probes = {}
 local pending
 local clicked
@@ -37,7 +39,7 @@ function Reader.IsBroken()
 	return (LI.test and LI.test.auto.streak or 0) >= GIVE_UP
 end
 
-function Reader.Want(key, profName, link)
+function Reader.Want(key, profName, link, extra)
 	local c = LI.Crafter(key)
 	local profKey = LI.ProfKey(profName)
 	local p = c and profKey and c.profs[profKey]
@@ -45,6 +47,9 @@ function Reader.Want(key, profName, link)
 		return
 	end
 	local id = key .. "|" .. (profKey or "")
+	if extra and extra.built and builtFailed[id] and time() - builtFailed[id] < BUILT_RETRY then
+		return
+	end
 	for _, q in ipairs(queue) do
 		if q.id == id then
 			q.link = link
@@ -52,7 +57,11 @@ function Reader.Want(key, profName, link)
 			return
 		end
 	end
-	table.insert(queue, { id = id, key = key, prof = profKey, link = link, at = Now() })
+	local job = { id = id, key = key, prof = profKey, link = link, at = Now() }
+	for k, v in pairs(extra or {}) do
+		job[k] = v
+	end
+	table.insert(queue, job)
 	while #queue > QUEUE_MAX do
 		table.remove(queue, 1)
 	end
@@ -161,6 +170,23 @@ local function Finish(job, outcome)
 		end)
 		return
 	end
+	if job.built then
+		local built = LI.test.built
+		if outcome == "ok" then
+			built.ok = built.ok + 1
+		else
+			built.timeout = built.timeout + 1
+			builtFailed[job.id] = time()
+			LI.Log("Built " .. tostring(job.prof) .. " link for " .. LI.ShortName(job.key) .. ": no reply")
+		end
+		pending = nil
+		nextAt = Now() + GAP
+		LI.Fire("TestChanged")
+		LI.After(0.05, function()
+			Kick()
+		end)
+		return
+	end
 	local auto = LI.test.auto
 	if outcome == "ok" then
 		auto.ok = auto.ok + 1
@@ -203,7 +229,11 @@ local function Pump()
 		return
 	end
 	local job = table.remove(queue)
-	LI.test.auto.tries = LI.test.auto.tries + 1
+	if job.built then
+		LI.test.built.tries = LI.test.built.tries + 1
+	else
+		LI.test.auto.tries = LI.test.auto.tries + 1
+	end
 	Start(job)
 end
 
@@ -406,7 +436,14 @@ function Reader.Read()
 		local count = LI.SetRecipes(key, info, list, via)
 		if job then
 			lastAuto = { key = key, at = Now() }
-			if not job.probe then
+			if job.built then
+				local c = LI.crafters[key]
+				if c then
+					c.class = c.class or job.class
+					c.where = job.where or c.where
+				end
+				LI.Log(string.format("Built %s link for %s: %d recipes", name, LI.ShortName(key), count))
+			elseif not job.probe then
 				if FrameVisible() then
 					LI.test.auto.flashed = LI.test.auto.flashed + 1
 				end

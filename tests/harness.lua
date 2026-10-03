@@ -1138,6 +1138,17 @@ do
 	check(not (ProfessionsFrame and ProfessionsFrame:IsShown()) and (not ProfessionsFrame or ProfessionsFrame:GetAlpha() == 1), "the window is closed and restored afterwards")
 	check(LI.db.log[#LI.db.log].m == "Online refresh: asked 3, 2 answered", "the test log records how many answered", LI.db.log[#LI.db.log].m)
 	check(LI.test.auto.tries == autoBefore and LI.test.click == clickBefore, "a refresh doesn't count as reads or clicks", LI.test.click)
+	check(LI.crafters["Bob Stone-TestRealm"].profs.tailoring.recipes == nil, "a refresh never gives one crafter another's recipes")
+	W.autoWorks = false
+	LI.CheckOnline("Bob Stone-TestRealm")
+	W.trade = { linked = true, linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Fire("TRADE_SKILL_LIST_UPDATE")
+	Advance(0.05)
+	check(LI.IsChecking("Bob Stone-TestRealm") and LI.Status("Bob Stone-TestRealm") ~= "online", "a late update from someone else's profession doesn't count as an answer")
+	Advance(2)
+	W.trade = nil
+	W.autoWorks = true
+	LI.MarkOffline("Bob Stone-TestRealm")
 	check(#W.who == 0, "no /who is used")
 	local mark = #W.hyperlinks
 	check(LI.RefreshOnline(false), "a refresh can run again")
@@ -1171,7 +1182,7 @@ do
 		if not LI.Reader.Sweeping() then finished = W.clock break end
 	end
 	check(finished and LI.Status("Many1 Folk-TestRealm") == "online" and LI.Status("Many10 Folk-TestRealm") == "online", "online crafters are found")
-	check(finished and finished - started < 11, "22 crafters, half offline, refresh in about ten seconds", finished and (finished - started))
+	check(finished and finished - started < 8.5, "22 crafters, half offline, refresh in a few seconds", finished and (finished - started))
 	check(LI.db.log[#LI.db.log].m == "Online refresh: asked 22, 11 answered", "every crafter is asked once", LI.db.log[#LI.db.log].m)
 	local done, total = LI.Reader.SweepProgress()
 	check(done == nil, "no progress once finished")

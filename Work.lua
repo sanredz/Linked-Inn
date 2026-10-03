@@ -20,10 +20,11 @@ Work.DURATIONS = {
 }
 
 Work.MATS = {
-	all = { code = "a", name = "Has all mats", short = "All mats" },
-	some = { code = "s", name = "Has some mats", short = "Some mats" },
-	none = { code = "n", name = "Needs mats", short = "No mats" },
+	all = { code = "a", name = "Brings all mats" },
+	some = { code = "s", name = "Brings some mats" },
+	none = { code = "n", name = "Needs all mats" },
 }
+local MAX_HAVE = 12
 local MATS_BY_CODE = { a = "all", s = "some", n = "none" }
 
 Work.MIN_PRICES = { 0, 10000, 50000, 100000, 500000 }
@@ -96,10 +97,71 @@ function Work.ItemOf(recipeID)
 	return meta and meta.item
 end
 
+local function EncodeHave(have)
+	local ids = {}
+	for id, n in pairs(have or {}) do
+		if n > 0 then
+			ids[#ids + 1] = id
+		end
+	end
+	table.sort(ids)
+	local parts = {}
+	for i = 1, math.min(#ids, MAX_HAVE) do
+		parts[#parts + 1] = B36(ids[i]) .. ":" .. B36(have[ids[i]])
+	end
+	return table.concat(parts, ",")
+end
+
+local function DecodeHave(text)
+	local have = {}
+	if type(text) ~= "string" or text == "" then
+		return have
+	end
+	local count = 0
+	for id, n in text:gmatch("([0-9a-z]+):([0-9a-z]+)") do
+		id, n = FromB36(id), FromB36(n)
+		count = count + 1
+		if id and n and n > 0 and n <= 9999 and count <= MAX_HAVE then
+			have[id] = n
+		end
+	end
+	return have
+end
+
+function Work.Needs(recipe, qty)
+	local meta = LI.db.recipes[recipe]
+	local list = {}
+	for _, r in ipairs(LI.ParseReagents(meta and meta.r)) do
+		list[#list + 1] = { id = r.id, need = r.qty * (qty or 1) }
+	end
+	return list
+end
+
+function Work.MatsFor(recipe, qty, have)
+	local needs = Work.Needs(recipe, qty)
+	if #needs == 0 then
+		return next(have or {}) and "some" or "none"
+	end
+	local full, any = true, false
+	for _, r in ipairs(needs) do
+		local n = (have or {})[r.id] or 0
+		if n > 0 then
+			any = true
+		end
+		if n < r.need then
+			full = false
+		end
+	end
+	if full then
+		return "all"
+	end
+	return any and "some" or "none"
+end
+
 function Work.Encode(req)
-	return string.format("R1|%s|%s|%s|%d|%s|%s|%s|%s",
+	return string.format("R1|%s|%s|%s|%d|%s|%s|%s|%s|%s",
 		req.id, B36(req.item or 0), B36(req.recipe or 0), req.qty,
-		Work.MATS[req.mats].code, B36(req.price), B36(math.max(0, req.expires - time())), Clean(req.note, NOTE_MAX))
+		Work.MATS[req.mats].code, B36(req.price), B36(math.max(0, req.expires - time())), Clean(req.note, NOTE_MAX), EncodeHave(req.have))
 end
 
 function Work.Decode(owner, parts)
@@ -124,6 +186,7 @@ function Work.Decode(owner, parts)
 		mats = mats,
 		price = price,
 		note = Clean(parts[9], NOTE_MAX),
+		have = DecodeHave(parts[10]),
 		expires = time() + ttl,
 		heard = time(),
 	}
@@ -277,7 +340,14 @@ function Work.Post(fields)
 	qty = math.max(1, math.min(QTY_MAX, qty))
 	local price = math.floor(tonumber(fields.price) or 0)
 	price = math.max(0, math.min(PRICE_MAX, price))
-	local mats = Work.MATS[fields.mats] and fields.mats or "none"
+	local have = {}
+	for _, r in ipairs(Work.Needs(recipe, qty)) do
+		local n = math.floor(tonumber((fields.have or {})[r.id]) or 0)
+		if n > 0 then
+			have[r.id] = math.min(n, r.need)
+		end
+	end
+	local mats = Work.MATS[fields.mats] and fields.mats or Work.MatsFor(recipe, qty, have)
 	local duration = tonumber(fields.duration) or Work.Settings().duration
 	duration = math.max(60, math.min(4 * 3600, duration))
 	w.seq = w.seq + 1
@@ -288,6 +358,7 @@ function Work.Post(fields)
 		item = meta.item,
 		qty = qty,
 		mats = mats,
+		have = have,
 		price = price,
 		note = Clean(fields.note, NOTE_MAX),
 		posted = time(),

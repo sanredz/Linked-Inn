@@ -80,6 +80,26 @@ local function Quality(itemID)
 	return nil
 end
 
+local function ItemName(itemID)
+	local name
+	if C_Item and C_Item.GetItemNameByID then
+		name = LI.Safe(LI.Try(C_Item.GetItemNameByID, itemID))
+	end
+	if type(name) ~= "string" or name == "" then
+		if C_Item and C_Item.RequestLoadItemDataByID then
+			LI.Try(C_Item.RequestLoadItemDataByID, itemID)
+		end
+		return nil
+	end
+	return name
+end
+
+local function ItemIcon(itemID)
+	local getInstant = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+	local icon = select(5, LI.Try(getInstant, itemID))
+	return LI.Safe(icon) or "Interface\\Icons\\INV_Misc_QuestionMark"
+end
+
 local function ItemLink(req)
 	local meta = LI.db.recipes[req.recipe] or {}
 	if req.item and C_Item and C_Item.GetItemInfo then
@@ -265,12 +285,14 @@ local function RowTooltip(row)
 	if (LI.Try(GameTooltip.NumLines, GameTooltip) or 0) == 0 then
 		GameTooltip:SetText((WorkUI.Name(req)), 1, 1, 1)
 	end
-	local lines = LI.Book and LI.Book.ReagentLines(LI.db.recipes[req.recipe] or {}) or {}
-	if #lines > 0 then
+	local needs = LI.Work.Needs(req.recipe, req.qty)
+	if #needs > 0 then
 		GameTooltip:AddLine(" ")
-		GameTooltip:AddLine("Reagents", 1, 0.82, 0)
-		for _, line in ipairs(lines) do
-			GameTooltip:AddLine(line, 1, 1, 1)
+		GameTooltip:AddLine(row.mine and "Materials you bring" or "Materials they bring", 1, 0.82, 0)
+		for _, r in ipairs(needs) do
+			local have = (req.have or {})[r.id] or 0
+			local color = have >= r.need and "|cff59f273" or (have > 0 and "|cffffd24d" or "|cffff6060")
+			GameTooltip:AddLine(string.format("|T%s:16:16:0:0|t  %s%d / %d|r  %s", tostring(ItemIcon(r.id)), color, have, r.need, ItemName(r.id) or "Loading..."), 1, 1, 1)
 		end
 	end
 	GameTooltip:AddLine(" ")
@@ -698,11 +720,111 @@ local function SearchItems(query)
 end
 WorkUI.SearchItems = SearchItems
 
-local function Label(parent, text, y)
-	local fs = Text(parent, "GameFontNormal")
-	fs:SetPoint("TOPLEFT", 20, y)
+local REAGENT_ROWS = 8
+local REAGENT_ROW = 26
+
+local function Label(parent, text, template)
+	local fs = Text(parent, template or "GameFontNormal")
 	fs:SetText(text)
 	return fs
+end
+
+local function ArrowButton(parent, which)
+	local b = CreateFrame("Button", nil, parent)
+	b:SetSize(23, 22)
+	b:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-" .. which .. "Page-Up")
+	b:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-" .. which .. "Page-Down")
+	b:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-" .. which .. "Page-Disabled")
+	b:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+	return b
+end
+
+local function Spinner(parent, onChange)
+	local ok, box = false, nil
+	if NumericInputSpinnerMixin then
+		ok, box = pcall(CreateFrame, "EditBox", nil, parent, "NumericInputSpinnerTemplate")
+	end
+	if ok and box and box.SetMinMaxValues and box.SetOnValueChangedCallback then
+		box:SetMinMaxValues(0, 99)
+		box:SetOnValueChangedCallback(function(_, value)
+			LI.SafeCall(onChange, value)
+		end)
+		box.Get = function(self)
+			return self:GetValue() or 0
+		end
+		box.Set = function(self, value)
+			self:SetValue(value)
+		end
+		box.SetRange = function(self, low, high)
+			self:SetMinMaxValues(low, high)
+			self:SetValue(math.max(low, math.min(high, self:GetValue() or low)))
+		end
+		return box
+	end
+	box = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
+	box:SetSize(31, 20)
+	box:SetAutoFocus(false)
+	box:SetNumeric(true)
+	box:SetMaxLetters(4)
+	box:SetJustifyH("CENTER")
+	box.low, box.high = 0, 99
+	box.Get = function(self)
+		return math.max(self.low, math.min(self.high, tonumber(self:GetText()) or self.low))
+	end
+	box.Set = function(self, value)
+		value = math.max(self.low, math.min(self.high, math.floor(tonumber(value) or 0)))
+		self:SetText(tostring(value))
+		LI.SafeCall(onChange, value)
+	end
+	box.SetRange = function(self, low, high)
+		self.low, self.high = low, high
+		self:Set(self:Get())
+	end
+	box.DecrementButton = ArrowButton(box, "Prev")
+	box.DecrementButton:SetPoint("RIGHT", box, "LEFT", -6, 0)
+	box.DecrementButton:SetScript("OnClick", function()
+		box:Set(box:Get() - 1)
+	end)
+	box.IncrementButton = ArrowButton(box, "Next")
+	box.IncrementButton:SetPoint("LEFT", box, "RIGHT", 0, 0)
+	box.IncrementButton:SetScript("OnClick", function()
+		box:Set(box:Get() + 1)
+	end)
+	box:SetScript("OnTextChanged", function(self, user)
+		if user then
+			LI.SafeCall(onChange, self:Get())
+		end
+	end)
+	return box
+end
+
+local function LinkButton(parent, label, onClick)
+	local b = CreateFrame("Button", nil, parent)
+	b.text = Text(b, "GameFontNormalSmall")
+	b.text:SetPoint("RIGHT")
+	b.text:SetText(label)
+	b:SetSize(44, 16)
+	b:SetScript("OnClick", function(self)
+		Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
+		LI.SafeCall(onClick, self)
+	end)
+	b:SetScript("OnEnter", function(self)
+		self.text:SetTextColor(1, 1, 1)
+	end)
+	b:SetScript("OnLeave", function(self)
+		self.text:SetTextColor(GOLD[1], GOLD[2], GOLD[3])
+	end)
+	return b
+end
+
+local function Have()
+	local have = {}
+	for _, row in ipairs(dialog.rows) do
+		if row:IsShown() and row.itemID then
+			have[row.itemID] = row.spin:Get()
+		end
+	end
+	return have
 end
 
 local function DialogInfo()
@@ -711,60 +833,115 @@ local function DialogInfo()
 		return
 	end
 	local count, online = LI.Work.KnownCrafters(dialog.recipe)
+	local who
 	if count == 0 then
-		dialog.info:SetText("Nobody on your list knows this yet. Linked Inn users who can make it still get a notice.")
+		who = "Nobody on your list knows it yet"
 	else
-		dialog.info:SetText(string.format("%d %s on your list %s it%s.", count, count == 1 and "crafter" or "crafters", count == 1 and "knows" or "know", online > 0 and string.format(", |cff59f273%d online|r", online) or ""))
+		who = string.format("%d %s on your list %s it%s", count, count == 1 and "crafter" or "crafters", count == 1 and "knows" or "know", online > 0 and string.format(", |cff59f273%d online|r", online) or "")
 	end
+	local mats = LI.Work.MatsFor(dialog.recipe, dialog.amount:Get(), Have())
+	dialog.info:SetText(who .. "\n|cffa8a090Crafters will see:|r " .. LI.Work.MATS[mats].name)
+end
+
+local function UpdateNeeds()
+	if not dialog.recipe then
+		return
+	end
+	local amount = math.max(1, dialog.amount:Get())
+	for _, row in ipairs(dialog.rows) do
+		if row:IsShown() and row.per then
+			local need = row.per * amount
+			row.total:SetText("/ " .. need)
+			row.spin:SetRange(0, need)
+		end
+	end
+	DialogInfo()
+end
+
+local function Layout()
+	local shown = 0
+	for _, row in ipairs(dialog.rows) do
+		if row:IsShown() then
+			shown = shown + 1
+		end
+	end
+	dialog.noReagents:SetShown(shown == 0)
+	dialog.allLink:SetShown(shown > 0)
+	dialog.noneLink:SetShown(shown > 0)
+	local height = math.max(shown, 1) * REAGENT_ROW
+	dialog.details:ClearAllPoints()
+	dialog.details:SetPoint("TOPLEFT", dialog.body, "TOPLEFT", 0, -26 - height - 14)
+	dialog.details:SetPoint("RIGHT", dialog.body, "RIGHT")
 end
 
 local function SelectRecipe(id)
 	dialog.recipe = id
 	local meta = id and LI.db.recipes[id]
-	dialog.pick:SetShown(meta ~= nil)
-	dialog.search:SetShown(meta == nil)
+	local picked = meta ~= nil
+	dialog.pick:SetShown(picked)
+	dialog.body:SetShown(picked)
+	dialog.search:SetShown(not picked)
+	dialog.hint:SetShown(not picked)
+	dialog.ask:SetText(picked and "You're asking for" or "What do you need made?")
 	for _, r in ipairs(dialog.results) do
 		r:Hide()
 	end
-	if meta then
-		dialog.pick.icon:SetTexture(meta.i or "Interface\\Icons\\INV_Misc_QuestionMark")
-		dialog.pick.name:SetText(meta.n or "?")
-		local color = Quality(meta.item) or { 1, 1, 1 }
-		dialog.pick.name:SetTextColor(color[1], color[2], color[3])
-	end
-	dialog.post:SetEnabled(meta ~= nil)
+	dialog.noResults:Hide()
+	dialog.post:SetEnabled(picked)
 	dialog.error:SetText("")
-	DialogInfo()
+	for _, row in ipairs(dialog.rows) do
+		row:Hide()
+		row.itemID, row.per = nil, nil
+	end
+	if not picked then
+		dialog.info:SetText("")
+		return
+	end
+	LI.FillRecipe(id)
+	dialog.pick.icon:SetTexture(meta.i or "Interface\\Icons\\INV_Misc_QuestionMark")
+	dialog.pick.name:SetText(meta.n or "?")
+	local color = Quality(meta.item) or { 1, 1, 1 }
+	dialog.pick.name:SetTextColor(color[1], color[2], color[3])
+	local prof = meta.p and LI.PROFESSION_NAMES[meta.p]
+	dialog.pick.prof:SetText(prof or "")
+	for i, r in ipairs(LI.Work.Needs(id, 1)) do
+		local row = dialog.rows[i]
+		if row then
+			row.itemID, row.per = r.id, r.need
+			row.icon:SetTexture(ItemIcon(r.id))
+			row.name:SetText(ItemName(r.id) or "Loading...")
+			row.spin:SetRange(0, r.need * math.max(1, dialog.amount:Get()))
+			row.spin:Set(0)
+			row:Show()
+		end
+	end
+	Layout()
+	UpdateNeeds()
 end
 
 local function ShowResults()
-	local found = SearchItems(dialog.search:GetText())
+	if dialog.recipe then
+		return
+	end
+	local text = dialog.search:GetText() or ""
+	local found = SearchItems(text)
 	for i, r in ipairs(dialog.results) do
 		local hit = found[i]
 		r.id = hit and hit.id
 		if hit then
 			r.icon:SetTexture(hit.meta.i or "Interface\\Icons\\INV_Misc_QuestionMark")
 			r.name:SetText(hit.meta.n)
+			local color = Quality(hit.meta.item) or { 1, 1, 1 }
+			r.name:SetTextColor(color[1], color[2], color[3])
 			r.prof:SetText(LI.PROFESSION_NAMES[hit.meta.p or ""] or "")
 			r:Show()
 		else
 			r:Hide()
 		end
 	end
-	dialog.noResults:SetShown(#found == 0 and LI.Trim(dialog.search:GetText() or "") ~= "")
-end
-
-local function SetMats(key)
-	dialog.mats = key
-	for _, b in ipairs(dialog.matButtons) do
-		if b.key == key then
-			b:LockHighlight()
-			b:GetFontString():SetTextColor(1, 1, 1)
-		else
-			b:UnlockHighlight()
-			b:GetFontString():SetTextColor(GOLD[1], GOLD[2], GOLD[3])
-		end
-	end
+	local typed = LI.Trim(text) ~= ""
+	dialog.noResults:SetShown(#found == 0 and typed)
+	dialog.hint:SetShown(not typed)
 end
 
 local function DurationName(seconds)
@@ -776,13 +953,14 @@ local function DurationName(seconds)
 	return LI.Duration(seconds)
 end
 
-local function NumberBox(parent, width, letters)
+local function MoneyBox(parent, letters, width)
 	local box = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
 	box:SetSize(width, 20)
 	box:SetAutoFocus(false)
 	box:SetNumeric(true)
 	box:SetMaxLetters(letters)
-	box:SetJustifyH("CENTER")
+	box:SetJustifyH("RIGHT")
+	box:SetTextInsets(0, 4, 0, 0)
 	return box
 end
 
@@ -805,10 +983,12 @@ local function CreateDialog()
 		dialog.Inset:Hide()
 	end
 
-	Label(dialog, "What do you need made?", -36)
+	dialog.ask = Label(dialog, "What do you need made?")
+	dialog.ask:SetPoint("TOPLEFT", 20, -34)
+
 	dialog.search = CreateFrame("EditBox", nil, dialog, "SearchBoxTemplate")
 	dialog.search:SetSize(316, 22)
-	dialog.search:SetPoint("TOPLEFT", 24, -56)
+	dialog.search:SetPoint("TOPLEFT", 24, -54)
 	if dialog.search.Instructions then
 		dialog.search.Instructions:SetText("Type an item name")
 	end
@@ -818,24 +998,28 @@ local function CreateDialog()
 		end
 		ShowResults()
 	end)
+	dialog.hint = Text(dialog, "GameFontDisableSmall")
+	dialog.hint:SetPoint("TOPLEFT", 26, -84)
+	dialog.hint:SetWidth(310)
+	dialog.hint:SetText("Anything from the recipes Linked Inn has seen.")
 	dialog.results = {}
-	for i = 1, 6 do
+	for i = 1, 10 do
 		local r = CreateFrame("Button", nil, dialog)
-		r:SetSize(316, 24)
-		r:SetPoint("TOPLEFT", 24, -80 - (i - 1) * 24)
+		r:SetSize(316, 26)
+		r:SetPoint("TOPLEFT", 24, -80 - (i - 1) * 26)
 		r.hl = r:CreateTexture(nil, "HIGHLIGHT")
 		r.hl:SetAllPoints()
 		r.hl:SetColorTexture(1, 0.82, 0.3, 0.12)
 		r.icon = r:CreateTexture(nil, "ARTWORK")
 		r.icon:SetSize(20, 20)
-		r.icon:SetPoint("LEFT", 2, 0)
+		r.icon:SetPoint("LEFT", 4, 0)
 		r.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 		r.name = Text(r, "GameFontHighlight")
 		r.name:SetPoint("LEFT", r.icon, "RIGHT", 8, 0)
-		r.name:SetPoint("RIGHT", -90, 0)
+		r.name:SetPoint("RIGHT", -96, 0)
 		r.name:SetWordWrap(false)
 		r.prof = Text(r, "GameFontDisableSmall", "RIGHT")
-		r.prof:SetPoint("RIGHT", -4, 0)
+		r.prof:SetPoint("RIGHT", -6, 0)
 		r:SetScript("OnClick", function(self)
 			if self.id then
 				Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
@@ -846,13 +1030,14 @@ local function CreateDialog()
 		dialog.results[i] = r
 	end
 	dialog.noResults = Text(dialog, "GameFontDisableSmall")
-	dialog.noResults:SetPoint("TOPLEFT", 28, -86)
-	dialog.noResults:SetText("No recipe by that name in your list yet.")
+	dialog.noResults:SetPoint("TOPLEFT", 26, -84)
+	dialog.noResults:SetText("No recipe by that name yet.")
 	dialog.noResults:Hide()
 
 	dialog.pick = CreateFrame("Frame", nil, dialog)
-	dialog.pick:SetSize(316, 44)
-	dialog.pick:SetPoint("TOPLEFT", 24, -56)
+	dialog.pick:SetPoint("TOPLEFT", 18, -52)
+	dialog.pick:SetPoint("RIGHT", -18, 0)
+	dialog.pick:SetHeight(44)
 	dialog.pick.edge = dialog.pick:CreateTexture(nil, "BORDER")
 	dialog.pick.edge:SetSize(42, 42)
 	dialog.pick.edge:SetPoint("LEFT")
@@ -862,80 +1047,115 @@ local function CreateDialog()
 	dialog.pick.icon:SetPoint("CENTER", dialog.pick.edge, "CENTER")
 	dialog.pick.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 	dialog.pick.name = Text(dialog.pick, "GameFontNormalLarge")
-	dialog.pick.name:SetPoint("LEFT", dialog.pick.edge, "RIGHT", 10, 6)
-	dialog.pick.name:SetPoint("RIGHT", -4, 0)
+	dialog.pick.name:SetPoint("TOPLEFT", dialog.pick.edge, "TOPRIGHT", 10, -3)
+	dialog.pick.name:SetPoint("RIGHT", -110, 0)
 	dialog.pick.name:SetWordWrap(false)
-	dialog.pick.change = CreateFrame("Button", nil, dialog.pick)
-	dialog.pick.change:SetSize(60, 16)
-	dialog.pick.change:SetPoint("TOPLEFT", dialog.pick.name, "BOTTOMLEFT", 0, -3)
-	dialog.pick.change.text = Text(dialog.pick.change, "GameFontNormalSmall")
-	dialog.pick.change.text:SetPoint("LEFT")
-	dialog.pick.change.text:SetText("Change")
-	dialog.pick.change:SetScript("OnClick", function()
+	dialog.pick.prof = Text(dialog.pick, "GameFontDisableSmall")
+	dialog.pick.prof:SetPoint("BOTTOMLEFT", dialog.pick.edge, "BOTTOMRIGHT", 10, 3)
+	dialog.pick.change = LinkButton(dialog.pick, "Change", function()
 		SelectRecipe(nil)
 		dialog.search:SetText("")
 		ShowResults()
 	end)
+	dialog.pick.change.text:ClearAllPoints()
+	dialog.pick.change.text:SetPoint("LEFT")
+	dialog.pick.change:SetPoint("LEFT", dialog.pick.prof, "RIGHT", 10, 0)
+	dialog.amountLabel = Text(dialog.pick, "GameFontDisableSmall", "CENTER")
+	dialog.amountLabel:SetText("Amount")
+	dialog.amount = Spinner(dialog.pick, function()
+		UpdateNeeds()
+	end)
+	dialog.amount:SetPoint("RIGHT", dialog.pick, "RIGHT", -26, -6)
+	dialog.amountLabel:SetPoint("BOTTOM", dialog.amount, "TOP", 0, 3)
+	dialog.amount:SetRange(1, 99)
 	dialog.pick:Hide()
 
-	local y = -236
-	Label(dialog, "How many?", y)
-	dialog.minus = Button(dialog, "-", 24, function()
-		dialog.qty:SetNumber(math.max(1, (dialog.qty:GetNumber() or 1) - 1))
-	end)
-	dialog.minus:SetPoint("TOPLEFT", 160, y + 4)
-	dialog.qty = NumberBox(dialog, 36, 2)
-	dialog.qty:SetPoint("LEFT", dialog.minus, "RIGHT", 10, 0)
-	dialog.plus = Button(dialog, "+", 24, function()
-		dialog.qty:SetNumber(math.min(99, (dialog.qty:GetNumber() or 0) + 1))
-	end)
-	dialog.plus:SetPoint("LEFT", dialog.qty, "RIGHT", 6, 0)
-
-	y = y - 40
-	Label(dialog, "Materials", y)
-	dialog.matButtons = {}
-	local prev
-	for _, key in ipairs({ "all", "some", "none" }) do
-		local b = Button(dialog, LI.Work.MATS[key].short, 98, function(self)
-			Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
-			SetMats(self.key)
-		end)
-		b.key = key
-		if prev then
-			b:SetPoint("LEFT", prev, "RIGHT", 4, 0)
-		else
-			b:SetPoint("TOPLEFT", 24, y - 18)
+	dialog.body = CreateFrame("Frame", nil, dialog)
+	dialog.body:SetPoint("TOPLEFT", 0, -108)
+	dialog.body:SetPoint("BOTTOMRIGHT", 0, 90)
+	dialog.matsHead = Label(dialog.body, "Materials you bring")
+	dialog.matsHead:SetPoint("TOPLEFT", 20, 0)
+	dialog.noneLink = LinkButton(dialog.body, "None", function()
+		for _, row in ipairs(dialog.rows) do
+			if row:IsShown() then
+				row.spin:Set(0)
+			end
 		end
-		dialog.matButtons[#dialog.matButtons + 1] = b
-		prev = b
+		DialogInfo()
+	end)
+	dialog.noneLink:SetPoint("TOPRIGHT", -20, 0)
+	dialog.allLink = LinkButton(dialog.body, "All", function()
+		for _, row in ipairs(dialog.rows) do
+			if row:IsShown() and row.per then
+				row.spin:Set(row.per * math.max(1, dialog.amount:Get()))
+			end
+		end
+		DialogInfo()
+	end)
+	dialog.allLink:SetPoint("RIGHT", dialog.noneLink, "LEFT", -6, 0)
+	local rule = dialog.body:CreateTexture(nil, "ARTWORK")
+	rule:SetHeight(1)
+	rule:SetPoint("TOPLEFT", 18, -18)
+	rule:SetPoint("TOPRIGHT", -18, -18)
+	rule:SetColorTexture(1, 0.82, 0, 0.25)
+	dialog.rows = {}
+	for i = 1, REAGENT_ROWS do
+		local row = CreateFrame("Frame", nil, dialog.body)
+		row:SetHeight(REAGENT_ROW)
+		row:SetPoint("TOPLEFT", 18, -24 - (i - 1) * REAGENT_ROW)
+		row:SetPoint("RIGHT", -18, 0)
+		row.icon = row:CreateTexture(nil, "ARTWORK")
+		row.icon:SetSize(20, 20)
+		row.icon:SetPoint("LEFT", 2, 0)
+		row.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+		row.name = Text(row, "GameFontHighlight")
+		row.name:SetPoint("LEFT", row.icon, "RIGHT", 8, 0)
+		row.name:SetPoint("RIGHT", -130, 0)
+		row.name:SetWordWrap(false)
+		row.total = Text(row, "GameFontHighlightSmall", "LEFT")
+		row.total:SetPoint("RIGHT", 0, 0)
+		row.total:SetWidth(36)
+		row.spin = Spinner(row, function()
+			DialogInfo()
+		end)
+		row.spin:SetPoint("RIGHT", row.total, "LEFT", -26, 0)
+		row:Hide()
+		dialog.rows[i] = row
 	end
+	dialog.noReagents = Text(dialog.body, "GameFontDisableSmall")
+	dialog.noReagents:SetPoint("TOPLEFT", 22, -30)
+	dialog.noReagents:SetText("Reagents for this item aren't known yet.")
+	dialog.noReagents:Hide()
 
-	y = y - 66
-	Label(dialog, "You pay", y)
-	dialog.gold = NumberBox(dialog, 60, 5)
-	dialog.gold:SetPoint("TOPLEFT", 160, y + 3)
-	local goldIcon = dialog:CreateTexture(nil, "ARTWORK")
-	goldIcon:SetSize(14, 14)
-	goldIcon:SetPoint("LEFT", dialog.gold, "RIGHT", 4, 0)
+	dialog.details = CreateFrame("Frame", nil, dialog.body)
+	dialog.details:SetHeight(110)
+	local payLabel = Label(dialog.details, "You pay")
+	payLabel:SetPoint("TOPLEFT", 20, 0)
+	dialog.gold = MoneyBox(dialog.details, 5, 64)
+	dialog.gold:SetPoint("TOPLEFT", 136, 4)
+	local goldIcon = dialog.details:CreateTexture(nil, "ARTWORK")
+	goldIcon:SetSize(13, 13)
+	goldIcon:SetPoint("LEFT", dialog.gold, "RIGHT", 3, 0)
 	goldIcon:SetTexture("Interface\\MoneyFrame\\UI-GoldIcon")
-	dialog.silver = NumberBox(dialog, 36, 2)
+	dialog.silver = MoneyBox(dialog.details, 2, 30)
 	dialog.silver:SetPoint("LEFT", goldIcon, "RIGHT", 12, 0)
-	local silverIcon = dialog:CreateTexture(nil, "ARTWORK")
-	silverIcon:SetSize(14, 14)
-	silverIcon:SetPoint("LEFT", dialog.silver, "RIGHT", 4, 0)
+	local silverIcon = dialog.details:CreateTexture(nil, "ARTWORK")
+	silverIcon:SetSize(13, 13)
+	silverIcon:SetPoint("LEFT", dialog.silver, "RIGHT", 3, 0)
 	silverIcon:SetTexture("Interface\\MoneyFrame\\UI-SilverIcon")
 
-	y = y - 40
-	Label(dialog, "Note", y)
-	dialog.note = CreateFrame("EditBox", nil, dialog, "InputBoxTemplate")
-	dialog.note:SetSize(306, 20)
-	dialog.note:SetPoint("TOPLEFT", 30, y - 18)
+	local noteLabel = Label(dialog.details, "Note")
+	noteLabel:SetPoint("TOPLEFT", 20, -34)
+	dialog.note = CreateFrame("EditBox", nil, dialog.details, "InputBoxTemplate")
+	dialog.note:SetHeight(20)
+	dialog.note:SetPoint("TOPLEFT", 140, -30)
+	dialog.note:SetPoint("RIGHT", -20, 0)
 	dialog.note:SetAutoFocus(false)
 	dialog.note:SetMaxLetters(60)
 
-	y = y - 66
-	Label(dialog, "Keep it up for", y)
-	dialog.duration = Button(dialog, "", 120, function(self)
+	local keepLabel = Label(dialog.details, "Keep it up for")
+	keepLabel:SetPoint("TOPLEFT", 20, -68)
+	dialog.duration = Button(dialog.details, "", 130, function(self)
 		Menu(self, function(root)
 			for _, d in ipairs(LI.Work.DURATIONS) do
 				root:CreateRadio(d.name, function()
@@ -948,23 +1168,24 @@ local function CreateDialog()
 			end
 		end)
 	end)
-	dialog.duration:SetPoint("TOPLEFT", 160, y + 4)
+	dialog.duration:SetPoint("TOPLEFT", 134, -64)
 
 	dialog.info = Text(dialog, "GameFontHighlightSmall")
-	dialog.info:SetPoint("BOTTOMLEFT", 20, 74)
+	dialog.info:SetPoint("BOTTOMLEFT", 20, 46)
 	dialog.info:SetWidth(320)
-	dialog.info:SetSpacing(2)
+	dialog.info:SetSpacing(3)
 	dialog.error = Text(dialog, "GameFontRedSmall")
-	dialog.error:SetPoint("BOTTOMLEFT", 20, 44)
+	dialog.error:SetPoint("BOTTOMLEFT", dialog.info, "TOPLEFT", 0, 6)
 	dialog.error:SetWidth(320)
 	dialog.post = Button(dialog, "Post request", 150, function()
 		WorkUI.Submit()
 	end)
-	dialog.post:SetPoint("BOTTOMRIGHT", -16, 14)
+	dialog.post:SetPoint("BOTTOMRIGHT", -16, 12)
 	dialog.cancel = Button(dialog, "Cancel", 90, function()
 		dialog:Hide()
 	end)
 	dialog.cancel:SetPoint("RIGHT", dialog.post, "LEFT", -6, 0)
+	dialog.body:Hide()
 	dialog:Hide()
 end
 
@@ -987,13 +1208,12 @@ function WorkUI.OpenDialog(recipe)
 		book:Hide()
 	end
 	dialog.search:SetText("")
-	dialog.qty:SetNumber(1)
+	dialog.amount:Set(1)
 	dialog.gold:SetText("")
 	dialog.silver:SetText("")
 	dialog.note:SetText("")
 	dialog.seconds = LI.Work.Settings().duration
 	dialog.duration:SetText(DurationName(dialog.seconds))
-	SetMats("all")
 	SelectRecipe(recipe)
 	ShowResults()
 	dialog:Show()
@@ -1002,8 +1222,8 @@ end
 function WorkUI.Submit()
 	local req, err = LI.Work.Post({
 		recipe = dialog.recipe,
-		qty = dialog.qty:GetNumber(),
-		mats = dialog.mats,
+		qty = dialog.amount:Get(),
+		have = Have(),
 		price = (dialog.gold:GetNumber() or 0) * 10000 + (dialog.silver:GetNumber() or 0) * 100,
 		note = dialog.note:GetText(),
 		duration = dialog.seconds,

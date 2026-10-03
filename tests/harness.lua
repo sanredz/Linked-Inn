@@ -1381,7 +1381,7 @@ do
 	Advance(2)
 	local r1 = Last("R1|")
 	check(r1 and r1.chatType == "CHANNEL" and r1.msg:find("^R1|1|" .. LI.Sync.B36(14155) .. "|" .. LI.Sync.B36(18560) .. "|2|s|" .. LI.Sync.B36(150000) .. "|"), "it goes out on the hidden channel", r1 and r1.msg)
-	check(r1 and r1.msg:find("|pst after 8$"), "with the note last", r1 and r1.msg)
+	check(r1 and r1.msg:find("|pst after 8|$"), "with the note, then what you bring", r1 and r1.msg)
 	for i = 2, 5 do
 		Work.Post({ recipe = 3914, qty = 1, mats = "none", price = 0 })
 	end
@@ -1491,7 +1491,7 @@ do
 	check(LI.WorkUI.View() == "foryou" and #page.list.__rows == 1, "For you lists what you can make", #page.list.__rows)
 	local row = page.list.__rows[1]
 	check(row.accent:IsShown() and row.offer:IsShown() and row.name.__text:find("Minor Healing Potion", 1, true) and row.name.__text:find("5", 1, true), "the row shows the item, amount and an offer button", row.name.__text)
-	check(row.line.__text:find("Other Guy", 1, true) and row.line.__text:find("Has all mats", 1, true) and row.line.__text:find("need pots", 1, true), "who, mats and note are shown", row.line.__text)
+	check(row.line.__text:find("Other Guy", 1, true) and row.line.__text:find("Brings all mats", 1, true) and row.line.__text:find("need pots", 1, true), "who, mats and note are shown", row.line.__text)
 	check(row.price.__text == "2g", "the price is shown", row.price.__text)
 	row.offer.__scripts.OnClick(row.offer)
 	Advance(0.2)
@@ -1527,9 +1527,20 @@ do
 	dlg.results[1].__scripts.OnClick(dlg.results[1])
 	check(dlg.pick:IsShown() and dlg.pick.name.__text == "Mooncloth Bag" and dlg.post:IsEnabled(), "picking an item shows it and enables Post")
 	check(dlg.info.__text:find("1 crafter on your list knows it", 1, true), "the panel says how many crafters know it", dlg.info.__text)
-	dlg.plus.__scripts.OnClick(dlg.plus)
-	dlg.plus.__scripts.OnClick(dlg.plus)
-	dlg.matButtons[3].__scripts.OnClick(dlg.matButtons[3])
+	check(dlg.body:IsShown() and dlg.rows[1]:IsShown() and dlg.rows[3]:IsShown() and not dlg.rows[4]:IsShown(), "the item's reagents are listed")
+	check(dlg.rows[1].total.__text == "/ 4" and dlg.rows[1].name.__text == "Mooncloth", "each shows how many are needed", dlg.rows[1].total.__text)
+	dlg.amount:Set(3)
+	check(dlg.rows[1].total.__text == "/ 12" and dlg.rows[2].total.__text == "/ 6", "the amounts follow the quantity", dlg.rows[1].total.__text)
+	check(dlg.info.__text:find("Needs all mats", 1, true), "with nothing brought, crafters see Needs all mats", dlg.info.__text)
+	dlg.allLink.__scripts.OnClick(dlg.allLink)
+	check(dlg.rows[1].spin:Get() == 12 and dlg.rows[3].spin:Get() == 6 and dlg.info.__text:find("Brings all mats", 1, true), "All fills in everything", dlg.info.__text)
+	dlg.noneLink.__scripts.OnClick(dlg.noneLink)
+	check(dlg.rows[1].spin:Get() == 0, "None clears it")
+	dlg.rows[1].spin:Set(12)
+	dlg.rows[2].spin:Set(99)
+	check(dlg.rows[2].spin:Get() == 6, "you can't bring more than needed")
+	dlg.rows[2].spin:Set(1)
+	check(dlg.info.__text:find("Brings some mats", 1, true), "some of them gives Brings some mats", dlg.info.__text)
 	dlg.gold:SetText("15")
 	dlg.silver:SetText("50")
 	dlg.note:SetText("thanks")
@@ -1538,7 +1549,13 @@ do
 	for _, m in ipairs(Work.Mine()) do
 		if m.note == "thanks" then posted = m end
 	end
-	check(posted and posted.qty == 3 and posted.mats == "none" and posted.price == 155000 and posted.recipe == 18560, "Post creates the request from the panel", posted and posted.price)
+	check(posted and posted.qty == 3 and posted.mats == "some" and posted.price == 155000 and posted.recipe == 18560, "Post creates the request from the panel", posted and posted.mats)
+	check(posted and posted.have[14342] == 12 and posted.have[14256] == 1 and not posted.have[8343], "it records exactly what you bring")
+	Advance(2)
+	local sent = Last("R1|")
+	check(sent and sent.msg:find("|" .. LI.Sync.B36(14256) .. ":1", 1, true) and sent.msg:find(LI.Sync.B36(14342) .. ":c", 1, true), "what you bring travels with the request", sent and sent.msg)
+	local back = Work.Decode("Me Again-TestRealm", { "R1", "9", LI.Sync.B36(14155), LI.Sync.B36(18560), "3", "s", "0", "100", "", LI.Sync.B36(14342) .. ":c," .. LI.Sync.B36(14256) .. ":1" })
+	check(back and back.have[14342] == 12 and back.have[14256] == 1, "and is read back on the other side")
 	check(not dlg:IsShown() and LI.WorkUI.View() == "mine", "the panel closes and shows My requests")
 	local sawPosted = false
 	for _ = 1, 30 do

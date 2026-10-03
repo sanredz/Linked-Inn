@@ -1,3 +1,5 @@
+<img src="media/logo.svg" alt="Linked Inn logo" width="96" align="right">
+
 # Linked Inn: Profession Finder
 
 [![CI](https://github.com/sanredz/Linked-Inn/actions/workflows/ci.yml/badge.svg)](https://github.com/sanredz/Linked-Inn/actions/workflows/ci.yml)

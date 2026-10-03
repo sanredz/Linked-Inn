@@ -22,7 +22,23 @@ LI.PROFESSION_ICONS = {
 
 LI.PROFESSION_ORDER = {
 	"alchemy", "blacksmithing", "enchanting", "engineering", "leatherworking",
-	"tailoring", "jewelcrafting", "inscription", "cooking", "first aid",
+	"tailoring", "jewelcrafting", "inscription", "cooking", "first aid", "fishing",
+}
+
+LI.PRIMARY = { "alchemy", "blacksmithing", "enchanting", "engineering", "leatherworking", "tailoring" }
+LI.SECONDARY = { "cooking", "first aid", "fishing" }
+LI.SECONDARY_SET = { cooking = true, ["first aid"] = true, fishing = true }
+
+LI.PROFESSION_NAMES = {
+	alchemy = "Alchemy",
+	blacksmithing = "Blacksmithing",
+	enchanting = "Enchanting",
+	engineering = "Engineering",
+	leatherworking = "Leatherworking",
+	tailoring = "Tailoring",
+	cooking = "Cooking",
+	["first aid"] = "First Aid",
+	fishing = "Fishing",
 }
 
 LI.KINDS = {
@@ -40,7 +56,8 @@ local KIND_BY_CLASS = { [0] = "consumable", [1] = "bag", [2] = "weapon", [4] = "
 
 local DEFAULTS = {
 	autoRead = true,
-	onlineOnly = false,
+	secondary = false,
+	profs = {},
 	kind = "all",
 	minimap = { angle = 200 },
 	collapsed = {},
@@ -297,7 +314,19 @@ function LI.Search(query, opts)
 	end
 	local q = LI.Trim(query):lower()
 	local kind = opts.kind or "all"
-	local profFilter = opts.prof
+	local profSet
+	for profKey, on in pairs(opts.profs or {}) do
+		if on and (opts.secondary or not LI.SECONDARY_SET[profKey]) then
+			profSet = profSet or {}
+			profSet[profKey] = true
+		end
+	end
+	local function Allowed(profKey)
+		if not opts.secondary and LI.SECONDARY_SET[profKey] then
+			return false
+		end
+		return not profSet or profSet[profKey] == true
+	end
 	local recipeSearch = q ~= "" or kind ~= "all"
 	local hits, hitCount, hitProfs = {}, 0, {}
 	if recipeSearch then
@@ -313,11 +342,11 @@ function LI.Search(query, opts)
 	end
 	for key, c in pairs(LI.crafters) do
 		local status, seenAt, sure = LI.Status(key)
-		if (not opts.onlineOnly or status == "online") and (not profFilter or c.profs[profFilter]) then
+		if key ~= LI.playerKey then
 			local nameMatch = q ~= "" and kind == "all" and Find(LI.ShortName(key), q)
 			local groups, top = {}, nil
 			for profKey, p in pairs(c.profs) do
-				if not profFilter or profFilter == profKey then
+				if Allowed(profKey) then
 					local g = { key = profKey, confidence = 0, makes = 0 }
 					if recipeSearch and hitCount > 0 and p.recipes then
 						for id in pairs(p.recipes) do
@@ -463,37 +492,50 @@ function LI.Group(results)
 	return groups
 end
 
-function LI.ProfessionsSeen()
+function LI.ProfessionChips(secondary)
 	local counts = {}
 	if LI.crafters then
-		for _, c in pairs(LI.crafters) do
-			for profKey, p in pairs(c.profs) do
-				local entry = counts[profKey]
-				if not entry then
-					entry = { key = profKey, name = p.name, icon = p.icon, count = 0 }
-					counts[profKey] = entry
+		for key, c in pairs(LI.crafters) do
+			if key ~= LI.playerKey then
+				for profKey, p in pairs(c.profs) do
+					local entry = counts[profKey]
+					if not entry then
+						entry = { key = profKey, name = p.name, icon = p.icon, count = 0 }
+						counts[profKey] = entry
+					end
+					entry.count = entry.count + 1
+					entry.icon = entry.icon or p.icon
 				end
-				entry.count = entry.count + 1
-				entry.icon = entry.icon or p.icon
 			end
 		end
 	end
 	local list, used = {}, {}
-	for _, key in ipairs(LI.PROFESSION_ORDER) do
-		if counts[key] then
-			list[#list + 1] = counts[key]
-			used[key] = true
+	local function Add(key)
+		if used[key] then
+			return
 		end
+		used[key] = true
+		local entry = counts[key] or { key = key, count = 0 }
+		entry.name = entry.name or LI.PROFESSION_NAMES[key] or key
+		list[#list + 1] = entry
+	end
+	for _, key in ipairs(LI.PRIMARY) do
+		Add(key)
 	end
 	local rest = {}
-	for key, entry in pairs(counts) do
-		if not used[key] then
-			rest[#rest + 1] = entry
+	for key in pairs(counts) do
+		if not used[key] and not LI.SECONDARY_SET[key] then
+			rest[#rest + 1] = key
 		end
 	end
-	table.sort(rest, function(a, b) return a.key < b.key end)
-	for _, entry in ipairs(rest) do
-		list[#list + 1] = entry
+	table.sort(rest)
+	for _, key in ipairs(rest) do
+		Add(key)
+	end
+	if secondary then
+		for _, key in ipairs(LI.SECONDARY) do
+			Add(key)
+		end
 	end
 	return list
 end

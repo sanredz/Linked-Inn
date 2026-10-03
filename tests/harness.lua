@@ -458,10 +458,10 @@ results = LI.Search("anna")
 check(#results == 1 and results[1].key == "Anna Smith-TestRealm", "searching a name finds the crafter")
 results = LI.Search("TAILOR")
 check(#results == 2, "searching a profession is case-insensitive")
-results = LI.Search("", { onlineOnly = true })
-check(#results == 1 and results[1].key == "Bob Stone-TestRealm", "the online filter keeps only online crafters")
-results = LI.Search("", { prof = "alchemy" })
+results = LI.Search("", { profs = { alchemy = true } })
 check(#results == 0, "the profession filter hides other professions")
+results = LI.Search("", { profs = { alchemy = true, tailoring = true } })
+check(#results == 2, "several professions can be picked at once")
 
 Advance(20 * 60)
 check(LI.Status("Anna Smith-TestRealm") == "offline", "people not seen for a while count as offline")
@@ -538,14 +538,16 @@ local function Shape()
 	end
 	return table.concat(out, " ")
 end
-check(Shape() == "#alchemy Brew Cora #tailoring Bob Anna", "crafters are grouped under profession headers, online first", Shape())
+check(Shape() == "#alchemy Cora #tailoring Bob Anna", "crafters are grouped under profession headers, online first, without you", Shape())
 local rows = main.list.__rows
-check(rows[1].headName.__text == "Alchemy" and rows[1].headCount.__text:find("2 crafters", 1, true) and rows[1].headCount.__text:find("1 online", 1, true), "a header names the profession and counts crafters", rows[1].headCount.__text)
+check(rows[1].headName.__text == "Alchemy" and rows[1].headCount.__text == "1 crafter", "a header names the profession and counts crafters", rows[1].headCount.__text)
+check(rows[3].headCount.__text:find("2 crafters", 1, true) and rows[3].headCount.__text:find("1 online", 1, true), "a header counts who is online", rows[3].headCount.__text)
+check(main.count.__text:find("3 crafters remembered", 1, true), "the footer doesn't count you", main.count.__text)
 check(rows[2].headName:IsShown() == false and rows[2].name:IsShown(), "crafter rows hide the header parts")
 check(rows[1].name:IsShown() == false, "header rows hide the crafter parts")
-local bobRow = rows[5]
+local bobRow = rows[4]
 check(bobRow.line.__text == "Skill 260  ·  recipes not read yet" or bobRow.line.__text == "recipes not read yet", "a row describes that profession", bobRow.line.__text)
-check(rows[6].line.__text == "Skill 260  ·  2 recipes", "skill and recipe count are shown", rows[6].line.__text)
+check(rows[5].line.__text == "Skill 260  ·  2 recipes", "skill and recipe count are shown", rows[5].line.__text)
 bobRow.__scripts.OnClick(bobRow, "LeftButton")
 check(W.tells[1] == "Bob Stone", "clicking a row whispers the crafter by name without the realm", W.tells[1])
 bobRow.__scripts.OnClick(bobRow, "RightButton")
@@ -562,27 +564,23 @@ check(Shape() == "#alchemy #tailoring Bob Anna", "clicking a header collapses it
 check(#W.tells == tells, "clicking a header doesn't whisper anyone")
 main.list.__rows[1].__scripts.OnClick(main.list.__rows[1], "LeftButton")
 Advance(1)
-check(Shape() == "#alchemy Brew Cora #tailoring Bob Anna", "clicking it again expands it", Shape())
+check(Shape() == "#alchemy Cora #tailoring Bob Anna", "clicking it again expands it", Shape())
 LI.SetRecipes("Anna Smith-TestRealm", { name = "Alchemy", rank = 40 }, { { id = 2330, name = "Minor Healing Potion", item = 118 } }, "click")
 Advance(1)
-check(Shape() == "#alchemy Brew Cora Anna #tailoring Bob Anna", "someone with two professions is listed under both, higher skill first", Shape())
-local annaAlch = main.list.__rows[4]
+check(Shape() == "#alchemy Cora Anna #tailoring Bob Anna", "someone with two professions is listed under both, higher skill first", Shape())
+local annaAlch = main.list.__rows[3]
 check(annaAlch.books[1].key == "alchemy" and annaAlch.books[2].key == "tailoring" and annaAlch.books[2]:IsShown(), "their row still shows every profession button")
 LI.crafters["Anna Smith-TestRealm"].profs.alchemy = nil
 LI.Fire("CraftersChanged")
 Advance(1)
 
-local coraRow = main.list.__rows[3]
+local coraRow = main.list.__rows[2]
 check(coraRow.entry.key == "Cora Vale-TestRealm", "found Cora's row", coraRow.entry.key)
 check(coraRow.pill:IsShown(), "each row has a last seen pill")
-check(main.list.__rows[2].pill.text.__text == "you", "your own pill says you", main.list.__rows[2].pill.text.__text)
 check(#coraRow.pill.text.__text <= 4, "last seen is shown short", coraRow.pill.text.__text)
-local whos = #W.who
-main.list.__rows[2].pill.__scripts.OnClick(main.list.__rows[2].pill)
-check(#W.who == whos, "your own pill doesn't send a /who")
 check(LI.Status("Cora Vale-TestRealm") ~= "online", "Cora starts out not online")
 coraRow.pill.__scripts.OnClick(coraRow.pill)
-check(main.list.__rows[3].pill.text.__text == "...", "clicking the pill starts a check and shows dots", main.list.__rows[3].pill.text.__text)
+check(main.list.__rows[2].pill.text.__text == "...", "clicking the pill starts a check and shows dots", main.list.__rows[2].pill.text.__text)
 check(W.who[1] and W.who[1].filter == "x-Cora+Vale" and W.who[1].origin == 3, "the check sends an exact /who with the surname joined", W.who[1] and W.who[1].filter)
 check(LI.CheckOnline("Anna Smith-TestRealm") == false and #W.who == 1, "only one check runs at a time")
 Fire("CHAT_MSG_SYSTEM", "You have learned a new spell.")
@@ -598,8 +596,7 @@ for _, m in ipairs(W.chat) do
 	if m:find("is online in Orgrimmar", 1, true) then said = true end
 end
 check(said, "the result is printed in chat")
-check(main.list.__rows[3].pill.text.__text == "online", "a confirmed online crafter's pill says online", main.list.__rows[3].pill.text.__text)
-check(Shape():find("#alchemy Brew Cora", 1, true) == 1, "the list refreshes with the new status", Shape())
+check(main.list.__rows[2].pill.text.__text == "online", "a confirmed online crafter's pill says online", main.list.__rows[2].pill.text.__text)
 
 W.whoResults = {}
 LI.CheckOnline("Bob Stone-TestRealm")
@@ -663,6 +660,58 @@ main.list.__rows[2].star.__scripts.OnClick(main.list.__rows[2].star)
 Advance(1)
 check(not LI.IsFavorite("Cora Vale-TestRealm") and Shape():find("#favorites", 1, true) == nil, "clicking the star again removes the favorite", Shape())
 LI.ToggleFavorite("Cora Vale-TestRealm")
+LI.ToggleFavorite("Cora Vale-TestRealm")
+Advance(1)
+
+local function Chips()
+	local out = {}
+	for _, chip in ipairs(main.chips) do
+		if chip:IsShown() then out[#out + 1] = chip.key end
+	end
+	return table.concat(out, ",")
+end
+local function Chip(key)
+	for _, chip in ipairs(main.chips) do
+		if chip:IsShown() and chip.key == key then return chip end
+	end
+end
+check(Chips() == "alchemy,blacksmithing,enchanting,engineering,leatherworking,tailoring", "every main profession has a filter even with nobody in it", Chips())
+check(Chip("engineering").count.__text == "" and Chip("tailoring").count.__text == "2", "filters show how many crafters they hold", Chip("tailoring").count.__text)
+check(not main.clearChips:IsShown(), "no clear button without a filter")
+Chip("alchemy").__scripts.OnClick(Chip("alchemy"))
+Advance(1)
+check(Shape() == "#alchemy Cora", "picking a profession filters the list", Shape())
+check(main.clearChips:IsShown(), "a clear button appears with a filter")
+Chip("tailoring").__scripts.OnClick(Chip("tailoring"))
+Advance(1)
+check(Shape() == "#alchemy Cora #tailoring Anna Bob", "picking a second profession shows both", Shape())
+Chip("alchemy").__scripts.OnClick(Chip("alchemy"))
+Advance(1)
+check(Shape() == "#tailoring Anna Bob", "clicking a picked profession removes it", Shape())
+main.clearChips.__scripts.OnClick(main.clearChips)
+Advance(1)
+check(Shape() == "#alchemy Cora #tailoring Anna Bob" and not main.clearChips:IsShown(), "clear shows everyone again", Shape())
+
+LI.SetRecipes("Dan Cook-TestRealm", { name = "Cooking", rank = 225 }, { { id = 818, name = "Spiced Wolf Meat", item = 2680 } }, "click")
+Advance(1)
+check(Shape() == "#alchemy Cora #tailoring Anna Bob", "secondary professions are hidden by default", Shape())
+check(not Chip("cooking"), "and have no filter by default")
+main.secondaryBox:SetChecked(true)
+main.secondaryBox.__scripts.OnClick(main.secondaryBox)
+Advance(1)
+check(Shape() == "#alchemy Cora #tailoring Anna Bob #cooking Dan", "the secondary checkbox shows them", Shape())
+check(Chips() == "alchemy,blacksmithing,enchanting,engineering,leatherworking,tailoring,cooking,first aid,fishing", "and adds their filters", Chips())
+Chip("cooking").__scripts.OnClick(Chip("cooking"))
+Advance(1)
+check(Shape() == "#cooking Dan", "secondary filters work like the others", Shape())
+main.secondaryBox:SetChecked(false)
+main.secondaryBox.__scripts.OnClick(main.secondaryBox)
+Advance(1)
+check(Shape() == "#alchemy Cora #tailoring Anna Bob", "unticking secondary drops its filters too", Shape())
+LI.settings.profs = {}
+LI.Forget("Dan Cook-TestRealm")
+if not LI.IsFavorite("Cora Vale-TestRealm") then LI.ToggleFavorite("Cora Vale-TestRealm") end
+Advance(1)
 
 local function Fake(key, rank, count, seen)
 	return { key = key, status = "offline", seenAt = seen, crafter = { profs = { tailoring = { name = "Tailoring", rank = rank, count = count } } }, groups = { { key = "tailoring", confidence = 2, makes = 0 } } }

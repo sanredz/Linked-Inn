@@ -27,15 +27,13 @@ local function ShowTooltip(self)
 	GameTooltip:SetOwner(self, "ANCHOR_LEFT")
 	GameTooltip:SetText(LI.TITLE, 1, 0.82, 0)
 	if LI.ready then
-		local total, online = 0, 0
+		local total = 0
 		for key in pairs(LI.crafters) do
-			total = total + 1
-			if LI.Status(key) == "online" then
-				online = online + 1
+			if key ~= LI.playerKey then
+				total = total + 1
 			end
 		end
 		GameTooltip:AddDoubleLine("Crafters remembered", tostring(total), 0.7, 0.7, 0.7, 1, 1, 1)
-		GameTooltip:AddDoubleLine("Online now", tostring(online), 0.7, 0.7, 0.7, 1, 1, 1)
 	end
 	GameTooltip:AddLine(" ")
 	GameTooltip:AddLine("Click: open   Right-click: test   Drag: move", 0.5, 0.5, 0.5)

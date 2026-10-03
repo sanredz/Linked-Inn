@@ -648,34 +648,62 @@ local function CreateList(parent)
 	return box
 end
 
+local function ProfsSelected()
+	LI.settings.profs = LI.settings.profs or {}
+	return LI.settings.profs
+end
+
+local function AnySelected(chips)
+	local selected = ProfsSelected()
+	for _, info in ipairs(chips) do
+		if selected[info.key] then
+			return true
+		end
+	end
+	return false
+end
+
 local function UpdateChips()
-	local profs = LI.ProfessionsSeen()
+	local profs = LI.ProfessionChips(LI.settings.secondary)
 	local chips = main.chips
+	local selected = ProfsSelected()
+	local any = AnySelected(profs)
 	for i, info in ipairs(profs) do
 		local chip = chips[i]
 		if not chip then
 			chip = CreateFrame("Button", nil, main.chipBar)
 			chip:SetSize(30, 30)
-			chip.icon = chip:CreateTexture(nil, "ARTWORK")
-			chip.icon:SetAllPoints()
-			chip.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 			chip.sel = chip:CreateTexture(nil, "BACKGROUND")
 			chip.sel:SetPoint("TOPLEFT", -3, 3)
 			chip.sel:SetPoint("BOTTOMRIGHT", 3, -3)
 			chip.sel:SetColorTexture(1, 0.82, 0.2, 0.9)
+			chip.edge = chip:CreateTexture(nil, "BORDER")
+			chip.edge:SetPoint("TOPLEFT", -1, 1)
+			chip.edge:SetPoint("BOTTOMRIGHT", 1, -1)
+			chip.edge:SetColorTexture(0, 0, 0, 0.85)
+			chip.icon = chip:CreateTexture(nil, "ARTWORK")
+			chip.icon:SetAllPoints()
+			chip.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+			chip.count = chip:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
+			chip.count:SetPoint("BOTTOMRIGHT", 2, -1)
 			chip.hl = chip:CreateTexture(nil, "HIGHLIGHT")
 			chip.hl:SetAllPoints()
 			chip.hl:SetColorTexture(1, 1, 1, 0.15)
 			chip:SetScript("OnClick", function(self)
-				filter.prof = filter.prof ~= self.key and self.key or nil
-				Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
+				local set = ProfsSelected()
+				set[self.key] = not set[self.key] or nil
+				Sound(set[self.key] and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
 				UI.Refresh()
+				if self:IsMouseOver() then
+					self:GetScript("OnEnter")(self)
+				end
 			end)
 			chip:SetScript("OnEnter", function(self)
 				GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
 				GameTooltip:SetText(self.name or "", 1, 0.82, 0)
-				GameTooltip:AddLine(string.format("%d %s", self.count or 0, (self.count or 0) == 1 and "crafter" or "crafters"), 1, 1, 1)
-				GameTooltip:AddLine(filter.prof == self.key and "Click to show everyone" or "Click to show only this profession", 0.5, 0.5, 0.5)
+				local n = self.n or 0
+				GameTooltip:AddLine(n == 0 and "Nobody seen yet" or string.format("%d %s", n, n == 1 and "crafter" or "crafters"), 1, 1, 1)
+				GameTooltip:AddLine(ProfsSelected()[self.key] and "Click to remove from the filter" or "Click to add to the filter", 0.5, 0.5, 0.5)
 				GameTooltip:Show()
 			end)
 			chip:SetScript("OnLeave", function()
@@ -683,11 +711,13 @@ local function UpdateChips()
 			end)
 			chips[i] = chip
 		end
-		chip.key, chip.name, chip.count = info.key, info.name, info.count
+		chip.key, chip.name, chip.n = info.key, info.name, info.count
 		chip.icon:SetTexture(LI.ProfIcon(info.key, info.icon))
-		local selected = filter.prof == info.key
-		chip.sel:SetShown(selected)
-		chip.icon:SetDesaturated(filter.prof ~= nil and not selected)
+		local on = selected[info.key] == true
+		chip.sel:SetShown(on)
+		chip.icon:SetDesaturated((any and not on) or info.count == 0)
+		chip.icon:SetAlpha(on and 1 or (any and 0.55) or (info.count == 0 and 0.45) or 1)
+		chip.count:SetText(info.count > 0 and tostring(info.count) or "")
 		chip:ClearAllPoints()
 		chip:SetPoint("LEFT", main.chipBar, "LEFT", (i - 1) * 38 + 3, 0)
 		chip:Show()
@@ -695,18 +725,15 @@ local function UpdateChips()
 	for i = #profs + 1, #chips do
 		chips[i]:Hide()
 	end
-	main.noChips:SetShown(#profs == 0)
+	main.clearChips:ClearAllPoints()
+	main.clearChips:SetPoint("LEFT", main.chipBar, "LEFT", #profs * 38 + 4, 0)
+	main.clearChips:SetShown(any)
+	main.secondaryBox:SetChecked(LI.settings.secondary and true or false)
 end
 
 local function RefreshFind()
-	local opts = { prof = filter.prof, kind = LI.settings.kind, onlineOnly = LI.settings.onlineOnly }
+	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary, kind = LI.settings.kind }
 	local results = LI.Search(filter.search, opts)
-	local online = 0
-	for _, entry in ipairs(results) do
-		if entry.status == "online" then
-			online = online + 1
-		end
-	end
 	local list = {}
 	local collapsed = LI.settings.collapsed or {}
 	for _, group in ipairs(LI.Group(results)) do
@@ -721,18 +748,19 @@ local function RefreshFind()
 	main.list:SetList(list)
 	UpdateChips()
 	main.kind:SetText(KindName(LI.settings.kind))
-	main.onlineBox:SetChecked(LI.settings.onlineOnly and true or false)
 	local total = 0
-	for _ in pairs(LI.crafters) do
-		total = total + 1
+	for key in pairs(LI.crafters) do
+		if key ~= LI.playerKey then
+			total = total + 1
+		end
 	end
-	main.count:SetText(string.format("%d shown  ·  %d online  ·  %d crafters remembered", #results, online, total))
+	main.count:SetText(string.format("%d shown  ·  %d crafters remembered", #results, total))
 	local empty = #results == 0
 	main.empty:SetShown(empty)
 	if empty then
 		if total == 0 then
 			main.emptyHead:SetText("The inn is quiet")
-			main.emptyText:SetText("Linked Inn listens to Trade, General, guild and party chat. Whenever someone links a profession, they show up here. Open your own profession window to add yourself.")
+			main.emptyText:SetText("Linked Inn listens to Trade, General, guild and party chat. Whenever someone links a profession, they show up here.")
 		elseif filter.search ~= "" then
 			main.emptyHead:SetText("Nobody for \"" .. filter.search .. "\" yet")
 			main.emptyText:SetText("No one you've seen can make that so far. Try a shorter word, or clear the filters.")
@@ -849,10 +877,10 @@ function UI.Refresh()
 	main.findPage:SetShown(findShown)
 	main.testPage:SetShown(not findShown)
 	main.search:SetShown(findShown)
-	main.onlineBox:SetShown(findShown)
-	main.onlineLabel:SetShown(findShown)
 	main.kind:SetShown(findShown)
 	main.chipBar:SetShown(findShown)
+	main.secondaryBox:SetShown(findShown)
+	main.secondaryLabel:SetShown(findShown)
 	main.count:SetShown(findShown)
 	if findShown then
 		RefreshFind()
@@ -927,25 +955,49 @@ local function CreateMain()
 	end)
 	main.kind:SetPoint("LEFT", search, "RIGHT", 8, 0)
 
-	main.onlineBox = CreateFrame("CheckButton", nil, main, "UICheckButtonTemplate")
-	main.onlineBox:SetSize(24, 24)
-	main.onlineBox:SetPoint("LEFT", main.kind, "RIGHT", 6, 0)
-	main.onlineBox:SetScript("OnClick", function(self)
-		LI.settings.onlineOnly = self:GetChecked() and true or false
-		UI.Refresh()
-	end)
-	main.onlineLabel = Text(main, "GameFontHighlightSmall")
-	main.onlineLabel:SetPoint("LEFT", main.onlineBox, "RIGHT", 0, 0)
-	main.onlineLabel:SetText("Online")
 
 	main.chipBar = CreateFrame("Frame", nil, main)
 	main.chipBar:SetPoint("TOPLEFT", 66, -60)
 	main.chipBar:SetPoint("TOPRIGHT", -10, -60)
 	main.chipBar:SetHeight(36)
 	main.chips = {}
-	main.noChips = Text(main.chipBar, "GameFontDisableSmall")
-	main.noChips:SetPoint("LEFT", 4, 0)
-	main.noChips:SetText("Professions you come across appear here as filters.")
+	main.clearChips = CreateFrame("Button", nil, main.chipBar)
+	main.clearChips:SetSize(44, 30)
+	main.clearChips.text = Text(main.clearChips, "GameFontNormalSmall", "LEFT")
+	main.clearChips.text:SetPoint("LEFT", 4, 0)
+	main.clearChips.text:SetText("Clear")
+	main.clearChips:SetScript("OnClick", function()
+		LI.settings.profs = {}
+		Sound("IG_MAINMENU_OPTION_CHECKBOX_OFF")
+		UI.Refresh()
+	end)
+	main.clearChips:SetScript("OnEnter", function(self)
+		self.text:SetTextColor(1, 1, 1)
+	end)
+	main.clearChips:SetScript("OnLeave", function(self)
+		self.text:SetTextColor(1, 0.82, 0)
+	end)
+	main.clearChips:Hide()
+	main.secondaryBox = CreateFrame("CheckButton", nil, main, "UICheckButtonTemplate")
+	main.secondaryBox:SetSize(24, 24)
+	main.secondaryBox:SetPoint("LEFT", main.kind, "RIGHT", 8, 0)
+	main.secondaryBox:SetScript("OnClick", function(self)
+		LI.settings.secondary = self:GetChecked() and true or false
+		Sound(LI.settings.secondary and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
+		UI.Refresh()
+	end)
+	main.secondaryBox:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+		GameTooltip:SetText("Secondary professions", 1, 0.82, 0)
+		GameTooltip:AddLine("Also show Cooking, First Aid and Fishing.", 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	main.secondaryBox:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+	main.secondaryLabel = Text(main, "GameFontHighlightSmall")
+	main.secondaryLabel:SetPoint("LEFT", main.secondaryBox, "RIGHT", 0, 0)
+	main.secondaryLabel:SetText("Secondary")
 
 	if main.Inset then
 		main.Inset:ClearAllPoints()

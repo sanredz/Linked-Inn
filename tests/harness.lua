@@ -1035,6 +1035,10 @@ check(LI.crafters["Anna Smith-TestRealm"] and LI.crafters["Anna Smith-TestRealm"
 check(LI.test.auto.ok == 1 and LI.test.click == 3, "test results survive a reload", LI.test.click)
 check(LI.guids["Player-1-CCC"] == "Cora Vale-TestRealm", "the GUID index is rebuilt after a reload")
 check(LI.IsFavorite("Cora Vale-TestRealm"), "favorites survive a reload")
+LI.db.profLinks = {}
+local again = Logout()
+Boot(again)
+check(LI.db.profLinks.alchemy and LI.db.profLinks.alchemy.spell == 2259, "profession link numbers are recovered from saved crafters", LI.db.profLinks.alchemy and LI.db.profLinks.alchemy.spell)
 W.clock = W.clock + 90 * 86400
 local savedOld = Logout()
 Boot(savedOld)

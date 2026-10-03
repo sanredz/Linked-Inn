@@ -115,6 +115,19 @@ local function RecipeLinks(msg)
 	return profs
 end
 
+LI.Listen("Ready", function()
+	for _, c in pairs(LI.crafters) do
+		for profKey, p in pairs(c.profs) do
+			if not LI.db.profLinks[profKey] and type(p.link) == "string" then
+				local parsed = LI.ParseTrade(p.link:match("^trade:(.+)$"))
+				if parsed then
+					LI.NoteProfLink(profKey, parsed.numbers)
+				end
+			end
+		end
+	end
+end)
+
 function LI.TryBuilt(msg, senderKey, senderGUID, event, channelBase)
 	if not msg:find("|H", 1, true) or msg:find("|Htrade:", 1, true) then
 		return

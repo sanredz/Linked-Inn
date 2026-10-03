@@ -1124,16 +1124,29 @@ do
 	Advance(20 * 60)
 	W.linkData["trade:Player-1-BBB:3908:197"] = nil
 	W.autoWorks = true
+	local mark = #W.hyperlinks
 	check(LI.CheckOnline("Anna Smith-TestRealm") and LI.CheckOnline("Bob Stone-TestRealm"), "two quick clicks are both accepted")
-	Advance(3)
+	Advance(1)
+	check(W.hyperlinks[mark + 2] == "trade:Player-1-BBB:3908:197", "the second click runs right after the first", W.hyperlinks[mark + 2])
+	Advance(2)
 	check(LI.Status("Anna Smith-TestRealm") == "online" and LI.Status("Bob Stone-TestRealm") ~= "online", "each click gets its own answer")
 	check(LI.crafters["Bob Stone-TestRealm"].profs.tailoring.recipes == nil, "a check never gives one crafter another's recipes")
 	W.autoWorks = false
 	LI.CheckOnline("Bob Stone-TestRealm")
 	W.trade = { linked = true, linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
 	Fire("TRADE_SKILL_LIST_UPDATE")
 	Advance(0.05)
 	check(LI.IsChecking("Bob Stone-TestRealm") and LI.Status("Bob Stone-TestRealm") ~= "online", "a late update from someone else's profession doesn't count as an answer")
+	Advance(0.5)
+	check(LI.crafters["Bob Stone-TestRealm"].profs.tailoring.recipes == nil and LI.Status("Bob Stone-TestRealm") ~= "online", "and its recipes are never filed under the person being checked")
+	Advance(2)
+	local before = #W.hyperlinks
+	LI.CheckOnline("Anna Smith-TestRealm")
+	Advance(0.1)
+	check(#W.hyperlinks == before + 1, "a leftover hidden profession doesn't hold up the next check")
+	C_TradeSkillUI.CloseTradeSkill()
+	Advance(3)
 	Advance(2)
 	W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
 	Fire("TRADE_SKILL_SHOW")

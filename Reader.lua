@@ -241,7 +241,7 @@ Kick = function()
 		CloseHidden()
 		return
 	end
-	if tradeOpen and not concealed then
+	if tradeOpen and FrameVisible() then
 		return
 	end
 	if (InCombatLockdown and InCombatLockdown()) or PanelOpen() then

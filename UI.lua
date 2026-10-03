@@ -9,7 +9,14 @@ local TITLE_FONT = "Fonts\\MORPHEUS.TTF"
 local ROW_HEIGHT = 46
 local BOOK_SIZE = 30
 local BOOK_GAP = 6
-local STATUS_WIDTH = 66
+local ICON_X = 14
+local ICON_SIZE = 30
+local TEXT_X = ICON_X + ICON_SIZE + 10
+local CHECK_RIGHT = 10
+local CHECK_SIZE = 16
+local SEEN_WIDTH = 30
+local DOT_SIZE = 8
+local STATUS_WIDTH = CHECK_RIGHT + CHECK_SIZE + 6 + SEEN_WIDTH + 4 + DOT_SIZE + 12
 local FRESH = 15 * 60
 local WARM = 3 * 3600
 local HEADER_HEIGHT = 34
@@ -332,8 +339,8 @@ local function BuildRow(row)
 	row.hl:SetColorTexture(1, 0.82, 0.3, 0.10)
 
 	row.icon = row:CreateTexture(nil, "ARTWORK")
-	row.icon:SetSize(30, 30)
-	row.icon:SetPoint("LEFT", 14, 0)
+	row.icon:SetSize(ICON_SIZE, ICON_SIZE)
+	row.icon:SetPoint("LEFT", ICON_X, 0)
 	row.name = Text(row, "GameFontNormalLarge")
 	row.name:SetPoint("TOPLEFT", row.icon, "TOPRIGHT", 10, 1)
 	row.name:SetWordWrap(false)
@@ -342,8 +349,8 @@ local function BuildRow(row)
 	row.line:SetWordWrap(false)
 
 	row.check = CreateFrame("Button", nil, row)
-	row.check:SetSize(16, 16)
-	row.check:SetPoint("RIGHT", -10, 0)
+	row.check:SetSize(CHECK_SIZE, CHECK_SIZE)
+	row.check:SetPoint("RIGHT", -CHECK_RIGHT, 0)
 	row.check.icon = row.check:CreateTexture(nil, "ARTWORK")
 	row.check.icon:SetAllPoints()
 	if not pcall(row.check.icon.SetAtlas, row.check.icon, "common-search-magnifyingglass") then
@@ -369,10 +376,11 @@ local function BuildRow(row)
 		GameTooltip:Hide()
 	end)
 
-	row.seen = Text(row, "GameFontHighlightSmall", "RIGHT")
-	row.seen:SetPoint("RIGHT", row.check, "LEFT", -5, 0)
+	row.seen = Text(row, "GameFontHighlightSmall", "LEFT")
+	row.seen:SetWidth(SEEN_WIDTH)
+	row.seen:SetPoint("RIGHT", row.check, "LEFT", -6, 0)
 	row.seenDot = row:CreateTexture(nil, "OVERLAY")
-	row.seenDot:SetSize(8, 8)
+	row.seenDot:SetSize(DOT_SIZE, DOT_SIZE)
 	row.seenDot:SetPoint("RIGHT", row.seen, "LEFT", -4, 0)
 	local mask = row:CreateMaskTexture()
 	mask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
@@ -381,20 +389,20 @@ local function BuildRow(row)
 
 	row.toggle = row:CreateTexture(nil, "ARTWORK")
 	row.toggle:SetSize(14, 14)
-	row.toggle:SetPoint("LEFT", 6, -2)
+	row.toggle:SetPoint("RIGHT", -CHECK_RIGHT - 1, 0)
 	row.headIcon = row:CreateTexture(nil, "ARTWORK")
-	row.headIcon:SetSize(22, 22)
-	row.headIcon:SetPoint("LEFT", row.toggle, "RIGHT", 6, 0)
+	row.headIcon:SetSize(ICON_SIZE - 6, ICON_SIZE - 6)
+	row.headIcon:SetPoint("LEFT", ICON_X + 3, 0)
 	row.headIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 	row.headName = row:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 	row.headName:SetFont(TITLE_FONT, 18, "")
-	row.headName:SetPoint("LEFT", row.headIcon, "RIGHT", 8, 0)
+	row.headName:SetPoint("LEFT", TEXT_X, 0)
 	row.headCount = Text(row, "GameFontDisableSmall")
 	row.headCount:SetPoint("BOTTOMLEFT", row.headName, "BOTTOMRIGHT", 10, 2)
 	row.headLine = row:CreateTexture(nil, "ARTWORK")
 	row.headLine:SetHeight(1)
-	row.headLine:SetPoint("BOTTOMLEFT", 6, 2)
-	row.headLine:SetPoint("BOTTOMRIGHT", -6, 2)
+	row.headLine:SetPoint("BOTTOMLEFT", ICON_X, 2)
+	row.headLine:SetPoint("BOTTOMRIGHT", -CHECK_RIGHT, 2)
 	row.headLine:SetColorTexture(1, 0.82, 0, 0.35)
 
 	row.rowParts = { row.icon, row.name, row.line, row.check, row.seen, row.seenDot }
@@ -508,7 +516,7 @@ local function InitRow(row, data)
 	row.seen:SetText(seenText)
 	row.seen:SetTextColor(seenColor[1], seenColor[2], seenColor[3])
 	row.seenDot:SetColorTexture(seenColor[1], seenColor[2], seenColor[3], 1)
-	row.check:SetShown(entry.key ~= LI.playerKey)
+	row.check:SetShown(entry.key ~= LI.playerKey and entry.status ~= "online")
 	local text, textColor = RowLine(data)
 	row.line:SetText(text)
 	row.line:SetTextColor(textColor[1], textColor[2], textColor[3])

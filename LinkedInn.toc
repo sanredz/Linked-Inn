@@ -5,6 +5,7 @@
 ## Version: @project-version@
 ## X-Website: https://github.com/sanredz/Linked-Inn
 ## X-License: All Rights Reserved
+## X-Curse-Project-ID: 1725169
 ## SavedVariables: LinkedInnDB
 ## IconTexture: Interface\Icons\INV_Drink_05
 ## AddonCompartmentFunc: LinkedInn_OnAddonCompartmentClick

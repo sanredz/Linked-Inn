@@ -1159,17 +1159,17 @@ local function CreateMain()
 	main.testPage:Hide()
 
 	main.count = Text(main, "GameFontDisableSmall", "RIGHT")
-	main.count:SetPoint("BOTTOMRIGHT", -12, 8)
+	main.count:SetPoint("RIGHT", main, "BOTTOMRIGHT", -12, 13)
 	main.compactBox = CreateFrame("CheckButton", nil, main, "UICheckButtonTemplate")
 	main.compactBox:SetSize(20, 20)
-	main.compactBox:SetPoint("BOTTOMLEFT", 10, 3)
+	main.compactBox:SetPoint("LEFT", main, "BOTTOMLEFT", 8, 13)
 	main.compactBox:SetScript("OnClick", function(self)
 		LI.settings.compact = self:GetChecked() and true or false
 		Sound(LI.settings.compact and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
 		UI.Refresh()
 	end)
-	main.compactLabel = Text(main, "GameFontDisableSmall")
-	main.compactLabel:SetPoint("LEFT", main.compactBox, "RIGHT", 0, 0)
+	main.compactLabel = Text(main, "GameFontHighlightSmall")
+	main.compactLabel:SetPoint("LEFT", main.compactBox, "RIGHT", 1, 0)
 	main.compactLabel:SetText("Compact")
 
 	for i, name in ipairs(TABS) do

@@ -5,8 +5,8 @@
 Find someone who can make what you need, for **World of Warcraft: Forever**.
 
 Linked Inn builds a list of every crafter around you and everything they can
-make, all on its own. Just play: it fills up from profession links in chat and
-from other players using the addon, with nothing to set up or click.
+make, all on its own. Just play: it fills up as you go about the world, with
+nothing to set up or click.
 
 When you need something made, search for it and you'll see exactly who can
 make it in seconds, who's online right now, and whisper them with one click.
@@ -19,7 +19,7 @@ Nobody around? Post a request and the crafters who can make it get a notice.
 > **Beta:** Linked Inn is new. If something looks off, please
 > [open an issue](https://github.com/sanredz/Linked-Inn/issues).
 
-![The crafters list, grouped by profession](media/crafters.png)
+![The crafters list with a recipe book open](media/crafters-recipes.png)
 
 ## Where the list comes from
 

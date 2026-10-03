@@ -172,7 +172,14 @@ local function InstallStubs()
 	_G.SlashCmdList = {}
 	_G.PlaySound = function() end
 	_G.SOUNDKIT = { IG_CHARACTER_INFO_OPEN = 2, IG_CHARACTER_INFO_CLOSE = 3, IG_CHARACTER_INFO_TAB = 4, IG_MAINMENU_OPTION_CHECKBOX_ON = 5 }
-	_G.UnitName = function(u) if u == "player" then return W.name or "Tester", W.surname end return nil end
+	_G.UnitName = function(u)
+		if u == "player" then return W.name or "Tester", W.surname end
+		local unit = W.units and W.units[u]
+		if unit then return unit.name, unit.surname end
+		return nil
+	end
+	_G.UnitIsPlayer = function(u) return u == "player" or (W.units and W.units[u] and not W.units[u].npc) or false end
+	_G.GetRealZoneText = function() return W.zone or "Stormwind City" end
 	_G.UnitClass = function() return "Mage", "MAGE" end
 	_G.C_AddOns = { GetAddOnMetadata = function(addon, field) if addon == ADDON_NAME and field == "Version" then return TOC_VERSION end end }
 	_G.GetRealmName = function() return "Test Realm" end
@@ -462,6 +469,29 @@ Say("CHAT_MSG_SAY", "hello", "Anna Smith-TestRealm", "Player-1-AAA")
 check(LI.Status("Anna Smith-TestRealm") == "recent", "any chat line marks a crafter active again")
 Fire("CHAT_MSG_SYSTEM", "No player named 'Anna Smith' is currently playing.")
 check(LI.Status("Anna Smith-TestRealm") == "offline", "a failed whisper marks the crafter offline")
+W.units = { mouseover = { name = "Anna", surname = "Smith" } }
+local fired = 0
+LI.Listen("StatusChanged", function() fired = fired + 1 end)
+Fire("UPDATE_MOUSEOVER_UNIT")
+check(LI.Status("Anna Smith-TestRealm") == "recent", "hovering a crafter in the world counts as seeing them")
+check(LI.crafters["Anna Smith-TestRealm"].where == "Stormwind City", "a world sighting records the zone", LI.crafters["Anna Smith-TestRealm"].where)
+check(fired == 1, "a sighting refreshes the list")
+Fire("UPDATE_MOUSEOVER_UNIT")
+Fire("PLAYER_TARGET_CHANGED")
+check(fired == 1, "repeat sightings within a minute don't refresh again", fired)
+Advance(20 * 60)
+W.units = { nameplate3 = { name = "Anna", surname = "Smith" } }
+Fire("NAME_PLATE_UNIT_ADDED", "nameplate3")
+check(LI.Status("Anna Smith-TestRealm") == "recent", "a nameplate counts as seeing them")
+W.units = { target = { name = "Stranger", surname = "Danger" }, mouseover = { name = "Anna", surname = "Smith", npc = true } }
+Fire("PLAYER_TARGET_CHANGED")
+check(LI.crafters["Stranger Danger-TestRealm"] == nil, "seeing someone who isn't a crafter adds nothing")
+W.units = nil
+LI.crafters["Anna Smith-TestRealm"].where = "Trade"
+LI.crafters["Bob Stone-TestRealm"].seen = time() - 3600
+Fire("GUILD_ROSTER_UPDATE")
+check(LI.crafters["Bob Stone-TestRealm"].seen == time(), "an online guild member counts as seen now")
+Fire("CHAT_MSG_SYSTEM", "No player named 'Anna Smith' is currently playing.")
 
 Say("CHAT_MSG_CHANNEL", "selling stuff " .. TradeLink("Player-1-CCC", 2259, 171, "Alchemy"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
 check(LI.crafters["Cora Vale-TestRealm"] and LI.crafters["Cora Vale-TestRealm"].profs.alchemy, "a relinked profession belongs to its owner, not the sender")

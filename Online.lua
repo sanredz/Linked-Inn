@@ -6,6 +6,8 @@ local ROSTER_EVERY = 90
 local CHECK_VALID = 10 * 60
 local CHECK_TIMEOUT = 5
 
+local SIGHT_QUIET = 60
+
 local roster = {}
 local offlineAt = {}
 local checked = {}
@@ -19,6 +21,9 @@ local function SetRoster(source, fullName, online)
 	local entry = roster[key] or {}
 	roster[key] = entry
 	entry[source] = online and true or false
+	if online then
+		LI.MarkSeen(key)
+	end
 end
 
 local function ReadGuild()
@@ -69,6 +74,9 @@ local function ReadGroup()
 			local entry = roster[key] or {}
 			roster[key] = entry
 			entry.group = LI.Safe(LI.Try(UnitIsConnected, unit)) ~= false
+			if entry.group then
+				LI.MarkSeen(key)
+			end
 		end
 	end
 	LI.Fire("StatusChanged")
@@ -107,13 +115,46 @@ function LI.Status(key)
 	return "offline", seen
 end
 
-function LI.MarkSeen(key)
+function LI.MarkSeen(key, where)
 	local c = LI.crafters and LI.crafters[key]
-	if c then
-		c.seen = time()
-		offlineAt[key] = nil
+	if not c then
+		return false
+	end
+	local fresh = offlineAt[key] ~= nil or time() - (c.seen or 0) >= SIGHT_QUIET
+	c.seen = time()
+	if where then
+		c.where = where
+	end
+	offlineAt[key] = nil
+	return fresh
+end
+
+local function Sighted(unit)
+	if not LI.ready or not unit then
+		return
+	end
+	if not LI.Safe(LI.Try(UnitIsPlayer, unit)) then
+		return
+	end
+	local key = LI.UnitKey(unit)
+	if not key or key == LI.playerKey or not LI.crafters[key] then
+		return
+	end
+	local zone = GetRealZoneText and LI.Safe(LI.Try(GetRealZoneText))
+	if LI.MarkSeen(key, type(zone) == "string" and zone ~= "" and zone or nil) then
+		LI.Fire("StatusChanged")
 	end
 end
+
+LI.On("UPDATE_MOUSEOVER_UNIT", function()
+	Sighted("mouseover")
+end)
+LI.On("PLAYER_TARGET_CHANGED", function()
+	Sighted("target")
+end)
+LI.On("NAME_PLATE_UNIT_ADDED", function(unit)
+	Sighted(LI.Safe(unit))
+end)
 
 local function NotFoundPattern()
 	local fmt = ERR_CHAT_PLAYER_NOT_FOUND_S

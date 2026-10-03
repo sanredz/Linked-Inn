@@ -329,7 +329,7 @@ local function InstallStubs()
 		end,
 		GetTradeSkillTexture = function(id) return 9000 + id end,
 		GetCategoryInfo = function(id)
-			local cats = { [10] = { name = "Bags", uiOrder = 2 }, [11] = { name = "Armor", uiOrder = 1 } }
+			local cats = { [10] = { name = "Bags", uiOrder = 1 }, [11] = { name = "Armor", uiOrder = 2 } }
 			local c = cats[id]
 			return c and { categoryID = id, name = c.name, uiOrder = c.uiOrder } or nil
 		end,
@@ -485,7 +485,7 @@ check(tailoring.rank == 260 and tailoring.max == 300, "skill level is saved")
 check(LI.test.auto.ok == 1 and LI.test.auto.tries == 1 and LI.test.auto.flashed == 0, "the test counts one clean automatic read")
 check(W.closed == 1, "the profession window is closed after an automatic read")
 check(LI.db.recipes[18560].k == "bag" and LI.db.recipes[3914].k == "armor", "recipes get an item type", LI.db.recipes[18560].k)
-check(LI.db.recipes[18560].c == 10 and LI.db.cats[10].n == "Bags" and LI.db.cats[11].o == 1, "recipes remember their category, named once in a shared table")
+check(LI.db.recipes[18560].c == 10 and LI.db.cats[10].n == "Bags" and LI.db.cats[10].o == 1, "recipes remember their category, named once in a shared table")
 check(LI.db.recipes[18560].r == "14342:4;14256:2;8343:2", "reagents are stored once per recipe", LI.db.recipes[18560].r)
 check(LI.db.recipes[3914].r == "2996:2;2320:1", "optional reagents are left out", LI.db.recipes[3914].r)
 check(LI.Reader.QueueSize() == 0, "the queue is empty after reading")
@@ -867,10 +867,10 @@ local function BookShape()
 	end
 	return table.concat(out, ",")
 end
-check(BookShape() == "#Armor,Brown Linen Pants,#Bags,Mooncloth Bag", "the book groups recipes under categories in the game's order", BookShape())
-local bag = book.list.__rows[4]
+check(BookShape() == "#Bags,Mooncloth Bag,#Armor,Brown Linen Pants", "the book groups recipes under categories in the game's order", BookShape())
+local bag = book.list.__rows[2]
 check(bag.reagents[1]:IsShown() and bag.reagents[1].count.__text == "4" and bag.reagents[3]:IsShown() and bag.reagents[1].icon.__texture == 60000 + 14342, "each recipe shows its reagents with counts", bag.reagents[1].count.__text)
-check(book.list.__rows[2].reagents[2].count.__text == "", "a single reagent shows no count")
+check(book.list.__rows[4].reagents[2].count.__text == "", "a single reagent shows no count")
 local lines = LI.Book.ReagentLines(LI.db.recipes[18560])
 check(#lines == 3 and lines[1]:find("4 \195\151 Mooncloth", 1, true) and lines[3]:find("Loading", 1, true), "hovering lists reagents with icon, amount and name", lines[1])
 book.search:SetText("felcloth")
@@ -878,7 +878,7 @@ book.search.__scripts.OnTextChanged(book.search)
 check(BookShape() == "#Bags,Mooncloth Bag", "the book search also finds recipes by reagent", BookShape())
 book.search:SetText("")
 book.search.__scripts.OnTextChanged(book.search)
-bag = book.list.__rows[4]
+bag = book.list.__rows[2]
 bag.__scripts.OnClick(bag)
 check(W.tells[#W.tells] == "Anna Smith" and W.editBox.text == "Hi! Could you make |cff0070dd|Hitem:14155::::::::60:::::|h[Mooncloth Bag]|h|r?", "clicking a recipe opens a whisper asking for it", W.editBox.text)
 W.shift = true
@@ -886,7 +886,7 @@ local tellsNow = #W.tells
 bag.__scripts.OnClick(bag)
 W.shift = false
 check(#W.tells == tellsNow and W.links[#W.links]:find("Mooncloth Bag", 1, true), "shift-clicking a recipe links it in chat")
-local pants = book.list.__rows[2]
+local pants = book.list.__rows[4]
 pants.__scripts.OnClick(pants)
 check(W.editBox.text == "Hi! Could you make [Brown Linen Pants]?", "an uncached item still gets asked for by name", W.editBox.text)
 check(LI.IsChecking("Anna Smith-TestRealm") and book.state.__text == "Checking..." and not book.live:IsEnabled(), "opening a book quietly checks if they're online", book.state.__text)
@@ -902,6 +902,7 @@ annaBook.__scripts.OnClick(annaBook)
 Advance(3)
 W.autoWorks = false
 check(book.state.__text == "Online" and book.live:IsEnabled(), "a reply enables Open in game and says Online", book.state.__text)
+check(#W.chat == chatLines, "a quiet online result prints nothing either")
 local refsNow = W.itemRefs or 0
 book.live.__scripts.OnClick(book.live)
 check((W.itemRefs or 0) == refsNow + 1, "Open in game opens the live window")

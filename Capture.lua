@@ -157,13 +157,6 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 	end
 	if senderKey and senderKey ~= LI.playerKey and senderGUID then
 		LI.TryBuilt(msg, senderKey, senderGUID, event, channelBase)
-		if not msg:find("|Htrade:", 1, true) and LI.ProfessionFromWords then
-			local prof = LI.ProfessionFromWords(msg)
-			if prof then
-				local _, classFile = KeyFromGUID(senderGUID)
-				LI.Clue(senderKey, senderGUID, prof, Where(event, channelBase), classFile)
-			end
-		end
 	end
 	if not msg:find("|Htrade:", 1, true) then
 		return

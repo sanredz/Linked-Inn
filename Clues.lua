@@ -4,58 +4,13 @@ local CAST_PROFS = {
 	[13262] = "enchanting",
 }
 
-local WORDS = {
-	{ "alchemist", "alchemy" }, { "alch", "alchemy" }, { "pots", "alchemy" }, { "flasks", "alchemy" },
-	{ "blacksmith", "blacksmithing" }, { "bs", "blacksmithing" },
-	{ "enchanter", "enchanting" }, { "enchants", "enchanting" }, { "enchanting", "enchanting" }, { "ench", "enchanting" },
-	{ "engineer", "engineering" }, { "engi", "engineering" }, { "engineering", "engineering" },
-	{ "leatherworker", "leatherworking" }, { "leatherworking", "leatherworking" }, { "lw", "leatherworking" },
-	{ "tailor", "tailoring" }, { "tailoring", "tailoring" },
-}
-
-local OFFER = { "lfw", "can make", "can craft", "crafting", "your mats", "ur mats", "yo mats", "tips", "tip", "pst for", "cheap" }
-local ASK = { "wtb", "lf", "lfm", "need", "looking for", "anyone", "any", "who can", "%?" }
+local SCAN_COOLDOWN = 300
+local SCAN_PLAYERS = 20
+local NAMEPLATE_CVAR = "nameplateShowFriendlyPlayers"
+local NAMEPLATE_WAIT = 0.4
 
 local spellCache = {}
-
-local function Has(text, word)
-	if word:find("[%%%?]") then
-		return text:find(word) ~= nil
-	end
-	return text:find("%f[%w]" .. word:gsub("(%p)", "%%%1") .. "%f[%W]") ~= nil
-end
-
-function LI.ProfessionFromWords(text)
-	if type(text) ~= "string" then
-		return nil
-	end
-	local lower = " " .. text:lower():gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|H.-|h(.-)|h", "%1") .. " "
-	local offer = false
-	for _, w in ipairs(OFFER) do
-		if Has(lower, w) then
-			offer = true
-			break
-		end
-	end
-	if not offer then
-		return nil
-	end
-	for _, w in ipairs(ASK) do
-		if Has(lower, w) then
-			return nil
-		end
-	end
-	local found
-	for _, pair in ipairs(WORDS) do
-		if Has(lower, pair[1]) then
-			if found and found ~= pair[2] then
-				return nil
-			end
-			found = pair[2]
-		end
-	end
-	return found
-end
+local lastScan
 
 local function SpellProfession(spellID)
 	if CAST_PROFS[spellID] then
@@ -71,6 +26,11 @@ local function SpellProfession(spellID)
 	end
 	spellCache[spellID] = prof or false
 	return prof
+end
+
+local function Zone()
+	local zone = GetRealZoneText and LI.Safe(LI.Try(GetRealZoneText))
+	return type(zone) == "string" and zone ~= "" and zone or nil
 end
 
 function LI.Clue(key, guid, profKey, where, classFile)
@@ -104,6 +64,126 @@ LI.On("UNIT_SPELLCAST_SUCCEEDED", function(unit, _, spellID)
 	local key = LI.UnitKey(unit)
 	local guid = UnitGUID and LI.Safe(LI.Try(UnitGUID, unit))
 	local classFile = select(2, LI.Try(UnitClass, unit))
-	local zone = GetRealZoneText and LI.Safe(LI.Try(GetRealZoneText))
-	LI.Clue(key, guid, prof, type(zone) == "string" and zone ~= "" and zone or nil, LI.Safe(classFile))
+	LI.Clue(key, guid, prof, Zone(), LI.Safe(classFile))
 end)
+
+local function GetCVarOn(name)
+	local getter = (C_CVar and C_CVar.GetCVarBool) or GetCVarBool
+	return getter and LI.Safe(LI.Try(getter, name)) == true
+end
+
+local function SetCVarValue(name, value)
+	local setter = (C_CVar and C_CVar.SetCVar) or SetCVar
+	if setter then
+		LI.Try(setter, name, value)
+	end
+end
+
+local function Tokens()
+	local tokens = { "target", "mouseover", "focus" }
+	for i = 1, 4 do
+		tokens[#tokens + 1] = "party" .. i
+	end
+	for i = 1, 40 do
+		tokens[#tokens + 1] = "raid" .. i
+	end
+	local plates = C_NamePlate and C_NamePlate.GetNamePlates and LI.Try(C_NamePlate.GetNamePlates)
+	for _, plate in ipairs(type(plates) == "table" and plates or {}) do
+		local token = plate.namePlateUnitToken or (plate.UnitFrame and plate.UnitFrame.unit)
+		if type(token) == "string" then
+			tokens[#tokens + 1] = token
+		end
+	end
+	for i = 1, 40 do
+		tokens[#tokens + 1] = "nameplate" .. i
+	end
+	return tokens
+end
+
+local function KnownPrimaries(c)
+	local n = 0
+	for profKey in pairs(c and c.profs or {}) do
+		for _, primary in ipairs(LI.PRIMARY) do
+			if primary == profKey then
+				n = n + 1
+			end
+		end
+	end
+	return n
+end
+
+function LI.ScanCandidates()
+	local seen, list = {}, {}
+	local zone = Zone()
+	for _, unit in ipairs(Tokens()) do
+		if #list >= SCAN_PLAYERS then
+			break
+		end
+		local guid = UnitGUID and LI.Safe(LI.Try(UnitGUID, unit))
+		if type(guid) == "string" and guid:find("^Player%-") and not seen[guid]
+			and LI.Safe(LI.Try(UnitIsPlayer, unit)) and LI.Safe(LI.Try(UnitIsFriend, "player", unit)) ~= false then
+			seen[guid] = true
+			local key = LI.UnitKey(unit)
+			local c = key and LI.crafters[key]
+			if key and key ~= LI.playerKey and KnownPrimaries(c) < 2 then
+				local profs = {}
+				for _, profKey in ipairs(LI.PRIMARY) do
+					local p = c and c.profs[profKey]
+					if LI.db.profLinks[profKey] and not (p and p.recipes) then
+						profs[#profs + 1] = profKey
+					end
+				end
+				if #profs > 0 then
+					list[#list + 1] = {
+						key = key,
+						guid = guid,
+						class = LI.Safe(select(2, LI.Try(UnitClass, unit))),
+						where = zone,
+						profs = profs,
+					}
+				end
+			end
+		end
+	end
+	return list
+end
+
+function LI.ScanReady()
+	if LI.Reader.Scanning() then
+		return false, "scanning"
+	end
+	if lastScan and GetTime() - lastScan < SCAN_COOLDOWN then
+		return false, "cooldown", SCAN_COOLDOWN - (GetTime() - lastScan)
+	end
+	if InCombatLockdown and InCombatLockdown() then
+		return false, "combat"
+	end
+	return true
+end
+
+local function StartScan()
+	local list = LI.ScanCandidates()
+	if #list == 0 then
+		LI.Print("Nobody new to scan around you.")
+		return
+	end
+	LI.Reader.Scan(list)
+end
+
+function LI.ScanNearby()
+	if not LI.ScanReady() then
+		return false
+	end
+	lastScan = GetTime()
+	if GetCVarOn(NAMEPLATE_CVAR) then
+		StartScan()
+	else
+		SetCVarValue(NAMEPLATE_CVAR, "1")
+		LI.After(NAMEPLATE_WAIT, function()
+			StartScan()
+			SetCVarValue(NAMEPLATE_CVAR, "0")
+		end)
+	end
+	LI.Fire("StatusChanged")
+	return true
+end

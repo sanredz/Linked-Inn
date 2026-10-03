@@ -18,6 +18,7 @@ local AUTO_ECHO = 10
 
 local queue = {}
 local builtFailed = {}
+local scanRun
 local BUILT_RETRY = 3600
 local probes = {}
 local pending
@@ -158,11 +159,43 @@ end
 
 local Kick
 
+local function ScanStep(job, ok)
+	local run = scanRun
+	if not run then
+		return
+	end
+	run.done = run.done + 1
+	if ok then
+		run.found[job.key] = (run.found[job.key] or 0) + 1
+		if run.found[job.key] >= 2 then
+			for i = #probes, 1, -1 do
+				if probes[i].scan and probes[i].key == job.key then
+					table.remove(probes, i)
+					run.total = run.total - 1
+				end
+			end
+		end
+	end
+	LI.Fire("StatusChanged")
+	if run.done >= run.total then
+		scanRun = nil
+		local crafters = 0
+		for _ in pairs(run.found) do
+			crafters = crafters + 1
+		end
+		LI.Print(string.format("Scan done: %d %s among %d %s nearby.", crafters, crafters == 1 and "crafter" or "crafters", run.players, run.players == 1 and "player" or "players"))
+		LI.Log(string.format("Scan: %d crafters among %d players", crafters, run.players))
+		LI.Fire("ScanDone")
+	end
+end
+
 local function Finish(job, outcome)
 	if job.probe then
 		pending = nil
 		nextAt = math.max(nextAt, Now() + 2)
-		if LI.ProbeResult and not job.notified then
+		if job.scan then
+			ScanStep(job, outcome == "ok")
+		elseif LI.ProbeResult and not job.notified then
 			LI.ProbeResult(job.key, outcome == "ok")
 		end
 		LI.After(0.01, function()
@@ -293,6 +326,40 @@ function Reader.Probe(key, link)
 		end
 	end
 	probes[#probes + 1] = { key = key, link = link, probe = true }
+	Kick()
+	return true
+end
+
+function Reader.Scanning()
+	return scanRun ~= nil
+end
+
+function Reader.ScanProgress()
+	if not scanRun then
+		return nil
+	end
+	return scanRun.done, scanRun.total
+end
+
+function Reader.Scan(candidates)
+	if not LI.ready or scanRun or #candidates == 0 then
+		return false
+	end
+	local run = { total = 0, done = 0, found = {}, players = #candidates }
+	for _, cand in ipairs(candidates) do
+		for _, profKey in ipairs(cand.profs) do
+			local link = LI.BuildLink(cand.guid, profKey)
+			if link then
+				probes[#probes + 1] = { key = cand.key, link = link, prof = profKey, probe = true, scan = true, class = cand.class, where = cand.where }
+				run.total = run.total + 1
+			end
+		end
+	end
+	if run.total == 0 then
+		return false
+	end
+	scanRun = run
+	LI.Fire("StatusChanged")
 	Kick()
 	return true
 end
@@ -436,13 +503,13 @@ function Reader.Read()
 		local count = LI.SetRecipes(key, info, list, via)
 		if job then
 			lastAuto = { key = key, at = Now() }
-			if job.built then
+			if job.built or job.scan then
 				local c = LI.crafters[key]
 				if c then
 					c.class = c.class or job.class
 					c.where = job.where or c.where
 				end
-				LI.Log(string.format("Built %s link for %s: %d recipes", name, LI.ShortName(key), count))
+				LI.Log(string.format("%s %s link for %s: %d recipes", job.scan and "Scan found" or "Built", name, LI.ShortName(key), count))
 			elseif not job.probe then
 				if FrameVisible() then
 					LI.test.auto.flashed = LI.test.auto.flashed + 1

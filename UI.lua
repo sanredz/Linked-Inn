@@ -771,6 +771,14 @@ local function UpdateChips()
 	main.secondaryBox:SetChecked(LI.settings.secondary and true or false)
 	main.maxBox:SetChecked(LI.settings.maxOnly and true or false)
 	main.compactBox:SetChecked(LI.settings.compact and true or false)
+	local done, total = LI.Reader.ScanProgress()
+	if done then
+		main.scan:SetText(string.format("Scanning %d/%d", done, total))
+		main.scan:SetEnabled(false)
+	else
+		main.scan:SetText("Scan nearby")
+		main.scan:SetEnabled((LI.ScanReady()))
+	end
 end
 
 local function RefreshFind()
@@ -984,6 +992,7 @@ function UI.Refresh()
 	main.secondaryBox:SetShown(findShown)
 	main.maxBox:SetShown(findShown)
 	main.compactBox:SetShown(findShown)
+	main.scan:SetShown(findShown)
 	main.compactLabel:SetShown(findShown)
 	main.maxLabel:SetShown(findShown)
 	main.secondaryLabel:SetShown(findShown)
@@ -1172,6 +1181,29 @@ local function CreateMain()
 	main.compactLabel = Text(main, "GameFontHighlightSmall")
 	main.compactLabel:SetPoint("LEFT", main.compactBox, "RIGHT", 0, -1)
 	main.compactLabel:SetText("Compact")
+	main.scan = Button(main, "Scan nearby", 104, function()
+		if LI.ScanNearby() then
+			Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
+		end
+		UI.Refresh()
+	end)
+	main.scan:SetHeight(20)
+	main.scan:SetPoint("LEFT", main.compactLabel, "RIGHT", 14, 0)
+	main.scan:SetMotionScriptsWhileDisabled(true)
+	main.scan:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText("Scan nearby", 1, 0.82, 0)
+		local ready, why, left = LI.ScanReady()
+		if why == "cooldown" then
+			GameTooltip:AddLine(string.format("Ready again in %s", LI.Duration(left)), 1, 1, 1)
+		elseif why == "combat" then
+			GameTooltip:AddLine("Not in combat", 1, 1, 1)
+		end
+		GameTooltip:Show()
+	end)
+	main.scan:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
 
 	for i, name in ipairs(TABS) do
 		local tab = CreateFrame("Button", "LinkedInnFrameTab" .. i, main, "PanelTabButtonTemplate")
@@ -1238,6 +1270,7 @@ UI.TAB = TAB
 LI.Listen("CraftersChanged", QueueRefresh)
 LI.Listen("StatusChanged", QueueRefresh)
 LI.Listen("TestChanged", QueueRefresh)
+LI.Listen("ScanDone", QueueRefresh)
 
 SLASH_LINKEDINN1 = "/linkedinn"
 SLASH_LINKEDINN2 = "/li"

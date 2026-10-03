@@ -174,18 +174,7 @@ end
 
 function Book.Ask(key, id)
 	local meta = LI.db.recipes[id]
-	local target = LI.WhisperTarget(key)
-	if ChatFrameUtil and ChatFrameUtil.SendTell then
-		ChatFrameUtil.SendTell(target)
-	elseif ChatFrame_SendTell then
-		ChatFrame_SendTell(target)
-	else
-		return
-	end
-	local box = ChatFrameUtil and ChatFrameUtil.GetActiveWindow and LI.Try(ChatFrameUtil.GetActiveWindow)
-	if box and box.Insert then
-		box:Insert("Hi! Could you make " .. ItemLink(meta, id) .. "?")
-	end
+	LI.Whisper(key, "Hi! Could you make " .. ItemLink(meta, id) .. "?")
 end
 
 local function LinkInChat(id)
@@ -519,6 +508,9 @@ local function Create()
 		GameTooltip:Hide()
 	end)
 	frame:SetScript("OnShow", Refresh)
+	frame:HookScript("OnHide", function()
+		LI.Fire("BookChanged")
+	end)
 	frame:Hide()
 end
 
@@ -545,6 +537,7 @@ function Book.Open(key, profKey, query)
 	frame:Show()
 	LI.ProbeOnline(key)
 	Refresh()
+	LI.Fire("BookChanged")
 end
 
 function Book.Frame()
@@ -553,6 +546,13 @@ end
 
 function Book.Current()
 	return current
+end
+
+function Book.IsOpen(key, profKey)
+	if not frame or not frame:IsShown() or current.key ~= key then
+		return false
+	end
+	return profKey == nil or current.prof == profKey
 end
 
 local function Later()

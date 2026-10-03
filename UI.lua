@@ -83,12 +83,7 @@ local function Movable(frame)
 end
 
 function UI.Whisper(key)
-	local target = LI.WhisperTarget(key)
-	if ChatFrameUtil and ChatFrameUtil.SendTell then
-		ChatFrameUtil.SendTell(target)
-	elseif ChatFrame_SendTell then
-		ChatFrame_SendTell(target)
-	end
+	LI.Whisper(key)
 end
 
 local function KindName(key)
@@ -355,11 +350,15 @@ local function UpdateBooks(row, data)
 		local p = item.p
 		book.prof, book.key = p, item.key
 		book.match = matchKey == item.key
+		book.open = LI.Book.IsOpen(entry.key, item.key)
 		book.icon:SetTexture(LI.ProfIcon(item.key, p.icon))
 		book.icon:SetDesaturated(not p.recipes)
 		book.icon:SetAlpha(p.recipes and 1 or 0.6)
 		book.rank:SetText(p.rank and p.rank > 0 and tostring(p.rank) or "")
-		if book.match then
+		if book.open then
+			book.glow:SetColorTexture(1, 0.82, 0.3, 0.95)
+			book.glow:Show()
+		elseif book.match then
 			book.glow:SetColorTexture(CAN[1], CAN[2], CAN[3], 0.75)
 			book.glow:Show()
 		else
@@ -400,6 +399,16 @@ local function BuildRow(row)
 	row.hl = row:CreateTexture(nil, "HIGHLIGHT")
 	row.hl:SetAllPoints()
 	row.hl:SetColorTexture(1, 0.82, 0.3, 0.10)
+	row.sel = row:CreateTexture(nil, "BACKGROUND", nil, 2)
+	row.sel:SetAllPoints()
+	row.sel:SetColorTexture(1, 0.82, 0.3, 0.16)
+	row.sel:Hide()
+	row.selBar = row:CreateTexture(nil, "ARTWORK")
+	row.selBar:SetPoint("TOPLEFT")
+	row.selBar:SetPoint("BOTTOMLEFT")
+	row.selBar:SetWidth(3)
+	row.selBar:SetColorTexture(1, 0.82, 0.3, 0.9)
+	row.selBar:Hide()
 
 	row.icon = row:CreateTexture(nil, "ARTWORK")
 	row.icon:SetSize(ICON_SIZE, ICON_SIZE)
@@ -568,6 +577,8 @@ local function InitHeader(row, data)
 		book:Hide()
 	end
 	row.bg:SetColorTexture(0, 0, 0, 0)
+	row.sel:Hide()
+	row.selBar:Hide()
 	local collapsed = LI.settings.collapsed and LI.settings.collapsed[group.key]
 	row.toggle:SetTexture(collapsed and "Interface\\Buttons\\UI-PlusButton-Up" or "Interface\\Buttons\\UI-MinusButton-Up")
 	if group.favorites then
@@ -627,6 +638,9 @@ local function InitRow(row, data)
 	local c = entry.crafter
 	local stripe = (data.index or 0) % 2 == 0 and 0.05 or 0.0
 	row.bg:SetColorTexture(1, 1, 1, stripe)
+	local open = LI.Book.IsOpen(entry.key)
+	row.sel:SetShown(open)
+	row.selBar:SetShown(open)
 	local color = LI.ClassColor(c.class) or LI.COLOR.WHITE
 	row.name:SetText(LI.ShortName(entry.key))
 	row.name:SetTextColor(color[1], color[2], color[3])
@@ -1308,6 +1322,7 @@ LI.Listen("TestChanged", QueueRefresh)
 LI.Listen("WorkChanged", QueueRefresh)
 LI.Listen("WorkSeen", QueueRefresh)
 LI.Listen("ScanDone", QueueRefresh)
+LI.Listen("BookChanged", QueueRefresh)
 
 SLASH_LINKEDINN1 = "/linkedinn"
 SLASH_LINKEDINN2 = "/li"

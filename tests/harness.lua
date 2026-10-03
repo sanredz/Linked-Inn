@@ -312,7 +312,8 @@ local function InstallStubs()
 	W.links = {}
 	_G.ChatFrameUtil = {
 		SendTell = function(name) table.insert(W.tells, name) W.editBox.text = "" W.typing = true end,
-		GetActiveWindow = function() return W.typing and W.editBox or nil end,
+		SendTellWithMessage = function(name, text) table.insert(W.tells, name) W.editBox.text = text W.typing = true end,
+		GetActiveWindow = function() return nil end,
 		InsertLink = function(link) table.insert(W.links, link) return true end,
 	}
 	_G.IsShiftKeyDown = function() return W.shift == true end
@@ -994,6 +995,30 @@ annaBook.__scripts.OnClick(annaBook)
 local book = LinkedInnBook
 check(book and book:IsShown() and #W.tells == whispers and (W.itemRefs or 0) == refs, "clicking a profession button opens the recipe book, not a whisper or the live window")
 check(LI.Book.Current().key == "Anna Smith-TestRealm" and LI.Book.Current().prof == "tailoring", "the book shows that crafter's profession")
+LI.UI.Refresh()
+do
+	local openRow, others = nil, 0
+	for _, r in ipairs(main.list.__rows) do
+		if r.entry and r.entry.key == "Anna Smith-TestRealm" then
+			openRow = r
+		elseif r.sel and r.sel:IsShown() then
+			others = others + 1
+		end
+	end
+	check(openRow and openRow.sel:IsShown() and openRow.selBar:IsShown() and others == 0, "the crafter whose book is open is highlighted in the list")
+	check(openRow and openRow.books[1].open and openRow.books[1].glow:IsShown(), "and so is the profession you opened")
+	LI.Book.Frame():Hide()
+	LI.UI.Refresh()
+	local closedRow
+	for _, r in ipairs(main.list.__rows) do
+		if r.entry and r.entry.key == "Anna Smith-TestRealm" then
+			closedRow = r
+		end
+	end
+	check(closedRow and not closedRow.sel:IsShown() and not closedRow.books[1].open, "closing the book clears the highlight")
+	LI.Book.Frame():Show()
+	LI.UI.Refresh()
+end
 check(book.search.__text == "mooncloth" and #book.list.__rows == 2 and book.list.__rows[1].data.header and book.list.__rows[2].name.__text == "Mooncloth Bag", "the book opens filtered to what you searched for", #book.list.__rows)
 check(book.prof.__text == "Tailoring  260/300" and book.info.__text:find("2 recipes", 1, true), "the book header shows skill and recipe count", book.info.__text)
 book.search:SetText("")

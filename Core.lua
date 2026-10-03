@@ -199,6 +199,35 @@ function LI.ShortName(fullName)
 end
 LI.WhisperTarget = LI.ShortName
 
+function LI.Whisper(key, text)
+	local target = LI.WhisperTarget(key)
+	if not target then
+		return false
+	end
+	local util = ChatFrameUtil
+	text = text or ""
+	if text ~= "" and util and util.SendTellWithMessage then
+		if pcall(util.SendTellWithMessage, target, text) then
+			return true
+		end
+	end
+	if util and util.SendTell then
+		LI.Try(util.SendTell, target)
+	elseif ChatFrame_SendTell then
+		LI.Try(ChatFrame_SendTell, target)
+	else
+		return false
+	end
+	if text ~= "" then
+		local box = util and util.GetActiveWindow and LI.Try(util.GetActiveWindow)
+		box = box or (ChatEdit_GetActiveWindow and LI.Try(ChatEdit_GetActiveWindow))
+		if box and box.Insert then
+			box:Insert(text)
+		end
+	end
+	return true
+end
+
 LI.COLOR = {
 	GOLD = { 1.00, 0.82, 0.00 },
 	GREEN = { 0.30, 0.92, 0.40 },

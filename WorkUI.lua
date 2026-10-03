@@ -131,18 +131,7 @@ local function Left(req)
 end
 
 local function Whisper(key, text)
-	local target = LI.WhisperTarget(key)
-	if ChatFrameUtil and ChatFrameUtil.SendTell then
-		ChatFrameUtil.SendTell(target)
-	elseif ChatFrame_SendTell then
-		ChatFrame_SendTell(target)
-	else
-		return
-	end
-	local box = ChatFrameUtil and ChatFrameUtil.GetActiveWindow and LI.Try(ChatFrameUtil.GetActiveWindow)
-	if text and box and box.Insert then
-		box:Insert(text)
-	end
+	LI.Whisper(key, text)
 end
 
 function WorkUI.WhisperOwner(req)

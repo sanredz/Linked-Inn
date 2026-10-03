@@ -9,14 +9,14 @@ local TITLE_FONT = "Fonts\\MORPHEUS.TTF"
 local ROW_HEIGHT = 46
 local BOOK_SIZE = 30
 local BOOK_GAP = 6
-local ICON_X = 14
+local ICON_X = 28
 local ICON_SIZE = 30
 local TEXT_X = ICON_X + ICON_SIZE + 10
-local CHECK_RIGHT = 10
-local CHECK_SIZE = 16
-local SEEN_WIDTH = 30
-local DOT_SIZE = 8
-local STATUS_WIDTH = CHECK_RIGHT + CHECK_SIZE + 6 + SEEN_WIDTH + 4 + DOT_SIZE + 12
+local PILL_RIGHT = 10
+local PILL_WIDTH = 54
+local PILL_HEIGHT = 20
+local STATUS_WIDTH = PILL_RIGHT + PILL_WIDTH + 12
+local ART = "Interface\\AddOns\\" .. ADDON .. "\\art\\"
 local FRESH = 15 * 60
 local WARM = 3 * 3600
 local HEADER_HEIGHT = 34
@@ -132,17 +132,24 @@ local function ProfLine(c, only)
 	return table.concat(parts, "  ·  ")
 end
 
+local function Lighter(color)
+	return 0.55 + color[1] * 0.45, 0.55 + color[2] * 0.45, 0.55 + color[3] * 0.45
+end
+
 local function Seen(entry)
+	if entry.key == LI.playerKey then
+		return "you", SEEN_COLOR.online
+	end
 	if LI.IsChecking(entry.key) then
 		return "...", SEEN_COLOR.warm
 	end
 	if entry.status == "online" then
-		return "now", SEEN_COLOR.online
+		return "online", SEEN_COLOR.online
+	end
+	if entry.sure then
+		return "offline", SEEN_COLOR.gone
 	end
 	local text = LI.ShortAgo(entry.seenAt)
-	if entry.sure then
-		return text, SEEN_COLOR.gone
-	end
 	local age = entry.seenAt and (time() - entry.seenAt) or math.huge
 	if age <= FRESH then
 		return text, SEEN_COLOR.fresh
@@ -161,6 +168,24 @@ local function SeenLine(entry)
 		return "Offline  ·  " .. line:lower()
 	end
 	return line
+end
+
+local function ShowPillTooltip(pill)
+	local entry = pill:GetParent().entry
+	if not entry then
+		return
+	end
+	local _, color = Seen(entry)
+	GameTooltip:SetOwner(pill, "ANCHOR_RIGHT")
+	GameTooltip:SetText(SeenLine(entry), color[1], color[2], color[3])
+	local c = entry.crafter
+	if c.where then
+		GameTooltip:AddLine("in " .. c.where, SOFT[1], SOFT[2], SOFT[3])
+	end
+	if entry.key ~= LI.playerKey then
+		GameTooltip:AddLine(LI.IsChecking(entry.key) and "Checking..." or "Click to check if they're online", 0.5, 0.5, 0.5)
+	end
+	GameTooltip:Show()
 end
 
 local function ShowRowTooltip(row)
@@ -330,6 +355,8 @@ local function ToggleGroup(key)
 	UI.Refresh()
 end
 
+local UpdateStar
+
 local function BuildRow(row)
 	row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 	row.bg = row:CreateTexture(nil, "BACKGROUND")
@@ -348,48 +375,50 @@ local function BuildRow(row)
 	row.line:SetPoint("BOTTOMLEFT", row.icon, "BOTTOMRIGHT", 10, 0)
 	row.line:SetWordWrap(false)
 
-	row.check = CreateFrame("Button", nil, row)
-	row.check:SetSize(CHECK_SIZE, CHECK_SIZE)
-	row.check:SetPoint("RIGHT", -CHECK_RIGHT, 0)
-	row.check.icon = row.check:CreateTexture(nil, "ARTWORK")
-	row.check.icon:SetAllPoints()
-	if not pcall(row.check.icon.SetAtlas, row.check.icon, "common-search-magnifyingglass") then
-		row.check.icon:SetTexture("Interface\\Buttons\\UI-RefreshButton")
+	row.pill = CreateFrame("Button", nil, row)
+	row.pill:SetSize(PILL_WIDTH, PILL_HEIGHT)
+	row.pill:SetPoint("RIGHT", -PILL_RIGHT, 0)
+	row.pill.fill = row.pill:CreateTexture(nil, "BACKGROUND")
+	row.pill.fill:SetAllPoints()
+	row.pill.fill:SetTexture(ART .. "pill")
+	row.pill.fill:SetTexCoord(0, 1, 0, 0.75)
+	row.pill.edge = row.pill:CreateTexture(nil, "BORDER")
+	row.pill.edge:SetAllPoints()
+	row.pill.edge:SetTexture(ART .. "pill_edge")
+	row.pill.edge:SetTexCoord(0, 1, 0, 0.75)
+	row.pill.text = Text(row.pill, "GameFontHighlightSmall", "CENTER")
+	row.pill.text:SetPoint("CENTER", 0, 0)
+	row.pill.pulse = row.pill:CreateAnimationGroup()
+	if row.pill.pulse then
+		local fade = row.pill.pulse:CreateAnimation("Alpha")
+		if fade then
+			fade:SetFromAlpha(1)
+			fade:SetToAlpha(0.35)
+			fade:SetDuration(0.45)
+		end
+		row.pill.pulse:SetLooping("BOUNCE")
 	end
-	row.check:SetAlpha(0.35)
-	row.check:SetScript("OnClick", function(self)
+	row.pill:SetScript("OnClick", function(self)
 		local entry = self:GetParent().entry
-		if entry and LI.CheckOnline(entry.key) then
+		if entry and entry.key ~= LI.playerKey and LI.CheckOnline(entry.key) then
 			Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
 			UI.Refresh()
 		end
 	end)
-	row.check:SetScript("OnEnter", function(self)
-		self:SetAlpha(1)
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-		GameTooltip:SetText("Check if online", 1, 0.82, 0)
-		GameTooltip:AddLine("Asks the server with /who. One at a time.", 1, 1, 1, true)
-		GameTooltip:Show()
+	row.pill:SetScript("OnEnter", function(self)
+		self.hover = true
+		self.fill:SetAlpha(1)
+		ShowPillTooltip(self)
 	end)
-	row.check:SetScript("OnLeave", function(self)
-		self:SetAlpha(0.35)
+	row.pill:SetScript("OnLeave", function(self)
+		self.hover = false
+		self.fill:SetAlpha(0.6)
 		GameTooltip:Hide()
 	end)
 
-	row.seen = Text(row, "GameFontHighlightSmall", "LEFT")
-	row.seen:SetWidth(SEEN_WIDTH)
-	row.seen:SetPoint("RIGHT", row.check, "LEFT", -6, 0)
-	row.seenDot = row:CreateTexture(nil, "OVERLAY")
-	row.seenDot:SetSize(DOT_SIZE, DOT_SIZE)
-	row.seenDot:SetPoint("RIGHT", row.seen, "LEFT", -4, 0)
-	local mask = row:CreateMaskTexture()
-	mask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-	mask:SetAllPoints(row.seenDot)
-	row.seenDot:AddMaskTexture(mask)
-
 	row.toggle = row:CreateTexture(nil, "ARTWORK")
 	row.toggle:SetSize(14, 14)
-	row.toggle:SetPoint("RIGHT", -CHECK_RIGHT - 1, 0)
+	row.toggle:SetPoint("LEFT", 8, 0)
 	row.headIcon = row:CreateTexture(nil, "ARTWORK")
 	row.headIcon:SetSize(ICON_SIZE - 6, ICON_SIZE - 6)
 	row.headIcon:SetPoint("LEFT", ICON_X + 3, 0)
@@ -402,20 +431,46 @@ local function BuildRow(row)
 	row.headLine = row:CreateTexture(nil, "ARTWORK")
 	row.headLine:SetHeight(1)
 	row.headLine:SetPoint("BOTTOMLEFT", ICON_X, 2)
-	row.headLine:SetPoint("BOTTOMRIGHT", -CHECK_RIGHT, 2)
+	row.headLine:SetPoint("BOTTOMRIGHT", -PILL_RIGHT, 2)
 	row.headLine:SetColorTexture(1, 0.82, 0, 0.35)
 
-	row.rowParts = { row.icon, row.name, row.line, row.check, row.seen, row.seenDot }
+	row.star = CreateFrame("Button", nil, row)
+	row.star:SetSize(16, 16)
+	row.star:SetPoint("LEFT", 7, 0)
+	row.star.icon = row.star:CreateTexture(nil, "ARTWORK")
+	row.star.icon:SetAllPoints()
+	row.star:SetScript("OnClick", function(self)
+		local entry = self:GetParent().entry
+		if entry then
+			local on = LI.ToggleFavorite(entry.key)
+			Sound(on and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
+		end
+	end)
+	row.star:SetScript("OnEnter", function(self)
+		local entry = self:GetParent().entry
+		self:SetAlpha(1)
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText(entry and LI.IsFavorite(entry.key) and "Remove from favorites" or "Add to favorites", 1, 0.82, 0)
+		GameTooltip:Show()
+	end)
+	row.star:SetScript("OnLeave", function(self)
+		GameTooltip:Hide()
+		UpdateStar(self:GetParent())
+	end)
+
+	row.rowParts = { row.icon, row.name, row.line, row.pill, row.star }
 	row.headParts = { row.toggle, row.headIcon, row.headName, row.headCount, row.headLine }
 
 	row:SetScript("OnEnter", function(self)
+		self.hover = true
 		if self.data and not self.data.header then
-			self.check:SetAlpha(0.8)
+			UpdateStar(self)
 			ShowRowTooltip(self)
 		end
 	end)
 	row:SetScript("OnLeave", function(self)
-		self.check:SetAlpha(0.35)
+		self.hover = false
+		UpdateStar(self)
 		GameTooltip:Hide()
 	end)
 	row:SetScript("OnClick", function(self, button)
@@ -432,6 +487,25 @@ local function BuildRow(row)
 		end
 	end)
 	row.built = true
+end
+
+UpdateStar = function(row)
+	local entry = row.entry
+	local star = row.star
+	if not entry or not star then
+		return
+	end
+	local on = LI.IsFavorite(entry.key)
+	if not pcall(star.icon.SetAtlas, star.icon, on and "auctionhouse-icon-favorite" or "auctionhouse-icon-favorite-off") then
+		star.icon:SetTexture("Interface\\Common\\ReputationStar")
+	end
+	if on then
+		star:SetAlpha(1)
+	elseif row.hover then
+		star:SetAlpha(0.6)
+	else
+		star:SetAlpha(0)
+	end
 end
 
 local function ShowParts(parts, shown)
@@ -460,7 +534,14 @@ local function InitHeader(row, data)
 	row.bg:SetColorTexture(0, 0, 0, 0)
 	local collapsed = LI.settings.collapsed and LI.settings.collapsed[group.key]
 	row.toggle:SetTexture(collapsed and "Interface\\Buttons\\UI-PlusButton-Up" or "Interface\\Buttons\\UI-MinusButton-Up")
-	row.headIcon:SetTexture(LI.ProfIcon(group.key, group.icon))
+	if group.favorites then
+		if not pcall(row.headIcon.SetAtlas, row.headIcon, "auctionhouse-icon-favorite") then
+			row.headIcon:SetTexture("Interface\\Icons\\INV_Misc_Note_01")
+		end
+	else
+		row.headIcon:SetTexture(LI.ProfIcon(group.key, group.icon))
+		row.headIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+	end
 	row.headName:SetText(group.name)
 	local count = #group.rows
 	local text = string.format("%d %s", count, count == 1 and "crafter" or "crafters")
@@ -513,10 +594,21 @@ local function InitRow(row, data)
 	row.name:SetText(LI.ShortName(entry.key))
 	row.name:SetTextColor(color[1], color[2], color[3])
 	local seenText, seenColor = Seen(entry)
-	row.seen:SetText(seenText)
-	row.seen:SetTextColor(seenColor[1], seenColor[2], seenColor[3])
-	row.seenDot:SetColorTexture(seenColor[1], seenColor[2], seenColor[3], 1)
-	row.check:SetShown(entry.key ~= LI.playerKey and entry.status ~= "online")
+	UpdateStar(row)
+	local pill = row.pill
+	pill.text:SetText(seenText)
+	pill.text:SetTextColor(Lighter(seenColor))
+	pill.fill:SetVertexColor(seenColor[1], seenColor[2], seenColor[3], 0.22)
+	pill.fill:SetAlpha(pill.hover and 1 or 0.6)
+	pill.edge:SetVertexColor(seenColor[1], seenColor[2], seenColor[3], 0.8)
+	if pill.pulse then
+		if LI.IsChecking(entry.key) then
+			pill.pulse:Play()
+		else
+			pill.pulse:Stop()
+			pill:SetAlpha(1)
+		end
+	end
 	local text, textColor = RowLine(data)
 	row.line:SetText(text)
 	row.line:SetTextColor(textColor[1], textColor[2], textColor[3])

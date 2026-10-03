@@ -99,10 +99,10 @@ function LI.Log(msg)
 	LI.Fire("TestChanged")
 end
 
-local function Prune(crafters)
+local function Prune(crafters, favorites)
 	local now = time()
 	for key, c in pairs(crafters) do
-		if type(c) ~= "table" or type(c.profs) ~= "table" or (now - (c.seen or 0)) > FORGET_AFTER then
+		if type(c) ~= "table" or type(c.profs) ~= "table" or (not favorites[key] and (now - (c.seen or 0)) > FORGET_AFTER) then
 			crafters[key] = nil
 		end
 	end
@@ -139,8 +139,10 @@ LI.On("PLAYER_LOGIN", function()
 	realms[LI.realm] = type(realms[LI.realm]) == "table" and realms[LI.realm] or {}
 	local realm = realms[LI.realm]
 	realm.crafters = type(realm.crafters) == "table" and realm.crafters or {}
+	realm.favorites = type(realm.favorites) == "table" and realm.favorites or {}
 	LI.crafters = realm.crafters
-	Prune(LI.crafters)
+	LI.favorites = realm.favorites
+	Prune(LI.crafters, LI.favorites)
 	LI.guids = {}
 	for key, c in pairs(LI.crafters) do
 		if c.guid then
@@ -237,7 +239,23 @@ function LI.SetRecipes(key, info, recipes, via)
 	return count
 end
 
+function LI.IsFavorite(key)
+	return LI.favorites ~= nil and key ~= nil and LI.favorites[key] == true
+end
+
+function LI.ToggleFavorite(key)
+	if not LI.favorites or not key then
+		return false
+	end
+	LI.favorites[key] = not LI.favorites[key] or nil
+	LI.Fire("CraftersChanged")
+	return LI.favorites[key] == true
+end
+
 function LI.Forget(key)
+	if LI.favorites and key then
+		LI.favorites[key] = nil
+	end
 	if LI.crafters and key then
 		local c = LI.crafters[key]
 		if c and c.guid and LI.guids then
@@ -339,6 +357,8 @@ function LI.Search(query, opts)
 					status = status,
 					seenAt = seenAt,
 					sure = sure,
+					favorite = LI.IsFavorite(key),
+					top = top,
 					groups = groups,
 					recipe = top.recipe,
 					recipeMeta = top.recipeMeta,
@@ -374,9 +394,40 @@ local function OrderIndex(key)
 	return #LI.PROFESSION_ORDER + 1
 end
 
+local function RowOrder(a, b)
+	local ra, rb = LI.StatusRank(a.entry.status), LI.StatusRank(b.entry.status)
+	if ra ~= rb then
+		return ra < rb
+	end
+	if a.match.confidence ~= b.match.confidence then
+		return a.match.confidence > b.match.confidence
+	end
+	local pa, pb = a.entry.crafter.profs[a.prof] or {}, b.entry.crafter.profs[b.prof] or {}
+	local ka, kb = pa.rank or 0, pb.rank or 0
+	if ka ~= kb then
+		return ka > kb
+	end
+	local na, nb = pa.count or 0, pb.count or 0
+	if na ~= nb then
+		return na > nb
+	end
+	local sa, sb = a.entry.seenAt or 0, b.entry.seenAt or 0
+	if sa ~= sb then
+		return sa > sb
+	end
+	return a.entry.key < b.entry.key
+end
+
 function LI.Group(results)
 	local byKey, groups = {}, {}
+	local favorites = { key = "favorites", name = "Favorites", favorites = true, rows = {}, online = 0, best = 0 }
 	for _, entry in ipairs(results) do
+		if entry.favorite and entry.top then
+			favorites.rows[#favorites.rows + 1] = { entry = entry, prof = entry.top.key, match = entry.top }
+			if entry.status == "online" then
+				favorites.online = favorites.online + 1
+			end
+		end
 		for _, g in ipairs(entry.groups) do
 			local group = byKey[g.key]
 			if not group then
@@ -393,29 +444,7 @@ function LI.Group(results)
 		end
 	end
 	for _, group in ipairs(groups) do
-		table.sort(group.rows, function(a, b)
-			local ra, rb = LI.StatusRank(a.entry.status), LI.StatusRank(b.entry.status)
-			if ra ~= rb then
-				return ra < rb
-			end
-			if a.match.confidence ~= b.match.confidence then
-				return a.match.confidence > b.match.confidence
-			end
-			local pa, pb = a.entry.crafter.profs[a.prof] or {}, b.entry.crafter.profs[b.prof] or {}
-			local ka, kb = pa.rank or 0, pb.rank or 0
-			if ka ~= kb then
-				return ka > kb
-			end
-			local na, nb = pa.count or 0, pb.count or 0
-			if na ~= nb then
-				return na > nb
-			end
-			local sa, sb = a.entry.seenAt or 0, b.entry.seenAt or 0
-			if sa ~= sb then
-				return sa > sb
-			end
-			return a.entry.key < b.entry.key
-		end)
+		table.sort(group.rows, RowOrder)
 	end
 	table.sort(groups, function(a, b)
 		if a.best ~= b.best then
@@ -427,6 +456,10 @@ function LI.Group(results)
 		end
 		return a.key < b.key
 	end)
+	if #favorites.rows > 0 then
+		table.sort(favorites.rows, RowOrder)
+		table.insert(groups, 1, favorites)
+	end
 	return groups
 end
 

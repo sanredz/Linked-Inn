@@ -544,12 +544,15 @@ Advance(1)
 
 local coraRow = main.list.__rows[3]
 check(coraRow.entry.key == "Cora Vale-TestRealm", "found Cora's row", coraRow.entry.key)
-check(coraRow.check:IsShown(), "each row has a small check button")
-check(not main.list.__rows[2].check:IsShown(), "your own row has no check button")
-check(#coraRow.seen.__text <= 4, "last seen is shown short", coraRow.seen.__text)
+check(coraRow.pill:IsShown(), "each row has a last seen pill")
+check(main.list.__rows[2].pill.text.__text == "you", "your own pill says you", main.list.__rows[2].pill.text.__text)
+check(#coraRow.pill.text.__text <= 4, "last seen is shown short", coraRow.pill.text.__text)
+local whos = #W.who
+main.list.__rows[2].pill.__scripts.OnClick(main.list.__rows[2].pill)
+check(#W.who == whos, "your own pill doesn't send a /who")
 check(LI.Status("Cora Vale-TestRealm") ~= "online", "Cora starts out not online")
-coraRow.check.__scripts.OnClick(coraRow.check)
-check(main.list.__rows[3].seen.__text == "...", "a running check shows dots", main.list.__rows[3].seen.__text)
+coraRow.pill.__scripts.OnClick(coraRow.pill)
+check(main.list.__rows[3].pill.text.__text == "...", "clicking the pill starts a check and shows dots", main.list.__rows[3].pill.text.__text)
 check(W.who[1] and W.who[1].filter == "x-Cora+Vale" and W.who[1].origin == 3, "the check sends an exact /who with the surname joined", W.who[1] and W.who[1].filter)
 check(LI.CheckOnline("Anna Smith-TestRealm") == false and #W.who == 1, "only one check runs at a time")
 Fire("CHAT_MSG_SYSTEM", "You have learned a new spell.")
@@ -565,7 +568,7 @@ for _, m in ipairs(W.chat) do
 	if m:find("is online in Orgrimmar", 1, true) then said = true end
 end
 check(said, "the result is printed in chat")
-check(main.list.__rows[3].seen.__text == "now", "a confirmed online crafter shows now", main.list.__rows[3].seen.__text)
+check(main.list.__rows[3].pill.text.__text == "online", "a confirmed online crafter's pill says online", main.list.__rows[3].pill.text.__text)
 check(Shape():find("#alchemy Brew Cora", 1, true) == 1, "the list refreshes with the new status", Shape())
 
 W.whoResults = {}
@@ -588,6 +591,48 @@ Advance(6)
 check(not LI.IsChecking("Anna Smith-TestRealm"), "a check with no answer gives up")
 check(LI.Status("Anna Smith-TestRealm") == "online", "no answer keeps the last known status")
 LI.crafters["Anna Smith-TestRealm"].where = "Trade"
+
+LI.CheckOnline("Bob Stone-TestRealm")
+Fire("CHAT_MSG_SYSTEM", "0 players total")
+LI.CheckOnline("Cora Vale-TestRealm")
+Fire("CHAT_MSG_SYSTEM", "0 players total")
+Advance(1)
+local coraNow
+for _, row in ipairs(main.list.__rows) do
+	if row.entry and row.entry.key == "Cora Vale-TestRealm" then coraNow = row end
+end
+check(coraNow and coraNow.pill.text.__text == "offline", "a confirmed offline crafter's pill says offline", coraNow and coraNow.pill.text.__text)
+
+local favRow
+for _, row in ipairs(main.list.__rows) do
+	if row.entry and row.entry.key == "Cora Vale-TestRealm" then favRow = row end
+end
+check(favRow.star:GetAlpha() == 0, "the star is hidden until you hover a row")
+favRow.__scripts.OnEnter(favRow)
+check(favRow.star:GetAlpha() > 0, "hovering a row shows its star")
+favRow.__scripts.OnLeave(favRow)
+favRow.star.__scripts.OnClick(favRow.star)
+Advance(1)
+check(LI.IsFavorite("Cora Vale-TestRealm"), "clicking the star adds a favorite")
+check(Shape():find("^#favorites Cora #alchemy") ~= nil, "favorites are listed first in their own section", Shape())
+check(main.list.__rows[1].headName.__text == "Favorites", "the favorites header is named")
+check(main.list.__rows[2].star:GetAlpha() == 1, "a favorite's star stays visible")
+local coraCount = 0
+for _, row in ipairs(main.list.__rows) do
+	if row.entry and row.entry.key == "Cora Vale-TestRealm" then coraCount = coraCount + 1 end
+end
+check(coraCount == 2, "a favorite also stays under its profession", coraCount)
+main.search:SetText("tailor")
+main.search.__scripts.OnTextChanged(main.search)
+Advance(1)
+check(Shape():find("#favorites", 1, true) == nil, "favorites that don't match the search are hidden", Shape())
+main.search:SetText("")
+main.search.__scripts.OnTextChanged(main.search)
+Advance(1)
+main.list.__rows[2].star.__scripts.OnClick(main.list.__rows[2].star)
+Advance(1)
+check(not LI.IsFavorite("Cora Vale-TestRealm") and Shape():find("#favorites", 1, true) == nil, "clicking the star again removes the favorite", Shape())
+LI.ToggleFavorite("Cora Vale-TestRealm")
 
 local function Fake(key, rank, count, seen)
 	return { key = key, status = "offline", seenAt = seen, crafter = { profs = { tailoring = { name = "Tailoring", rank = rank, count = count } } }, groups = { { key = "tailoring", confidence = 2, makes = 0 } } }
@@ -625,6 +670,14 @@ Boot(saved)
 check(LI.crafters["Anna Smith-TestRealm"] and LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes[18560], "crafters and recipes survive a reload")
 check(LI.test.auto.ok == 1 and LI.test.click == 3, "test results survive a reload", LI.test.click)
 check(LI.guids["Player-1-CCC"] == "Cora Vale-TestRealm", "the GUID index is rebuilt after a reload")
+check(LI.IsFavorite("Cora Vale-TestRealm"), "favorites survive a reload")
+W.clock = W.clock + 90 * 86400
+local savedOld = Logout()
+Boot(savedOld)
+check(LI.crafters["Cora Vale-TestRealm"] ~= nil, "favorites are never forgotten for being old")
+check(LI.crafters["Anna Smith-TestRealm"] == nil, "other crafters are forgotten after two months")
+LI.Forget("Cora Vale-TestRealm")
+check(not LI.IsFavorite("Cora Vale-TestRealm"), "forgetting a crafter removes the favorite")
 
 Setup()
 W.combat = true

@@ -1991,5 +1991,37 @@ do
 	W.playerGUID = nil
 end
 
+do
+	Setup()
+	Boot()
+	Advance(5)
+	local function Make(key, rank, seenAgo)
+		local c = LI.Crafter(key, true)
+		c.profs.tailoring = { name = "Tailoring", rank = rank, max = 300, count = 10, recipes = { [3914] = true } }
+		c.seen = time() - seenAgo
+	end
+	Make("High Skill-TestRealm", 290, 40 * 60)
+	Make("Low Skill-TestRealm", 150, 50 * 60)
+	local function Order()
+		local names = {}
+		for _, group in ipairs(LI.Group(LI.Search("", {}))) do
+			for _, row in ipairs(group.rows) do
+				names[#names + 1] = row.entry.key:match("^(%S+)")
+			end
+		end
+		return table.concat(names, ",")
+	end
+	check(Order() == "High,Low", "unconfirmed crafters sort by skill", Order())
+	LI.MarkOffline("High Skill-TestRealm")
+	check(Order() == "Low,High", "someone confirmed offline drops below crafters who may still be on", Order())
+	LI.NoteHeard("Low Skill-TestRealm")
+	Advance(2)
+	LI.MarkOffline("Low Skill-TestRealm")
+	check(LI.Status("Low Skill-TestRealm") == "offline", "a newer offline result beats having heard them earlier", LI.Status("Low Skill-TestRealm"))
+	Advance(2)
+	LI.NoteHeard("Low Skill-TestRealm")
+	check(LI.Status("Low Skill-TestRealm") == "online", "and hearing them again brings them back online", LI.Status("Low Skill-TestRealm"))
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

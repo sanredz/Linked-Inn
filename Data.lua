@@ -445,8 +445,12 @@ end
 
 local STATUS_RANK = { online = 0, recent = 1, offline = 2 }
 
-function LI.StatusRank(status)
-	return STATUS_RANK[status] or 3
+function LI.StatusRank(status, sure)
+	local rank = STATUS_RANK[status] or 3
+	if status == "offline" and sure then
+		rank = rank + 1
+	end
+	return rank
 end
 
 function LI.Search(query, opts)
@@ -549,7 +553,7 @@ function LI.Search(query, opts)
 		end
 	end
 	table.sort(out, function(a, b)
-		local ra, rb = LI.StatusRank(a.status), LI.StatusRank(b.status)
+		local ra, rb = LI.StatusRank(a.status, a.sure), LI.StatusRank(b.status, b.sure)
 		if ra ~= rb then
 			return ra < rb
 		end
@@ -575,7 +579,7 @@ local function OrderIndex(key)
 end
 
 local function RowOrder(a, b)
-	local ra, rb = LI.StatusRank(a.entry.status), LI.StatusRank(b.entry.status)
+	local ra, rb = LI.StatusRank(a.entry.status, a.entry.sure), LI.StatusRank(b.entry.status, b.entry.sure)
 	if ra ~= rb then
 		return ra < rb
 	end

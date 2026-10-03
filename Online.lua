@@ -91,8 +91,13 @@ function LI.Status(key)
 	if key == LI.playerKey then
 		return "online", time()
 	end
-	if heardAt[key] and time() - heardAt[key] <= HEARD_ONLINE then
-		return "online", seen
+	local who = checked[key]
+	local heard = heardAt[key]
+	if heard and time() - heard <= HEARD_ONLINE then
+		local gone = (who and not who.online and who.at >= heard) or (offlineAt[key] and offlineAt[key] >= heard)
+		if not gone then
+			return "online", seen
+		end
 	end
 	local entry = roster[key]
 	if entry then
@@ -103,7 +108,6 @@ function LI.Status(key)
 			return "offline", seen, true
 		end
 	end
-	local who = checked[key]
 	if who and time() - who.at <= CHECK_VALID then
 		if who.online then
 			return "online", seen

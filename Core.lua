@@ -125,29 +125,46 @@ function LI.RealmName()
 	return realm
 end
 
-function LI.FullName(name)
-	if type(name) ~= "string" or name == "" then
-		return nil
-	end
-	if not name:find("-", 1, true) then
-		name = name .. "-" .. LI.RealmName()
-	end
-	return name
-end
+local surnames
 
 function LI.Surnames()
+	if surnames then
+		return true
+	end
 	if RegionalUniqueNamesEnabled and LI.Safe(LI.Try(RegionalUniqueNamesEnabled)) then
+		surnames = true
 		return true
 	end
 	local _, second = LI.Try(UnitName, "player")
 	second = LI.Safe(second)
-	return type(second) == "string" and second ~= ""
+	surnames = type(second) == "string" and second ~= "" or nil
+	return surnames == true
 end
 
 local function SurnameSeparator()
 	local consts = Constants and Constants.CharacterNameSeparatorConsts
 	local sep = consts and consts.CHARACTERNAME_SURNAME_SEPARATOR
 	return type(sep) == "string" and sep ~= "" and sep or " "
+end
+
+LI.realmOf = {}
+LI.bareWhisper = {}
+
+function LI.FullName(name)
+	if type(name) ~= "string" or name == "" then
+		return nil
+	end
+	local base, realm = name:match("^(.+)%-([^%-]+)$")
+	if not base then
+		return name .. "-" .. LI.RealmName()
+	end
+	local mine = LI.RealmName()
+	if realm ~= mine and mine ~= "" and base:find(SurnameSeparator(), 1, true) and LI.Surnames() then
+		local key = base .. "-" .. mine
+		LI.realmOf[key] = realm
+		return key
+	end
+	return name
 end
 
 function LI.UnitKey(unit)
@@ -181,7 +198,14 @@ function LI.ShortName(fullName)
 	end
 	return fullName
 end
-LI.WhisperTarget = LI.ShortName
+function LI.WhisperTarget(fullName)
+	local short = LI.ShortName(fullName)
+	local realm = LI.realmOf[fullName]
+	if realm and realm ~= LI.RealmName() and short ~= fullName and not LI.bareWhisper[fullName] then
+		return short .. "-" .. realm
+	end
+	return short
+end
 
 LI.COLOR = {
 	GOLD = { 1.00, 0.82, 0.00 },

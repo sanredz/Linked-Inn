@@ -24,6 +24,13 @@ local RATE_WINDOW = 60
 local RATE_MAX = 60
 local BUFFER_TTL = 90
 local MAX_BUFFERS = 20
+local LINK_LIVE = 20 * 60
+local SEEN_TTL = 10 * 60
+local DISCOVER_GAP = 45
+local DISCOVER_AGAIN = 24 * 3600
+local LINK_HELLO_GAP = 60
+local WHISPER_MEMORY = 15
+local RELAY = { H1 = true, R1 = true, X1 = true }
 
 local queue = {}
 local channelName
@@ -38,6 +45,14 @@ local lastAnswer = 0
 local asked = {}
 local buffers = {}
 local rates = {}
+local peers = {}
+local seenMsgs = {}
+local whispered = {}
+local firstFrom = {}
+local lastDiscover = -DISCOVER_GAP
+local linkSig = ""
+local lastLinkHello = -LINK_HELLO_GAP
+local mySid
 
 local function Now()
 	return GetTime()
@@ -179,6 +194,86 @@ local function Paused()
 	return false
 end
 
+local function SidOf(guid)
+	return type(guid) == "string" and guid:match("^Player%-(%d+)%-") or nil
+end
+Sync.SidOf = SidOf
+
+local function MySid()
+	if not mySid then
+		mySid = SidOf(LI.Safe(LI.Try(UnitGUID, "player")))
+	end
+	return mySid
+end
+
+local function MyRealm()
+	return LI.RealmName()
+end
+
+local function Live(p)
+	return p ~= nil and p.at ~= nil and Now() - p.at <= LINK_LIVE
+end
+
+local function Touch(key)
+	local p = peers[key]
+	if p then
+		p.at = Now()
+	end
+end
+
+local function NotePeer(key, realm, sid, links)
+	local p = peers[key] or {}
+	peers[key] = p
+	p.at = Now()
+	if type(realm) == "string" and realm:match("^%w+$") then
+		p.realm = realm
+		if realm ~= MyRealm() then
+			LI.realmOf[key] = realm
+		end
+	end
+	if type(sid) == "string" and sid:match("^%d+$") then
+		p.sid = sid
+	end
+	if links then
+		p.links = links
+	end
+	return p
+end
+
+function Sync.RealmOf(key)
+	local p = peers[key]
+	return (p and p.realm) or LI.realmOf[key] or (key and key:match("%-([^%-]+)$"))
+end
+
+function Sync.Links()
+	local out = {}
+	local mine = MyRealm()
+	for key, p in pairs(peers) do
+		if Live(p) and p.realm and p.realm ~= mine then
+			local best = out[p.realm]
+			if not best or peers[best].at < p.at then
+				out[p.realm] = key
+			end
+		end
+	end
+	return out
+end
+
+function Sync.Elected(realm)
+	local me = LI.playerKey or ""
+	local mine = MyRealm()
+	for key, p in pairs(peers) do
+		if key < me and Live(p) and p.realm == mine and p.links and p.links[realm] then
+			return false, key
+		end
+	end
+	return true
+end
+
+local function BaseName(key)
+	return key:match("^(.+)%-[^%-]+$") or key
+end
+
 local function Enqueue(kind, message, chatType, target)
 	for _, q in ipairs(queue) do
 		if q.kind == kind and q.message == message and q.chatType == chatType and q.target == target then
@@ -210,6 +305,9 @@ local function Deliver(q)
 	if ok and (result == nil or result == 0 or result == true) then
 		LI.test.sync.sent = LI.test.sync.sent + 1
 		Count("tx", chatType)
+		if chatType == "WHISPER" and type(target) == "string" then
+			whispered[target:lower()] = { target = target, at = Now(), kind = q.kind }
+		end
 		return true
 	end
 	LI.test.sync.failed = (LI.test.sync.failed or 0) + 1
@@ -259,7 +357,12 @@ local function OnlineFriends()
 	return list
 end
 
+local Spread
+
 local function Broadcast(kind, message, withGuild, withFriends)
+	if Spread and LI.playerKey then
+		Spread(LI.playerKey, MyRealm(), message)
+	end
 	for _, route in ipairs(Routes(withGuild)) do
 		Enqueue(kind, message, route)
 	end
@@ -340,6 +443,15 @@ function Sync.Refresh()
 	return false
 end
 
+local function LinkList()
+	local list = {}
+	for realm in pairs(Sync.Links()) do
+		list[#list + 1] = realm
+	end
+	table.sort(list)
+	return table.concat(list, ",")
+end
+
 function Sync.Hello()
 	local own = OwnState()
 	if not own.payload or not own.ver then
@@ -359,7 +471,12 @@ function Sync.Hello()
 		parts[#parts + 1] = table.concat({ Clean(key), B36(p.rank or 0), B36(p.max or 0), p.recipes and B36(p.count or 0) or "-" }, "~")
 	end
 	local class = select(2, LI.Try(UnitClass, "player")) or ""
-	return string.format("H1|%s|%s|%s", own.ver, Clean(class), table.concat(parts, ";"))
+	local base = string.format("H1|%s|%s|%s|%s|%s", own.ver, Clean(class), table.concat(parts, ";"), MyRealm(), MySid() or "")
+	local links = LinkList()
+	if links ~= "" and #base + #links + 1 <= 200 then
+		return base .. "|" .. links
+	end
+	return base
 end
 
 local function SendHello()
@@ -463,10 +580,27 @@ local function Ask(key, ver)
 	Enqueue("ask", "Q1|" .. ver, "WHISPER", short)
 end
 
-local function OnHello(key, parts)
+local function OnHello(key, parts, chatType)
 	local ver, class, list = parts[2], parts[3], parts[4] or ""
 	if not FromB36(ver) then
 		return
+	end
+	local links
+	if parts[5] then
+		links = {}
+		for realm in (parts[7] or ""):gmatch("[^,]+") do
+			if realm:match("^%w+$") then
+				links[realm] = true
+			end
+		end
+	end
+	local peer = NotePeer(key, parts[5], parts[6], links)
+	if chatType == "WHISPER" and peer.realm and peer.realm ~= MyRealm() and not peer.greeted then
+		peer.greeted = true
+		local hello = Sync.Hello()
+		if hello then
+			Enqueue("hello", hello, "WHISPER", LI.WhisperTarget(key))
+		end
 	end
 	if not LI.Heard(key) then
 		LI.test.sync.heard = LI.test.sync.heard + 1
@@ -474,7 +608,8 @@ local function OnHello(key, parts)
 	LI.NoteHeard(key)
 	if not sessionHeard[key] then
 		sessionHeard[key] = true
-		LI.Log("Heard " .. LI.ShortName(key) .. " (Linked Inn)")
+		local realm = peer.realm and peer.realm ~= MyRealm() and (" on " .. peer.realm) or ""
+		LI.Log(string.format("Heard %s (Linked Inn%s, %s)", LI.ShortName(key), realm, tostring(chatType)))
 		if Now() - lastGreet >= GREET_GAP then
 			lastGreet = Now()
 			LI.After(2 + math.random() * 3, function()
@@ -603,6 +738,128 @@ local function OnAsk(key, parts)
 	answerAt = math.max(Now() + ANSWER_WAIT, lastAnswer + ANSWER_GAP)
 end
 
+local Dispatch
+
+Spread = function(origin, realm, inner)
+	if type(inner) ~= "string" or not RELAY[inner:sub(1, 2)] or not realm then
+		return
+	end
+	local id = origin .. "\1" .. inner
+	if seenMsgs[id] then
+		return
+	end
+	seenMsgs[id] = Now()
+	local message = string.format("B1|%s-%s|%s", BaseName(origin), realm, inner)
+	if #message > 255 then
+		return
+	end
+	local mine = MyRealm()
+	for target, key in pairs(Sync.Links()) do
+		if target ~= realm and target ~= mine and Sync.Elected(target) then
+			Enqueue("relay", message, "WHISPER", LI.WhisperTarget(key))
+			LI.test.sync.relayOut = (LI.test.sync.relayOut or 0) + 1
+		end
+	end
+end
+
+local function OnRelay(relayer, text, chatType)
+	local originName, inner = text:match("^B1|([^|]+)|(.+)$")
+	if not originName or not RELAY[inner:sub(1, 2)] then
+		return
+	end
+	local realm = originName:match("%-(%w+)$")
+	local origin = LI.FullName(originName)
+	if not realm or not origin or origin == LI.playerKey or origin == relayer then
+		return
+	end
+	if seenMsgs[origin .. "\1" .. inner] or not Allow(origin) then
+		return
+	end
+	Touch(relayer)
+	LI.test.sync.relayIn = (LI.test.sync.relayIn or 0) + 1
+	if realm ~= MyRealm() then
+		LI.realmOf[origin] = realm
+	end
+	if chatType == "WHISPER" then
+		Enqueue("relay", text, "CHANNEL")
+	end
+	Spread(origin, realm, inner)
+	Dispatch(origin, inner, "RELAY")
+end
+
+local function ForeignSighting(key, guid)
+	if not LI.ready or not joined or not key or key == LI.playerKey or peers[key] then
+		return
+	end
+	local sid, mine = SidOf(guid), MySid()
+	if not sid or not mine or sid == mine or Now() - lastDiscover < DISCOVER_GAP then
+		return
+	end
+	for _, p in pairs(peers) do
+		if p.sid == sid and Live(p) then
+			return
+		end
+	end
+	local probed = LI.db.probed
+	if type(probed) ~= "table" then
+		probed = {}
+		LI.db.probed = probed
+	end
+	if probed[key] and time() - probed[key] < DISCOVER_AGAIN then
+		return
+	end
+	local hello = Sync.Hello()
+	if not hello then
+		return
+	end
+	probed[key] = time()
+	lastDiscover = Now()
+	LI.test.sync.discover = (LI.test.sync.discover or 0) + 1
+	Enqueue("discover", hello, "WHISPER", LI.WhisperTarget(key))
+end
+Sync.ForeignSighting = ForeignSighting
+
+local function NotFoundName(msg)
+	local fmt = ERR_CHAT_PLAYER_NOT_FOUND_S
+	if type(fmt) ~= "string" or type(msg) ~= "string" then
+		return nil
+	end
+	local pattern = "^" .. fmt:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1"):gsub("%%%%s", "(.+)") .. "$"
+	return msg:match(pattern)
+end
+
+local function OurWhisper(msg)
+	local name = NotFoundName(msg)
+	local w = name and whispered[name:lower()]
+	if w and Now() - w.at <= WHISPER_MEMORY then
+		return w
+	end
+	return nil
+end
+
+function Sync.HideNotFound(_, _, msg)
+	return OurWhisper(LI.Safe(msg)) ~= nil
+end
+
+local function OnNotFound(msg)
+	local w = OurWhisper(msg)
+	if not w then
+		return
+	end
+	whispered[w.target:lower()] = nil
+	local key = LI.FullName(w.target)
+	local p = peers[key]
+	if p then
+		p.at = nil
+	end
+	if w.target:find("-", 1, true) and LI.realmOf[key] and not LI.bareWhisper[key] then
+		LI.bareWhisper[key] = true
+		LI.Log(string.format("Could not whisper %s, trying %s next", w.target, LI.ShortName(key)))
+	else
+		LI.Log(string.format("Could not whisper %s (%s): offline or unreachable", w.target, tostring(w.kind)))
+	end
+end
+
 function Sync.OnMessage(prefix, text, chatType, sender)
 	if prefix ~= PREFIX or type(text) ~= "string" or type(sender) ~= "string" or not LI.ready then
 		return
@@ -623,6 +880,22 @@ function Sync.OnMessage(prefix, text, chatType, sender)
 		return
 	end
 	Count("rx", chatType or "?")
+	Touch(key)
+	if not firstFrom[key] then
+		firstFrom[key] = true
+		LI.Log(string.format("First message from %s via %s (sender %s)", LI.ShortName(key), tostring(chatType), sender))
+	end
+	if text:sub(1, 3) == "B1|" then
+		OnRelay(key, text, chatType)
+		return
+	end
+	if chatType == "CHANNEL" then
+		Spread(key, MyRealm(), text)
+	end
+	Dispatch(key, text, chatType)
+end
+
+Dispatch = function(key, text, chatType)
 	local parts = Split(text, "|")
 	local kind = parts[1]
 	if kind == "P1" then
@@ -641,7 +914,7 @@ function Sync.OnMessage(prefix, text, chatType, sender)
 		return
 	end
 	if kind == "H1" then
-		OnHello(key, parts)
+		OnHello(key, parts, chatType)
 	elseif kind == "D1" and #parts == 5 then
 		OnData(key, parts)
 	elseif kind == "Q1" then
@@ -668,6 +941,28 @@ local function Tick()
 	if answerAt and now >= answerAt then
 		answerAt = nil
 		SendData()
+	end
+	local sig = LinkList()
+	if sig ~= linkSig then
+		local gained = false
+		for realm in sig:gmatch("[^,]+") do
+			if not ("," .. linkSig .. ","):find("," .. realm .. ",", 1, true) then
+				gained = true
+			end
+		end
+		if gained then
+			LI.Log("Linked to Linked Inn users on " .. sig)
+		end
+		linkSig = sig
+		if gained and joined and now - lastLinkHello >= LINK_HELLO_GAP then
+			lastLinkHello = now
+			nextHello = math.min(nextHello or math.huge, now + 3)
+		end
+	end
+	for id, at in pairs(seenMsgs) do
+		if now - at > SEEN_TTL then
+			seenMsgs[id] = nil
+		end
 	end
 end
 
@@ -739,11 +1034,21 @@ function Sync.Status()
 	end
 	local heard = {}
 	for key in pairs(sessionHeard) do
-		heard[#heard + 1] = LI.ShortName(key)
+		local realm = Sync.RealmOf(key)
+		heard[#heard + 1] = LI.ShortName(key) .. ((realm and realm ~= MyRealm()) and (" (" .. realm .. ")") or "")
 	end
 	table.sort(heard)
+	local bridges = {}
+	for realm, key in pairs(Sync.Links()) do
+		local elected, other = Sync.Elected(realm)
+		bridges[#bridges + 1] = string.format("%s via %s (%s)", realm, LI.ShortName(key), elected and "you relay" or (LI.ShortName(other) .. " relays"))
+	end
+	table.sort(bridges)
 	local lines = {
+		string.format("Realm: %s (server %s)", MyRealm(), tostring(MySid())),
 		string.format("Channel: %s%s", joined and "joined" or "NOT joined", ChannelId() and (" (#" .. ChannelId() .. ")") or ""),
+		"Other realms: " .. (#bridges > 0 and table.concat(bridges, "; ") or "none linked yet"),
+		string.format("Relayed: %d out, %d in; looked for users on other realms %d times", sync.relayOut or 0, sync.relayIn or 0, sync.discover or 0),
 		string.format("Your list: version %s, %d professions", tostring(OwnState().ver), OwnCount()),
 		"Sent: " .. Counts("tx") .. ((sync.failed or 0) > 0 and string.format("  |cffff6060failed %d (%s)|r", sync.failed, tostring(sync.lastError)) or ""),
 		"Received: " .. Counts("rx"),
@@ -828,6 +1133,38 @@ LI.On("GROUP_ROSTER_UPDATE", function()
 	end
 end)
 
+LI.On("CHAT_MSG_SYSTEM", function(msg)
+	OnNotFound(LI.Safe(msg))
+end)
+
+local function SightUnit(unit)
+	unit = LI.Safe(unit)
+	if not unit or not LI.Safe(LI.Try(UnitIsPlayer, unit)) then
+		return
+	end
+	if UnitIsFriend and not LI.Safe(LI.Try(UnitIsFriend, "player", unit)) then
+		return
+	end
+	ForeignSighting(LI.UnitKey(unit), LI.Safe(LI.Try(UnitGUID, unit)))
+end
+
+LI.On("NAME_PLATE_UNIT_ADDED", SightUnit)
+LI.On("PLAYER_TARGET_CHANGED", function()
+	SightUnit("target")
+end)
+LI.On("UPDATE_MOUSEOVER_UNIT", function()
+	SightUnit("mouseover")
+end)
+
+for _, event in ipairs({ "CHAT_MSG_CHANNEL", "CHAT_MSG_SAY", "CHAT_MSG_YELL" }) do
+	LI.On(event, function(_, sender, _, _, _, _, _, _, _, _, _, guid)
+		sender = LI.Safe(sender)
+		if type(sender) == "string" then
+			ForeignSighting(LI.FullName(sender), LI.Safe(guid))
+		end
+	end)
+end
+
 LI.On("CHAT_MSG_ADDON", function(prefix, text, chatType, sender)
 	Sync.OnMessage(LI.Safe(prefix), LI.Safe(text), LI.Safe(chatType), LI.Safe(sender))
 end)
@@ -851,6 +1188,17 @@ LI.Listen("Ready", function()
 	LI.test.sync.joined = false
 	if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
 		LI.Try(C_ChatInfo.RegisterAddonMessagePrefix, PREFIX)
+	end
+	local addFilter = (ChatFrameUtil and ChatFrameUtil.AddMessageEventFilter) or ChatFrame_AddMessageEventFilter
+	if addFilter then
+		LI.Try(addFilter, "CHAT_MSG_SYSTEM", Sync.HideNotFound)
+	end
+	if type(LI.db.probed) == "table" then
+		for key, at in pairs(LI.db.probed) do
+			if type(at) ~= "number" or time() - at > DISCOVER_AGAIN then
+				LI.db.probed[key] = nil
+			end
+		end
 	end
 	ReadOwnBasics()
 	Sync.Refresh()

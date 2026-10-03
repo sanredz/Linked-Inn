@@ -11,3 +11,4 @@
 - Profession filters (several at once), optional secondary professions, favorites, last seen with a quick online check.
 - Recipe books with categories and reagents, compact list, max skill filter, scan nearby.
 - Work: post crafting requests, get notified about requests you can make, send offers.
+- Reaches Linked Inn users on the other hidden realms of your ruleset too: one user per realm quietly passes messages across.

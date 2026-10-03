@@ -1875,5 +1875,97 @@ do
 	W.friends = nil
 end
 
+do
+	Setup()
+	W.profs = { { name = "Tailoring", rank = 260, max = 300 } }
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(50)
+	local Sync = LI.Sync
+	local function Find(prefix, chatType, target)
+		for _, m in ipairs(W.sent) do
+			if m.msg:sub(1, #prefix) == prefix and m.chatType == chatType and (not target or m.target == target) then
+				return m
+			end
+		end
+	end
+	local function CountOf(prefix, chatType)
+		local n = 0
+		for _, m in ipairs(W.sent) do
+			if m.msg:sub(1, #prefix) == prefix and m.chatType == chatType then
+				n = n + 1
+			end
+		end
+		return n
+	end
+	check(LI.FullName("Far Away-OtherRealm") == "Far Away-TestRealm" and LI.realmOf["Far Away-TestRealm"] == "OtherRealm", "a name from another backend realm is kept as one person", LI.FullName("Far Away-OtherRealm"))
+	check(LI.WhisperTarget("Far Away-TestRealm") == "Far Away-OtherRealm", "and is whispered on their own realm", LI.WhisperTarget("Far Away-TestRealm"))
+	check((Sync.Hello() or ""):find("|TestRealm|1$"), "your hello says your realm and server", Sync.Hello())
+	W.sent = {}
+	Addon("H1|abc|ROGUE|tailoring~5~a~-|OtherRealm|2", "Far Away-OtherRealm", "WHISPER")
+	Advance(6)
+	check(LI.crafters["Far Away-TestRealm"] and not LI.crafters["Far Away-OtherRealm"], "a user on another realm is listed once")
+	check(Find("H1", "WHISPER", "Far Away-OtherRealm"), "a whispered hello from another realm is answered by whisper")
+	check(Sync.Links().OtherRealm == "Far Away-TestRealm", "and links you to that realm")
+	Advance(6)
+	check((Sync.Hello() or ""):find("|OtherRealm$"), "your hello then says which realms you link to", Sync.Hello())
+	W.sent = {}
+	Addon("H1|abd|MAGE|tailoring~5~a~-|TestRealm|1", "Near By-TestRealm", "CHANNEL")
+	Advance(6)
+	check(Find("B1|Near By-TestRealm|H1|abd", "WHISPER", "Far Away-OtherRealm"), "a hello on your channel is passed to the other realm")
+	W.sent = {}
+	Addon("H1|abd|MAGE|tailoring~5~a~-|TestRealm|1", "Near By-TestRealm", "CHANNEL")
+	Advance(4)
+	check(not Find("B1|Near By", "WHISPER"), "the same message is passed on only once")
+	Sync.Send("X1|abc", "CHANNEL")
+	Advance(8)
+	check(Find("B1|Brew Master-TestRealm|X1|abc", "WHISPER", "Far Away-OtherRealm"), "your own work messages cross too")
+	Addon("H1|abf|MAGE|tailoring~5~a~-|TestRealm|1|OtherRealm", "Aaa Bridge-TestRealm", "CHANNEL")
+	Advance(6)
+	W.sent = {}
+	Sync.Send("X1|zz", "CHANNEL")
+	Advance(8)
+	check(not Find("B1|Brew Master-TestRealm|X1|zz", "WHISPER"), "only one user per realm passes messages on")
+	local chat0 = #W.chat
+	SlashCmdList.LINKEDINN("status")
+	local report = table.concat({ table.unpack(W.chat, chat0 + 1) }, "\n")
+	check(report:find("Realm: TestRealm", 1, true) and report:find("OtherRealm via Far Away", 1, true) and report:find("Aaa Bridge relays", 1, true) and report:find("Far Away (OtherRealm)", 1, true), "/li status shows realms and who relays", report)
+	Advance(120)
+	W.sent = {}
+	Addon("B1|Third Guy-OtherRealm|H1|abe|PRIEST|alchemy~5~a~-|OtherRealm|2", "Far Away-OtherRealm", "WHISPER")
+	Advance(6)
+	check(LI.crafters["Third Guy-TestRealm"], "a relayed hello lists that user")
+	check(Find("B1|Third Guy-OtherRealm|H1|abe", "CHANNEL"), "and is passed on to everyone on your realm")
+	check(Find("Q1|abe", "WHISPER", "Third Guy-OtherRealm"), "their list is asked from them directly")
+	Addon("B1|Third Guy-OtherRealm|H1|abe|PRIEST|alchemy~5~a~-|OtherRealm|2", "Far Away-OtherRealm", "WHISPER")
+	Advance(4)
+	check(CountOf("B1|Third Guy", "CHANNEL") == 1, "a relay that comes twice is passed on once", CountOf("B1|Third Guy", "CHANNEL"))
+	Addon("B1|Brew Master-TestRealm|H1|zzz|PRIEST|alchemy~5~a~-|TestRealm|1", "Far Away-OtherRealm", "WHISPER")
+	check(not LI.crafters[LI.playerKey].profs.alchemy, "a relay claiming to be you is ignored")
+	W.sent = {}
+	W.units = { nameplate1 = { name = "Stranger", surname = "Danger", guid = "Player-3-XYZ" }, nameplate2 = { name = "Other", surname = "One", guid = "Player-3-QQQ" }, nameplate3 = { name = "Local", surname = "Guy", guid = "Player-1-LLL" }, nameplate4 = { name = "Linked", surname = "Realm", guid = "Player-2-KKK" } }
+	Fire("NAME_PLATE_UNIT_ADDED", "nameplate3")
+	Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+	Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
+	Advance(4)
+	check(Find("H1", "WHISPER", "Stranger Danger") and not Find("H1", "WHISPER", "Other One") and not Find("H1", "WHISPER", "Local Guy"), "someone from an unlinked realm gets one quiet hello, at most every 45 seconds")
+	Advance(50)
+	W.sent = {}
+	Fire("NAME_PLATE_UNIT_ADDED", "nameplate4")
+	Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+	Advance(4)
+	check(not Find("H1", "WHISPER", "Linked Realm") and not Find("H1", "WHISPER", "Stranger Danger"), "not for a realm you already link to, nor twice a day")
+	W.units = nil
+	Sync.Ping("Far Away-OtherRealm")
+	Advance(3)
+	local gone = "No player named 'Far Away-OtherRealm' is currently playing."
+	check(Sync.HideNotFound(nil, "CHAT_MSG_SYSTEM", gone), "the game's 'no player named' line is hidden for our own quiet whispers")
+	Fire("CHAT_MSG_SYSTEM", gone)
+	check(Sync.Links().OtherRealm == "Third Guy-TestRealm", "a link that can't be whispered is dropped for another one", Sync.Links().OtherRealm)
+	check(LI.WhisperTarget("Far Away-TestRealm") == "Far Away", "and the name is tried without the realm next", LI.WhisperTarget("Far Away-TestRealm"))
+	check(not Sync.HideNotFound(nil, "CHAT_MSG_SYSTEM", "No player named 'Someone Else' is currently playing."), "other 'no player named' lines are left alone")
+	W.playerGUID = nil
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

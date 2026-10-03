@@ -1270,6 +1270,32 @@ do
 	check(not LI.IsChecking("Anna Smith-TestRealm"), "a check never stays stuck on Checking")
 	C_TradeSkillUI.CloseTradeSkill()
 	Advance(3)
+	W.openPanel = {}
+	check(LI.CheckOnline("Anna Smith-TestRealm"), "a check is accepted while a game window is open")
+	Advance(10)
+	check(LI.IsChecking("Anna Smith-TestRealm"), "it waits for the window instead of giving up after a few seconds")
+	local waited = false
+	for _, e in ipairs(LI.db.log) do
+		if e.m:find("has to wait: a game window is open", 1, true) then waited = true end
+	end
+	check(waited, "the log says why it waits")
+	W.openPanel = nil
+	W.autoWorks = true
+	Advance(4)
+	check(not LI.IsChecking("Anna Smith-TestRealm") and LI.Status("Anna Smith-TestRealm") == "online", "once the window closes the check runs and its answer counts")
+	W.autoWorks = false
+	Advance(30)
+	W.openPanel = {}
+	local changes = 0
+	LI.Listen("StatusChanged", function() changes = changes + 1 end)
+	LI.CheckOnline("Bob Stone-TestRealm")
+	local before = changes
+	Advance(22)
+	check(not LI.IsChecking("Bob Stone-TestRealm") and changes > before, "a check that never runs gives up and the window is told to redraw")
+	W.openPanel = nil
+	local tries = #W.hyperlinks
+	Advance(5)
+	check(#W.hyperlinks == tries, "a check that gave up isn't sent later")
 end
 
 do

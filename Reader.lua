@@ -296,8 +296,23 @@ Start = function(job)
 	end)
 end
 
+local lastWaitLog = -30
+
+local function Waiting(reason)
+	if Now() - lastWaitLog >= 30 and probes[1] then
+		lastWaitLog = Now()
+		LI.Log(string.format("Checking %s has to wait: %s", LI.ShortName(probes[1].key), reason))
+	end
+end
+
 Kick = function()
-	if pending or not LI.ready then
+	if not LI.ready then
+		return
+	end
+	if pending then
+		if #probes > 0 and Now() - (pending.started or 0) > 4 then
+			Waiting(pending.probe and "another check" or "a profession read")
+		end
 		return
 	end
 	if #probes == 0 then
@@ -305,9 +320,15 @@ Kick = function()
 		return
 	end
 	if tradeOpen and FrameVisible() then
+		Waiting("a profession window is open")
 		return
 	end
-	if (InCombatLockdown and InCombatLockdown()) or PanelOpen() then
+	if InCombatLockdown and InCombatLockdown() then
+		Waiting("in combat")
+		return
+	end
+	if PanelOpen() then
+		Waiting("a game window is open")
 		return
 	end
 	Start(table.remove(probes, 1))
@@ -398,6 +419,24 @@ end
 
 function Reader.Busy(key)
 	return pending ~= nil and pending.key == key and Now() - (pending.started or 0) < PROBE_MAX + 1
+end
+
+function Reader.Queued(key)
+	for _, job in ipairs(probes) do
+		if job.key == key and not job.scan and not job.own then
+			return true
+		end
+	end
+	return false
+end
+
+function Reader.Drop(key)
+	for i = #probes, 1, -1 do
+		local job = probes[i]
+		if job.key == key and not job.scan and not job.own then
+			table.remove(probes, i)
+		end
+	end
 end
 
 LI.On("UI_ERROR_MESSAGE", function(_, msg)

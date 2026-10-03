@@ -332,12 +332,25 @@ function LI.ProbeOnline(key)
 end
 
 local CHECK_STUCK = 6
+local CHECK_GIVEUP = 20
 
 function LI.IsChecking(key)
 	local probe = probing[key]
-	if probe and GetTime() - (probe.at or 0) > CHECK_STUCK and not (LI.Reader and LI.Reader.Busy(key)) then
-		probing[key] = nil
-		probe = nil
+	if probe then
+		local age = GetTime() - (probe.at or 0)
+		local reader = LI.Reader
+		local active = reader and (reader.Busy(key) or reader.Queued(key))
+		if (age > CHECK_STUCK and not active) or age > CHECK_GIVEUP then
+			probing[key] = nil
+			probe = nil
+			if reader and reader.Drop then
+				reader.Drop(key)
+			end
+			LI.Log(string.format("No answer when checking %s", LI.ShortName(key)))
+			LI.After(0, function()
+				LI.Fire("StatusChanged")
+			end)
+		end
 	end
 	return probe ~= nil or (whoCheck ~= nil and whoCheck.key == key)
 end
@@ -400,6 +413,11 @@ LI.Listen("Ready", function()
 	ReadGroup()
 	LI.After(5, RequestRoster)
 	LI.Every(ROSTER_EVERY, RequestRoster)
+	LI.Every(1, function()
+		for key in pairs(probing) do
+			LI.IsChecking(key)
+		end
+	end)
 end)
 
 LI.NotFoundPattern = NotFoundPattern

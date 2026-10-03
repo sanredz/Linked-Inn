@@ -59,6 +59,7 @@ local DEFAULTS = {
 	autoRead = true,
 	share = true,
 	secondary = false,
+	maxOnly = false,
 	profs = {},
 	kind = "all",
 	minimap = { angle = 200 },
@@ -376,6 +377,19 @@ local function KindMatch(meta, kind)
 	return kind == nil or kind == "all" or meta.k == kind
 end
 
+function LI.SkillCaps()
+	local caps = {}
+	for _, c in pairs(LI.crafters or {}) do
+		for profKey, p in pairs(c.profs) do
+			local top = math.max(p.max or 0, p.rank or 0)
+			if top > (caps[profKey] or 0) then
+				caps[profKey] = top
+			end
+		end
+	end
+	return caps
+end
+
 local STATUS_RANK = { online = 0, recent = 1, offline = 2 }
 
 function LI.StatusRank(status)
@@ -403,6 +417,14 @@ function LI.Search(query, opts)
 		end
 		return not profSet or profSet[profKey] == true
 	end
+	local caps = opts.maxOnly and LI.SkillCaps() or nil
+	local function Maxed(profKey, p)
+		if not caps then
+			return true
+		end
+		local cap = caps[profKey] or 0
+		return cap > 0 and (p.rank or 0) >= cap
+	end
 	local recipeSearch = q ~= "" or kind ~= "all"
 	local hits, hitCount, hitProfs = {}, 0, {}
 	if recipeSearch then
@@ -422,7 +444,7 @@ function LI.Search(query, opts)
 			local nameMatch = q ~= "" and kind == "all" and Find(LI.ShortName(key), q)
 			local groups, top = {}, nil
 			for profKey, p in pairs(c.profs) do
-				if Allowed(profKey) then
+				if Allowed(profKey) and Maxed(profKey, p) then
 					local g = { key = profKey, confidence = 0, makes = 0 }
 					if recipeSearch and hitCount > 0 and p.recipes then
 						for id in pairs(p.recipes) do

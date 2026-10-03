@@ -717,10 +717,11 @@ local function UpdateChips()
 	main.clearChips:SetPoint("LEFT", main.chipBar, "LEFT", #profs * 38 + 4, 0)
 	main.clearChips:SetShown(any)
 	main.secondaryBox:SetChecked(LI.settings.secondary and true or false)
+	main.maxBox:SetChecked(LI.settings.maxOnly and true or false)
 end
 
 local function RefreshFind()
-	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary, kind = LI.settings.kind }
+	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary, kind = LI.settings.kind, maxOnly = LI.settings.maxOnly }
 	local results = LI.Search(filter.search, opts)
 	local list = {}
 	local collapsed = LI.settings.collapsed or {}
@@ -927,6 +928,8 @@ function UI.Refresh()
 	main.kind:SetShown(findShown)
 	main.chipBar:SetShown(findShown)
 	main.secondaryBox:SetShown(findShown)
+	main.maxBox:SetShown(findShown)
+	main.maxLabel:SetShown(findShown)
 	main.secondaryLabel:SetShown(findShown)
 	main.count:SetShown(findShown)
 	if findShown then
@@ -1045,6 +1048,27 @@ local function CreateMain()
 	main.secondaryLabel = Text(main, "GameFontHighlightSmall")
 	main.secondaryLabel:SetPoint("LEFT", main.secondaryBox, "RIGHT", 0, 0)
 	main.secondaryLabel:SetText("Secondary")
+
+	main.maxLabel = Text(main.chipBar, "GameFontHighlightSmall", "RIGHT")
+	main.maxLabel:SetPoint("RIGHT", main.chipBar, "RIGHT", -6, 0)
+	main.maxLabel:SetText("Max skill")
+	main.maxBox = CreateFrame("CheckButton", nil, main.chipBar, "UICheckButtonTemplate")
+	main.maxBox:SetSize(24, 24)
+	main.maxBox:SetPoint("RIGHT", main.maxLabel, "LEFT", 0, 0)
+	main.maxBox:SetScript("OnClick", function(self)
+		LI.settings.maxOnly = self:GetChecked() and true or false
+		Sound(LI.settings.maxOnly and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
+		UI.Refresh()
+	end)
+	main.maxBox:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+		GameTooltip:SetText("Max skill", 1, 0.82, 0)
+		GameTooltip:AddLine("Only crafters at the highest skill level.", 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	main.maxBox:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
 
 
 	if main.Inset then

@@ -679,7 +679,7 @@ check(not LI.IsChecking("Cora Vale-TestRealm") and LI.Status("Cora Vale-TestReal
 Advance(5)
 check(not LI.IsChecking("Bob Stone-TestRealm") and LI.Status("Dee Gone-TestRealm") == "offline", "all queued checks finish within a few seconds", LI.Status("Dee Gone-TestRealm"))
 check(W.hyperlinks[firstHyper + 1] == "trade:Player-1-CCC:2259:171" and W.hyperlinks[firstHyper + 3] == "trade:Player-1-DDD:3908:197", "queued checks run in click order, before background reads", W.hyperlinks[firstHyper + 3])
-check(math.abs(LI.Reader.ProbeTimeout() - 0.5) < 0.01, "the wait adapts to how fast replies arrive", LI.Reader.ProbeTimeout())
+check(math.abs(LI.Reader.ProbeTimeout() - 0.4) < 0.01, "the wait adapts to how fast replies arrive", LI.Reader.ProbeTimeout())
 check(#W.who == 0, "no /who was needed")
 LI.Forget("Dee Gone-TestRealm")
 
@@ -991,7 +991,7 @@ check(#W.errors == uiErrors, "the window builds without errors", W.errors[uiErro
 local saved = Logout()
 Boot(saved)
 check(LI.crafters["Anna Smith-TestRealm"] and LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes[18560], "crafters and recipes survive a reload")
-check(LI.test.auto.ok == 1 and LI.test.click == 2, "test results survive a reload", LI.test.click)
+check(LI.test.auto.ok == 1 and LI.test.click == 3, "test results survive a reload", LI.test.click)
 check(LI.guids["Player-1-CCC"] == "Cora Vale-TestRealm", "the GUID index is rebuilt after a reload")
 check(LI.IsFavorite("Cora Vale-TestRealm"), "favorites survive a reload")
 W.clock = W.clock + 90 * 86400
@@ -1175,6 +1175,14 @@ do
 	check(LI.db.log[#LI.db.log].m == "Online refresh: asked 22, 11 answered", "every crafter is asked once", LI.db.log[#LI.db.log].m)
 	local done, total = LI.Reader.SweepProgress()
 	check(done == nil, "no progress once finished")
+	W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	Advance(1)
+	check(LI.CheckOnline("Many1 Folk-TestRealm") and LI.IsChecking("Many1 Folk-TestRealm"), "a check can be queued while your own profession window is open")
+	Advance(7)
+	check(not LI.IsChecking("Many1 Folk-TestRealm"), "a check never stays stuck on Checking")
+	C_TradeSkillUI.CloseTradeSkill()
+	Advance(3)
 	W.autoWorks = false
 end
 

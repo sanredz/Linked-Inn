@@ -6,7 +6,7 @@ LI.Reader = Reader
 local PUMP_EVERY = 2
 local GAP = 8
 local TIMEOUT = 3
-local PROBE_MIN = 0.4
+local PROBE_MIN = 0.3
 local PROBE_MAX = 1.5
 local PROBE_DEFAULT = 1.0
 local latencies = {}
@@ -124,14 +124,15 @@ local function EnsureFrame()
 end
 
 local function PanelOpen()
-	if FrameShown() then
+	if FrameShown() and not concealed then
 		return true
 	end
 	if not GetUIPanel then
 		return false
 	end
 	for _, key in ipairs(PANELS) do
-		if LI.Try(GetUIPanel, key) then
+		local panel = LI.Try(GetUIPanel, key)
+		if panel and not (concealed and panel == ProfessionsFrame) then
 			return true
 		end
 	end
@@ -178,7 +179,7 @@ local function Finish(job, outcome)
 		elseif LI.ProbeResult and not job.notified then
 			LI.ProbeResult(job.key, outcome == "ok")
 		end
-		LI.After(0.05, function()
+		LI.After(0.01, function()
 			Kick()
 		end)
 		return
@@ -247,14 +248,23 @@ Start = function(job)
 			if not job.probe then
 				LI.Log("No reply for " .. LI.ShortName(job.key) .. "'s " .. tostring(job.prof) .. ", probably offline")
 			end
-			CloseHidden()
+			if not job.probe then
+				CloseHidden()
+			end
 			Finish(job, "timeout")
 		end
 	end)
 end
 
 Kick = function()
-	if pending or #probes == 0 or tradeOpen or not LI.ready then
+	if pending or not LI.ready then
+		return
+	end
+	if #probes == 0 then
+		CloseHidden()
+		return
+	end
+	if tradeOpen and not concealed then
 		return
 	end
 	if (InCombatLockdown and InCombatLockdown()) or PanelOpen() then
@@ -292,6 +302,10 @@ function Reader.Probe(key, link)
 	table.insert(probes, math.min(at, #probes + 1), { key = key, link = link, probe = true })
 	Kick()
 	return true
+end
+
+function Reader.Busy(key)
+	return pending ~= nil and pending.key == key and Now() - (pending.started or 0) < PROBE_MAX + 1
 end
 
 function Reader.Sweeping()
@@ -459,6 +473,13 @@ function Reader.Read()
 		if not pending and lastAuto and Now() - lastAuto.at <= AUTO_ECHO and not (clicked and clicked.at > lastAuto.at) then
 			return
 		end
+		if pending and not Reader.NameMatches(LI.Safe(linkedName), pending.key) then
+			return
+		end
+		if pending and pending.sweep then
+			LI.SetRecipes(pending.key, info, list, "auto")
+			return
+		end
 		local key, via = LinkedOwner(linkedName)
 		if not key then
 			LI.Log("Read a linked " .. name .. " but could not tell whose it was")
@@ -529,7 +550,23 @@ function Reader.ProbeTimeout()
 	for _, v in ipairs(latencies) do
 		worst = math.max(worst, v)
 	end
-	return math.min(PROBE_MAX, math.max(PROBE_MIN, worst * 2.5))
+	return math.min(PROBE_MAX, math.max(PROBE_MIN, worst * 2))
+end
+
+local function Plain(name)
+	return LI.ShortName(LI.FullName(name) or ""):lower()
+end
+
+function Reader.NameMatches(linkedName, key)
+	if type(linkedName) ~= "string" or linkedName == "" then
+		return true
+	end
+	local a, b = Plain(linkedName), Plain(key)
+	if a == b then
+		return true
+	end
+	local fa, fb = a:match("^(%S+)"), b:match("^(%S+)")
+	return (a == fb) or (b == fa)
 end
 
 local function Replied()
@@ -538,8 +575,14 @@ local function Replied()
 		return
 	end
 	local api = C_TradeSkillUI
-	if api and api.IsTradeSkillLinked and LI.Safe(LI.Try(api.IsTradeSkillLinked)) == false then
-		return
+	if api and api.IsTradeSkillLinked then
+		local linked, linkedName = LI.Try(api.IsTradeSkillLinked)
+		if LI.Safe(linked) == false then
+			return
+		end
+		if not Reader.NameMatches(LI.Safe(linkedName), job.key) then
+			return
+		end
 	end
 	job.replied = Now()
 	table.insert(latencies, job.replied - (job.started or job.replied))
@@ -548,9 +591,8 @@ local function Replied()
 	end
 	if job.sweep then
 		lastAuto = { key = job.key, at = Now() }
-		LI.After(0.05, function()
+		LI.After(0.01, function()
 			if pending == job then
-				CloseHidden()
 				Finish(job, "ok")
 			end
 		end)
@@ -574,17 +616,22 @@ LI.On("TRADE_SKILL_SHOW", function()
 	ScheduleRead()
 end)
 LI.On("TRADE_SKILL_LIST_UPDATE", function()
+	Replied()
 	if tradeOpen then
 		ScheduleRead()
 	end
 end)
 LI.On("TRADE_SKILL_DATA_SOURCE_CHANGED", function()
+	Replied()
 	if tradeOpen then
 		ScheduleRead()
 	end
 end)
 LI.On("TRADE_SKILL_CLOSE", function()
 	tradeOpen = false
+	LI.After(0.01, function()
+		Kick()
+	end)
 end)
 
 LI.On("ADDON_LOADED", function(name)

@@ -321,7 +321,7 @@ function LI.CheckOnline(key)
 	end
 	local link = ProbeLink(key)
 	if link and LI.Reader and LI.Reader.Probe(key, link) then
-		probing[key] = { quiet = false }
+		probing[key] = { quiet = false, at = GetTime() }
 		LI.Fire("StatusChanged")
 		return true
 	end
@@ -359,15 +359,22 @@ function LI.ProbeOnline(key)
 	end
 	local link = ProbeLink(key)
 	if link and LI.Reader and LI.Reader.Probe(key, link) then
-		probing[key] = { quiet = true }
+		probing[key] = { quiet = true, at = GetTime() }
 		LI.Fire("StatusChanged")
 		return true
 	end
 	return false
 end
 
+local CHECK_STUCK = 6
+
 function LI.IsChecking(key)
-	return probing[key] ~= nil or (whoCheck ~= nil and whoCheck.key == key)
+	local probe = probing[key]
+	if probe and GetTime() - (probe.at or 0) > CHECK_STUCK and not (LI.Reader and LI.Reader.Busy(key)) then
+		probing[key] = nil
+		probe = nil
+	end
+	return probe ~= nil or (whoCheck ~= nil and whoCheck.key == key)
 end
 
 LI.On("CHAT_MSG_SYSTEM", function(msg)

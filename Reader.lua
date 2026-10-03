@@ -328,6 +328,14 @@ function Reader.Read()
 			return
 		end
 		info.class = select(2, LI.Try(UnitClass, "player"))
+		local own = api.GetTradeSkillListLink and LI.Safe(LI.Try(api.GetTradeSkillListLink))
+		if type(own) == "string" then
+			local payload, text = own:match("|Htrade:([^|]+)|h%[([^%]]*)%]|h")
+			if payload then
+				info.link = "trade:" .. payload
+				info.text = "[" .. text .. "]"
+			end
+		end
 		local first = not (LI.crafters[LI.playerKey] and LI.crafters[LI.playerKey].profs[profKey] and LI.crafters[LI.playerKey].profs[profKey].recipes)
 		local count = LI.SetRecipes(LI.playerKey, info, list, "own")
 		if first then

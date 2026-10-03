@@ -7,6 +7,9 @@ local TAB = { find = 1, test = 2 }
 local TABS = { "Crafters", "Test" }
 local TITLE_FONT = "Fonts\\MORPHEUS.TTF"
 local ROW_HEIGHT = 46
+local BOOK_SIZE = 30
+local BOOK_GAP = 6
+local STATUS_WIDTH = 96
 
 local STATUS = {
 	online = { icon = "Interface\\FriendsFrame\\StatusIcon-Online", color = { 0.35, 0.95, 0.45 } },
@@ -73,7 +76,9 @@ end
 local function OpenLink(p)
 	if p and p.link and SetItemRef then
 		SetItemRef(p.link, p.text or "", "LeftButton")
+		return true
 	end
+	return false
 end
 
 local function KindName(key)
@@ -188,6 +193,108 @@ local function RowMenu(row)
 	end)
 end
 
+local function ShowBookTooltip(book)
+	local p = book.prof
+	if not p then
+		return
+	end
+	GameTooltip:SetOwner(book, "ANCHOR_TOP")
+	local name = p.name or book.key
+	if p.rank and p.rank > 0 then
+		name = string.format("%s  %d/%d", name, p.rank, p.max or p.rank)
+	end
+	GameTooltip:SetText(name, 1, 0.82, 0)
+	if p.recipes then
+		GameTooltip:AddLine(string.format("%d recipes known", p.count or 0), 1, 1, 1)
+	else
+		GameTooltip:AddLine("Recipes not read yet", SOFT[1], SOFT[2], SOFT[3])
+	end
+	if book.match then
+		GameTooltip:AddLine("Can make what you searched for", CAN[1], CAN[2], CAN[3])
+	end
+	if p.link then
+		GameTooltip:AddLine("Click to open their recipes", 0.5, 0.5, 0.5)
+	else
+		GameTooltip:AddLine("Can't be opened until they link it", 0.5, 0.5, 0.5)
+	end
+	GameTooltip:Show()
+end
+
+local function Book(row, i)
+	row.books = row.books or {}
+	local book = row.books[i]
+	if book then
+		return book
+	end
+	book = CreateFrame("Button", nil, row)
+	book:SetSize(BOOK_SIZE, BOOK_SIZE)
+	book.glow = book:CreateTexture(nil, "BACKGROUND")
+	book.glow:SetPoint("TOPLEFT", -3, 3)
+	book.glow:SetPoint("BOTTOMRIGHT", 3, -3)
+	book.edge = book:CreateTexture(nil, "BORDER")
+	book.edge:SetPoint("TOPLEFT", -1, 1)
+	book.edge:SetPoint("BOTTOMRIGHT", 1, -1)
+	book.edge:SetColorTexture(0, 0, 0, 0.85)
+	book.icon = book:CreateTexture(nil, "ARTWORK")
+	book.icon:SetAllPoints()
+	book.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+	book.rank = book:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
+	book.rank:SetPoint("BOTTOMRIGHT", 2, -1)
+	book.rank:SetJustifyH("RIGHT")
+	book:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+	book:SetScript("OnMouseDown", function(self)
+		self.icon:SetPoint("TOPLEFT", 1, -1)
+		self.icon:SetPoint("BOTTOMRIGHT", 1, -1)
+	end)
+	book:SetScript("OnMouseUp", function(self)
+		self.icon:ClearAllPoints()
+		self.icon:SetAllPoints()
+	end)
+	book:SetScript("OnClick", function(self)
+		if OpenLink(self.prof) then
+			Sound("IG_SPELLBOOK_OPEN")
+		end
+	end)
+	book:SetScript("OnEnter", ShowBookTooltip)
+	book:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+	row.books[i] = book
+	return book
+end
+
+local function UpdateBooks(row, entry)
+	local profs = SortedProfs(entry.crafter)
+	local matchKey = entry.recipeMeta and entry.recipeMeta.p
+	for i, item in ipairs(profs) do
+		local book = Book(row, i)
+		local p = item.p
+		book.prof, book.key = p, item.key
+		book.match = matchKey == item.key
+		book.icon:SetTexture(LI.ProfIcon(item.key, p.icon))
+		book.icon:SetDesaturated(not p.link)
+		book.icon:SetAlpha(p.link and 1 or 0.6)
+		book.rank:SetText(p.rank and p.rank > 0 and tostring(p.rank) or "")
+		if book.match then
+			book.glow:SetColorTexture(CAN[1], CAN[2], CAN[3], 0.75)
+			book.glow:Show()
+		elseif filter.prof == item.key then
+			book.glow:SetColorTexture(1, 0.82, 0.2, 0.75)
+			book.glow:Show()
+		else
+			book.glow:Hide()
+		end
+		book:ClearAllPoints()
+		book:SetPoint("RIGHT", row, "RIGHT", -STATUS_WIDTH - (i - 1) * (BOOK_SIZE + BOOK_GAP), 0)
+		book:Show()
+	end
+	for i = #profs + 1, #(row.books or {}) do
+		row.books[i]:Hide()
+	end
+	local shelf = #profs * (BOOK_SIZE + BOOK_GAP)
+	row.line:SetPoint("RIGHT", row, "RIGHT", -STATUS_WIDTH - shelf - 4, 0)
+end
+
 local function BuildRow(row)
 	row:SetHeight(ROW_HEIGHT)
 	row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -207,7 +314,6 @@ local function BuildRow(row)
 	row.name:SetPoint("LEFT", row.dot, "RIGHT", 3, 0)
 	row.line = Text(row, "GameFontHighlightSmall")
 	row.line:SetPoint("BOTTOMLEFT", row.icon, "BOTTOMRIGHT", 10, 1)
-	row.line:SetPoint("RIGHT", -120, 0)
 	row.line:SetWordWrap(false)
 	row.status = Text(row, "GameFontHighlightSmall", "RIGHT")
 	row.status:SetPoint("TOPRIGHT", -12, -9)
@@ -263,6 +369,7 @@ local function InitRow(row, entry)
 		end
 		icon = first and LI.ProfIcon(first.key, first.p.icon)
 	end
+	UpdateBooks(row, entry)
 	row.icon:SetTexture(icon or LI.ICON)
 	row.icon:SetDesaturated(entry.status == "offline")
 	row.icon:SetAlpha(entry.status == "offline" and 0.75 or 1)
@@ -414,7 +521,7 @@ local function RefreshTest()
 	page.formats:SetText(#formats > 0 and table.concat(formats, "\n") or "No profession links seen yet.")
 	local log = {}
 	local entries = LI.db.log
-	for i = #entries, math.max(1, #entries - 7), -1 do
+	for i = #entries, math.max(1, #entries - 5), -1 do
 		log[#log + 1] = date("%H:%M", entries[i].t) .. "  " .. entries[i].m
 	end
 	page.log:SetText(#log > 0 and table.concat(log, "\n") or "Nothing yet.")

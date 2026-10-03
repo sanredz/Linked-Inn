@@ -259,6 +259,9 @@ local function InstallStubs()
 			return { icon = 1 }
 		end,
 		GetTradeSkillTexture = function(id) return 9000 + id end,
+		GetTradeSkillListLink = function()
+			if W.trade and not W.trade.linked then return "|cffffd000|Htrade:Player-1-ME:2259:171|h[Alchemy]|h|r" end
+		end,
 		CloseTradeSkill = function()
 			W.closed = W.closed + 1
 			W.trade = nil
@@ -466,6 +469,7 @@ Advance(1)
 local me = LI.crafters[LI.playerKey]
 check(me and me.profs.alchemy and me.profs.alchemy.via == "own" and me.profs.alchemy.recipes[2330], "opening your own profession saves it")
 check(LI.test.own == 1, "the test counts your own professions")
+check(me.profs.alchemy.link == "trade:Player-1-ME:2259:171" and me.profs.alchemy.text == "[Alchemy]", "your own profession gets a link so its button can open it", me.profs.alchemy.link)
 check(LI.Status(LI.playerKey) == "online", "you are always online")
 Fire("TRADE_SKILL_LIST_UPDATE")
 Advance(1)
@@ -498,6 +502,14 @@ main.search.__scripts.OnTextChanged(main.search)
 Advance(1)
 check(#main.list.__rows == 2, "typing in the search box filters the list", #main.list.__rows)
 local annaRow = main.list.__rows[2]
+local annaBook = annaRow.books and annaRow.books[1]
+check(annaBook and annaBook:IsShown() and annaBook.key == "tailoring", "each row shows a button per profession")
+check(annaBook and annaBook.match and annaBook.glow:IsShown(), "the profession that matches the search is highlighted")
+check(annaBook and annaBook.rank.__text == "260", "the profession button shows the skill level", annaBook and annaBook.rank.__text)
+local refs = W.itemRefs or 0
+local whispers = #W.tells
+annaBook.__scripts.OnClick(annaBook)
+check((W.itemRefs or 0) == refs + 1 and #W.tells == whispers, "clicking a profession button opens it without whispering")
 check(annaRow.line.__text and annaRow.line.__text:find("Can make Mooncloth Bag", 1, true), "the row says what the crafter can make", annaRow.line.__text)
 main.search:SetText("")
 main.search.__scripts.OnTextChanged(main.search)
@@ -510,7 +522,7 @@ check(#W.errors == uiErrors, "the window builds without errors", W.errors[uiErro
 local saved = Logout()
 Boot(saved)
 check(LI.crafters["Anna Smith-TestRealm"] and LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes[18560], "crafters and recipes survive a reload")
-check(LI.test.auto.ok == 1 and LI.test.click == 2, "test results survive a reload")
+check(LI.test.auto.ok == 1 and LI.test.click == 3, "test results survive a reload", LI.test.click)
 check(LI.guids["Player-1-CCC"] == "Cora Vale-TestRealm", "the GUID index is rebuilt after a reload")
 
 Setup()

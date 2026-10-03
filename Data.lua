@@ -214,6 +214,8 @@ function LI.SetRecipes(key, info, recipes, via)
 	p.max = info.max or p.max
 	p.read = now
 	p.via = via
+	p.link = info.link or p.link
+	p.text = info.text or p.text
 	local set, count = {}, 0
 	for _, r in ipairs(recipes) do
 		if r.id and not set[r.id] then

@@ -16,7 +16,7 @@ Nobody around? Post a request and the crafters who can make it get a notice.
 > [Releases](https://github.com/sanredz/Linked-Inn/releases) and CurseForge.
 > Copies uploaded anywhere else aren't official and may be modified.
 
-> **Beta:** Linked Inn is new. If something looks off, please
+> **Found a bug?** If something looks off, please
 > [open an issue](https://github.com/sanredz/Linked-Inn/issues).
 
 ![The crafters list with a recipe book open](media/crafters-recipes.png)

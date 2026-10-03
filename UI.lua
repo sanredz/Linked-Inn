@@ -745,7 +745,9 @@ local function RefreshFind()
 	main.count:SetText(string.format("%d shown  ·  %d crafters remembered", #results, total))
 	local sweeping = LI.Reader.Sweeping()
 	main.refresh:SetEnabled(not sweeping)
-	main.refresh.icon:SetDesaturated(sweeping)
+	if main.refresh.Icon then
+		main.refresh.Icon:SetDesaturated(sweeping)
+	end
 	local empty = #results == 0
 	main.empty:SetShown(empty)
 	if empty then
@@ -977,7 +979,7 @@ local function CreateMain()
 	tinsert(UISpecialFrames, "LinkedInnFrame")
 
 	local search = CreateFrame("EditBox", nil, main, "SearchBoxTemplate")
-	search:SetSize(250, 22)
+	search:SetSize(232, 22)
 	search:SetPoint("TOPLEFT", 70, -32)
 	if search.Instructions then
 		search.Instructions:SetText("Search an item, profession or name")
@@ -991,7 +993,7 @@ local function CreateMain()
 	end)
 	main.search = search
 
-	main.kind = Button(main, KindName(LI.settings.kind), 120, function(self)
+	main.kind = Button(main, KindName(LI.settings.kind), 112, function(self)
 		Menu(self, function(root)
 			for _, k in ipairs(LI.KINDS) do
 				root:CreateRadio(k.name, function()
@@ -1049,13 +1051,20 @@ local function CreateMain()
 	main.secondaryLabel:SetPoint("LEFT", main.secondaryBox, "RIGHT", 0, 0)
 	main.secondaryLabel:SetText("Secondary")
 
-	main.refresh = CreateFrame("Button", nil, main)
-	main.refresh:SetSize(22, 22)
-	main.refresh:SetPoint("RIGHT", main.chipBar, "RIGHT", -4, 0)
-	main.refresh.icon = main.refresh:CreateTexture(nil, "ARTWORK")
-	main.refresh.icon:SetAllPoints()
-	main.refresh.icon:SetTexture("Interface\\Buttons\\UI-RefreshButton")
-	main.refresh:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+	local ok, refresh = pcall(CreateFrame, "Button", nil, main, "RefreshButtonTemplate")
+	if not ok or not refresh then
+		refresh = CreateFrame("Button", nil, main)
+		refresh.Icon = refresh:CreateTexture(nil, "ARTWORK")
+		refresh.Icon:SetSize(16, 16)
+		refresh.Icon:SetPoint("CENTER")
+		refresh.Icon:SetTexture("Interface\\Buttons\\UI-RefreshButton")
+		refresh:SetNormalTexture("Interface\\Buttons\\UI-SquareButton-Up")
+		refresh:SetPushedTexture("Interface\\Buttons\\UI-SquareButton-Down")
+		refresh:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+	end
+	main.refresh = refresh
+	refresh:SetSize(26, 26)
+	refresh:SetPoint("TOPRIGHT", -8, -30)
 	main.refresh:SetScript("OnClick", function()
 		if LI.RefreshOnline(false) then
 			Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")

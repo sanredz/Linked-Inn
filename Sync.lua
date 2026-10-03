@@ -852,12 +852,7 @@ local function OnNotFound(msg)
 	if p then
 		p.at = nil
 	end
-	if w.target:find("-", 1, true) and LI.realmOf[key] and not LI.bareWhisper[key] then
-		LI.bareWhisper[key] = true
-		LI.Log(string.format("Could not whisper %s, trying %s next", w.target, LI.ShortName(key)))
-	else
-		LI.Log(string.format("Could not whisper %s (%s): offline or unreachable", w.target, tostring(w.kind)))
-	end
+	LI.Log(string.format("Could not whisper %s (%s): offline", w.target, tostring(w.kind)))
 end
 
 function Sync.OnMessage(prefix, text, chatType, sender)

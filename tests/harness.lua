@@ -1898,28 +1898,28 @@ do
 		end
 		return n
 	end
-	check(LI.FullName("Far Away-OtherRealm") == "Far Away-TestRealm" and LI.realmOf["Far Away-TestRealm"] == "OtherRealm", "a name from another backend realm is kept as one person", LI.FullName("Far Away-OtherRealm"))
-	check(LI.WhisperTarget("Far Away-TestRealm") == "Far Away-OtherRealm", "and is whispered on their own realm", LI.WhisperTarget("Far Away-TestRealm"))
+	check(LI.FullName("Far Away-OtherRealm") == "Far Away-TestRealm" and LI.realmOf["Far Away-TestRealm"] == "OtherRealm", "a name from another backend realm is kept as one person", LI.FullName("Far Away"))
+	check(LI.WhisperTarget("Far Away-TestRealm") == "Far Away", "and is whispered by name and surname alone", LI.WhisperTarget("Far Away-TestRealm"))
 	check((Sync.Hello() or ""):find("|TestRealm|1$"), "your hello says your realm and server", Sync.Hello())
 	W.sent = {}
 	Addon("H1|abc|ROGUE|tailoring~5~a~-|OtherRealm|2", "Far Away-OtherRealm", "WHISPER")
 	Advance(6)
 	check(LI.crafters["Far Away-TestRealm"] and not LI.crafters["Far Away-OtherRealm"], "a user on another realm is listed once")
-	check(Find("H1", "WHISPER", "Far Away-OtherRealm"), "a whispered hello from another realm is answered by whisper")
+	check(Find("H1", "WHISPER", "Far Away"), "a whispered hello from another realm is answered by whisper")
 	check(Sync.Links().OtherRealm == "Far Away-TestRealm", "and links you to that realm")
 	Advance(6)
 	check((Sync.Hello() or ""):find("|OtherRealm$"), "your hello then says which realms you link to", Sync.Hello())
 	W.sent = {}
 	Addon("H1|abd|MAGE|tailoring~5~a~-|TestRealm|1", "Near By-TestRealm", "CHANNEL")
 	Advance(6)
-	check(Find("B1|Near By-TestRealm|H1|abd", "WHISPER", "Far Away-OtherRealm"), "a hello on your channel is passed to the other realm")
+	check(Find("B1|Near By-TestRealm|H1|abd", "WHISPER", "Far Away"), "a hello on your channel is passed to the other realm")
 	W.sent = {}
 	Addon("H1|abd|MAGE|tailoring~5~a~-|TestRealm|1", "Near By-TestRealm", "CHANNEL")
 	Advance(4)
 	check(not Find("B1|Near By", "WHISPER"), "the same message is passed on only once")
 	Sync.Send("X1|abc", "CHANNEL")
 	Advance(8)
-	check(Find("B1|Brew Master-TestRealm|X1|abc", "WHISPER", "Far Away-OtherRealm"), "your own work messages cross too")
+	check(Find("B1|Brew Master-TestRealm|X1|abc", "WHISPER", "Far Away"), "your own work messages cross too")
 	Addon("H1|abf|MAGE|tailoring~5~a~-|TestRealm|1|OtherRealm", "Aaa Bridge-TestRealm", "CHANNEL")
 	Advance(6)
 	W.sent = {}
@@ -1936,7 +1936,7 @@ do
 	Advance(6)
 	check(LI.crafters["Third Guy-TestRealm"], "a relayed hello lists that user")
 	check(Find("B1|Third Guy-OtherRealm|H1|abe", "CHANNEL"), "and is passed on to everyone on your realm")
-	check(Find("Q1|abe", "WHISPER", "Third Guy-OtherRealm"), "their list is asked from them directly")
+	check(Find("Q1|abe", "WHISPER", "Third Guy"), "their list is asked from them directly")
 	Addon("B1|Third Guy-OtherRealm|H1|abe|PRIEST|alchemy~5~a~-|OtherRealm|2", "Far Away-OtherRealm", "WHISPER")
 	Advance(4)
 	check(CountOf("B1|Third Guy", "CHANNEL") == 1, "a relay that comes twice is passed on once", CountOf("B1|Third Guy", "CHANNEL"))
@@ -1956,13 +1956,12 @@ do
 	Advance(4)
 	check(not Find("H1", "WHISPER", "Linked Realm") and not Find("H1", "WHISPER", "Stranger Danger"), "not for a realm you already link to, nor twice a day")
 	W.units = nil
-	Sync.Ping("Far Away-OtherRealm")
+	Sync.Ping("Far Away")
 	Advance(3)
-	local gone = "No player named 'Far Away-OtherRealm' is currently playing."
+	local gone = "No player named 'Far Away' is currently playing."
 	check(Sync.HideNotFound(nil, "CHAT_MSG_SYSTEM", gone), "the game's 'no player named' line is hidden for our own quiet whispers")
 	Fire("CHAT_MSG_SYSTEM", gone)
 	check(Sync.Links().OtherRealm == "Third Guy-TestRealm", "a link that can't be whispered is dropped for another one", Sync.Links().OtherRealm)
-	check(LI.WhisperTarget("Far Away-TestRealm") == "Far Away", "and the name is tried without the realm next", LI.WhisperTarget("Far Away-TestRealm"))
 	check(not Sync.HideNotFound(nil, "CHAT_MSG_SYSTEM", "No player named 'Someone Else' is currently playing."), "other 'no player named' lines are left alone")
 	W.playerGUID = nil
 end

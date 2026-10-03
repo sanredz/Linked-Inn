@@ -148,7 +148,6 @@ local function SurnameSeparator()
 end
 
 LI.realmOf = {}
-LI.bareWhisper = {}
 
 function LI.FullName(name)
 	if type(name) ~= "string" or name == "" then
@@ -198,14 +197,7 @@ function LI.ShortName(fullName)
 	end
 	return fullName
 end
-function LI.WhisperTarget(fullName)
-	local short = LI.ShortName(fullName)
-	local realm = LI.realmOf[fullName]
-	if realm and realm ~= LI.RealmName() and short ~= fullName and not LI.bareWhisper[fullName] then
-		return short .. "-" .. realm
-	end
-	return short
-end
+LI.WhisperTarget = LI.ShortName
 
 LI.COLOR = {
 	GOLD = { 1.00, 0.82, 0.00 },

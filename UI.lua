@@ -10,6 +10,7 @@ local ROW_HEIGHT = 46
 local BOOK_SIZE = 30
 local BOOK_GAP = 6
 local STATUS_WIDTH = 96
+local HEADER_HEIGHT = 34
 
 local STATUS = {
 	online = { icon = "Interface\\FriendsFrame\\StatusIcon-Online", color = { 0.35, 0.95, 0.45 } },
@@ -263,9 +264,10 @@ local function Book(row, i)
 	return book
 end
 
-local function UpdateBooks(row, entry)
+local function UpdateBooks(row, data)
+	local entry = data.entry
 	local profs = SortedProfs(entry.crafter)
-	local matchKey = entry.recipeMeta and entry.recipeMeta.p
+	local matchKey = data.match and data.match.recipeMeta and data.prof
 	for i, item in ipairs(profs) do
 		local book = Book(row, i)
 		local p = item.p
@@ -277,9 +279,6 @@ local function UpdateBooks(row, entry)
 		book.rank:SetText(p.rank and p.rank > 0 and tostring(p.rank) or "")
 		if book.match then
 			book.glow:SetColorTexture(CAN[1], CAN[2], CAN[3], 0.75)
-			book.glow:Show()
-		elseif filter.prof == item.key then
-			book.glow:SetColorTexture(1, 0.82, 0.2, 0.75)
 			book.glow:Show()
 		else
 			book.glow:Hide()
@@ -293,53 +292,160 @@ local function UpdateBooks(row, entry)
 	end
 	local shelf = #profs * (BOOK_SIZE + BOOK_GAP)
 	row.line:SetPoint("RIGHT", row, "RIGHT", -STATUS_WIDTH - shelf - 4, 0)
+	row.name:SetPoint("RIGHT", row, "RIGHT", -STATUS_WIDTH - shelf - 4, 0)
+end
+
+local function ToggleGroup(key)
+	LI.settings.collapsed = LI.settings.collapsed or {}
+	LI.settings.collapsed[key] = not LI.settings.collapsed[key] or nil
+	Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
+	UI.Refresh()
 end
 
 local function BuildRow(row)
-	row:SetHeight(ROW_HEIGHT)
 	row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 	row.bg = row:CreateTexture(nil, "BACKGROUND")
 	row.bg:SetAllPoints()
 	row.hl = row:CreateTexture(nil, "HIGHLIGHT")
 	row.hl:SetAllPoints()
 	row.hl:SetColorTexture(1, 0.82, 0.3, 0.10)
+
 	row.icon = row:CreateTexture(nil, "ARTWORK")
-	row.icon:SetSize(34, 34)
-	row.icon:SetPoint("LEFT", 8, 0)
-	row.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+	row.icon:SetSize(30, 30)
+	row.icon:SetPoint("LEFT", 14, 0)
 	row.dot = row:CreateTexture(nil, "OVERLAY")
 	row.dot:SetSize(14, 14)
 	row.dot:SetPoint("TOPLEFT", row.icon, "TOPRIGHT", 8, -1)
 	row.name = Text(row, "GameFontNormalLarge")
 	row.name:SetPoint("LEFT", row.dot, "RIGHT", 3, 0)
+	row.name:SetWordWrap(false)
 	row.line = Text(row, "GameFontHighlightSmall")
-	row.line:SetPoint("BOTTOMLEFT", row.icon, "BOTTOMRIGHT", 10, 1)
+	row.line:SetPoint("BOTTOMLEFT", row.icon, "BOTTOMRIGHT", 10, 0)
 	row.line:SetWordWrap(false)
 	row.status = Text(row, "GameFontHighlightSmall", "RIGHT")
 	row.status:SetPoint("TOPRIGHT", -12, -9)
 	row.where = Text(row, "GameFontDisableSmall", "RIGHT")
 	row.where:SetPoint("TOPRIGHT", row.status, "BOTTOMRIGHT", 0, -4)
-	row:SetScript("OnEnter", ShowRowTooltip)
+
+	row.toggle = row:CreateTexture(nil, "ARTWORK")
+	row.toggle:SetSize(14, 14)
+	row.toggle:SetPoint("LEFT", 6, -2)
+	row.headIcon = row:CreateTexture(nil, "ARTWORK")
+	row.headIcon:SetSize(22, 22)
+	row.headIcon:SetPoint("LEFT", row.toggle, "RIGHT", 6, 0)
+	row.headIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+	row.headName = row:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	row.headName:SetFont(TITLE_FONT, 18, "")
+	row.headName:SetPoint("LEFT", row.headIcon, "RIGHT", 8, 0)
+	row.headCount = Text(row, "GameFontDisableSmall")
+	row.headCount:SetPoint("BOTTOMLEFT", row.headName, "BOTTOMRIGHT", 10, 2)
+	row.headLine = row:CreateTexture(nil, "ARTWORK")
+	row.headLine:SetHeight(1)
+	row.headLine:SetPoint("BOTTOMLEFT", 6, 2)
+	row.headLine:SetPoint("BOTTOMRIGHT", -6, 2)
+	row.headLine:SetColorTexture(1, 0.82, 0, 0.35)
+
+	row.rowParts = { row.icon, row.dot, row.name, row.line, row.status, row.where }
+	row.headParts = { row.toggle, row.headIcon, row.headName, row.headCount, row.headLine }
+
+	row:SetScript("OnEnter", function(self)
+		if self.data and not self.data.header then
+			ShowRowTooltip(self)
+		end
+	end)
 	row:SetScript("OnLeave", function()
 		GameTooltip:Hide()
 	end)
 	row:SetScript("OnClick", function(self, button)
-		if button == "RightButton" then
+		local data = self.data
+		if not data then
+			return
+		end
+		if data.header then
+			ToggleGroup(data.group.key)
+		elseif button == "RightButton" then
 			RowMenu(self)
-		elseif self.entry then
-			UI.Whisper(self.entry.key)
+		else
+			UI.Whisper(data.entry.key)
 		end
 	end)
 	row.built = true
 end
 
-local function InitRow(row, entry)
+local function ShowParts(parts, shown)
+	for _, part in ipairs(parts) do
+		part:SetShown(shown)
+	end
+end
+
+local function ClassIcon(texture, classFile)
+	if type(classFile) == "string" and texture.SetAtlas then
+		local ok = pcall(texture.SetAtlas, texture, "classicon-" .. classFile:lower())
+		if ok then
+			return true
+		end
+	end
+	return false
+end
+
+local function InitHeader(row, data)
+	local group = data.group
+	ShowParts(row.rowParts, false)
+	ShowParts(row.headParts, true)
+	for _, book in ipairs(row.books or {}) do
+		book:Hide()
+	end
+	row.bg:SetColorTexture(0, 0, 0, 0)
+	local collapsed = LI.settings.collapsed and LI.settings.collapsed[group.key]
+	row.toggle:SetTexture(collapsed and "Interface\\Buttons\\UI-PlusButton-Up" or "Interface\\Buttons\\UI-MinusButton-Up")
+	row.headIcon:SetTexture(LI.ProfIcon(group.key, group.icon))
+	row.headName:SetText(group.name)
+	local count = #group.rows
+	local text = string.format("%d %s", count, count == 1 and "crafter" or "crafters")
+	if group.online > 0 then
+		text = text .. string.format("  ·  |cff59f273%d online|r", group.online)
+	end
+	row.headCount:SetText(text)
+end
+
+local function RowLine(data)
+	local entry, match = data.entry, data.match
+	local p = entry.crafter.profs[data.prof] or {}
+	if match.recipeMeta then
+		local more = match.makes > 1 and string.format("  |cff8c8c8c+%d more|r", match.makes - 1) or ""
+		return "Can make " .. (match.recipeMeta.n or "?") .. more, CAN
+	end
+	if match.confidence == 1 then
+		return "Recipes not read yet, might make it", MAYBE
+	end
+	local parts = {}
+	if p.rank and p.rank > 0 then
+		parts[#parts + 1] = string.format("Skill %d", p.rank)
+	end
+	if p.recipes then
+		parts[#parts + 1] = string.format("%d recipes", p.count or 0)
+	else
+		parts[#parts + 1] = "recipes not read yet"
+	end
+	return table.concat(parts, "  ·  "), SOFT
+end
+
+local function InitRow(row, data)
 	if not row.built then
 		BuildRow(row)
 	end
+	row.data = data
+	if data.header then
+		row.entry = nil
+		InitHeader(row, data)
+		return
+	end
+	ShowParts(row.headParts, false)
+	ShowParts(row.rowParts, true)
+	local entry = data.entry
 	row.entry = entry
 	local c = entry.crafter
-	local stripe = (entry.index or 0) % 2 == 0 and 0.05 or 0.0
+	local stripe = (data.index or 0) % 2 == 0 and 0.05 or 0.0
 	row.bg:SetColorTexture(1, 1, 1, stripe)
 	local color = LI.ClassColor(c.class) or LI.COLOR.WHITE
 	row.name:SetText(LI.ShortName(entry.key))
@@ -349,30 +455,17 @@ local function InitRow(row, entry)
 	row.status:SetText(StatusText(entry))
 	row.status:SetTextColor(st.color[1], st.color[2], st.color[3])
 	row.where:SetText(c.where or "")
-	local icon
-	if entry.recipeMeta then
-		icon = entry.recipeMeta.i
-		local more = entry.makes > 1 and string.format("  |cff8c8c8c+%d more|r", entry.makes - 1) or ""
-		row.line:SetText("Can make " .. (entry.recipeMeta.n or "?") .. more)
-		row.line:SetTextColor(CAN[1], CAN[2], CAN[3])
-	elseif entry.confidence == 1 then
-		row.line:SetText(ProfLine(c, filter.prof) .. "  |cff8c8c8c- recipes not read yet, might make it|r")
-		row.line:SetTextColor(MAYBE[1], MAYBE[2], MAYBE[3])
-	else
-		row.line:SetText(ProfLine(c, nil))
-		row.line:SetTextColor(SOFT[1], SOFT[2], SOFT[3])
+	local text, textColor = RowLine(data)
+	row.line:SetText(text)
+	row.line:SetTextColor(textColor[1], textColor[2], textColor[3])
+	if not ClassIcon(row.icon, c.class) then
+		local p = c.profs[data.prof] or {}
+		row.icon:SetTexture(LI.ProfIcon(data.prof, p.icon))
+		row.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 	end
-	if not icon then
-		local first = SortedProfs(c)[1]
-		if filter.prof and c.profs[filter.prof] then
-			first = { key = filter.prof, p = c.profs[filter.prof] }
-		end
-		icon = first and LI.ProfIcon(first.key, first.p.icon)
-	end
-	UpdateBooks(row, entry)
-	row.icon:SetTexture(icon or LI.ICON)
 	row.icon:SetDesaturated(entry.status == "offline")
-	row.icon:SetAlpha(entry.status == "offline" and 0.75 or 1)
+	row.icon:SetAlpha(entry.status == "offline" and 0.6 or 1)
+	UpdateBooks(row, data)
 end
 
 local function CreateList(parent)
@@ -383,7 +476,13 @@ local function CreateList(parent)
 	bar:SetPoint("TOPLEFT", box, "TOPRIGHT", 4, 0)
 	bar:SetPoint("BOTTOMLEFT", box, "BOTTOMRIGHT", 4, 0)
 	local view = CreateScrollBoxListLinearView()
-	view:SetElementExtent(ROW_HEIGHT)
+	if view.SetElementExtentCalculator then
+		view:SetElementExtentCalculator(function(_, data)
+			return data.header and HEADER_HEIGHT or ROW_HEIGHT
+		end)
+	else
+		view:SetElementExtent(ROW_HEIGHT)
+	end
 	view:SetElementInitializer("Button", function(row, data)
 		LI.SafeCall(InitRow, row, data)
 	end)
@@ -449,13 +548,23 @@ local function RefreshFind()
 	local opts = { prof = filter.prof, kind = LI.settings.kind, onlineOnly = LI.settings.onlineOnly }
 	local results = LI.Search(filter.search, opts)
 	local online = 0
-	for i, entry in ipairs(results) do
-		entry.index = i
+	for _, entry in ipairs(results) do
 		if entry.status == "online" then
 			online = online + 1
 		end
 	end
-	main.list:SetList(results)
+	local list = {}
+	local collapsed = LI.settings.collapsed or {}
+	for _, group in ipairs(LI.Group(results)) do
+		list[#list + 1] = { header = true, group = group }
+		if not collapsed[group.key] then
+			for i, data in ipairs(group.rows) do
+				data.index = i
+				list[#list + 1] = data
+			end
+		end
+	end
+	main.list:SetList(list)
 	UpdateChips()
 	main.kind:SetText(KindName(LI.settings.kind))
 	main.onlineBox:SetChecked(LI.settings.onlineOnly and true or false)

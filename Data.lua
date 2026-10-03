@@ -43,6 +43,7 @@ local DEFAULTS = {
 	onlineOnly = false,
 	kind = "all",
 	minimap = { angle = 200 },
+	collapsed = {},
 }
 
 local function NewTest()
@@ -264,6 +265,12 @@ local function KindMatch(meta, kind)
 	return kind == nil or kind == "all" or meta.k == kind
 end
 
+local STATUS_RANK = { online = 0, recent = 1, offline = 2 }
+
+function LI.StatusRank(status)
+	return STATUS_RANK[status] or 3
+end
+
 function LI.Search(query, opts)
 	opts = opts or {}
 	local out = {}
@@ -289,57 +296,59 @@ function LI.Search(query, opts)
 	for key, c in pairs(LI.crafters) do
 		local status, seenAt = LI.Status(key)
 		if (not opts.onlineOnly or status == "online") and (not profFilter or c.profs[profFilter]) then
-			local best, bestMeta, makes, confidence = nil, nil, 0, 0
-			local nameMatch = q ~= "" and Find(LI.ShortName(key), q)
-			local profMatch, maybe = false, false
+			local nameMatch = q ~= "" and kind == "all" and Find(LI.ShortName(key), q)
+			local groups, top = {}, nil
 			for profKey, p in pairs(c.profs) do
 				if not profFilter or profFilter == profKey then
-					if q ~= "" and Find(p.name, q) then
-						profMatch = true
-					end
-					if recipeSearch and hitCount > 0 then
-						if p.recipes then
-							for id in pairs(p.recipes) do
-								local meta = hits[id]
-								if meta then
-									makes = makes + 1
-									if not bestMeta or (meta.n or "") < (bestMeta.n or "") then
-										best, bestMeta = id, meta
-									end
+					local g = { key = profKey, confidence = 0, makes = 0 }
+					if recipeSearch and hitCount > 0 and p.recipes then
+						for id in pairs(p.recipes) do
+							local meta = hits[id]
+							if meta then
+								g.makes = g.makes + 1
+								if not g.recipeMeta or (meta.n or "") < (g.recipeMeta.n or "") then
+									g.recipe, g.recipeMeta = id, meta
 								end
 							end
-						elseif hitProfs[profKey] then
-							maybe = true
+						end
+					end
+					if g.makes > 0 then
+						g.confidence = 3
+					elseif not recipeSearch or nameMatch or (kind == "all" and Find(p.name, q)) then
+						g.confidence = 2
+					elseif recipeSearch and not p.recipes and hitProfs[profKey] then
+						g.confidence = 1
+					end
+					if g.confidence > 0 then
+						groups[#groups + 1] = g
+						if not top or g.confidence > top.confidence or (g.confidence == top.confidence and g.makes > top.makes) then
+							top = g
 						end
 					end
 				end
 			end
-			if makes > 0 then
-				confidence = 3
-			elseif (profMatch or nameMatch) and kind == "all" then
-				confidence = 2
-			elseif maybe then
-				confidence = 1
-			elseif not recipeSearch then
-				confidence = 2
-			end
-			if confidence > 0 then
+			if top then
+				table.sort(groups, function(a, b) return a.key < b.key end)
+				local makes = 0
+				for _, g in ipairs(groups) do
+					makes = makes + g.makes
+				end
 				out[#out + 1] = {
 					key = key,
 					crafter = c,
 					status = status,
 					seenAt = seenAt,
-					recipe = best,
-					recipeMeta = bestMeta,
+					groups = groups,
+					recipe = top.recipe,
+					recipeMeta = top.recipeMeta,
 					makes = makes,
-					confidence = confidence,
+					confidence = top.confidence,
 				}
 			end
 		end
 	end
-	local RANK = { online = 0, recent = 1, offline = 2 }
 	table.sort(out, function(a, b)
-		local ra, rb = RANK[a.status] or 3, RANK[b.status] or 3
+		local ra, rb = LI.StatusRank(a.status), LI.StatusRank(b.status)
 		if ra ~= rb then
 			return ra < rb
 		end
@@ -353,6 +362,62 @@ function LI.Search(query, opts)
 		return a.key < b.key
 	end)
 	return out
+end
+
+local function OrderIndex(key)
+	for i, k in ipairs(LI.PROFESSION_ORDER) do
+		if k == key then
+			return i
+		end
+	end
+	return #LI.PROFESSION_ORDER + 1
+end
+
+function LI.Group(results)
+	local byKey, groups = {}, {}
+	for _, entry in ipairs(results) do
+		for _, g in ipairs(entry.groups) do
+			local group = byKey[g.key]
+			if not group then
+				local p = entry.crafter.profs[g.key]
+				group = { key = g.key, name = p.name or g.key, icon = p.icon, rows = {}, online = 0, best = 0 }
+				byKey[g.key] = group
+				groups[#groups + 1] = group
+			end
+			group.rows[#group.rows + 1] = { entry = entry, prof = g.key, match = g }
+			group.best = math.max(group.best, g.confidence)
+			if entry.status == "online" then
+				group.online = group.online + 1
+			end
+		end
+	end
+	for _, group in ipairs(groups) do
+		table.sort(group.rows, function(a, b)
+			local ra, rb = LI.StatusRank(a.entry.status), LI.StatusRank(b.entry.status)
+			if ra ~= rb then
+				return ra < rb
+			end
+			if a.match.confidence ~= b.match.confidence then
+				return a.match.confidence > b.match.confidence
+			end
+			local sa, sb = a.entry.seenAt or 0, b.entry.seenAt or 0
+			if sa ~= sb then
+				return sa > sb
+			end
+			return a.entry.key < b.entry.key
+		end)
+	end
+	table.sort(groups, function(a, b)
+		if a.best ~= b.best then
+			return a.best > b.best
+		end
+		local ia, ib = OrderIndex(a.key), OrderIndex(b.key)
+		if ia ~= ib then
+			return ia < ib
+		end
+		return a.key < b.key
+	end)
+	return groups
 end
 
 function LI.ProfessionsSeen()

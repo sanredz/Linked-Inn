@@ -480,13 +480,25 @@ local uiErrors = #W.errors
 LI.UI.Open()
 local main = LinkedInnFrame
 check(main and main:IsShown(), "the window opens")
-local rows = main.list.__rows
-check(rows and #rows == 4, "every crafter has a row", rows and #rows)
-local bobRow
-for _, row in ipairs(rows or {}) do
-	if row.entry.key == "Bob Stone-TestRealm" then bobRow = row end
+local function Shape()
+	local out = {}
+	for _, row in ipairs(main.list.__rows) do
+		if row.data.header then
+			out[#out + 1] = "#" .. row.data.group.key
+		else
+			out[#out + 1] = row.entry.key:match("^(%S+)")
+		end
+	end
+	return table.concat(out, " ")
 end
-check(bobRow and rows[1] == bobRow or rows[1].entry.key == LI.playerKey, "online crafters are listed first", rows[1].entry.key)
+check(Shape() == "#alchemy Brew Cora #tailoring Bob Anna", "crafters are grouped under profession headers, online first", Shape())
+local rows = main.list.__rows
+check(rows[1].headName.__text == "Alchemy" and rows[1].headCount.__text:find("2 crafters", 1, true) and rows[1].headCount.__text:find("1 online", 1, true), "a header names the profession and counts crafters", rows[1].headCount.__text)
+check(rows[2].headName:IsShown() == false and rows[2].name:IsShown(), "crafter rows hide the header parts")
+check(rows[1].name:IsShown() == false, "header rows hide the crafter parts")
+local bobRow = rows[5]
+check(bobRow.line.__text == "Skill 260  ·  recipes not read yet" or bobRow.line.__text == "recipes not read yet", "a row describes that profession", bobRow.line.__text)
+check(rows[6].line.__text == "Skill 260  ·  2 recipes", "skill and recipe count are shown", rows[6].line.__text)
 bobRow.__scripts.OnClick(bobRow, "LeftButton")
 check(W.tells[1] == "Bob Stone", "clicking a row whispers the crafter by name without the realm", W.tells[1])
 bobRow.__scripts.OnClick(bobRow, "RightButton")
@@ -496,12 +508,28 @@ for _, e in ipairs(W.lastMenu.entries) do
 	if e.text == "Open Tailoring" then opened = true end
 end
 check(opened, "the menu can open the stored profession link")
+local tells = #W.tells
+rows[1].__scripts.OnClick(rows[1], "LeftButton")
+Advance(1)
+check(Shape() == "#alchemy #tailoring Bob Anna", "clicking a header collapses it", Shape())
+check(#W.tells == tells, "clicking a header doesn't whisper anyone")
+main.list.__rows[1].__scripts.OnClick(main.list.__rows[1], "LeftButton")
+Advance(1)
+check(Shape() == "#alchemy Brew Cora #tailoring Bob Anna", "clicking it again expands it", Shape())
+LI.SetRecipes("Anna Smith-TestRealm", { name = "Alchemy", rank = 40 }, { { id = 2330, name = "Minor Healing Potion", item = 118 } }, "click")
+Advance(1)
+check(Shape() == "#alchemy Brew Anna Cora #tailoring Bob Anna", "someone with two professions is listed under both", Shape())
+local annaAlch = main.list.__rows[3]
+check(annaAlch.books[1].key == "alchemy" and annaAlch.books[2].key == "tailoring" and annaAlch.books[2]:IsShown(), "their row still shows every profession button")
+LI.crafters["Anna Smith-TestRealm"].profs.alchemy = nil
+LI.Fire("CraftersChanged")
+Advance(1)
 main.search.__scripts.OnTextChanged(main.search)
 main.search:SetText("mooncloth")
 main.search.__scripts.OnTextChanged(main.search)
 Advance(1)
-check(#main.list.__rows == 2, "typing in the search box filters the list", #main.list.__rows)
-local annaRow = main.list.__rows[2]
+check(Shape() == "#tailoring Bob Anna", "typing in the search box filters the list", Shape())
+local annaRow = main.list.__rows[3]
 local annaBook = annaRow.books and annaRow.books[1]
 check(annaBook and annaBook:IsShown() and annaBook.key == "tailoring", "each row shows a button per profession")
 check(annaBook and annaBook.match and annaBook.glow:IsShown(), "the profession that matches the search is highlighted")

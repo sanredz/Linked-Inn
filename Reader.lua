@@ -10,7 +10,6 @@ local PROBE_MIN = 0.3
 local PROBE_MAX = 1.5
 local PROBE_DEFAULT = 1.0
 local latencies = {}
-local sweepRun
 local GIVE_UP = 5
 local QUEUE_MAX = 30
 local STALE = 3 * 86400
@@ -150,33 +149,11 @@ end
 
 local Kick
 
-local function SweepStep(job, ok)
-	local run = sweepRun
-	if not run then
-		return
-	end
-	run.done = run.done + 1
-	if ok then
-		run.answered = run.answered + 1
-		if LI.MarkOnline then
-			LI.MarkOnline(job.key)
-		end
-	end
-	LI.Fire("StatusChanged")
-	if run.done >= run.total then
-		sweepRun = nil
-		LI.Log(string.format("Online refresh: asked %d, %d answered", run.total, run.answered))
-		LI.Fire("SweepDone", run.total, run.answered)
-	end
-end
-
 local function Finish(job, outcome)
 	if job.probe then
 		pending = nil
 		nextAt = math.max(nextAt, Now() + 2)
-		if job.sweep then
-			SweepStep(job, outcome == "ok")
-		elseif LI.ProbeResult and not job.notified then
+		if LI.ProbeResult and not job.notified then
 			LI.ProbeResult(job.key, outcome == "ok")
 		end
 		LI.After(0.01, function()
@@ -277,77 +254,21 @@ function Reader.Probe(key, link)
 	if not LI.ready or not key or type(link) ~= "string" then
 		return false
 	end
-	if pending and pending.probe and pending.key == key and not pending.sweep then
+	if pending and pending.probe and pending.key == key then
 		return true
 	end
-	local at = #probes + 1
-	for i = #probes, 1, -1 do
-		local job = probes[i]
+	for _, job in ipairs(probes) do
 		if job.key == key then
-			if not job.sweep then
-				return true
-			end
-			table.remove(probes, i)
-			if sweepRun then
-				sweepRun.total = sweepRun.total - 1
-			end
+			return true
 		end
 	end
-	for i, job in ipairs(probes) do
-		if job.sweep then
-			at = i
-			break
-		end
-	end
-	table.insert(probes, math.min(at, #probes + 1), { key = key, link = link, probe = true })
+	probes[#probes + 1] = { key = key, link = link, probe = true }
 	Kick()
 	return true
 end
 
 function Reader.Busy(key)
 	return pending ~= nil and pending.key == key and Now() - (pending.started or 0) < PROBE_MAX + 1
-end
-
-function Reader.Sweeping()
-	return sweepRun ~= nil
-end
-
-function Reader.SweepProgress()
-	if not sweepRun then
-		return nil
-	end
-	return sweepRun.done, sweepRun.total
-end
-
-function Reader.Sweep(targets)
-	if not LI.ready or sweepRun or #targets == 0 then
-		return false
-	end
-	if (InCombatLockdown and InCombatLockdown()) or PanelOpen() then
-		return false
-	end
-	local queued = {}
-	for _, job in ipairs(probes) do
-		queued[job.key] = true
-	end
-	if pending then
-		queued[pending.key] = true
-	end
-	local run = { total = 0, done = 0, answered = 0 }
-	for _, t in ipairs(targets) do
-		if not queued[t.key] then
-			queued[t.key] = true
-			probes[#probes + 1] = { key = t.key, link = t.link, probe = true, sweep = true }
-			run.total = run.total + 1
-		end
-	end
-	if run.total == 0 then
-		return false
-	end
-	sweepRun = run
-	LI.Fire("StatusChanged")
-	Kick()
-	return true
 end
 
 LI.On("UI_ERROR_MESSAGE", function(_, msg)
@@ -476,10 +397,6 @@ function Reader.Read()
 		if pending and not Reader.NameMatches(LI.Safe(linkedName), pending.key) then
 			return
 		end
-		if pending and pending.sweep then
-			LI.SetRecipes(pending.key, info, list, "auto")
-			return
-		end
 		local key, via = LinkedOwner(linkedName)
 		if not key then
 			LI.Log("Read a linked " .. name .. " but could not tell whose it was")
@@ -588,15 +505,6 @@ local function Replied()
 	table.insert(latencies, job.replied - (job.started or job.replied))
 	while #latencies > 10 do
 		table.remove(latencies, 1)
-	end
-	if job.sweep then
-		lastAuto = { key = job.key, at = Now() }
-		LI.After(0.01, function()
-			if pending == job then
-				Finish(job, "ok")
-			end
-		end)
-		return
 	end
 	if job.probe and not job.notified and LI.ProbeResult then
 		job.notified = true

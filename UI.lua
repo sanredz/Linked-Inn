@@ -743,11 +743,6 @@ local function RefreshFind()
 		end
 	end
 	main.count:SetText(string.format("%d shown  ·  %d crafters remembered", #results, total))
-	local sweeping = LI.Reader.Sweeping()
-	main.refresh:SetEnabled(not sweeping)
-	if main.refresh.Icon then
-		main.refresh.Icon:SetDesaturated(sweeping)
-	end
 	local empty = #results == 0
 	main.empty:SetShown(empty)
 	if empty then
@@ -979,7 +974,7 @@ local function CreateMain()
 	tinsert(UISpecialFrames, "LinkedInnFrame")
 
 	local search = CreateFrame("EditBox", nil, main, "SearchBoxTemplate")
-	search:SetSize(232, 22)
+	search:SetSize(250, 22)
 	search:SetPoint("TOPLEFT", 70, -32)
 	if search.Instructions then
 		search.Instructions:SetText("Search an item, profession or name")
@@ -993,7 +988,7 @@ local function CreateMain()
 	end)
 	main.search = search
 
-	main.kind = Button(main, KindName(LI.settings.kind), 112, function(self)
+	main.kind = Button(main, KindName(LI.settings.kind), 120, function(self)
 		Menu(self, function(root)
 			for _, k in ipairs(LI.KINDS) do
 				root:CreateRadio(k.name, function()
@@ -1051,38 +1046,6 @@ local function CreateMain()
 	main.secondaryLabel:SetPoint("LEFT", main.secondaryBox, "RIGHT", 0, 0)
 	main.secondaryLabel:SetText("Secondary")
 
-	local ok, refresh = pcall(CreateFrame, "Button", nil, main, "RefreshButtonTemplate")
-	if not ok or not refresh then
-		refresh = CreateFrame("Button", nil, main)
-		refresh.Icon = refresh:CreateTexture(nil, "ARTWORK")
-		refresh.Icon:SetSize(16, 16)
-		refresh.Icon:SetPoint("CENTER")
-		refresh.Icon:SetTexture("Interface\\Buttons\\UI-RefreshButton")
-		refresh:SetNormalTexture("Interface\\Buttons\\UI-SquareButton-Up")
-		refresh:SetPushedTexture("Interface\\Buttons\\UI-SquareButton-Down")
-		refresh:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
-	end
-	main.refresh = refresh
-	refresh:SetSize(26, 26)
-	refresh:SetPoint("TOPRIGHT", -8, -30)
-	main.refresh:SetScript("OnClick", function()
-		if LI.RefreshOnline(false) then
-			Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
-			UI.Refresh()
-		end
-	end)
-	main.refresh:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
-		GameTooltip:SetText("Refresh online status", 1, 0.82, 0)
-		local done, total = LI.Reader.SweepProgress()
-		if done then
-			GameTooltip:AddLine(string.format("%d of %d", done, total), 1, 1, 1)
-		end
-		GameTooltip:Show()
-	end)
-	main.refresh:SetScript("OnLeave", function()
-		GameTooltip:Hide()
-	end)
 
 	if main.Inset then
 		main.Inset:ClearAllPoints()
@@ -1142,11 +1105,6 @@ local function CreateMain()
 
 	main:SetScript("OnShow", function()
 		Sound("IG_CHARACTER_INFO_OPEN")
-		LI.After(0.5, function()
-			if main:IsShown() then
-				LI.RefreshOnline(true)
-			end
-		end)
 		UI.Refresh()
 	end)
 	main:SetScript("OnHide", function()
@@ -1189,7 +1147,6 @@ UI.TAB = TAB
 LI.Listen("CraftersChanged", QueueRefresh)
 LI.Listen("StatusChanged", QueueRefresh)
 LI.Listen("TestChanged", QueueRefresh)
-LI.Listen("SweepDone", QueueRefresh)
 
 SLASH_LINKEDINN1 = "/linkedinn"
 SLASH_LINKEDINN2 = "/li"

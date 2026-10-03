@@ -244,45 +244,6 @@ function LI.ProbeResult(key, found)
 	end
 end
 
-function LI.MarkOnline(key)
-	if key and LI.crafters and LI.crafters[key] then
-		RecordCheck(key, true, nil, true)
-	end
-end
-
-local SWEEP_SKIP = 5 * 60
-local SWEEP_EVERY = 2 * 60
-local lastSweep = 0
-
-function LI.SweepTargets()
-	local targets = {}
-	for key in pairs(LI.crafters or {}) do
-		if key ~= LI.playerKey then
-			local who = checked[key]
-			local fresh = (who and who.online and time() - who.at < SWEEP_SKIP) or (heardAt[key] and time() - heardAt[key] < SWEEP_SKIP)
-			local link = ProbeLink(key)
-			if link and not fresh then
-				targets[#targets + 1] = { key = key, link = link }
-			end
-		end
-	end
-	return targets
-end
-
-function LI.RefreshOnline(auto)
-	if auto and GetTime() - lastSweep < SWEEP_EVERY then
-		return false
-	end
-	if not LI.Reader then
-		return false
-	end
-	local ok = LI.Reader.Sweep(LI.SweepTargets())
-	if ok then
-		lastSweep = GetTime()
-	end
-	return ok
-end
-
 function LI.MarkOffline(key)
 	if key and LI.crafters and LI.crafters[key] then
 		offlineAt[key] = time()

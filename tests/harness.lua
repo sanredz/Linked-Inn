@@ -1121,24 +1121,13 @@ do
 	LI.settings.autoRead = false
 	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
 	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-BBB", 3908, 197, "Tailoring"), "Bob Stone-TestRealm", "Player-1-BBB", "Trade - City")
-	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-CCC", 2259, 171, "Alchemy"), "Cora Vale-TestRealm", "Player-1-CCC", "Trade - City")
 	Advance(20 * 60)
 	W.linkData["trade:Player-1-BBB:3908:197"] = nil
 	W.autoWorks = true
-	local autoBefore, clickBefore = LI.test.auto.tries, LI.test.click
-	check(LI.RefreshOnline(false) and LI.Reader.Sweeping(), "the refresh starts")
-	check(#W.hyperlinks == 1, "it asks one crafter at a time, since the game keeps only one request", #W.hyperlinks)
-	Advance(0.3)
-	check(ProfessionsFrame and ProfessionsFrame:GetAlpha() == 0 or not (ProfessionsFrame and ProfessionsFrame:IsShown()), "the profession window stays invisible during a refresh")
-	Advance(5)
-	check(not LI.Reader.Sweeping(), "the refresh ends on its own")
-	check(LI.Status("Anna Smith-TestRealm") == "online" and LI.Status("Cora Vale-TestRealm") == "online", "everyone who answers is online")
-	local bobStatus, _, bobSure = LI.Status("Bob Stone-TestRealm")
-	check(bobStatus ~= "online" and not bobSure, "nobody is marked offline for not answering", bobStatus)
-	check(not (ProfessionsFrame and ProfessionsFrame:IsShown()) and (not ProfessionsFrame or ProfessionsFrame:GetAlpha() == 1), "the window is closed and restored afterwards")
-	check(LI.db.log[#LI.db.log].m == "Online refresh: asked 3, 2 answered", "the test log records how many answered", LI.db.log[#LI.db.log].m)
-	check(LI.test.auto.tries == autoBefore and LI.test.click == clickBefore, "a refresh doesn't count as reads or clicks", LI.test.click)
-	check(LI.crafters["Bob Stone-TestRealm"].profs.tailoring.recipes == nil, "a refresh never gives one crafter another's recipes")
+	check(LI.CheckOnline("Anna Smith-TestRealm") and LI.CheckOnline("Bob Stone-TestRealm"), "two quick clicks are both accepted")
+	Advance(3)
+	check(LI.Status("Anna Smith-TestRealm") == "online" and LI.Status("Bob Stone-TestRealm") ~= "online", "each click gets its own answer")
+	check(LI.crafters["Bob Stone-TestRealm"].profs.tailoring.recipes == nil, "a check never gives one crafter another's recipes")
 	W.autoWorks = false
 	LI.CheckOnline("Bob Stone-TestRealm")
 	W.trade = { linked = true, linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
@@ -1146,55 +1135,14 @@ do
 	Advance(0.05)
 	check(LI.IsChecking("Bob Stone-TestRealm") and LI.Status("Bob Stone-TestRealm") ~= "online", "a late update from someone else's profession doesn't count as an answer")
 	Advance(2)
-	W.trade = nil
-	W.autoWorks = true
-	LI.MarkOffline("Bob Stone-TestRealm")
-	check(#W.who == 0, "no /who is used")
-	local mark = #W.hyperlinks
-	check(LI.RefreshOnline(false), "a refresh can run again")
-	Advance(3)
-	check(#W.hyperlinks == mark + 1 and W.hyperlinks[mark + 1] == "trade:Player-1-BBB:3908:197", "crafters just confirmed online are skipped", #W.hyperlinks - mark)
-	check(not LI.RefreshOnline(true), "opening the window refreshes at most every two minutes")
-	Advance(130)
-	W.combat = true
-	check(not LI.RefreshOnline(false), "no refresh in combat")
-	W.combat = false
-
-	for i = 1, 20 do
-		local guid = "Player-3-" .. i
-		W.guids[guid] = { class = "MAGE", name = "Many" .. i .. " Folk", realm = "" }
-		Say("CHAT_MSG_CHANNEL", TradeLink(guid, 3908, 197, "Tailoring"), "Many" .. i .. " Folk-TestRealm", guid, "Trade - City")
-		if i <= 10 then
-			W.linkData["trade:" .. guid .. ":3908:197"] = { linkedName = "Many" .. i .. " Folk", prof = TAILORING, recipes = TAILOR_RECIPES }
-		end
-	end
-	Advance(6 * 60)
-	LI.MarkOnline("Anna Smith-TestRealm")
-	mark = #W.hyperlinks
-	local started = W.clock
-	LI.RefreshOnline(false)
-	check(LI.CheckOnline("Anna Smith-TestRealm") and LI.IsChecking("Anna Smith-TestRealm"), "a click during a refresh is accepted")
-	Advance(1.6)
-	check(not LI.IsChecking("Anna Smith-TestRealm") and LI.Status("Anna Smith-TestRealm") == "online", "a click jumps ahead of the refresh and gets the right answer", LI.Status("Anna Smith-TestRealm"))
-	local finished
-	for _ = 1, 400 do
-		Advance(0.1)
-		if not LI.Reader.Sweeping() then finished = W.clock break end
-	end
-	check(finished and LI.Status("Many1 Folk-TestRealm") == "online" and LI.Status("Many10 Folk-TestRealm") == "online", "online crafters are found")
-	check(finished and finished - started < 8.5, "22 crafters, half offline, refresh in a few seconds", finished and (finished - started))
-	check(LI.db.log[#LI.db.log].m == "Online refresh: asked 22, 11 answered", "every crafter is asked once", LI.db.log[#LI.db.log].m)
-	local done, total = LI.Reader.SweepProgress()
-	check(done == nil, "no progress once finished")
 	W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
 	Fire("TRADE_SKILL_SHOW")
 	Advance(1)
-	check(LI.CheckOnline("Many1 Folk-TestRealm") and LI.IsChecking("Many1 Folk-TestRealm"), "a check can be queued while your own profession window is open")
+	check(LI.CheckOnline("Anna Smith-TestRealm") and LI.IsChecking("Anna Smith-TestRealm"), "a check can be queued while your own profession window is open")
 	Advance(7)
-	check(not LI.IsChecking("Many1 Folk-TestRealm"), "a check never stays stuck on Checking")
+	check(not LI.IsChecking("Anna Smith-TestRealm"), "a check never stays stuck on Checking")
 	C_TradeSkillUI.CloseTradeSkill()
 	Advance(3)
-	W.autoWorks = false
 end
 
 local function Sent(kind, chatType)

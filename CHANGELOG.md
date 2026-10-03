@@ -21,7 +21,6 @@ First release.
 - Linked Inn users share their professions automatically, including with
   users on the other hidden realms of the same ruleset.
 - Your own professions are read at login.
-- `/li status` shows what is sent and received.
 
 ### Work
 - Post requests: item, amount, the materials you bring, price, note and how

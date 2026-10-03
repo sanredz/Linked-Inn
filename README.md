@@ -82,9 +82,6 @@ you.
 
 Open it with `/li`, the minimap button, or the addon menu.
 
-`/li status` prints what the addon is sending and receiving, which is handy if
-two friends with the addon can't see each other.
-
 ## What gets shared
 
 Only with other Linked Inn users, and only inside the game:

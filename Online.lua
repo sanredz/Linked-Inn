@@ -190,7 +190,7 @@ local function SameName(a, b)
 	return type(a) == "string" and type(b) == "string" and LI.FullName(a):lower() == LI.FullName(b):lower()
 end
 
-local function RecordCheck(key, found, area)
+local function RecordCheck(key, found, area, quiet)
 	local name = LI.ShortName(key)
 	checked[key] = { online = found, at = time() }
 	local c = LI.crafters and LI.crafters[key]
@@ -202,8 +202,10 @@ local function RecordCheck(key, found, area)
 				c.where = area
 			end
 		end
-		LI.Print(LI.Colorize(name, LI.COLOR.GREEN) .. " is online" .. (type(area) == "string" and area ~= "" and (" in " .. area) or "") .. ".")
-	else
+		if not quiet then
+			LI.Print(LI.Colorize(name, LI.COLOR.GREEN) .. " is online" .. (type(area) == "string" and area ~= "" and (" in " .. area) or "") .. ".")
+		end
+	elseif not quiet then
 		LI.Print(name .. " is offline.")
 	end
 	LI.Fire("StatusChanged")
@@ -224,8 +226,9 @@ end
 
 function LI.ProbeResult(key, found)
 	if pendingCheck and pendingCheck.key == key and pendingCheck.probe then
+		local quiet = pendingCheck.quiet
 		pendingCheck = nil
-		RecordCheck(key, found)
+		RecordCheck(key, found, nil, quiet)
 	end
 end
 
@@ -303,6 +306,19 @@ function LI.CheckOnline(key)
 		end
 	end)
 	return true
+end
+
+function LI.ProbeOnline(key)
+	if not key or key == LI.playerKey or pendingCheck then
+		return false
+	end
+	local link = ProbeLink(key)
+	if link and LI.Reader and LI.Reader.Probe(key, link) then
+		pendingCheck = { key = key, probe = true, quiet = true }
+		LI.Fire("StatusChanged")
+		return true
+	end
+	return false
 end
 
 function LI.IsChecking(key)

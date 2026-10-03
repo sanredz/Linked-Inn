@@ -261,12 +261,20 @@ local function CollectRecipes(profKey)
 		local info = LI.Try(C_TradeSkillUI.GetRecipeInfo, id)
 		if type(info) == "table" and LI.Safe(info.learned) and LI.Safe(info.name) then
 			local item, outIcon = OutputItem(id)
+			local cat = LI.Safe(info.categoryID)
+			if type(cat) == "number" then
+				LI.NoteCategory(cat)
+			else
+				cat = nil
+			end
 			list[#list + 1] = {
 				id = id,
 				name = LI.Safe(info.name),
 				icon = outIcon or LI.Safe(info.icon),
 				item = item,
 				kind = LI.KindOf(item, profKey),
+				cat = cat,
+				reagents = LI.Reagents(id),
 			}
 		end
 	end

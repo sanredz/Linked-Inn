@@ -136,6 +136,7 @@ LI.On("ADDON_LOADED", function(name)
 	LinkedInnDB = db
 	db.realms = type(db.realms) == "table" and db.realms or {}
 	db.recipes = type(db.recipes) == "table" and db.recipes or {}
+	db.cats = type(db.cats) == "table" and db.cats or {}
 	db.settings = type(db.settings) == "table" and db.settings or {}
 	for k, v in pairs(DEFAULTS) do
 		if db.settings[k] == nil then
@@ -251,6 +252,8 @@ function LI.SetRecipes(key, info, recipes, via)
 			meta.item = r.item or meta.item
 			meta.p = profKey
 			meta.k = r.kind or meta.k or LI.KindOf(meta.item, profKey)
+			meta.c = r.cat or meta.c
+			meta.r = r.reagents or meta.r
 		end
 	end
 	p.recipes = set
@@ -270,6 +273,76 @@ function LI.ToggleFavorite(key)
 	LI.favorites[key] = not LI.favorites[key] or nil
 	LI.Fire("CraftersChanged")
 	return LI.favorites[key] == true
+end
+
+function LI.Reagents(recipeID)
+	local api = C_TradeSkillUI
+	if not api or not api.GetRecipeSchematic then
+		return nil
+	end
+	local schematic = LI.Try(api.GetRecipeSchematic, recipeID, false)
+	if type(schematic) ~= "table" or type(schematic.reagentSlotSchematics) ~= "table" then
+		return nil
+	end
+	local parts = {}
+	for _, slot in ipairs(schematic.reagentSlotSchematics) do
+		local basic = slot.reagentType == nil or slot.reagentType == 1 or slot.required == true
+		local reagent = type(slot.reagents) == "table" and slot.reagents[1]
+		local itemID = reagent and LI.Safe(reagent.itemID)
+		local qty = LI.Safe(slot.quantityRequired)
+		if basic and type(itemID) == "number" and type(qty) == "number" and qty > 0 then
+			parts[#parts + 1] = itemID .. ":" .. qty
+		end
+	end
+	if #parts == 0 then
+		return nil
+	end
+	return table.concat(parts, ";")
+end
+
+function LI.ParseReagents(text)
+	local out = {}
+	if type(text) ~= "string" then
+		return out
+	end
+	for id, qty in text:gmatch("(%d+):(%d+)") do
+		out[#out + 1] = { id = tonumber(id), qty = tonumber(qty) }
+	end
+	return out
+end
+
+function LI.NoteCategory(catID)
+	local api = C_TradeSkillUI
+	if type(catID) ~= "number" or not api or not api.GetCategoryInfo then
+		return
+	end
+	local known = LI.db.cats[catID]
+	if known and known.n then
+		return
+	end
+	local info = LI.Try(api.GetCategoryInfo, catID)
+	if type(info) == "table" and LI.Safe(info.name) then
+		LI.db.cats[catID] = { n = LI.Safe(info.name), o = LI.Safe(info.uiOrder) or 0 }
+	end
+end
+
+function LI.FillRecipe(recipeID)
+	local meta = LI.db.recipes[recipeID]
+	if not meta then
+		return nil
+	end
+	if not meta.r then
+		meta.r = LI.Reagents(recipeID)
+	end
+	if not meta.c and C_TradeSkillUI and C_TradeSkillUI.GetRecipeInfo then
+		local info = LI.Try(C_TradeSkillUI.GetRecipeInfo, recipeID)
+		local cat = type(info) == "table" and LI.Safe(info.categoryID)
+		if type(cat) == "number" then
+			meta.c = cat
+			LI.NoteCategory(cat)
+		end
+	end
+	return meta
 end
 
 function LI.Forget(key)

@@ -95,6 +95,8 @@ function methods:HookScript(k, fn)
 	end
 end
 function methods:SetAlpha(a) self.__alpha = a end
+function methods:SetEnabled(v) self.__disabled = not v end
+function methods:IsEnabled() return not self.__disabled end
 function methods:GetAlpha() return self.__alpha or 1 end
 function methods:SetHyperlink(link)
 	table.insert(W.hyperlinks, link)
@@ -256,13 +258,14 @@ local function InstallStubs()
 	_G.C_Item = {
 		GetItemInfoInstant = function(id)
 			local classID = W.items[id]
-			return id, "x", "y", "", 1, classID, 0
+			return id, "x", "y", "", 60000 + id, classID, 0
 		end,
 		GetItemInfo = function(id)
 			if id == 14155 then return "Mooncloth Bag", "|cff0070dd|Hitem:14155::::::::60:::::|h[Mooncloth Bag]|h|r" end
 			return nil
 		end,
 		GetItemQualityByID = function(id) return id == 14155 and 3 or 1 end,
+		GetItemNameByID = function(id) return W.itemNames and W.itemNames[id] or nil end,
 		RequestLoadItemDataByID = function() end,
 	}
 	_G.C_ClassColor = { GetClassColor = function(c) return { r = 0.5, g = 0.5, b = 1, class = c } end }
@@ -314,7 +317,7 @@ local function InstallStubs()
 		end,
 		GetRecipeInfo = function(id)
 			for _, r in ipairs(W.trade and W.trade.recipes or {}) do
-				if r.id == id then return { recipeID = id, name = r.name, learned = r.learned ~= false, icon = 5000 + id } end
+				if r.id == id then return { recipeID = id, name = r.name, learned = r.learned ~= false, icon = 5000 + id, categoryID = r.cat } end
 			end
 		end,
 		GetRecipeOutputItemData = function(id)
@@ -325,6 +328,20 @@ local function InstallStubs()
 			return { icon = 1 }
 		end,
 		GetTradeSkillTexture = function(id) return 9000 + id end,
+		GetCategoryInfo = function(id)
+			local cats = { [10] = { name = "Bags", uiOrder = 2 }, [11] = { name = "Armor", uiOrder = 1 } }
+			local c = cats[id]
+			return c and { categoryID = id, name = c.name, uiOrder = c.uiOrder } or nil
+		end,
+		GetRecipeSchematic = function(id)
+			local reagents = W.schematics and W.schematics[id]
+			if not reagents then return nil end
+			local slots = {}
+			for i, r in ipairs(reagents) do
+				slots[i] = { reagents = { { itemID = r[1] } }, quantityRequired = r[2], reagentType = r[3] or 1, required = (r[3] or 1) == 1 }
+			end
+			return { recipeID = id, reagentSlotSchematics = slots }
+		end,
 		GetTradeSkillListLink = function()
 			if W.trade and not W.trade.linked then return "|cffffd000|Htrade:Player-1-ME:2259:171|h[Alchemy]|h|r" end
 		end,
@@ -392,8 +409,8 @@ end
 local TAILORING = { professionName = "Tailoring", professionID = 197, skillLevel = 260, maxSkillLevel = 300 }
 local ALCHEMY = { professionName = "Alchemy", professionID = 171, skillLevel = 150, maxSkillLevel = 225 }
 local TAILOR_RECIPES = {
-	{ id = 18560, name = "Mooncloth Bag", item = 14155 },
-	{ id = 3914, name = "Brown Linen Pants", item = 4343 },
+	{ id = 18560, name = "Mooncloth Bag", item = 14155, cat = 10 },
+	{ id = 3914, name = "Brown Linen Pants", item = 4343, cat = 11 },
 	{ id = 3915, name = "Brown Linen Shirt", item = 4344, learned = false },
 }
 local ALCHEMY_RECIPES = {
@@ -408,8 +425,16 @@ local function Say(event, msg, sender, senderGUID, channelBase)
 	Fire(event, msg, sender, "", "", "", "", 0, 0, channelBase or "", 0, 1, senderGUID)
 end
 
+local SCHEMATICS = {
+	[18560] = { { 14342, 4 }, { 14256, 2 }, { 8343, 2 } },
+	[3914] = { { 2996, 2 }, { 2320, 1 }, { 9999, 1, 0 } },
+	[2330] = { { 2447, 1 }, { 765, 1 }, { 3371, 1 } },
+}
+
 local function Setup()
 	W = {
+		schematics = SCHEMATICS,
+		itemNames = { [14342] = "Mooncloth", [14256] = "Felcloth", [2996] = "Bolt of Linen Cloth" },
 		clock = 0,
 		name = "Brew",
 		surname = "Master",
@@ -460,6 +485,9 @@ check(tailoring.rank == 260 and tailoring.max == 300, "skill level is saved")
 check(LI.test.auto.ok == 1 and LI.test.auto.tries == 1 and LI.test.auto.flashed == 0, "the test counts one clean automatic read")
 check(W.closed == 1, "the profession window is closed after an automatic read")
 check(LI.db.recipes[18560].k == "bag" and LI.db.recipes[3914].k == "armor", "recipes get an item type", LI.db.recipes[18560].k)
+check(LI.db.recipes[18560].c == 10 and LI.db.cats[10].n == "Bags" and LI.db.cats[11].o == 1, "recipes remember their category, named once in a shared table")
+check(LI.db.recipes[18560].r == "14342:4;14256:2;8343:2", "reagents are stored once per recipe", LI.db.recipes[18560].r)
+check(LI.db.recipes[3914].r == "2996:2;2320:1", "optional reagents are left out", LI.db.recipes[3914].r)
 check(LI.Reader.QueueSize() == 0, "the queue is empty after reading")
 W.trade = { linked = true, linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
 Fire("TRADE_SKILL_SHOW")
@@ -828,12 +856,29 @@ annaBook.__scripts.OnClick(annaBook)
 local book = LinkedInnBook
 check(book and book:IsShown() and #W.tells == whispers and (W.itemRefs or 0) == refs, "clicking a profession button opens the recipe book, not a whisper or the live window")
 check(LI.Book.Current().key == "Anna Smith-TestRealm" and LI.Book.Current().prof == "tailoring", "the book shows that crafter's profession")
-check(book.search.__text == "mooncloth" and #book.list.__rows == 1 and book.list.__rows[1].name.__text == "Mooncloth Bag", "the book opens filtered to what you searched for", #book.list.__rows)
+check(book.search.__text == "mooncloth" and #book.list.__rows == 2 and book.list.__rows[1].data.header and book.list.__rows[2].name.__text == "Mooncloth Bag", "the book opens filtered to what you searched for", #book.list.__rows)
 check(book.prof.__text == "Tailoring  260/300" and book.info.__text:find("2 recipes", 1, true), "the book header shows skill and recipe count", book.info.__text)
 book.search:SetText("")
 book.search.__scripts.OnTextChanged(book.search)
-check(#book.list.__rows == 2 and book.list.__rows[1].name.__text == "Brown Linen Pants", "clearing the book search lists every recipe alphabetically", #book.list.__rows)
-local bag = book.list.__rows[2]
+local function BookShape()
+	local out = {}
+	for _, row in ipairs(book.list.__rows) do
+		out[#out + 1] = row.data.header and ("#" .. row.data.name) or row.data.name
+	end
+	return table.concat(out, ",")
+end
+check(BookShape() == "#Armor,Brown Linen Pants,#Bags,Mooncloth Bag", "the book groups recipes under categories in the game's order", BookShape())
+local bag = book.list.__rows[4]
+check(bag.reagents[1]:IsShown() and bag.reagents[1].count.__text == "4" and bag.reagents[3]:IsShown() and bag.reagents[1].icon.__texture == 60000 + 14342, "each recipe shows its reagents with counts", bag.reagents[1].count.__text)
+check(book.list.__rows[2].reagents[2].count.__text == "", "a single reagent shows no count")
+local lines = LI.Book.ReagentLines(LI.db.recipes[18560])
+check(#lines == 3 and lines[1]:find("4 \195\151 Mooncloth", 1, true) and lines[3]:find("Loading", 1, true), "hovering lists reagents with icon, amount and name", lines[1])
+book.search:SetText("felcloth")
+book.search.__scripts.OnTextChanged(book.search)
+check(BookShape() == "#Bags,Mooncloth Bag", "the book search also finds recipes by reagent", BookShape())
+book.search:SetText("")
+book.search.__scripts.OnTextChanged(book.search)
+bag = book.list.__rows[4]
 bag.__scripts.OnClick(bag)
 check(W.tells[#W.tells] == "Anna Smith" and W.editBox.text == "Hi! Could you make |cff0070dd|Hitem:14155::::::::60:::::|h[Mooncloth Bag]|h|r?", "clicking a recipe opens a whisper asking for it", W.editBox.text)
 W.shift = true
@@ -841,11 +886,25 @@ local tellsNow = #W.tells
 bag.__scripts.OnClick(bag)
 W.shift = false
 check(#W.tells == tellsNow and W.links[#W.links]:find("Mooncloth Bag", 1, true), "shift-clicking a recipe links it in chat")
-local pants = book.list.__rows[1]
+local pants = book.list.__rows[2]
 pants.__scripts.OnClick(pants)
 check(W.editBox.text == "Hi! Could you make [Brown Linen Pants]?", "an uncached item still gets asked for by name", W.editBox.text)
+check(LI.IsChecking("Anna Smith-TestRealm") and book.state.__text == "Checking..." and not book.live:IsEnabled(), "opening a book quietly checks if they're online", book.state.__text)
+local chatLines = #W.chat
+Advance(7)
+check(book.state.__text == "Offline" and not book.live:IsEnabled(), "no reply greys out Open in game and says Offline", book.state.__text)
+check(#W.chat == chatLines, "the quiet check prints nothing in chat")
 book.live.__scripts.OnClick(book.live)
-check((W.itemRefs or 0) == refs + 1, "Open in game still opens the live window")
+check((W.itemRefs or 0) == refs, "a greyed out Open in game does nothing")
+W.autoWorks = true
+book:Hide()
+annaBook.__scripts.OnClick(annaBook)
+Advance(3)
+W.autoWorks = false
+check(book.state.__text == "Online" and book.live:IsEnabled(), "a reply enables Open in game and says Online", book.state.__text)
+local refsNow = W.itemRefs or 0
+book.live.__scripts.OnClick(book.live)
+check((W.itemRefs or 0) == refsNow + 1, "Open in game opens the live window")
 annaBook.__scripts.OnClick(annaBook)
 check(book:IsShown(), "opening with a search keeps the book open")
 main.search:SetText("")
@@ -872,7 +931,7 @@ check(#W.errors == uiErrors, "the window builds without errors", W.errors[uiErro
 local saved = Logout()
 Boot(saved)
 check(LI.crafters["Anna Smith-TestRealm"] and LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes[18560], "crafters and recipes survive a reload")
-check(LI.test.auto.ok == 1 and LI.test.click == 3, "test results survive a reload", LI.test.click)
+check(LI.test.auto.ok == 1 and LI.test.click == 2, "test results survive a reload", LI.test.click)
 check(LI.guids["Player-1-CCC"] == "Cora Vale-TestRealm", "the GUID index is rebuilt after a reload")
 check(LI.IsFavorite("Cora Vale-TestRealm"), "favorites survive a reload")
 W.clock = W.clock + 90 * 86400

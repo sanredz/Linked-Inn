@@ -1113,6 +1113,60 @@ LI.ResetTest()
 check(LI.test.links == 0 and LI.test.auto.tries == 0 and #LI.db.log == 0, "the test can be reset")
 
 check(#W.errors == 0, "no errors", W.errors[1])
+do
+	Setup()
+	Boot()
+	LI.settings.autoRead = false
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-BBB", 3908, 197, "Tailoring"), "Bob Stone-TestRealm", "Player-1-BBB", "Trade - City")
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-CCC", 2259, 171, "Alchemy"), "Cora Vale-TestRealm", "Player-1-CCC", "Trade - City")
+	Advance(20 * 60)
+	W.linkData["trade:Player-1-BBB:3908:197"] = nil
+	W.autoWorks = true
+	local autoBefore, clickBefore = LI.test.auto.tries, LI.test.click
+	check(LI.RefreshOnline(false) and LI.Reader.Sweeping(), "the refresh asks everyone at once")
+	check(#W.hyperlinks == 3, "every crafter with a link is asked in the same moment", #W.hyperlinks)
+	Advance(0.3)
+	check(LI.Status("Anna Smith-TestRealm") == "online" and LI.Status("Cora Vale-TestRealm") == "online", "everyone who answers is online within a fraction of a second")
+	check(ProfessionsFrame and ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() == 0, "the profession window stays invisible during a refresh")
+	local bobStatus, _, bobSure = LI.Status("Bob Stone-TestRealm")
+	check(bobStatus ~= "online" and not bobSure, "nobody is marked offline for not answering", bobStatus)
+	Advance(1.5)
+	check(not LI.Reader.Sweeping(), "the refresh ends on its own")
+	check(not ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() == 1, "and is closed and restored afterwards")
+	check(LI.db.log[#LI.db.log].m == "Online refresh: asked 3, 2 answered", "the test log records how many answered", LI.db.log[#LI.db.log].m)
+	check(LI.crafters["Cora Vale-TestRealm"].profs.alchemy.recipes and LI.crafters["Cora Vale-TestRealm"].profs.alchemy.recipes[2330], "answers also refresh recipes")
+	check(LI.test.auto.tries == autoBefore and LI.test.click == clickBefore, "a refresh doesn't count as reads or clicks")
+	check(#W.who == 0, "no /who is used")
+	local mark = #W.hyperlinks
+	check(LI.RefreshOnline(false), "a refresh can run again")
+	check(#W.hyperlinks == mark + 1 and W.hyperlinks[mark + 1] == "trade:Player-1-BBB:3908:197", "crafters just confirmed online are skipped", #W.hyperlinks - mark)
+	Advance(2)
+	check(not LI.RefreshOnline(true), "opening the window refreshes at most every two minutes")
+	Advance(130)
+	W.combat = true
+	check(not LI.RefreshOnline(false), "no refresh in combat")
+	W.combat = false
+
+	for i = 1, 20 do
+		local guid = "Player-3-" .. i
+		W.guids[guid] = { class = "MAGE", name = "Many" .. i .. " Folk", realm = "" }
+		Say("CHAT_MSG_CHANNEL", TradeLink(guid, 3908, 197, "Tailoring"), "Many" .. i .. " Folk-TestRealm", guid, "Trade - City")
+	end
+	Advance(6 * 60)
+	mark = #W.hyperlinks
+	LI.RefreshOnline(false)
+	local first = #W.hyperlinks - mark
+	Advance(0.05)
+	check(first == 8, "requests go out in quick bursts of eight", first)
+	Advance(0.2)
+	check(#W.hyperlinks - mark == 23, "the whole list is asked within a fraction of a second", #W.hyperlinks - mark)
+	check(LI.CheckOnline("Anna Smith-TestRealm") and LI.IsChecking("Anna Smith-TestRealm"), "a click during a refresh waits its turn")
+	Advance(3)
+	check(not LI.IsChecking("Anna Smith-TestRealm") and LI.Status("Anna Smith-TestRealm") == "online", "and runs right after with the right answer", LI.Status("Anna Smith-TestRealm"))
+	W.autoWorks = false
+end
+
 local function Sent(kind, chatType)
 	local out = {}
 	for _, m in ipairs(W.sent) do

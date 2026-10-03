@@ -742,7 +742,21 @@ local function RefreshFind()
 			total = total + 1
 		end
 	end
-	main.count:SetText(string.format("%d shown  ·  %d crafters remembered", #results, total))
+	local online = 0
+	for _, entry in ipairs(results) do
+		if entry.status == "online" then
+			online = online + 1
+		end
+	end
+	local parts = { string.format("%d shown", #results) }
+	if online > 0 then
+		parts[#parts + 1] = string.format("|cff59f273%d online|r", online)
+	end
+	parts[#parts + 1] = string.format("%d crafters remembered", total)
+	main.count:SetText(table.concat(parts, "  ·  "))
+	local sweeping = LI.Reader.Sweeping()
+	main.refresh:SetEnabled(not sweeping)
+	main.refresh.icon:SetDesaturated(sweeping)
 	local empty = #results == 0
 	main.empty:SetShown(empty)
 	if empty then
@@ -1046,6 +1060,29 @@ local function CreateMain()
 	main.secondaryLabel:SetPoint("LEFT", main.secondaryBox, "RIGHT", 0, 0)
 	main.secondaryLabel:SetText("Secondary")
 
+	main.refresh = CreateFrame("Button", nil, main)
+	main.refresh:SetSize(22, 22)
+	main.refresh:SetPoint("TOPRIGHT", -12, -32)
+	main.refresh.icon = main.refresh:CreateTexture(nil, "ARTWORK")
+	main.refresh.icon:SetAllPoints()
+	main.refresh.icon:SetTexture("Interface\\Buttons\\UI-RefreshButton")
+	main.refresh:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+	main.refresh:SetScript("OnClick", function()
+		if LI.RefreshOnline(false) then
+			Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
+			UI.Refresh()
+		end
+	end)
+	main.refresh:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
+		GameTooltip:SetText("Refresh who's online", 1, 0.82, 0)
+		GameTooltip:AddLine("Quietly asks every crafter's profession at once. Everyone who answers is online.", 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	main.refresh:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+
 	if main.Inset then
 		main.Inset:ClearAllPoints()
 		main.Inset:SetPoint("TOPLEFT", 4, -100)
@@ -1104,6 +1141,11 @@ local function CreateMain()
 
 	main:SetScript("OnShow", function()
 		Sound("IG_CHARACTER_INFO_OPEN")
+		LI.After(0.5, function()
+			if main:IsShown() then
+				LI.RefreshOnline(true)
+			end
+		end)
 		UI.Refresh()
 	end)
 	main:SetScript("OnHide", function()
@@ -1146,6 +1188,7 @@ UI.TAB = TAB
 LI.Listen("CraftersChanged", QueueRefresh)
 LI.Listen("StatusChanged", QueueRefresh)
 LI.Listen("TestChanged", QueueRefresh)
+LI.Listen("SweepDone", QueueRefresh)
 
 SLASH_LINKEDINN1 = "/linkedinn"
 SLASH_LINKEDINN2 = "/li"

@@ -10,6 +10,10 @@ local PROBE_MIN = 0.4
 local PROBE_MAX = 1.5
 local PROBE_DEFAULT = 1.0
 local latencies = {}
+local SWEEP_BATCH = 8
+local SWEEP_GAP = 0.1
+local SWEEP_WAIT = 1.0
+local sweep
 local GIVE_UP = 5
 local QUEUE_MAX = 30
 local STALE = 3 * 86400
@@ -102,7 +106,7 @@ local function HookFrame()
 	end
 	hooked = true
 	frame:HookScript("OnShow", function(self)
-		if pending then
+		if pending or sweep then
 			self:SetAlpha(0)
 			concealed = true
 		end
@@ -189,7 +193,7 @@ local function Pump()
 		Kick()
 		return
 	end
-	if not LI.ready or not LI.settings.autoRead or pending or tradeOpen or Reader.IsBroken() then
+	if not LI.ready or not LI.settings.autoRead or pending or sweep or tradeOpen or Reader.IsBroken() then
 		return
 	end
 	if #queue == 0 or Now() < nextAt then
@@ -231,7 +235,7 @@ Start = function(job)
 end
 
 Kick = function()
-	if pending or #probes == 0 or tradeOpen or not LI.ready then
+	if pending or sweep or #probes == 0 or tradeOpen or not LI.ready then
 		return
 	end
 	if (InCombatLockdown and InCombatLockdown()) or PanelOpen() then
@@ -373,6 +377,13 @@ function Reader.Read()
 		rank = LI.Safe(base.skillLevel),
 		max = LI.Safe(base.maxSkillLevel),
 	}
+	if linked and sweep then
+		local key = Reader.SweepKey(linkedName)
+		if key and #list > 0 then
+			LI.SetRecipes(key, info, list, "auto")
+		end
+		return
+	end
 	if linked then
 		if #list == 0 then
 			return
@@ -453,7 +464,101 @@ function Reader.ProbeTimeout()
 	return math.min(PROBE_MAX, math.max(PROBE_MIN, worst * 2.5))
 end
 
+function Reader.SweepKey(linkedName)
+	linkedName = LI.Safe(linkedName)
+	if not sweep or type(linkedName) ~= "string" then
+		return nil
+	end
+	return sweep.names[linkedName] or sweep.names[LI.ShortName(LI.FullName(linkedName))]
+end
+
+local function SweepReply()
+	local api = C_TradeSkillUI
+	if not sweep or not api or not api.IsTradeSkillLinked then
+		return
+	end
+	local linked, linkedName = LI.Try(api.IsTradeSkillLinked)
+	if LI.Safe(linked) ~= true then
+		return
+	end
+	local key = Reader.SweepKey(linkedName)
+	if key and not sweep.got[key] then
+		sweep.got[key] = true
+		sweep.answered = sweep.answered + 1
+		if LI.MarkOnline then
+			LI.MarkOnline(key)
+		end
+	end
+end
+
+local function EndSweep(job)
+	if sweep ~= job then
+		return
+	end
+	local api = C_TradeSkillUI
+	if (tradeOpen or concealed) and api and api.CloseTradeSkill then
+		LI.Try(api.CloseTradeSkill)
+	end
+	Reveal()
+	sweep = nil
+	LI.test.sync.sweeps = (LI.test.sync.sweeps or 0) + 1
+	LI.Log(string.format("Online refresh: asked %d, %d answered", job.sent, job.answered))
+	LI.Fire("StatusChanged")
+	LI.Fire("SweepDone", job.sent, job.answered)
+	LI.After(0.05, function()
+		Kick()
+	end)
+end
+
+function Reader.Sweeping()
+	return sweep ~= nil
+end
+
+function Reader.Sweep(targets)
+	if not LI.ready or sweep or pending or tradeOpen or #targets == 0 then
+		return false
+	end
+	if (InCombatLockdown and InCombatLockdown()) or PanelOpen() then
+		return false
+	end
+	EnsureFrame()
+	local job = { names = {}, got = {}, sent = 0, answered = 0 }
+	for _, t in ipairs(targets) do
+		job.names[LI.ShortName(t.key)] = t.key
+	end
+	sweep = job
+	local t = Tip()
+	local batches = math.ceil(#targets / SWEEP_BATCH)
+	local function Send(b)
+		if sweep ~= job then
+			return
+		end
+		for i = (b - 1) * SWEEP_BATCH + 1, math.min(#targets, b * SWEEP_BATCH) do
+			LI.Try(t.SetOwner, t, WorldFrame or UIParent, "ANCHOR_NONE")
+			if pcall(t.SetHyperlink, t, targets[i].link) then
+				job.sent = job.sent + 1
+			end
+		end
+		LI.Try(t.Hide, t)
+	end
+	Send(1)
+	for b = 2, batches do
+		LI.After((b - 1) * SWEEP_GAP, function()
+			Send(b)
+		end)
+	end
+	LI.After((batches - 1) * SWEEP_GAP + SWEEP_WAIT, function()
+		EndSweep(job)
+	end)
+	LI.Fire("StatusChanged")
+	return true
+end
+
 local function Replied()
+	if sweep then
+		SweepReply()
+		return
+	end
 	local job = pending
 	if not job or job.replied then
 		return
@@ -485,6 +590,9 @@ LI.On("TRADE_SKILL_SHOW", function()
 	ScheduleRead()
 end)
 LI.On("TRADE_SKILL_LIST_UPDATE", function()
+	if sweep then
+		SweepReply()
+	end
 	if tradeOpen then
 		ScheduleRead()
 	end

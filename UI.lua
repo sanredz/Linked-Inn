@@ -742,18 +742,7 @@ local function RefreshFind()
 			total = total + 1
 		end
 	end
-	local online = 0
-	for _, entry in ipairs(results) do
-		if entry.status == "online" then
-			online = online + 1
-		end
-	end
-	local parts = { string.format("%d shown", #results) }
-	if online > 0 then
-		parts[#parts + 1] = string.format("|cff59f273%d online|r", online)
-	end
-	parts[#parts + 1] = string.format("%d crafters remembered", total)
-	main.count:SetText(table.concat(parts, "  ·  "))
+	main.count:SetText(string.format("%d shown  ·  %d crafters remembered", #results, total))
 	local sweeping = LI.Reader.Sweeping()
 	main.refresh:SetEnabled(not sweeping)
 	main.refresh.icon:SetDesaturated(sweeping)
@@ -1062,7 +1051,7 @@ local function CreateMain()
 
 	main.refresh = CreateFrame("Button", nil, main)
 	main.refresh:SetSize(22, 22)
-	main.refresh:SetPoint("TOPRIGHT", -12, -32)
+	main.refresh:SetPoint("RIGHT", main.chipBar, "RIGHT", -4, 0)
 	main.refresh.icon = main.refresh:CreateTexture(nil, "ARTWORK")
 	main.refresh.icon:SetAllPoints()
 	main.refresh.icon:SetTexture("Interface\\Buttons\\UI-RefreshButton")
@@ -1075,8 +1064,11 @@ local function CreateMain()
 	end)
 	main.refresh:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
-		GameTooltip:SetText("Refresh who's online", 1, 0.82, 0)
-		GameTooltip:AddLine("Quietly asks every crafter's profession at once. Everyone who answers is online.", 1, 1, 1, true)
+		GameTooltip:SetText("Refresh online status", 1, 0.82, 0)
+		local done, total = LI.Reader.SweepProgress()
+		if done then
+			GameTooltip:AddLine(string.format("%d of %d", done, total), 1, 1, 1)
+		end
 		GameTooltip:Show()
 	end)
 	main.refresh:SetScript("OnLeave", function()

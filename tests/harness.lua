@@ -102,7 +102,7 @@ function methods:SetHyperlink(link)
 	table.insert(W.hyperlinks, link)
 	if W.autoWorks then
 		local data = W.linkData[link]
-		C_Timer.After(1, function()
+		C_Timer.After(W.replyDelay or 0.2, function()
 			if data then
 				W.trade = { linked = true, linkedName = data.linkedName, prof = data.prof, recipes = data.recipes }
 				W.Fire("TRADE_SKILL_SHOW")
@@ -663,6 +663,65 @@ Advance(7)
 check(not LI.IsChecking("Anna Smith-TestRealm") and LI.Status("Anna Smith-TestRealm") == "offline", "no reply means they're offline")
 check(LI.test.auto.streak == streakBefore and LI.test.auto.timeout == 0, "an offline probe doesn't count against automatic reading")
 W.linkData[annaLink] = annaData
+
+W.guids["Player-1-DDD"] = { class = "MAGE", name = "Dee Gone", realm = "" }
+Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-DDD", 3908, 197, "Tailoring"), "Dee Gone-TestRealm", "Player-1-DDD", "Trade - City")
+LI.settings.autoRead = true
+LI.crafters["Dee Gone-TestRealm"].seen = time() - 3600
+local order = {}
+local firstHyper = #W.hyperlinks
+for _, k in ipairs({ "Cora Vale-TestRealm", "Anna Smith-TestRealm", "Dee Gone-TestRealm", "Bob Stone-TestRealm" }) do
+	check(LI.CheckOnline(k), "rapid clicks are all accepted: " .. k)
+end
+check(LI.IsChecking("Anna Smith-TestRealm") and LI.IsChecking("Bob Stone-TestRealm"), "every clicked crafter shows as checking")
+Advance(0.3)
+check(not LI.IsChecking("Cora Vale-TestRealm") and LI.Status("Cora Vale-TestRealm") == "online", "an online reply resolves right away")
+Advance(5)
+check(not LI.IsChecking("Bob Stone-TestRealm") and LI.Status("Dee Gone-TestRealm") == "offline", "all queued checks finish within a few seconds", LI.Status("Dee Gone-TestRealm"))
+check(W.hyperlinks[firstHyper + 1] == "trade:Player-1-CCC:2259:171" and W.hyperlinks[firstHyper + 3] == "trade:Player-1-DDD:3908:197", "queued checks run in click order, before background reads", W.hyperlinks[firstHyper + 3])
+check(math.abs(LI.Reader.ProbeTimeout() - 0.5) < 0.01, "the wait adapts to how fast replies arrive", LI.Reader.ProbeTimeout())
+check(#W.who == 0, "no /who was needed")
+LI.Forget("Dee Gone-TestRealm")
+
+W.guids["Player-1-EEE"] = { class = "MAGE", name = "Eve One", realm = "" }
+W.guids["Player-1-FFF"] = { class = "MAGE", name = "Fay Two", realm = "" }
+Advance(10)
+Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-EEE", 3908, 197, "Tailoring"), "Eve One-TestRealm", "Player-1-EEE", "Trade - City")
+Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-FFF", 3908, 197, "Tailoring"), "Fay Two-TestRealm", "Player-1-FFF", "Trade - City")
+local mark = #W.hyperlinks
+for _ = 1, 40 do
+	Advance(0.1)
+	if #W.hyperlinks > mark then break end
+end
+check(W.hyperlinks[mark + 1] == "trade:Player-1-FFF:3908:197", "a background read started", W.hyperlinks[mark + 1])
+LI.CheckOnline("Cora Vale-TestRealm")
+Advance(5)
+check(W.hyperlinks[mark + 2] == "trade:Player-1-CCC:2259:171", "a click jumps ahead of queued background reads", W.hyperlinks[mark + 2])
+LI.settings.autoRead = false
+LI.Forget("Eve One-TestRealm")
+LI.Forget("Fay Two-TestRealm")
+Advance(10)
+
+W.autoWorks = false
+LI.CheckOnline("Anna Smith-TestRealm")
+W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+Fire("TRADE_SKILL_SHOW")
+Advance(0.1)
+check(LI.IsChecking("Anna Smith-TestRealm"), "opening your own profession during a check doesn't count as their reply")
+C_TradeSkillUI.CloseTradeSkill()
+Advance(3)
+check(LI.Status("Anna Smith-TestRealm") == "offline", "the check still ends as offline")
+Advance(5)
+W.combat = true
+local inFight = #W.hyperlinks
+LI.CheckOnline("Cora Vale-TestRealm")
+Advance(3)
+check(#W.hyperlinks == inFight and LI.IsChecking("Cora Vale-TestRealm"), "a check clicked in combat waits")
+W.combat = false
+Advance(3)
+check(#W.hyperlinks == inFight + 1, "and runs once combat ends")
+Advance(3)
+LI.settings.autoRead = false
 W.autoWorks = false
 Advance(10)
 
@@ -844,7 +903,7 @@ main.search.__scripts.OnTextChanged(main.search)
 main.search:SetText("mooncloth")
 main.search.__scripts.OnTextChanged(main.search)
 Advance(1)
-check(Shape() == "#tailoring Anna Bob", "typing in the search box filters the list, sure matches first among online crafters", Shape())
+check(Shape() == "#tailoring Anna", "typing in the search box filters the list; crafters whose recipes rule it out drop away", Shape())
 local annaRow = main.list.__rows[2]
 local annaBook = annaRow.books and annaRow.books[1]
 check(annaBook and annaBook:IsShown() and annaBook.key == "tailoring", "each row shows a button per profession")

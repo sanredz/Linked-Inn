@@ -13,7 +13,8 @@ local roster = {}
 local offlineAt = {}
 local checked = {}
 local heardAt = {}
-local pendingCheck
+local whoCheck
+local probing = {}
 
 local function SetRoster(source, fullName, online)
 	local key = LI.FullName(LI.Safe(fullName))
@@ -212,11 +213,11 @@ local function RecordCheck(key, found, area, quiet)
 end
 
 local function FinishCheck(found, area)
-	local job = pendingCheck
+	local job = whoCheck
 	if not job then
 		return
 	end
-	pendingCheck = nil
+	whoCheck = nil
 	if found == nil then
 		LI.Print("No answer from /who for " .. LI.ShortName(job.key) .. ". Try again in a moment.")
 		return
@@ -225,10 +226,10 @@ local function FinishCheck(found, area)
 end
 
 function LI.ProbeResult(key, found)
-	if pendingCheck and pendingCheck.key == key and pendingCheck.probe then
-		local quiet = pendingCheck.quiet
-		pendingCheck = nil
-		RecordCheck(key, found, nil, quiet)
+	local probe = probing[key]
+	if probe then
+		probing[key] = nil
+		RecordCheck(key, found, nil, probe.quiet)
 	end
 end
 
@@ -251,9 +252,9 @@ local function ProbeLink(key)
 end
 
 local function ReadWho()
-	local job = pendingCheck
+	local job = whoCheck
 	local list = C_FriendList
-	if not job or job.probe or not list then
+	if not job or not list then
 		return
 	end
 	local count = LI.Safe(LI.Try(list.GetNumWhoResults))
@@ -275,14 +276,18 @@ function LI.CheckOnline(key)
 	if not key or not list or not list.SendWho then
 		return false
 	end
-	if pendingCheck then
-		LI.Print("Still checking " .. LI.ShortName(pendingCheck.key) .. ".")
+	if LI.IsChecking(key) then
 		return false
 	end
 	local link = ProbeLink(key)
 	if link and LI.Reader and LI.Reader.Probe(key, link) then
-		pendingCheck = { key = key, probe = true }
+		probing[key] = { quiet = false }
+		LI.Fire("StatusChanged")
 		return true
+	end
+	if whoCheck then
+		LI.Print("Still checking " .. LI.ShortName(whoCheck.key) .. ".")
+		return false
 	end
 	local name = LI.ShortName(key)
 	local query = name
@@ -292,15 +297,15 @@ function LI.CheckOnline(key)
 	local tag = type(WHO_TAG_EXACT) == "string" and WHO_TAG_EXACT or "n-"
 	local origin = Enum and Enum.SocialWhoOrigin and Enum.SocialWhoOrigin.Item
 	local job = { key = key }
-	pendingCheck = job
+	whoCheck = job
 	local ok = pcall(list.SendWho, tag .. query, origin)
 	if not ok then
-		pendingCheck = nil
+		whoCheck = nil
 		LI.Print("Couldn't check " .. name .. " right now.")
 		return false
 	end
 	LI.After(CHECK_TIMEOUT, function()
-		if pendingCheck == job then
+		if whoCheck == job then
 			FinishCheck(nil)
 			LI.Fire("StatusChanged")
 		end
@@ -309,12 +314,12 @@ function LI.CheckOnline(key)
 end
 
 function LI.ProbeOnline(key)
-	if not key or key == LI.playerKey or pendingCheck then
+	if not key or key == LI.playerKey or LI.IsChecking(key) then
 		return false
 	end
 	local link = ProbeLink(key)
 	if link and LI.Reader and LI.Reader.Probe(key, link) then
-		pendingCheck = { key = key, probe = true, quiet = true }
+		probing[key] = { quiet = true }
 		LI.Fire("StatusChanged")
 		return true
 	end
@@ -322,7 +327,7 @@ function LI.ProbeOnline(key)
 end
 
 function LI.IsChecking(key)
-	return pendingCheck ~= nil and pendingCheck.key == key
+	return probing[key] ~= nil or (whoCheck ~= nil and whoCheck.key == key)
 end
 
 LI.On("CHAT_MSG_SYSTEM", function(msg)
@@ -330,8 +335,8 @@ LI.On("CHAT_MSG_SYSTEM", function(msg)
 	if not LI.ready or type(msg) ~= "string" then
 		return
 	end
-	if pendingCheck and not pendingCheck.probe then
-		local name = LI.ShortName(pendingCheck.key)
+	if whoCheck then
+		local name = LI.ShortName(whoCheck.key)
 		if msg:find(name, 1, true) then
 			FinishCheck(true, msg:match("%s%-%s([^%-]+)$"))
 			return

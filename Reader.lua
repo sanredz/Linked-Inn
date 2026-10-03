@@ -5,7 +5,11 @@ LI.Reader = Reader
 
 local PUMP_EVERY = 2
 local GAP = 8
-local TIMEOUT = 6
+local TIMEOUT = 3
+local PROBE_MIN = 0.4
+local PROBE_MAX = 1.5
+local PROBE_DEFAULT = 1.0
+local latencies = {}
 local GIVE_UP = 5
 local QUEUE_MAX = 30
 local STALE = 3 * 86400
@@ -13,6 +17,7 @@ local CLICK_WINDOW = 20
 local AUTO_ECHO = 10
 
 local queue = {}
+local probes = {}
 local pending
 local clicked
 local tradeOpen = false
@@ -141,13 +146,18 @@ local function CloseHidden()
 	end
 end
 
+local Kick
+
 local function Finish(job, outcome)
 	if job.probe then
 		pending = nil
-		nextAt = Now() + GAP
-		if LI.ProbeResult then
+		nextAt = math.max(nextAt, Now() + 2)
+		if LI.ProbeResult and not job.notified then
 			LI.ProbeResult(job.key, outcome == "ok")
 		end
+		LI.After(0.05, function()
+			Kick()
+		end)
 		return
 	end
 	local auto = LI.test.auto
@@ -167,11 +177,18 @@ local function Finish(job, outcome)
 	pending = nil
 	nextAt = Now() + GAP
 	LI.Fire("TestChanged")
+	LI.After(0.05, function()
+		Kick()
+	end)
 end
 
 local Start
 
 local function Pump()
+	if #probes > 0 then
+		Kick()
+		return
+	end
 	if not LI.ready or not LI.settings.autoRead or pending or tradeOpen or Reader.IsBroken() then
 		return
 	end
@@ -202,27 +219,57 @@ Start = function(job)
 		Finish(job, "err")
 		return
 	end
-	LI.After(TIMEOUT, function()
-		if pending == job then
+	LI.After(job.probe and Reader.ProbeTimeout() or TIMEOUT, function()
+		if pending == job and not job.replied then
 			if not job.probe then
 				LI.Log("No reply for " .. LI.ShortName(job.key) .. "'s " .. tostring(job.prof) .. ", probably offline")
 			end
-			Finish(job, "timeout")
 			CloseHidden()
+			Finish(job, "timeout")
 		end
 	end)
 end
 
-function Reader.Probe(key, link)
-	if not LI.ready or not key or type(link) ~= "string" or pending or tradeOpen then
-		return false
+Kick = function()
+	if pending or #probes == 0 or tradeOpen or not LI.ready then
+		return
 	end
 	if (InCombatLockdown and InCombatLockdown()) or PanelOpen() then
+		return
+	end
+	Start(table.remove(probes, 1))
+end
+
+function Reader.Probe(key, link)
+	if not LI.ready or not key or type(link) ~= "string" then
 		return false
 	end
-	Start({ key = key, link = link, probe = true })
+	if pending and pending.probe and pending.key == key then
+		return true
+	end
+	for _, job in ipairs(probes) do
+		if job.key == key then
+			return true
+		end
+	end
+	probes[#probes + 1] = { key = key, link = link, probe = true }
+	Kick()
 	return true
 end
+
+LI.On("UI_ERROR_MESSAGE", function(_, msg)
+	msg = LI.Safe(msg)
+	if pending and pending.probe and type(msg) == "string" then
+		LI.Log("While checking " .. LI.ShortName(pending.key) .. ": " .. msg)
+	end
+end)
+
+LI.On("CHAT_MSG_SYSTEM", function(msg)
+	msg = LI.Safe(msg)
+	if pending and pending.probe and type(msg) == "string" then
+		LI.Log("While checking " .. LI.ShortName(pending.key) .. ": " .. msg)
+	end
+end)
 
 function Reader.Retry()
 	LI.test.auto.streak = 0
@@ -348,11 +395,11 @@ function Reader.Read()
 				end
 				LI.Log(string.format("Read %s's %s automatically (%d recipes)", LI.ShortName(key), name, count))
 			end
-			Finish(job, "ok")
 			if api.CloseTradeSkill then
 				LI.Try(api.CloseTradeSkill)
 			end
 			Reveal()
+			Finish(job, "ok")
 		else
 			if not clicked or clicked.counted ~= key .. "|" .. profKey then
 				LI.test.click = LI.test.click + 1
@@ -395,8 +442,46 @@ local function ScheduleRead()
 	LI.After(0.3, Reader.Read)
 end
 
+function Reader.ProbeTimeout()
+	if #latencies == 0 then
+		return PROBE_DEFAULT
+	end
+	local worst = 0
+	for _, v in ipairs(latencies) do
+		worst = math.max(worst, v)
+	end
+	return math.min(PROBE_MAX, math.max(PROBE_MIN, worst * 2.5))
+end
+
+local function Replied()
+	local job = pending
+	if not job or job.replied then
+		return
+	end
+	local api = C_TradeSkillUI
+	if api and api.IsTradeSkillLinked and LI.Safe(LI.Try(api.IsTradeSkillLinked)) == false then
+		return
+	end
+	job.replied = Now()
+	table.insert(latencies, job.replied - (job.started or job.replied))
+	while #latencies > 10 do
+		table.remove(latencies, 1)
+	end
+	if job.probe and not job.notified and LI.ProbeResult then
+		job.notified = true
+		LI.ProbeResult(job.key, true)
+	end
+	LI.After(TIMEOUT, function()
+		if pending == job then
+			CloseHidden()
+			Finish(job, "ok")
+		end
+	end)
+end
+
 LI.On("TRADE_SKILL_SHOW", function()
 	tradeOpen = true
+	Replied()
 	ScheduleRead()
 end)
 LI.On("TRADE_SKILL_LIST_UPDATE", function()

@@ -3,8 +3,13 @@ local ADDON, LI = ...
 local RECENT = 15 * 60
 local ROSTER_EVERY = 90
 
+local CHECK_VALID = 10 * 60
+local CHECK_TIMEOUT = 5
+
 local roster = {}
 local offlineAt = {}
+local checked = {}
+local pendingCheck
 
 local function SetRoster(source, fullName, online)
 	local key = LI.FullName(LI.Safe(fullName))
@@ -84,6 +89,15 @@ function LI.Status(key)
 			return "offline", seen
 		end
 	end
+	local who = checked[key]
+	if who and time() - who.at <= CHECK_VALID then
+		if who.online then
+			return "online", seen
+		end
+		if not seen or seen <= who.at then
+			return "offline", seen
+		end
+	end
 	if offlineAt[key] and (not seen or offlineAt[key] >= seen) then
 		return "offline", seen
 	end
@@ -110,10 +124,115 @@ local function NotFoundPattern()
 	return "^" .. escaped:gsub("%%%%s", "(.+)") .. "$"
 end
 
+local function SameName(a, b)
+	return type(a) == "string" and type(b) == "string" and LI.FullName(a):lower() == LI.FullName(b):lower()
+end
+
+local function FinishCheck(found, area)
+	local job = pendingCheck
+	if not job then
+		return
+	end
+	pendingCheck = nil
+	local name = LI.ShortName(job.key)
+	if found == nil then
+		LI.Print("No answer from /who for " .. name .. ". Try again in a moment.")
+		return
+	end
+	checked[job.key] = { online = found, at = time() }
+	local c = LI.crafters and LI.crafters[job.key]
+	if found then
+		offlineAt[job.key] = nil
+		if c then
+			c.seen = time()
+			if type(area) == "string" and area ~= "" then
+				c.where = area
+			end
+		end
+		LI.Print(LI.Colorize(name, LI.COLOR.GREEN) .. " is online" .. (type(area) == "string" and area ~= "" and (" in " .. area) or "") .. ".")
+	else
+		LI.Print(name .. " is offline.")
+	end
+	LI.Fire("StatusChanged")
+end
+
+local function ReadWho()
+	local job = pendingCheck
+	local list = C_FriendList
+	if not job or not list then
+		return
+	end
+	local count = LI.Safe(LI.Try(list.GetNumWhoResults))
+	if type(count) ~= "number" then
+		return
+	end
+	for i = 1, count do
+		local info = LI.Try(list.GetWhoInfo, i)
+		if type(info) == "table" and SameName(LI.Safe(info.fullName), job.key) then
+			FinishCheck(true, LI.Safe(info.area))
+			return
+		end
+	end
+	FinishCheck(false)
+end
+
+function LI.CheckOnline(key)
+	local list = C_FriendList
+	if not key or not list or not list.SendWho then
+		return false
+	end
+	if pendingCheck then
+		LI.Print("Still checking " .. LI.ShortName(pendingCheck.key) .. ".")
+		return false
+	end
+	local name = LI.ShortName(key)
+	local query = name
+	if C_NameUtil and C_NameUtil.ReplaceSurnameSeparatorWithLinkSeparator then
+		query = LI.Safe(LI.Try(C_NameUtil.ReplaceSurnameSeparatorWithLinkSeparator, name)) or name
+	end
+	local tag = type(WHO_TAG_EXACT) == "string" and WHO_TAG_EXACT or "n-"
+	local origin = Enum and Enum.SocialWhoOrigin and Enum.SocialWhoOrigin.Item
+	local job = { key = key }
+	pendingCheck = job
+	local ok = pcall(list.SendWho, tag .. query, origin)
+	if not ok then
+		pendingCheck = nil
+		LI.Print("Couldn't check " .. name .. " right now.")
+		return false
+	end
+	LI.After(CHECK_TIMEOUT, function()
+		if pendingCheck == job then
+			FinishCheck(nil)
+		end
+	end)
+	return true
+end
+
+function LI.IsChecking(key)
+	return pendingCheck ~= nil and pendingCheck.key == key
+end
+
 LI.On("CHAT_MSG_SYSTEM", function(msg)
 	msg = LI.Safe(msg)
 	if not LI.ready or type(msg) ~= "string" then
 		return
+	end
+	if pendingCheck then
+		local name = LI.ShortName(pendingCheck.key)
+		if msg:find(name, 1, true) then
+			FinishCheck(true, msg:match("%s%-%s([^%-]+)$"))
+			return
+		end
+		local total = type(WHO_NUM_RESULTS) == "string" and WHO_NUM_RESULTS:match(";%s*(.-)$")
+		local count = tonumber(msg:match("^(%d+)%s"))
+		if count and total and total ~= "" and msg:find(total, 1, true) then
+			if count == 0 then
+				FinishCheck(false)
+			else
+				LI.After(0.2, ReadWho)
+			end
+			return
+		end
 	end
 	local pattern = NotFoundPattern()
 	local name = pattern and msg:match(pattern)
@@ -124,6 +243,10 @@ LI.On("CHAT_MSG_SYSTEM", function(msg)
 			LI.Fire("StatusChanged")
 		end
 	end
+end)
+
+LI.On("WHO_LIST_UPDATE", function()
+	LI.After(0.1, ReadWho)
 end)
 
 LI.On("GUILD_ROSTER_UPDATE", ReadGuild)

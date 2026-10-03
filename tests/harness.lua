@@ -228,7 +228,19 @@ local function InstallStubs()
 		return g.name, "", 0, 60, "", "", "", "", g.online
 	end
 	_G.C_GuildInfo = { GuildRoster = function() W.rosterRequests = (W.rosterRequests or 0) + 1 end }
-	_G.C_FriendList = { GetNumFriends = function() return 0 end, GetFriendInfoByIndex = function() return nil end, ShowFriends = function() end }
+	W.who = W.who or {}
+	_G.C_FriendList = {
+		GetNumFriends = function() return 0 end,
+		GetFriendInfoByIndex = function() return nil end,
+		ShowFriends = function() end,
+		SendWho = function(filter, origin) table.insert(W.who, { filter = filter, origin = origin }) end,
+		GetNumWhoResults = function() return #(W.whoResults or {}) end,
+		GetWhoInfo = function(i) return W.whoResults[i] end,
+	}
+	_G.C_NameUtil = { ReplaceSurnameSeparatorWithLinkSeparator = function(name) return (name:gsub(" ", "+")) end }
+	_G.WHO_TAG_EXACT = "x-"
+	_G.WHO_NUM_RESULTS = "%d |4player:players; total"
+	_G.Enum = { SocialWhoOrigin = { Item = 3 } }
 	_G.GetNumGroupMembers = function() return 0 end
 	_G.ERR_CHAT_PLAYER_NOT_FOUND_S = "No player named '%s' is currently playing."
 	_G.C_TradeSkillUI = {
@@ -518,18 +530,75 @@ Advance(1)
 check(Shape() == "#alchemy Brew Cora #tailoring Bob Anna", "clicking it again expands it", Shape())
 LI.SetRecipes("Anna Smith-TestRealm", { name = "Alchemy", rank = 40 }, { { id = 2330, name = "Minor Healing Potion", item = 118 } }, "click")
 Advance(1)
-check(Shape() == "#alchemy Brew Anna Cora #tailoring Bob Anna", "someone with two professions is listed under both", Shape())
-local annaAlch = main.list.__rows[3]
+check(Shape() == "#alchemy Brew Cora Anna #tailoring Bob Anna", "someone with two professions is listed under both, higher skill first", Shape())
+local annaAlch = main.list.__rows[4]
 check(annaAlch.books[1].key == "alchemy" and annaAlch.books[2].key == "tailoring" and annaAlch.books[2]:IsShown(), "their row still shows every profession button")
 LI.crafters["Anna Smith-TestRealm"].profs.alchemy = nil
 LI.Fire("CraftersChanged")
 Advance(1)
+
+local coraRow = main.list.__rows[3]
+check(coraRow.entry.key == "Cora Vale-TestRealm", "found Cora's row", coraRow.entry.key)
+coraRow.__scripts.OnClick(coraRow, "RightButton")
+local checkEntry
+for _, e in ipairs(W.lastMenu.entries) do
+	if e.text == "Check if online" then checkEntry = e end
+end
+check(checkEntry ~= nil, "the menu offers Check if online")
+check(LI.Status("Cora Vale-TestRealm") ~= "online", "Cora starts out not online")
+checkEntry.a()
+check(W.who[1] and W.who[1].filter == "x-Cora+Vale" and W.who[1].origin == 3, "the check sends an exact /who with the surname joined", W.who[1] and W.who[1].filter)
+check(LI.CheckOnline("Anna Smith-TestRealm") == false and #W.who == 1, "only one check runs at a time")
+Fire("CHAT_MSG_SYSTEM", "You have learned a new spell.")
+Advance(1)
+check(LI.IsChecking("Cora Vale-TestRealm"), "unrelated system messages don't end the check")
+W.whoResults = { { fullName = "Cora Vale", area = "Orgrimmar", level = 60 } }
+Fire("WHO_LIST_UPDATE")
+Advance(1)
+check(LI.Status("Cora Vale-TestRealm") == "online", "a /who hit marks the crafter online")
+check(LI.crafters["Cora Vale-TestRealm"].where == "Orgrimmar", "the zone from /who is shown", LI.crafters["Cora Vale-TestRealm"].where)
+local said = false
+for _, m in ipairs(W.chat) do
+	if m:find("is online in Orgrimmar", 1, true) then said = true end
+end
+check(said, "the result is printed in chat")
+check(Shape():find("#alchemy Brew Cora", 1, true) == 1, "the list refreshes with the new status", Shape())
+
+W.whoResults = {}
+LI.CheckOnline("Bob Stone-TestRealm")
+Fire("CHAT_MSG_SYSTEM", "0 players total")
+Advance(1)
+check(not LI.IsChecking("Bob Stone-TestRealm"), "zero results end the check")
+check(LI.Status("Bob Stone-TestRealm") == "online", "guild status still wins over /who for guild members")
+
+LI.CheckOnline("Anna Smith-TestRealm")
+Fire("CHAT_MSG_SYSTEM", "0 players total")
+Advance(1)
+check(LI.Status("Anna Smith-TestRealm") == "offline", "zero results mark the crafter offline")
+LI.CheckOnline("Anna Smith-TestRealm")
+Fire("CHAT_MSG_SYSTEM", "[Anna Smith]: Level 60 Human Priest - Stormwind City")
+Advance(1)
+check(LI.Status("Anna Smith-TestRealm") == "online" and LI.crafters["Anna Smith-TestRealm"].where == "Stormwind City", "a /who line printed to chat counts too", LI.crafters["Anna Smith-TestRealm"].where)
+LI.CheckOnline("Anna Smith-TestRealm")
+Advance(6)
+check(not LI.IsChecking("Anna Smith-TestRealm"), "a check with no answer gives up")
+check(LI.Status("Anna Smith-TestRealm") == "online", "no answer keeps the last known status")
+LI.crafters["Anna Smith-TestRealm"].where = "Trade"
+
+local function Fake(key, rank, count, seen)
+	return { key = key, status = "offline", seenAt = seen, crafter = { profs = { tailoring = { name = "Tailoring", rank = rank, count = count } } }, groups = { { key = "tailoring", confidence = 2, makes = 0 } } }
+end
+local order = {}
+for _, row in ipairs(LI.Group({ Fake("a", 100, 5, 1), Fake("b", 300, 2, 1), Fake("c", 300, 9, 1), Fake("d", 300, 9, 5) })[1].rows) do
+	order[#order + 1] = row.entry.key
+end
+check(table.concat(order) == "dcba", "rows sort by skill, then recipes, then last seen", table.concat(order))
 main.search.__scripts.OnTextChanged(main.search)
 main.search:SetText("mooncloth")
 main.search.__scripts.OnTextChanged(main.search)
 Advance(1)
-check(Shape() == "#tailoring Bob Anna", "typing in the search box filters the list", Shape())
-local annaRow = main.list.__rows[3]
+check(Shape() == "#tailoring Anna Bob", "typing in the search box filters the list, sure matches first among online crafters", Shape())
+local annaRow = main.list.__rows[2]
 local annaBook = annaRow.books and annaRow.books[1]
 check(annaBook and annaBook:IsShown() and annaBook.key == "tailoring", "each row shows a button per profession")
 check(annaBook and annaBook.match and annaBook.glow:IsShown(), "the profession that matches the search is highlighted")

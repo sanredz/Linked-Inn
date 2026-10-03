@@ -400,6 +400,15 @@ function LI.Group(results)
 			if a.match.confidence ~= b.match.confidence then
 				return a.match.confidence > b.match.confidence
 			end
+			local pa, pb = a.entry.crafter.profs[a.prof] or {}, b.entry.crafter.profs[b.prof] or {}
+			local ka, kb = pa.rank or 0, pb.rank or 0
+			if ka ~= kb then
+				return ka > kb
+			end
+			local na, nb = pa.count or 0, pb.count or 0
+			if na ~= nb then
+				return na > nb
+			end
 			local sa, sb = a.entry.seenAt or 0, b.entry.seenAt or 0
 			if sa ~= sb then
 				return sa > sb

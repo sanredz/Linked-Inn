@@ -181,6 +181,11 @@ local function RowMenu(row)
 		root:CreateButton("Whisper", function()
 			UI.Whisper(entry.key)
 		end)
+		if entry.key ~= LI.playerKey then
+			root:CreateButton("Check if online", function()
+				LI.CheckOnline(entry.key)
+			end)
+		end
 		for _, item in ipairs(SortedProfs(entry.crafter)) do
 			if item.p.link then
 				root:CreateButton("Open " .. (item.p.name or item.key), function()

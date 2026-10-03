@@ -20,6 +20,9 @@ local nextAt = 0
 local readScheduled = false
 local tip
 local lastAuto
+local hooked = false
+local concealed = false
+local PANELS = { "left", "center", "right", "doublewide", "fullscreen" }
 
 local function Now()
 	return GetTime()
@@ -72,6 +75,72 @@ local function FrameShown()
 	return frame and frame.IsShown and frame:IsShown() and true or false
 end
 
+local function FrameVisible()
+	if not FrameShown() then
+		return false
+	end
+	local alpha = LI.Try(ProfessionsFrame.GetAlpha, ProfessionsFrame)
+	return (alpha or 1) > 0.05
+end
+
+local function Reveal()
+	if concealed and ProfessionsFrame then
+		LI.Try(ProfessionsFrame.SetAlpha, ProfessionsFrame, 1)
+	end
+	concealed = false
+end
+
+local function HookFrame()
+	local frame = ProfessionsFrame
+	if hooked or not frame or not frame.HookScript then
+		return hooked
+	end
+	hooked = true
+	frame:HookScript("OnShow", function(self)
+		if pending then
+			self:SetAlpha(0)
+			concealed = true
+		end
+	end)
+	frame:HookScript("OnHide", Reveal)
+	return true
+end
+
+local function EnsureFrame()
+	if not ProfessionsFrame then
+		if ProfessionsFrame_LoadUI then
+			LI.Try(ProfessionsFrame_LoadUI)
+		elseif C_AddOns and C_AddOns.LoadAddOn then
+			LI.Try(C_AddOns.LoadAddOn, "Blizzard_Professions")
+		end
+	end
+	return HookFrame()
+end
+
+local function PanelOpen()
+	if FrameShown() then
+		return true
+	end
+	if not GetUIPanel then
+		return false
+	end
+	for _, key in ipairs(PANELS) do
+		if LI.Try(GetUIPanel, key) then
+			return true
+		end
+	end
+	return false
+end
+
+local function CloseHidden()
+	if concealed then
+		if C_TradeSkillUI and C_TradeSkillUI.CloseTradeSkill then
+			LI.Try(C_TradeSkillUI.CloseTradeSkill)
+		end
+		Reveal()
+	end
+end
+
 local function Finish(outcome)
 	local auto = LI.test.auto
 	if outcome == "ok" then
@@ -99,9 +168,10 @@ local function Pump()
 	if InCombatLockdown and InCombatLockdown() then
 		return
 	end
-	if ChatActive() then
+	if ChatActive() or PanelOpen() then
 		return
 	end
+	EnsureFrame()
 	local job = table.remove(queue)
 	pending = job
 	job.started = Now()
@@ -119,6 +189,7 @@ local function Pump()
 		if pending == job then
 			LI.Log("No reply for " .. LI.ShortName(job.key) .. "'s " .. tostring(job.prof))
 			Finish("timeout")
+			CloseHidden()
 		end
 	end)
 end
@@ -233,7 +304,7 @@ function Reader.Read()
 		local count = LI.SetRecipes(key, info, list, via)
 		if job then
 			lastAuto = { key = key, at = Now() }
-			if FrameShown() then
+			if FrameVisible() then
 				LI.test.auto.flashed = LI.test.auto.flashed + 1
 			end
 			LI.Log(string.format("Read %s's %s automatically (%d recipes)", LI.ShortName(key), name, count))
@@ -241,6 +312,7 @@ function Reader.Read()
 			if api.CloseTradeSkill then
 				LI.Try(api.CloseTradeSkill)
 			end
+			Reveal()
 		else
 			if not clicked or clicked.counted ~= key .. "|" .. profKey then
 				LI.test.click = LI.test.click + 1
@@ -251,6 +323,7 @@ function Reader.Read()
 			end
 		end
 	else
+		Reveal()
 		if #list == 0 or not LI.playerKey then
 			return
 		end
@@ -289,6 +362,12 @@ LI.On("TRADE_SKILL_DATA_SOURCE_CHANGED", function()
 end)
 LI.On("TRADE_SKILL_CLOSE", function()
 	tradeOpen = false
+end)
+
+LI.On("ADDON_LOADED", function(name)
+	if name == "Blizzard_Professions" then
+		HookFrame()
+	end
 end)
 
 LI.Listen("Ready", function()

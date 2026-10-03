@@ -85,6 +85,15 @@ function methods:SetDataProvider(dp)
 	self.__count = #dp.list
 end
 function methods:SetElementInitializer(_, fn) self.__init = fn end
+function methods:HookScript(k, fn)
+	local old = self.__scripts[k]
+	self.__scripts[k] = function(...)
+		if old then old(...) end
+		fn(...)
+	end
+end
+function methods:SetAlpha(a) self.__alpha = a end
+function methods:GetAlpha() return self.__alpha or 1 end
 function methods:SetHyperlink(link)
 	table.insert(W.hyperlinks, link)
 	if W.autoWorks then
@@ -93,7 +102,10 @@ function methods:SetHyperlink(link)
 			if data then
 				W.trade = { linked = true, linkedName = data.linkedName, prof = data.prof, recipes = data.recipes }
 				W.Fire("TRADE_SKILL_SHOW")
+				if ProfessionsFrame then ProfessionsFrame:Show() end
 				W.Fire("TRADE_SKILL_LIST_UPDATE")
+			elseif W.showEmpty and ProfessionsFrame then
+				ProfessionsFrame:Show()
 			end
 		end)
 	end
@@ -251,6 +263,7 @@ local function InstallStubs()
 			W.closed = W.closed + 1
 			W.trade = nil
 			Fire("TRADE_SKILL_CLOSE")
+			if ProfessionsFrame then ProfessionsFrame:Hide() end
 		end,
 	}
 end
@@ -532,14 +545,71 @@ check(LI.test.auto.ok == 1, "retrying reads again", LI.test.auto.ok)
 LI.UI.Refresh()
 check(LinkedInnFrame.testPage.head.__text == "Chat alone is enough", "a later success changes the verdict")
 
-ProfessionsFrame = NewMock("Frame", "ProfessionsFrame")
+local loads = 0
+_G.ProfessionsFrame_LoadUI = function()
+	loads = loads + 1
+	ProfessionsFrame = NewMock("Frame", "ProfessionsFrame")
+	ProfessionsFrame:Hide()
+	Fire("ADDON_LOADED", "Blizzard_Professions")
+	return true
+end
+local alphas = {}
 W.linkData["trade:Player-2-2:3908:197"] = { linkedName = "Mage2 Test", prof = TAILORING, recipes = TAILOR_RECIPES }
 Say("CHAT_MSG_CHANNEL", TradeLink("Player-2-2", 3908, 197, "Tailoring"), "Mage2 Test-TestRealm", "Player-2-2", "Trade - City")
+for _ = 1, 30 do
+	Advance(1)
+	if ProfessionsFrame and ProfessionsFrame:IsShown() then alphas[#alphas + 1] = ProfessionsFrame:GetAlpha() end
+end
+check(loads == 1, "the professions window is loaded before the first automatic read", loads)
+check(#alphas == 0 or math.max(table.unpack(alphas)) == 0, "the profession window stays invisible during automatic reads", alphas[1])
+check(LI.test.auto.flashed == 0, "no flash is counted when the window stays hidden", LI.test.auto.flashed)
+check(ProfessionsFrame:GetAlpha() == 1 and not ProfessionsFrame:IsShown(), "the window is closed and made visible again afterwards")
+check(LI.crafters["Mage2 Test-TestRealm"].profs.tailoring.via == "auto", "the hidden read still saves recipes")
+ProfessionsFrame:Show()
+check(ProfessionsFrame:GetAlpha() == 1, "opening the window yourself is not hidden")
+ProfessionsFrame:Hide()
+
+local tries = LI.test.auto.tries
+_G.GetUIPanel = function(key) if key == "left" then return W.openPanel end end
+W.openPanel = NewMock("Frame", "CharacterFrame")
+W.linkData["trade:Player-2-3:3908:197"] = { linkedName = "Mage3 Test", prof = TAILORING, recipes = TAILOR_RECIPES }
+Say("CHAT_MSG_CHANNEL", TradeLink("Player-2-3", 3908, 197, "Tailoring"), "Mage3 Test-TestRealm", "Player-2-3", "Trade - City")
 Advance(30)
-check(LI.test.auto.flashed >= 1, "a profession window that pops up is noticed", LI.test.auto.flashed)
-LI.UI.Refresh()
-check(LinkedInnFrame.testPage.head.__text == "Chat alone works, but a window pops up", "the verdict mentions the popup")
-ProfessionsFrame = nil
+check(LI.test.auto.tries == tries, "nothing is read while another window is open")
+W.openPanel = nil
+Advance(12)
+check(LI.test.auto.tries > tries, "reading resumes when the window closes")
+Advance(60)
+
+W.autoWorks = false
+W.showEmpty = true
+local before = W.closed
+W.guids["Player-2-7"] = { class = "MAGE", name = "Mage7 Test", realm = "" }
+Say("CHAT_MSG_CHANNEL", TradeLink("Player-2-7", 3908, 197, "Tailoring"), "Mage7 Test-TestRealm", "Player-2-7", "Trade - City")
+local origHyper = methods.SetHyperlink
+methods.SetHyperlink = function(self, link)
+	table.insert(W.hyperlinks, link)
+	ProfessionsFrame:Show()
+end
+Advance(30)
+methods.SetHyperlink = origHyper
+check(W.closed > before and not ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() == 1, "a hidden window with no reply is closed and restored")
+W.showEmpty = false
+
+W.guids["Player-2-8"] = { class = "MAGE", name = "Mage8 Test", realm = "" }
+Say("CHAT_MSG_CHANNEL", TradeLink("Player-2-8", 3908, 197, "Tailoring"), "Mage8 Test-TestRealm", "Player-2-8", "Trade - City")
+local escaped
+methods.SetHyperlink = function(self, link)
+	ProfessionsFrame:Show()
+	C_Timer.After(0.5, function()
+		ProfessionsFrame:Hide()
+		escaped = ProfessionsFrame:GetAlpha()
+	end)
+end
+Advance(12)
+methods.SetHyperlink = origHyper
+check(escaped == 1, "a hidden window closed some other way is made visible again at once", escaped)
+
 
 local before = LI.test.links
 Fire("CHAT_MSG_CHANNEL", { __secret = true }, { __secret = true }, "", "", "", "", 0, 0, "", 0, 1, { __secret = true })

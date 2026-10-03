@@ -96,6 +96,8 @@ function methods:HookScript(k, fn)
 end
 function methods:SetAlpha(a) self.__alpha = a end
 function methods:SetEnabled(v) self.__disabled = not v end
+function methods:SetSize(w, h) self.__w, self.__h = w, h end
+function methods:SetElementExtentCalculator(fn) self.__extent = fn end
 function methods:IsEnabled() return not self.__disabled end
 function methods:GetAlpha() return self.__alpha or 1 end
 function methods:SetHyperlink(link)
@@ -894,6 +896,20 @@ main.maxBox:SetChecked(false)
 main.maxBox.__scripts.OnClick(main.maxBox)
 Advance(1)
 check(Shape() == "#alchemy Cora #tailoring Anna Bob", "unticking shows everyone again", Shape())
+local extent = main.list.__view.__extent
+check(extent(1, { entry = {} }) == 46 and extent(1, { header = true }) == 34, "normal rows are tall")
+main.compactBox:SetChecked(true)
+main.compactBox.__scripts.OnClick(main.compactBox)
+Advance(1)
+check(LI.settings.compact and extent(1, { entry = {} }) == 24 and extent(1, { header = true }) == 34, "compact rows are about half the height, headers stay")
+local compactRow = main.list.__rows[2]
+check(compactRow.compact and compactRow.icon.__w == 18 and compactRow.pill.__w == 44 and compactRow.books[1].__w == 18, "compact shrinks the icon, pill and profession buttons")
+check(compactRow.line.__text == "Skill 150  ·  1 recipes" and compactRow.name:IsShown(), "skill and recipes sit next to the name", compactRow.line.__text)
+check(not compactRow.books[1].rank:IsShown(), "compact hides the skill number on the buttons, it's in the text")
+main.compactBox:SetChecked(false)
+main.compactBox.__scripts.OnClick(main.compactBox)
+Advance(1)
+check(not main.list.__rows[2].compact and main.list.__rows[2].icon.__w == 30 and main.list.__rows[2].books[1].rank:IsShown(), "unticking brings the full rows back")
 
 LI.SetRecipes("Dan Cook-TestRealm", { name = "Cooking", rank = 225 }, { { id = 818, name = "Spiced Wolf Meat", item = 2680 } }, "click")
 Advance(1)

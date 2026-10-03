@@ -20,6 +20,12 @@ local ART = "Interface\\AddOns\\" .. ADDON .. "\\art\\"
 local FRESH = 15 * 60
 local WARM = 3 * 3600
 local HEADER_HEIGHT = 34
+local COMPACT_HEIGHT = 24
+local COMPACT_ICON = 18
+local COMPACT_BOOK = 18
+local COMPACT_PILL_WIDTH = 44
+local COMPACT_PILL_HEIGHT = 16
+local NAME_MAX = 170
 
 local SEEN_COLOR = {
 	online = { 0.35, 0.95, 0.45 },
@@ -305,8 +311,43 @@ local function Book(row, i)
 	return book
 end
 
+local function Compact()
+	return LI.settings.compact == true
+end
+
+local function LayoutRow(row)
+	local compact = Compact()
+	if row.compact == compact then
+		return
+	end
+	row.compact = compact
+	row.icon:ClearAllPoints()
+	row.name:ClearAllPoints()
+	row.line:ClearAllPoints()
+	if compact then
+		row.icon:SetSize(COMPACT_ICON, COMPACT_ICON)
+		row.icon:SetPoint("LEFT", ICON_X + (ICON_SIZE - COMPACT_ICON) / 2, 0)
+		row.name:SetFontObject("GameFontNormal")
+		row.name:SetPoint("LEFT", ICON_X + ICON_SIZE + 10, 0)
+		row.line:SetPoint("LEFT", row.name, "RIGHT", 10, 0)
+		row.pill:SetSize(COMPACT_PILL_WIDTH, COMPACT_PILL_HEIGHT)
+	else
+		row.icon:SetSize(ICON_SIZE, ICON_SIZE)
+		row.icon:SetPoint("LEFT", ICON_X, 0)
+		row.name:SetFontObject("GameFontNormalLarge")
+		row.name:SetWidth(0)
+		row.name:SetPoint("TOPLEFT", row.icon, "TOPRIGHT", 10, 1)
+		row.line:SetPoint("BOTTOMLEFT", row.icon, "BOTTOMRIGHT", 10, 0)
+		row.pill:SetSize(PILL_WIDTH, PILL_HEIGHT)
+	end
+end
+
 local function UpdateBooks(row, data)
 	local entry = data.entry
+	local compact = Compact()
+	local size = compact and COMPACT_BOOK or BOOK_SIZE
+	local gap = compact and 4 or BOOK_GAP
+	local right = compact and (PILL_RIGHT + COMPACT_PILL_WIDTH + 12) or STATUS_WIDTH
 	local profs = SortedProfs(entry.crafter)
 	local matchKey = data.match and data.match.recipeMeta and data.prof
 	for i, item in ipairs(profs) do
@@ -324,16 +365,23 @@ local function UpdateBooks(row, data)
 		else
 			book.glow:Hide()
 		end
+		book:SetSize(size, size)
+		book.rank:SetShown(not compact)
 		book:ClearAllPoints()
-		book:SetPoint("RIGHT", row, "RIGHT", -STATUS_WIDTH - (i - 1) * (BOOK_SIZE + BOOK_GAP), 0)
+		book:SetPoint("RIGHT", row, "RIGHT", -right - (i - 1) * (size + gap), 0)
 		book:Show()
 	end
 	for i = #profs + 1, #(row.books or {}) do
 		row.books[i]:Hide()
 	end
-	local shelf = #profs * (BOOK_SIZE + BOOK_GAP)
-	row.line:SetPoint("RIGHT", row, "RIGHT", -STATUS_WIDTH - shelf - 4, 0)
-	row.name:SetPoint("RIGHT", row, "RIGHT", -STATUS_WIDTH - shelf - 4, 0)
+	local shelf = #profs * (size + gap)
+	row.line:SetPoint("RIGHT", row, "RIGHT", -right - shelf - 4, 0)
+	if compact then
+		local width = LI.Try(row.name.GetStringWidth, row.name) or 0
+		row.name:SetWidth(math.min(math.max(width, 1), NAME_MAX))
+	else
+		row.name:SetPoint("RIGHT", row, "RIGHT", -right - shelf - 4, 0)
+	end
 end
 
 local function ToggleGroup(key)
@@ -573,6 +621,7 @@ local function InitRow(row, data)
 	end
 	ShowParts(row.headParts, false)
 	ShowParts(row.rowParts, true)
+	LayoutRow(row)
 	local entry = data.entry
 	row.entry = entry
 	local c = entry.crafter
@@ -620,7 +669,10 @@ local function CreateList(parent)
 	local view = CreateScrollBoxListLinearView()
 	if view.SetElementExtentCalculator then
 		view:SetElementExtentCalculator(function(_, data)
-			return data.header and HEADER_HEIGHT or ROW_HEIGHT
+			if data.header then
+				return HEADER_HEIGHT
+			end
+			return Compact() and COMPACT_HEIGHT or ROW_HEIGHT
 		end)
 	else
 		view:SetElementExtent(ROW_HEIGHT)
@@ -707,17 +759,18 @@ local function UpdateChips()
 		chip.icon:SetAlpha(on and 1 or (any and 0.55) or (info.count == 0 and 0.45) or 1)
 		chip.count:SetText(info.count > 0 and tostring(info.count) or "")
 		chip:ClearAllPoints()
-		chip:SetPoint("LEFT", main.chipBar, "LEFT", (i - 1) * 38 + 3, 0)
+		chip:SetPoint("LEFT", main.chipBar, "LEFT", (i - 1) * 36 + 3, 0)
 		chip:Show()
 	end
 	for i = #profs + 1, #chips do
 		chips[i]:Hide()
 	end
 	main.clearChips:ClearAllPoints()
-	main.clearChips:SetPoint("LEFT", main.chipBar, "LEFT", #profs * 38 + 4, 0)
+	main.clearChips:SetPoint("LEFT", main.chipBar, "LEFT", #profs * 36 + 4, 0)
 	main.clearChips:SetShown(any)
 	main.secondaryBox:SetChecked(LI.settings.secondary and true or false)
 	main.maxBox:SetChecked(LI.settings.maxOnly and true or false)
+	main.compactBox:SetChecked(LI.settings.compact and true or false)
 end
 
 local function RefreshFind()
@@ -929,6 +982,8 @@ function UI.Refresh()
 	main.chipBar:SetShown(findShown)
 	main.secondaryBox:SetShown(findShown)
 	main.maxBox:SetShown(findShown)
+	main.compactBox:SetShown(findShown)
+	main.compactLabel:SetShown(findShown)
 	main.maxLabel:SetShown(findShown)
 	main.secondaryLabel:SetShown(findShown)
 	main.count:SetShown(findShown)
@@ -1049,12 +1104,12 @@ local function CreateMain()
 	main.secondaryLabel:SetPoint("LEFT", main.secondaryBox, "RIGHT", 0, 0)
 	main.secondaryLabel:SetText("Secondary")
 
-	main.maxLabel = Text(main.chipBar, "GameFontHighlightSmall", "RIGHT")
-	main.maxLabel:SetPoint("RIGHT", main.chipBar, "RIGHT", -6, 0)
-	main.maxLabel:SetText("Max skill")
-	main.maxBox = CreateFrame("CheckButton", nil, main.chipBar, "UICheckButtonTemplate")
+	main.maxBox = CreateFrame("CheckButton", nil, main, "UICheckButtonTemplate")
 	main.maxBox:SetSize(24, 24)
-	main.maxBox:SetPoint("RIGHT", main.maxLabel, "LEFT", 0, 0)
+	main.maxBox:SetPoint("TOPLEFT", main.secondaryBox, "BOTTOMLEFT", 0, -11)
+	main.maxLabel = Text(main, "GameFontHighlightSmall")
+	main.maxLabel:SetPoint("LEFT", main.maxBox, "RIGHT", 0, 0)
+	main.maxLabel:SetText("Max skill only")
 	main.maxBox:SetScript("OnClick", function(self)
 		LI.settings.maxOnly = self:GetChecked() and true or false
 		Sound(LI.settings.maxOnly and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
@@ -1062,7 +1117,7 @@ local function CreateMain()
 	end)
 	main.maxBox:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-		GameTooltip:SetText("Max skill", 1, 0.82, 0)
+		GameTooltip:SetText("Max skill only", 1, 0.82, 0)
 		GameTooltip:AddLine("Only crafters at the highest skill level.", 1, 1, 1, true)
 		GameTooltip:Show()
 	end)
@@ -1105,6 +1160,17 @@ local function CreateMain()
 
 	main.count = Text(main, "GameFontDisableSmall", "RIGHT")
 	main.count:SetPoint("BOTTOMRIGHT", -12, 8)
+	main.compactBox = CreateFrame("CheckButton", nil, main, "UICheckButtonTemplate")
+	main.compactBox:SetSize(20, 20)
+	main.compactBox:SetPoint("BOTTOMLEFT", 10, 3)
+	main.compactBox:SetScript("OnClick", function(self)
+		LI.settings.compact = self:GetChecked() and true or false
+		Sound(LI.settings.compact and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
+		UI.Refresh()
+	end)
+	main.compactLabel = Text(main, "GameFontDisableSmall")
+	main.compactLabel:SetPoint("LEFT", main.compactBox, "RIGHT", 0, 0)
+	main.compactLabel:SetText("Compact")
 
 	for i, name in ipairs(TABS) do
 		local tab = CreateFrame("Button", "LinkedInnFrameTab" .. i, main, "PanelTabButtonTemplate")

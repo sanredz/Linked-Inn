@@ -60,6 +60,7 @@ local DEFAULTS = {
 	share = true,
 	secondary = false,
 	maxOnly = false,
+	compact = false,
 	profs = {},
 	kind = "all",
 	minimap = { angle = 200 },

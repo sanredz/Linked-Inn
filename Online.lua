@@ -86,7 +86,7 @@ function LI.Status(key)
 			return "online", seen
 		end
 		if entry.group == false or entry.guild == false or entry.friend == false then
-			return "offline", seen
+			return "offline", seen, true
 		end
 	end
 	local who = checked[key]
@@ -95,11 +95,11 @@ function LI.Status(key)
 			return "online", seen
 		end
 		if not seen or seen <= who.at then
-			return "offline", seen
+			return "offline", seen, true
 		end
 	end
 	if offlineAt[key] and (not seen or offlineAt[key] >= seen) then
-		return "offline", seen
+		return "offline", seen, true
 	end
 	if seen and time() - seen <= RECENT then
 		return "recent", seen
@@ -203,6 +203,7 @@ function LI.CheckOnline(key)
 	LI.After(CHECK_TIMEOUT, function()
 		if pendingCheck == job then
 			FinishCheck(nil)
+			LI.Fire("StatusChanged")
 		end
 	end)
 	return true

@@ -294,7 +294,7 @@ function LI.Search(query, opts)
 		end
 	end
 	for key, c in pairs(LI.crafters) do
-		local status, seenAt = LI.Status(key)
+		local status, seenAt, sure = LI.Status(key)
 		if (not opts.onlineOnly or status == "online") and (not profFilter or c.profs[profFilter]) then
 			local nameMatch = q ~= "" and kind == "all" and Find(LI.ShortName(key), q)
 			local groups, top = {}, nil
@@ -338,6 +338,7 @@ function LI.Search(query, opts)
 					crafter = c,
 					status = status,
 					seenAt = seenAt,
+					sure = sure,
 					groups = groups,
 					recipe = top.recipe,
 					recipeMeta = top.recipeMeta,

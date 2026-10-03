@@ -9,13 +9,17 @@ local TITLE_FONT = "Fonts\\MORPHEUS.TTF"
 local ROW_HEIGHT = 46
 local BOOK_SIZE = 30
 local BOOK_GAP = 6
-local STATUS_WIDTH = 96
+local STATUS_WIDTH = 66
+local FRESH = 15 * 60
+local WARM = 3 * 3600
 local HEADER_HEIGHT = 34
 
-local STATUS = {
-	online = { icon = "Interface\\FriendsFrame\\StatusIcon-Online", color = { 0.35, 0.95, 0.45 } },
-	recent = { icon = "Interface\\FriendsFrame\\StatusIcon-Away", color = { 1.00, 0.82, 0.30 } },
-	offline = { icon = "Interface\\FriendsFrame\\StatusIcon-Offline", color = { 0.55, 0.55, 0.55 } },
+local SEEN_COLOR = {
+	online = { 0.35, 0.95, 0.45 },
+	fresh = { 0.80, 0.95, 0.45 },
+	warm = { 1.00, 0.82, 0.30 },
+	cold = { 0.55, 0.55, 0.55 },
+	gone = { 0.45, 0.45, 0.45 },
 }
 
 local SOFT = { 0.72, 0.68, 0.60 }
@@ -121,18 +125,35 @@ local function ProfLine(c, only)
 	return table.concat(parts, "  ·  ")
 end
 
-local function StatusText(entry)
+local function Seen(entry)
+	if LI.IsChecking(entry.key) then
+		return "...", SEEN_COLOR.warm
+	end
 	if entry.status == "online" then
-		return "Online"
+		return "now", SEEN_COLOR.online
 	end
-	if entry.seenAt then
-		local ago = LI.Ago(entry.seenAt)
-		if ago == "just now" then
-			return "Seen just now"
-		end
-		return "Seen " .. ago
+	local text = LI.ShortAgo(entry.seenAt)
+	if entry.sure then
+		return text, SEEN_COLOR.gone
 	end
-	return "Offline"
+	local age = entry.seenAt and (time() - entry.seenAt) or math.huge
+	if age <= FRESH then
+		return text, SEEN_COLOR.fresh
+	elseif age <= WARM then
+		return text, SEEN_COLOR.warm
+	end
+	return text, SEEN_COLOR.cold
+end
+
+local function SeenLine(entry)
+	if entry.status == "online" then
+		return "Online now"
+	end
+	local line = entry.seenAt and ("Last seen " .. LI.Ago(entry.seenAt)) or "Not seen yet"
+	if entry.sure then
+		return "Offline  ·  " .. line:lower()
+	end
+	return line
 end
 
 local function ShowRowTooltip(row)
@@ -159,8 +180,8 @@ local function ShowRowTooltip(row)
 		GameTooltip:AddDoubleLine(name, right, 1, 1, 1, SOFT[1], SOFT[2], SOFT[3])
 	end
 	GameTooltip:AddLine(" ")
-	local st = STATUS[entry.status] or STATUS.offline
-	GameTooltip:AddDoubleLine(StatusText(entry), c.where and ("in " .. c.where) or "", st.color[1], st.color[2], st.color[3], SOFT[1], SOFT[2], SOFT[3])
+	local _, color2 = Seen(entry)
+	GameTooltip:AddDoubleLine(SeenLine(entry), c.where and ("in " .. c.where) or "", color2[1], color2[2], color2[3], SOFT[1], SOFT[2], SOFT[3])
 	if entry.recipeMeta and entry.makes > 1 then
 		GameTooltip:AddLine(string.format("Can make %d items that match your search", entry.makes), CAN[1], CAN[2], CAN[3], true)
 	end
@@ -181,11 +202,6 @@ local function RowMenu(row)
 		root:CreateButton("Whisper", function()
 			UI.Whisper(entry.key)
 		end)
-		if entry.key ~= LI.playerKey then
-			root:CreateButton("Check if online", function()
-				LI.CheckOnline(entry.key)
-			end)
-		end
 		for _, item in ipairs(SortedProfs(entry.crafter)) do
 			if item.p.link then
 				root:CreateButton("Open " .. (item.p.name or item.key), function()
@@ -318,19 +334,50 @@ local function BuildRow(row)
 	row.icon = row:CreateTexture(nil, "ARTWORK")
 	row.icon:SetSize(30, 30)
 	row.icon:SetPoint("LEFT", 14, 0)
-	row.dot = row:CreateTexture(nil, "OVERLAY")
-	row.dot:SetSize(14, 14)
-	row.dot:SetPoint("TOPLEFT", row.icon, "TOPRIGHT", 8, -1)
 	row.name = Text(row, "GameFontNormalLarge")
-	row.name:SetPoint("LEFT", row.dot, "RIGHT", 3, 0)
+	row.name:SetPoint("TOPLEFT", row.icon, "TOPRIGHT", 10, 1)
 	row.name:SetWordWrap(false)
 	row.line = Text(row, "GameFontHighlightSmall")
 	row.line:SetPoint("BOTTOMLEFT", row.icon, "BOTTOMRIGHT", 10, 0)
 	row.line:SetWordWrap(false)
-	row.status = Text(row, "GameFontHighlightSmall", "RIGHT")
-	row.status:SetPoint("TOPRIGHT", -12, -9)
-	row.where = Text(row, "GameFontDisableSmall", "RIGHT")
-	row.where:SetPoint("TOPRIGHT", row.status, "BOTTOMRIGHT", 0, -4)
+
+	row.check = CreateFrame("Button", nil, row)
+	row.check:SetSize(16, 16)
+	row.check:SetPoint("RIGHT", -10, 0)
+	row.check.icon = row.check:CreateTexture(nil, "ARTWORK")
+	row.check.icon:SetAllPoints()
+	if not pcall(row.check.icon.SetAtlas, row.check.icon, "common-search-magnifyingglass") then
+		row.check.icon:SetTexture("Interface\\Buttons\\UI-RefreshButton")
+	end
+	row.check:SetAlpha(0.35)
+	row.check:SetScript("OnClick", function(self)
+		local entry = self:GetParent().entry
+		if entry and LI.CheckOnline(entry.key) then
+			Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
+			UI.Refresh()
+		end
+	end)
+	row.check:SetScript("OnEnter", function(self)
+		self:SetAlpha(1)
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText("Check if online", 1, 0.82, 0)
+		GameTooltip:AddLine("Asks the server with /who. One at a time.", 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	row.check:SetScript("OnLeave", function(self)
+		self:SetAlpha(0.35)
+		GameTooltip:Hide()
+	end)
+
+	row.seen = Text(row, "GameFontHighlightSmall", "RIGHT")
+	row.seen:SetPoint("RIGHT", row.check, "LEFT", -5, 0)
+	row.seenDot = row:CreateTexture(nil, "OVERLAY")
+	row.seenDot:SetSize(8, 8)
+	row.seenDot:SetPoint("RIGHT", row.seen, "LEFT", -4, 0)
+	local mask = row:CreateMaskTexture()
+	mask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+	mask:SetAllPoints(row.seenDot)
+	row.seenDot:AddMaskTexture(mask)
 
 	row.toggle = row:CreateTexture(nil, "ARTWORK")
 	row.toggle:SetSize(14, 14)
@@ -350,15 +397,17 @@ local function BuildRow(row)
 	row.headLine:SetPoint("BOTTOMRIGHT", -6, 2)
 	row.headLine:SetColorTexture(1, 0.82, 0, 0.35)
 
-	row.rowParts = { row.icon, row.dot, row.name, row.line, row.status, row.where }
+	row.rowParts = { row.icon, row.name, row.line, row.check, row.seen, row.seenDot }
 	row.headParts = { row.toggle, row.headIcon, row.headName, row.headCount, row.headLine }
 
 	row:SetScript("OnEnter", function(self)
 		if self.data and not self.data.header then
+			self.check:SetAlpha(0.8)
 			ShowRowTooltip(self)
 		end
 	end)
-	row:SetScript("OnLeave", function()
+	row:SetScript("OnLeave", function(self)
+		self.check:SetAlpha(0.35)
 		GameTooltip:Hide()
 	end)
 	row:SetScript("OnClick", function(self, button)
@@ -455,11 +504,11 @@ local function InitRow(row, data)
 	local color = LI.ClassColor(c.class) or LI.COLOR.WHITE
 	row.name:SetText(LI.ShortName(entry.key))
 	row.name:SetTextColor(color[1], color[2], color[3])
-	local st = STATUS[entry.status] or STATUS.offline
-	row.dot:SetTexture(st.icon)
-	row.status:SetText(StatusText(entry))
-	row.status:SetTextColor(st.color[1], st.color[2], st.color[3])
-	row.where:SetText(c.where or "")
+	local seenText, seenColor = Seen(entry)
+	row.seen:SetText(seenText)
+	row.seen:SetTextColor(seenColor[1], seenColor[2], seenColor[3])
+	row.seenDot:SetColorTexture(seenColor[1], seenColor[2], seenColor[3], 1)
+	row.check:SetShown(entry.key ~= LI.playerKey)
 	local text, textColor = RowLine(data)
 	row.line:SetText(text)
 	row.line:SetTextColor(textColor[1], textColor[2], textColor[3])

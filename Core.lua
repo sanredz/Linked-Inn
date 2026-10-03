@@ -229,6 +229,23 @@ function LI.Ago(timestamp)
 	return LI.Duration(seconds) .. " ago"
 end
 
+function LI.ShortAgo(timestamp)
+	if not timestamp then
+		return "?"
+	end
+	local seconds = math.max(0, time() - timestamp)
+	if seconds < 60 then
+		return "now"
+	elseif seconds < 3600 then
+		return math.floor(seconds / 60) .. "m"
+	elseif seconds < 86400 then
+		return math.floor(seconds / 3600) .. "h"
+	elseif seconds < 14 * 86400 then
+		return math.floor(seconds / 86400) .. "d"
+	end
+	return math.floor(seconds / (7 * 86400)) .. "w"
+end
+
 function LI.Date(timestamp)
 	return date("%Y-%m-%d", timestamp or time())
 end

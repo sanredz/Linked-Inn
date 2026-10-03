@@ -73,6 +73,8 @@ function methods:GetEffectiveScale() return 1 end
 function methods:GetFrameLevel() return 1 end
 function methods:CreateTexture() return NewMock("Texture") end
 function methods:CreateFontString() return NewMock("FontString") end
+function methods:CreateMaskTexture() return NewMock("MaskTexture") end
+function methods:GetParent() return self.__parent end
 function methods:SetTexture(t) self.__texture = t end
 function methods:SetDataProvider(dp)
 	local view = self.__view
@@ -150,8 +152,9 @@ local function InstallStubs()
 	_G.date = os.date
 	_G.GetTime = function() return W.clock end
 	_G.geterrorhandler = function() return function(e) table.insert(W.errors, tostring(e)); print("ERROR: " .. tostring(e)) end end
-	_G.CreateFrame = function(kind, name)
+	_G.CreateFrame = function(kind, name, parent)
 		local m = NewMock(kind, name)
+		m.__parent = parent
 		if name then _G[name] = m end
 		return m
 	end
@@ -377,6 +380,8 @@ Setup()
 Boot()
 check(LI.ready and LI.playerKey == "Brew Master-TestRealm" or LI.playerKey == "Brew-Master-TestRealm", "player key has the surname", LI.playerKey)
 check(LI.settings.autoRead == true, "automatic reading is on by default")
+local agos = { LI.ShortAgo(time() - 30), LI.ShortAgo(time() - 300), LI.ShortAgo(time() - 7300), LI.ShortAgo(time() - 3 * 86400), LI.ShortAgo(time() - 21 * 86400), LI.ShortAgo(nil) }
+check(table.concat(agos, ",") == "now,5m,2h,3d,3w,?", "short ages read now, minutes, hours, days, weeks", table.concat(agos, ","))
 
 Say("CHAT_MSG_CHANNEL", "WTB tailor " .. TradeLink("Player-1-AAA", 3908, 197, "Tailoring") .. " lol", "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
 local anna = LI.crafters["Anna Smith-TestRealm"]
@@ -539,14 +544,12 @@ Advance(1)
 
 local coraRow = main.list.__rows[3]
 check(coraRow.entry.key == "Cora Vale-TestRealm", "found Cora's row", coraRow.entry.key)
-coraRow.__scripts.OnClick(coraRow, "RightButton")
-local checkEntry
-for _, e in ipairs(W.lastMenu.entries) do
-	if e.text == "Check if online" then checkEntry = e end
-end
-check(checkEntry ~= nil, "the menu offers Check if online")
+check(coraRow.check:IsShown(), "each row has a small check button")
+check(not main.list.__rows[2].check:IsShown(), "your own row has no check button")
+check(#coraRow.seen.__text <= 4, "last seen is shown short", coraRow.seen.__text)
 check(LI.Status("Cora Vale-TestRealm") ~= "online", "Cora starts out not online")
-checkEntry.a()
+coraRow.check.__scripts.OnClick(coraRow.check)
+check(main.list.__rows[3].seen.__text == "...", "a running check shows dots", main.list.__rows[3].seen.__text)
 check(W.who[1] and W.who[1].filter == "x-Cora+Vale" and W.who[1].origin == 3, "the check sends an exact /who with the surname joined", W.who[1] and W.who[1].filter)
 check(LI.CheckOnline("Anna Smith-TestRealm") == false and #W.who == 1, "only one check runs at a time")
 Fire("CHAT_MSG_SYSTEM", "You have learned a new spell.")
@@ -562,6 +565,7 @@ for _, m in ipairs(W.chat) do
 	if m:find("is online in Orgrimmar", 1, true) then said = true end
 end
 check(said, "the result is printed in chat")
+check(main.list.__rows[3].seen.__text == "now", "a confirmed online crafter shows now", main.list.__rows[3].seen.__text)
 check(Shape():find("#alchemy Brew Cora", 1, true) == 1, "the list refreshes with the new status", Shape())
 
 W.whoResults = {}

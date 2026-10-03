@@ -4,10 +4,13 @@
 
 Find someone who can make what you need, for **World of Warcraft: Forever**.
 
-Linked Inn keeps a list of crafters for you. Search for an item, see who can
-make it and when they were last around, and whisper them with one click. If
-nobody's online, post a request and the crafters who can make it get a
-notice.
+Linked Inn builds a list of every crafter around you and everything they can
+make, all on its own. Just play: it fills up from profession links in chat and
+from other players using the addon, with nothing to set up or click.
+
+When you need something made, search for it and you'll see exactly who can
+make it in seconds, who's online right now, and whisper them with one click.
+Nobody around? Post a request and the crafters who can make it get a notice.
 
 > **Official download:** this repository's
 > [Releases](https://github.com/sanredz/Linked-Inn/releases) and CurseForge.

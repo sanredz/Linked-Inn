@@ -183,6 +183,7 @@ local function InstallStubs()
 		return nil
 	end
 	_G.UnitIsPlayer = function(u) return u == "player" or (W.units and W.units[u] and not W.units[u].npc) or false end
+	_G.UnitGUID = function(u) return W.units and W.units[u] and W.units[u].guid or nil end
 	_G.GetRealZoneText = function() return W.zone or "Stormwind City" end
 	_G.UnitClass = function() return "Mage", "MAGE" end
 	_G.C_AddOns = { GetAddOnMetadata = function(addon, field) if addon == ADDON_NAME and field == "Version" then return TOC_VERSION end end }
@@ -1240,6 +1241,40 @@ do
 	C_TradeSkillUI.GetProfessionInfoByRecipeID = function(id) if id == 7418 then return { professionName = "Enchanting" } end end
 	Say("CHAT_MSG_CHANNEL", "|cffffd000|Henchant:7418|h[Enchant Bracer - Minor Health]|h|r", "Ench Guy-TestRealm", "Player-1-EEE", "Trade - City")
 	check(LI.db.log[#LI.db.log].m:find("no enchanting link to copy yet", 1, true), "without a seen link of that profession it says so", LI.db.log[#LI.db.log].m)
+
+	local W2 = LI.ProfessionFromWords
+	check(W2("LFW enchanter, your mats + tips") == "enchanting", "an offer naming a profession is a clue")
+	check(W2("Tailor LFW, pst") == "tailoring" and W2("BS lfw cheap") == "blacksmithing", "short names count too")
+	check(W2("LF enchanter") == nil and W2("WTB enchants cheap") == nil and W2("any tailor can make bags?") == nil, "buyers asking for a crafter are not clues")
+	check(W2("lfw bs and lw") == nil and W2("selling linen cloth") == nil, "two professions or no offer means no guess")
+	local tries0 = LI.test.built.tries
+	W.guids["Player-1-HHH"] = { class = "ROGUE", name = "Words Guy", realm = "" }
+	W.linkData["trade:Player-1-HHH:3908:197"] = { linkedName = "Words Guy", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", "Tailor LFW, your mats + tips", "Words Guy-TestRealm", "Player-1-HHH", "Trade - City")
+	Advance(10)
+	check(LI.crafters["Words Guy-TestRealm"] and LI.crafters["Words Guy-TestRealm"].profs.tailoring.count == 2 and LI.test.built.tries == tries0 + 1, "a written offer leads to one read of that profession")
+	Say("CHAT_MSG_CHANNEL", "LF tailor to make bags", "Buyer Bee-TestRealm", "Player-1-JJJ", "Trade - City")
+	Advance(10)
+	check(LI.test.built.tries == tries0 + 1, "asking for a crafter sends nothing")
+
+	LI.db.profLinks.enchanting = { spell = 7411, line = 333 }
+	local ENCH = { professionName = "Enchanting", professionID = 333, skillLevel = 40, maxSkillLevel = 75 }
+	W.linkData["trade:Player-1-III:7411:333"] = { linkedName = "De Guy", prof = ENCH, recipes = { { id = 7418, name = "Enchant Bracer - Minor Health" } } }
+	W.units = { nameplate4 = { name = "De", surname = "Guy", guid = "Player-1-III" } }
+	Fire("UNIT_SPELLCAST_SUCCEEDED", "nameplate4", "cast-1", 13262)
+	Advance(10)
+	local de = LI.crafters["De Guy-TestRealm"]
+	check(de and de.profs.enchanting and de.profs.enchanting.count == 1 and de.where == "Stormwind City", "seeing someone disenchant reads their enchanting", de and de.where)
+	local tries1 = LI.test.built.tries
+	W.units = { target = { name = "Craft", surname = "Er", guid = "Player-1-KKK" }, mouseover = { name = "Mob", surname = "", npc = true, guid = "Creature-1" } }
+	Fire("UNIT_SPELLCAST_SUCCEEDED", "target", "cast-2", 133)
+	Fire("UNIT_SPELLCAST_SUCCEEDED", "mouseover", "cast-3", 18560)
+	Advance(10)
+	check(LI.test.built.tries == tries1, "ordinary spells and NPCs give no clue")
+	Fire("UNIT_SPELLCAST_SUCCEEDED", "target", "cast-4", 18560)
+	Advance(10)
+	check(LI.test.built.tries == tries1 + 1 and W.hyperlinks[#W.hyperlinks] == "trade:Player-1-KKK:3908:197", "seeing someone craft a known recipe reads that profession", W.hyperlinks[#W.hyperlinks])
+	W.units = nil
 	W.autoWorks = false
 end
 

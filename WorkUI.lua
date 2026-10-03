@@ -1018,6 +1018,23 @@ local function Knowers(recipe)
 	return keys
 end
 
+local function SampleHave(recipe, qty, mats)
+	local have = {}
+	local needs = LI.Work.Needs(recipe, qty)
+	for i, r in ipairs(needs) do
+		if mats == "all" then
+			have[r.id] = r.need
+		elseif mats == "some" then
+			if #needs == 1 then
+				have[r.id] = r.need > 1 and math.floor(r.need / 2) or nil
+			elseif i <= math.ceil(#needs / 2) then
+				have[r.id] = r.need
+			end
+		end
+	end
+	return have, LI.Work.MatsFor(recipe, qty, have)
+end
+
 local function BuildSample()
 	local now = time()
 	local foryou, mine = {}, {}
@@ -1034,9 +1051,10 @@ local function BuildSample()
 			break
 		end
 		local meta = LI.db.recipes[id]
+		local have, mats = SampleHave(id, s.qty, s.mats)
 		foryou[#foryou + 1] = {
 			id = "s" .. i, key = "sample:" .. i, owner = LI.FullName(SAMPLE_OWNERS[i]), item = meta.item, recipe = id,
-			qty = s.qty, mats = s.mats, price = s.price, note = s.note,
+			qty = s.qty, mats = mats, have = have, price = s.price, note = s.note,
 			expires = now + s.left * 60, heard = now - i * 90, posted = now - i * 90,
 			canMake = true, offered = s.offered,
 		}
@@ -1068,9 +1086,10 @@ local function BuildSample()
 			local key = knowers[k] or LI.FullName(SAMPLE_OFFERERS[k])
 			offers[key] = now - k * 70
 		end
+		local have, mats = SampleHave(id, s.qty, s.mats)
 		mine[#mine + 1] = {
 			id = "m" .. i, key = "mine:" .. i, owner = LI.playerKey, item = meta.item, recipe = id,
-			qty = s.qty, mats = s.mats, price = s.price, note = "",
+			qty = s.qty, mats = mats, have = have, price = s.price, note = "",
 			expires = now + s.left * 60, posted = now - i * 300, heard = now - i * 300,
 			offers = offers,
 		}

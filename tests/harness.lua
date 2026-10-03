@@ -1713,6 +1713,9 @@ do
 	page.views[2].__scripts.OnClick(page.views[2])
 	local sampleMine = page.list.__rows[1]
 	check(sampleMine and sampleMine.req.key == "mine:1" and sampleMine.chips[1] and sampleMine.chips[1]:IsShown(), "and My requests with offers", sampleMine and sampleMine.req.key)
+	for _, r in ipairs(page.list.__rows) do
+		check(LI.Work.MatsFor(r.req.recipe, r.req.qty, r.req.have) == r.req.mats, "sample mats match what each request brings", r.req.mats)
+	end
 	page.views[1].__scripts.OnClick(page.views[1])
 	page.list.__rows[1].offer.__scripts.OnClick(page.list.__rows[1].offer)
 	Advance(3)

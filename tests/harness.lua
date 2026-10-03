@@ -1280,6 +1280,8 @@ do
 		target = { name = "Scan", surname = "One", guid = "Player-2-AAA" },
 	}
 	W.plates = { "nameplate1", "nameplate2", "nameplate3", "nameplate4" }
+	LI.db.profLinks.alchemy = { spell = 2259, line = 171 }
+	W.linkData["trade:Player-2-AAA:2259:171"] = { linkedName = "Scan One", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
 	W.linkData["trade:Player-2-AAA:3908:197"] = { linkedName = "Scan One", prof = TAILORING, recipes = TAILOR_RECIPES }
 	W.linkData["trade:Player-2-AAA:7411:333"] = { linkedName = "Scan One", prof = ENCH, recipes = { { id = 7418, name = "Enchant Bracer - Minor Health" } } }
 	W.cvars.nameplateShowFriendlyPlayers = "0"
@@ -1292,14 +1294,19 @@ do
 	Advance(0.5)
 	check(W.cvars.nameplateShowFriendlyPlayers == "0", "and turned back off right after")
 	local done, total = LI.Reader.ScanProgress()
-	check(total == 4, "two friendly players times two known professions are asked; enemies, NPCs, duplicates are skipped", total)
+	check(total == 6, "two friendly players times three known professions are asked; enemies, NPCs, duplicates are skipped", total)
 	Advance(0.1)
 	LI.UI.Refresh()
 	check(main.scan:GetText():find("^Scanning") and not main.scan:IsEnabled(), "the button shows progress", main.scan:GetText())
 	Advance(10)
 	check(not LI.Reader.Scanning(), "the scan finishes")
 	local one = LI.crafters["Scan One-TestRealm"]
-	check(one and one.profs.tailoring and one.profs.enchanting and one.profs.enchanting.count == 1, "a scanned player gets every profession they have")
+	check(one and one.profs.alchemy and one.profs.enchanting and one.profs.enchanting.count == 1, "a scanned player gets their professions")
+	local askedTailoring = false
+	for _, h in ipairs(W.hyperlinks) do
+		if h == "trade:Player-2-AAA:3908:197" then askedTailoring = true end
+	end
+	check(not askedTailoring and not one.profs.tailoring, "after two professions are found, nothing more is asked")
 	check(not LI.crafters["Scan Two-TestRealm"] and not LI.crafters["Enemy Guy-TestRealm"], "players with no answer aren't added")
 	check(W.chat[#W.chat]:find("Scan done: 1 crafter among 2 players nearby.", 1, true), "a one-line summary goes to chat", W.chat[#W.chat])
 	local ready, why = LI.ScanReady()

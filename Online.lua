@@ -190,21 +190,12 @@ local function SameName(a, b)
 	return type(a) == "string" and type(b) == "string" and LI.FullName(a):lower() == LI.FullName(b):lower()
 end
 
-local function FinishCheck(found, area)
-	local job = pendingCheck
-	if not job then
-		return
-	end
-	pendingCheck = nil
-	local name = LI.ShortName(job.key)
-	if found == nil then
-		LI.Print("No answer from /who for " .. name .. ". Try again in a moment.")
-		return
-	end
-	checked[job.key] = { online = found, at = time() }
-	local c = LI.crafters and LI.crafters[job.key]
+local function RecordCheck(key, found, area)
+	local name = LI.ShortName(key)
+	checked[key] = { online = found, at = time() }
+	local c = LI.crafters and LI.crafters[key]
 	if found then
-		offlineAt[job.key] = nil
+		offlineAt[key] = nil
 		if c then
 			c.seen = time()
 			if type(area) == "string" and area ~= "" then
@@ -218,10 +209,48 @@ local function FinishCheck(found, area)
 	LI.Fire("StatusChanged")
 end
 
+local function FinishCheck(found, area)
+	local job = pendingCheck
+	if not job then
+		return
+	end
+	pendingCheck = nil
+	if found == nil then
+		LI.Print("No answer from /who for " .. LI.ShortName(job.key) .. ". Try again in a moment.")
+		return
+	end
+	RecordCheck(job.key, found, area)
+end
+
+function LI.ProbeResult(key, found)
+	if pendingCheck and pendingCheck.key == key and pendingCheck.probe then
+		pendingCheck = nil
+		RecordCheck(key, found)
+	end
+end
+
+function LI.MarkOffline(key)
+	if key and LI.crafters and LI.crafters[key] then
+		offlineAt[key] = time()
+		LI.Fire("StatusChanged")
+	end
+end
+
+local function ProbeLink(key)
+	local c = LI.crafters and LI.crafters[key]
+	local best
+	for _, p in pairs(c and c.profs or {}) do
+		if type(p.link) == "string" and (not best or (p.read or 0) > (best.read or 0)) then
+			best = p
+		end
+	end
+	return best and best.link
+end
+
 local function ReadWho()
 	local job = pendingCheck
 	local list = C_FriendList
-	if not job or not list then
+	if not job or job.probe or not list then
 		return
 	end
 	local count = LI.Safe(LI.Try(list.GetNumWhoResults))
@@ -246,6 +275,11 @@ function LI.CheckOnline(key)
 	if pendingCheck then
 		LI.Print("Still checking " .. LI.ShortName(pendingCheck.key) .. ".")
 		return false
+	end
+	local link = ProbeLink(key)
+	if link and LI.Reader and LI.Reader.Probe(key, link) then
+		pendingCheck = { key = key, probe = true }
+		return true
 	end
 	local name = LI.ShortName(key)
 	local query = name
@@ -280,7 +314,7 @@ LI.On("CHAT_MSG_SYSTEM", function(msg)
 	if not LI.ready or type(msg) ~= "string" then
 		return
 	end
-	if pendingCheck then
+	if pendingCheck and not pendingCheck.probe then
 		local name = LI.ShortName(pendingCheck.key)
 		if msg:find(name, 1, true) then
 			FinishCheck(true, msg:match("%s%-%s([^%-]+)$"))

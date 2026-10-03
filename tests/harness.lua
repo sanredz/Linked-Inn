@@ -619,13 +619,55 @@ LI.crafters["Anna Smith-TestRealm"].profs.alchemy = nil
 LI.Fire("CraftersChanged")
 Advance(1)
 
-local coraRow = main.list.__rows[2]
-check(coraRow.entry.key == "Cora Vale-TestRealm", "found Cora's row", coraRow.entry.key)
+local triesBefore, streakBefore = LI.test.auto.tries, LI.test.auto.streak
+local hyperBefore = #W.hyperlinks
+W.autoWorks = true
+check(LI.CheckOnline("Cora Vale-TestRealm") and LI.IsChecking("Cora Vale-TestRealm"), "with a stored link, the online check probes the profession")
+check(W.hyperlinks[hyperBefore + 1] == "trade:Player-1-CCC:2259:171" and #W.who == 0, "the probe asks for the link, not /who", W.hyperlinks[hyperBefore + 1])
+Advance(3)
+check(not LI.IsChecking("Cora Vale-TestRealm") and LI.Status("Cora Vale-TestRealm") == "online", "a reply means they're online")
+check(LI.test.auto.tries == triesBefore, "probes don't count as automatic reads")
+local annaLink = "trade:Player-1-AAA:3908:197"
+local annaData = W.linkData[annaLink]
+W.linkData[annaLink] = nil
+LI.CheckOnline("Anna Smith-TestRealm")
+Advance(7)
+check(not LI.IsChecking("Anna Smith-TestRealm") and LI.Status("Anna Smith-TestRealm") == "offline", "no reply means they're offline")
+check(LI.test.auto.streak == streakBefore and LI.test.auto.timeout == 0, "an offline probe doesn't count against automatic reading")
+W.linkData[annaLink] = annaData
+W.autoWorks = false
+Advance(10)
+
+local stash = {}
+for _, c in pairs(LI.crafters) do
+	for _, prof in pairs(c.profs) do
+		if prof.link then
+			stash[#stash + 1] = { p = prof, link = prof.link }
+			prof.link = nil
+		end
+	end
+end
+LI.ToggleFavorite("Cora Vale-TestRealm")
+LI.ToggleFavorite("Cora Vale-TestRealm")
+local coraRow
+for _, row in ipairs(main.list.__rows) do
+	if row.entry and row.entry.key == "Cora Vale-TestRealm" then coraRow = row end
+end
+LI.UI.Refresh()
+for _, row in ipairs(main.list.__rows) do
+	if row.entry and row.entry.key == "Cora Vale-TestRealm" then coraRow = row end
+end
+check(coraRow and coraRow.entry.key == "Cora Vale-TestRealm", "found Cora's row")
 check(coraRow.pill:IsShown(), "each row has a last seen pill")
-check(#coraRow.pill.text.__text <= 4, "last seen is shown short", coraRow.pill.text.__text)
-check(LI.Status("Cora Vale-TestRealm") ~= "online", "Cora starts out not online")
+check(#coraRow.pill.text.__text <= 7, "last seen is shown short", coraRow.pill.text.__text)
+local function CoraRow()
+	for _, row in ipairs(main.list.__rows) do
+		if row.entry and row.entry.key == "Cora Vale-TestRealm" then return row end
+	end
+end
 coraRow.pill.__scripts.OnClick(coraRow.pill)
-check(main.list.__rows[2].pill.text.__text == "...", "clicking the pill starts a check and shows dots", main.list.__rows[2].pill.text.__text)
+coraRow = CoraRow()
+check(coraRow.pill.text.__text == "...", "clicking the pill starts a check and shows dots", coraRow.pill.text.__text)
 check(W.who[1] and W.who[1].filter == "x-Cora+Vale" and W.who[1].origin == 3, "the check sends an exact /who with the surname joined", W.who[1] and W.who[1].filter)
 check(LI.CheckOnline("Anna Smith-TestRealm") == false and #W.who == 1, "only one check runs at a time")
 Fire("CHAT_MSG_SYSTEM", "You have learned a new spell.")
@@ -641,7 +683,8 @@ for _, m in ipairs(W.chat) do
 	if m:find("is online in Orgrimmar", 1, true) then said = true end
 end
 check(said, "the result is printed in chat")
-check(main.list.__rows[2].pill.text.__text == "online", "a confirmed online crafter's pill says online", main.list.__rows[2].pill.text.__text)
+coraRow = CoraRow()
+check(coraRow.pill.text.__text == "online", "a confirmed online crafter's pill says online", coraRow.pill.text.__text)
 
 W.whoResults = {}
 LI.CheckOnline("Bob Stone-TestRealm")
@@ -674,6 +717,9 @@ for _, row in ipairs(main.list.__rows) do
 	if row.entry and row.entry.key == "Cora Vale-TestRealm" then coraNow = row end
 end
 check(coraNow and coraNow.pill.text.__text == "offline", "a confirmed offline crafter's pill says offline", coraNow and coraNow.pill.text.__text)
+for _, item in ipairs(stash) do
+	item.p.link = item.link
+end
 
 local favRow
 for _, row in ipairs(main.list.__rows) do

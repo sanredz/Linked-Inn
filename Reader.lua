@@ -141,7 +141,15 @@ local function CloseHidden()
 	end
 end
 
-local function Finish(outcome)
+local function Finish(job, outcome)
+	if job.probe then
+		pending = nil
+		nextAt = Now() + GAP
+		if LI.ProbeResult then
+			LI.ProbeResult(job.key, outcome == "ok")
+		end
+		return
+	end
 	local auto = LI.test.auto
 	if outcome == "ok" then
 		auto.ok = auto.ok + 1
@@ -149,6 +157,9 @@ local function Finish(outcome)
 	elseif outcome == "timeout" then
 		auto.timeout = auto.timeout + 1
 		auto.streak = auto.streak + 1
+		if LI.MarkOffline then
+			LI.MarkOffline(job.key)
+		end
 	elseif outcome == "err" then
 		auto.err = auto.err + 1
 		auto.streak = auto.streak + 1
@@ -157,6 +168,8 @@ local function Finish(outcome)
 	nextAt = Now() + GAP
 	LI.Fire("TestChanged")
 end
+
+local Start
 
 local function Pump()
 	if not LI.ready or not LI.settings.autoRead or pending or tradeOpen or Reader.IsBroken() then
@@ -171,27 +184,44 @@ local function Pump()
 	if ChatActive() or PanelOpen() then
 		return
 	end
-	EnsureFrame()
 	local job = table.remove(queue)
+	LI.test.auto.tries = LI.test.auto.tries + 1
+	Start(job)
+end
+
+Start = function(job)
+	EnsureFrame()
 	pending = job
 	job.started = Now()
-	LI.test.auto.tries = LI.test.auto.tries + 1
 	local t = Tip()
 	LI.Try(t.SetOwner, t, WorldFrame or UIParent, "ANCHOR_NONE")
 	local ok, err = pcall(t.SetHyperlink, t, job.link)
 	LI.Try(t.Hide, t)
 	if not ok then
 		LI.Log("Automatic read failed: " .. tostring(err):sub(1, 120))
-		Finish("err")
+		Finish(job, "err")
 		return
 	end
 	LI.After(TIMEOUT, function()
 		if pending == job then
-			LI.Log("No reply for " .. LI.ShortName(job.key) .. "'s " .. tostring(job.prof))
-			Finish("timeout")
+			if not job.probe then
+				LI.Log("No reply for " .. LI.ShortName(job.key) .. "'s " .. tostring(job.prof) .. ", probably offline")
+			end
+			Finish(job, "timeout")
 			CloseHidden()
 		end
 	end)
+end
+
+function Reader.Probe(key, link)
+	if not LI.ready or not key or type(link) ~= "string" or pending or tradeOpen then
+		return false
+	end
+	if (InCombatLockdown and InCombatLockdown()) or PanelOpen() then
+		return false
+	end
+	Start({ key = key, link = link, probe = true })
+	return true
 end
 
 function Reader.Retry()
@@ -304,11 +334,13 @@ function Reader.Read()
 		local count = LI.SetRecipes(key, info, list, via)
 		if job then
 			lastAuto = { key = key, at = Now() }
-			if FrameVisible() then
-				LI.test.auto.flashed = LI.test.auto.flashed + 1
+			if not job.probe then
+				if FrameVisible() then
+					LI.test.auto.flashed = LI.test.auto.flashed + 1
+				end
+				LI.Log(string.format("Read %s's %s automatically (%d recipes)", LI.ShortName(key), name, count))
 			end
-			LI.Log(string.format("Read %s's %s automatically (%d recipes)", LI.ShortName(key), name, count))
-			Finish("ok")
+			Finish(job, "ok")
 			if api.CloseTradeSkill then
 				LI.Try(api.CloseTradeSkill)
 			end

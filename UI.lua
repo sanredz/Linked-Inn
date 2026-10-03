@@ -85,14 +85,6 @@ function UI.Whisper(key)
 	end
 end
 
-local function OpenLink(p)
-	if p and p.link and SetItemRef then
-		SetItemRef(p.link, p.text or "", "LeftButton")
-		return true
-	end
-	return false
-end
-
 local function KindName(key)
 	for _, k in ipairs(LI.KINDS) do
 		if k.key == key then
@@ -235,11 +227,9 @@ local function RowMenu(row)
 			UI.Whisper(entry.key)
 		end)
 		for _, item in ipairs(SortedProfs(entry.crafter)) do
-			if item.p.link then
-				root:CreateButton("Open " .. (item.p.name or item.key), function()
-					OpenLink(item.p)
-				end)
-			end
+			root:CreateButton("Open " .. (item.p.name or item.key), function()
+				LI.Book.Open(entry.key, item.key, filter.search)
+			end)
 		end
 		root:CreateButton("Forget this crafter", function()
 			LI.Forget(entry.key)
@@ -266,11 +256,7 @@ local function ShowBookTooltip(book)
 	if book.match then
 		GameTooltip:AddLine("Can make what you searched for", CAN[1], CAN[2], CAN[3])
 	end
-	if p.link then
-		GameTooltip:AddLine("Click to open their recipes", 0.5, 0.5, 0.5)
-	else
-		GameTooltip:AddLine("Can't be opened until they link it", 0.5, 0.5, 0.5)
-	end
+	GameTooltip:AddLine("Click to see their recipes", 0.5, 0.5, 0.5)
 	GameTooltip:Show()
 end
 
@@ -305,7 +291,9 @@ local function Book(row, i)
 		self.icon:SetAllPoints()
 	end)
 	book:SetScript("OnClick", function(self)
-		if OpenLink(self.prof) then
+		local entry = self:GetParent().entry
+		if entry then
+			LI.Book.Open(entry.key, self.key, filter.search)
 			Sound("IG_SPELLBOOK_OPEN")
 		end
 	end)
@@ -327,8 +315,8 @@ local function UpdateBooks(row, data)
 		book.prof, book.key = p, item.key
 		book.match = matchKey == item.key
 		book.icon:SetTexture(LI.ProfIcon(item.key, p.icon))
-		book.icon:SetDesaturated(not p.link)
-		book.icon:SetAlpha(p.link and 1 or 0.6)
+		book.icon:SetDesaturated(not p.recipes)
+		book.icon:SetAlpha(p.recipes and 1 or 0.6)
 		book.rank:SetText(p.rank and p.rank > 0 and tostring(p.rank) or "")
 		if book.match then
 			book.glow:SetColorTexture(CAN[1], CAN[2], CAN[3], 0.75)

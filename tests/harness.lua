@@ -253,12 +253,27 @@ local function InstallStubs()
 		local p = W.profs[i]
 		return p.name, p.icon or 777, p.rank, p.max
 	end
-	_G.C_Item = { GetItemInfoInstant = function(id)
-		local classID = W.items[id]
-		return id, "x", "y", "", 1, classID, 0
-	end }
+	_G.C_Item = {
+		GetItemInfoInstant = function(id)
+			local classID = W.items[id]
+			return id, "x", "y", "", 1, classID, 0
+		end,
+		GetItemInfo = function(id)
+			if id == 14155 then return "Mooncloth Bag", "|cff0070dd|Hitem:14155::::::::60:::::|h[Mooncloth Bag]|h|r" end
+			return nil
+		end,
+		GetItemQualityByID = function(id) return id == 14155 and 3 or 1 end,
+		RequestLoadItemDataByID = function() end,
+	}
 	_G.C_ClassColor = { GetClassColor = function(c) return { r = 0.5, g = 0.5, b = 1, class = c } end }
-	_G.ChatFrameUtil = { SendTell = function(name) table.insert(W.tells, name) end }
+	W.editBox = { text = "", Insert = function(self, t) self.text = self.text .. t end }
+	W.links = {}
+	_G.ChatFrameUtil = {
+		SendTell = function(name) table.insert(W.tells, name) W.editBox.text = "" W.typing = true end,
+		GetActiveWindow = function() return W.typing and W.editBox or nil end,
+		InsertLink = function(link) table.insert(W.links, link) return true end,
+	}
+	_G.IsShiftKeyDown = function() return W.shift == true end
 	_G.IsInGuild = function() return #W.guild > 0 end
 	_G.GetNumGuildMembers = function() return #W.guild end
 	_G.GetGuildRosterInfo = function(i)
@@ -579,6 +594,7 @@ check(bobRow.line.__text == "Skill 260  ·  recipes not read yet" or bobRow.line
 check(rows[5].line.__text == "Skill 260  ·  2 recipes", "skill and recipe count are shown", rows[5].line.__text)
 bobRow.__scripts.OnClick(bobRow, "LeftButton")
 check(W.tells[1] == "Bob Stone", "clicking a row whispers the crafter by name without the realm", W.tells[1])
+W.typing = false
 bobRow.__scripts.OnClick(bobRow, "RightButton")
 check(W.lastMenu and W.lastMenu.entries[2] and W.lastMenu.entries[2].text == "Whisper", "right-click opens a menu with Whisper")
 local opened = false
@@ -763,7 +779,41 @@ check(annaBook and annaBook.rank.__text == "260", "the profession button shows t
 local refs = W.itemRefs or 0
 local whispers = #W.tells
 annaBook.__scripts.OnClick(annaBook)
-check((W.itemRefs or 0) == refs + 1 and #W.tells == whispers, "clicking a profession button opens it without whispering")
+local book = LinkedInnBook
+check(book and book:IsShown() and #W.tells == whispers and (W.itemRefs or 0) == refs, "clicking a profession button opens the recipe book, not a whisper or the live window")
+check(LI.Book.Current().key == "Anna Smith-TestRealm" and LI.Book.Current().prof == "tailoring", "the book shows that crafter's profession")
+check(book.search.__text == "mooncloth" and #book.list.__rows == 1 and book.list.__rows[1].name.__text == "Mooncloth Bag", "the book opens filtered to what you searched for", #book.list.__rows)
+check(book.prof.__text == "Tailoring  260/300" and book.info.__text:find("2 recipes", 1, true), "the book header shows skill and recipe count", book.info.__text)
+book.search:SetText("")
+book.search.__scripts.OnTextChanged(book.search)
+check(#book.list.__rows == 2 and book.list.__rows[1].name.__text == "Brown Linen Pants", "clearing the book search lists every recipe alphabetically", #book.list.__rows)
+local bag = book.list.__rows[2]
+bag.__scripts.OnClick(bag)
+check(W.tells[#W.tells] == "Anna Smith" and W.editBox.text == "Hi! Could you make |cff0070dd|Hitem:14155::::::::60:::::|h[Mooncloth Bag]|h|r?", "clicking a recipe opens a whisper asking for it", W.editBox.text)
+W.shift = true
+local tellsNow = #W.tells
+bag.__scripts.OnClick(bag)
+W.shift = false
+check(#W.tells == tellsNow and W.links[#W.links]:find("Mooncloth Bag", 1, true), "shift-clicking a recipe links it in chat")
+local pants = book.list.__rows[1]
+pants.__scripts.OnClick(pants)
+check(W.editBox.text == "Hi! Could you make [Brown Linen Pants]?", "an uncached item still gets asked for by name", W.editBox.text)
+book.live.__scripts.OnClick(book.live)
+check((W.itemRefs or 0) == refs + 1, "Open in game still opens the live window")
+annaBook.__scripts.OnClick(annaBook)
+check(book:IsShown(), "opening with a search keeps the book open")
+main.search:SetText("")
+main.search.__scripts.OnTextChanged(main.search)
+Advance(1)
+for _, row in ipairs(main.list.__rows) do
+	if row.entry and row.entry.key == "Anna Smith-TestRealm" then annaBook = row.books[1] end
+end
+annaBook.__scripts.OnClick(annaBook)
+check(not book:IsShown(), "clicking the same profession again closes the book")
+annaBook.__scripts.OnClick(annaBook)
+check(book:IsShown() and book.search.__text == "", "and once more opens it, unfiltered")
+book:Hide()
+W.typing = false
 check(annaRow.line.__text and annaRow.line.__text:find("Can make Mooncloth Bag", 1, true), "the row says what the crafter can make", annaRow.line.__text)
 main.search:SetText("")
 main.search.__scripts.OnTextChanged(main.search)
@@ -1007,6 +1057,15 @@ check(LI.db.recipes[18560].n == "Mooncloth Bag" and LI.db.recipes[18560].k == "b
 local found = LI.Search("mooncloth")
 check(#found == 1 and found[1].key == "Brew Master-TestRealm" and found[1].makes == 1, "shared recipes are searchable")
 check(LI.test.sync.lists == 1, "the test counts lists received")
+local onlyIds = true
+for _, c in pairs(LI.crafters) do
+	for _, prof in pairs(c.profs) do
+		for id, v in pairs(prof.recipes or {}) do
+			if type(id) ~= "number" or v ~= true then onlyIds = false end
+		end
+	end
+end
+check(onlyIds and type(LI.db.recipes[18560]) == "table", "crafters store only recipe ids; names and icons live once in a shared dictionary")
 Addon(newHello, "Brew Master-TestRealm")
 Advance(130)
 check(#Sent("Q1") == 1, "a hello with a version you have asks nothing")

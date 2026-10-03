@@ -18,4 +18,5 @@ Capture.lua
 Reader.lua
 Sync.lua
 UI.lua
+Book.lua
 Minimap.lua

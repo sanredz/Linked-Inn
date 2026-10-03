@@ -4,6 +4,10 @@ local WorkUI = {}
 LI.WorkUI = WorkUI
 
 local ROW = 50
+local ROW_OFFERS = 78
+local CHIP_HEIGHT = 20
+local CHIP_MAX = 4
+local ART = "Interface\\AddOns\\" .. ADDON .. "\\art\\"
 local TITLE_FONT = "Fonts\\MORPHEUS.TTF"
 local SOFT = { 0.72, 0.68, 0.60 }
 local GREEN = { 0.35, 0.95, 0.45 }
@@ -300,7 +304,7 @@ local function RowTooltip(row)
 		GameTooltip:AddDoubleLine("Offering", WorkUI.Money(req.price), 0.7, 0.7, 0.7, 1, 1, 1)
 		GameTooltip:AddDoubleLine("Expires", Left(req), 0.7, 0.7, 0.7, 1, 1, 1)
 		GameTooltip:AddLine(" ")
-		GameTooltip:AddLine("Click to see who can make it   Right-click for offers", 0.5, 0.5, 0.5)
+		GameTooltip:AddLine("Click to see who can make it   Right-click for more", 0.5, 0.5, 0.5)
 	else
 		GameTooltip:AddDoubleLine("Requested by", LI.ShortName(req.owner), 0.7, 0.7, 0.7, 1, 1, 1)
 		GameTooltip:AddDoubleLine("Quantity", tostring(req.qty), 0.7, 0.7, 0.7, 1, 1, 1)
@@ -322,16 +326,6 @@ local function RowMenu(row)
 			root:CreateTitle((WorkUI.Name(req)))
 		end
 		if row.mine then
-			local any = false
-			for key in pairs(req.offers or {}) do
-				any = true
-				root:CreateButton("Whisper " .. LI.ShortName(key), function()
-					Whisper(key, "Hi! About my request for " .. ItemLink(req) .. ":")
-				end)
-			end
-			if not any and root.CreateTitle then
-				root:CreateTitle("No offers yet")
-			end
 			root:CreateButton("Show crafters who know it", function()
 				WorkUI.ShowCrafters(req)
 			end)
@@ -381,7 +375,7 @@ local function BuildRow(row)
 	row.accent:SetColorTexture(GREEN[1], GREEN[2], GREEN[3], 0.9)
 	row.edge = row:CreateTexture(nil, "BORDER")
 	row.edge:SetSize(36, 36)
-	row.edge:SetPoint("LEFT", 13, 0)
+	row.edge:SetPoint("TOPLEFT", 13, -7)
 	row.edge:SetColorTexture(0, 0, 0, 0.85)
 	row.icon = row:CreateTexture(nil, "ARTWORK")
 	row.icon:SetSize(34, 34)
@@ -398,7 +392,7 @@ local function BuildRow(row)
 	row.price = Text(row, "GameFontHighlight", "RIGHT")
 	row.price:SetPoint("TOPRIGHT", -12, -8)
 	row.state = Text(row, "GameFontHighlightSmall", "RIGHT")
-	row.state:SetPoint("BOTTOMRIGHT", -12, 9)
+	row.state:SetPoint("TOPRIGHT", -12, -29)
 	row.offer = Button(row, "I can make it", 104, function(self)
 		local req = self:GetParent().req
 		if req and LI.Work.Offer(req.key) then
@@ -406,7 +400,12 @@ local function BuildRow(row)
 		end
 	end)
 	row.offer:SetHeight(20)
-	row.offer:SetPoint("BOTTOMRIGHT", -8, 5)
+	row.offer:SetPoint("TOPRIGHT", -8, -24)
+	row.offersLabel = Text(row, "GameFontDisableSmall")
+	row.offersLabel:SetPoint("BOTTOMLEFT", row.edge, "BOTTOMRIGHT", 10, -22)
+	row.offersLabel:SetText("Offers:")
+	row.more = Text(row, "GameFontDisableSmall")
+	row.chips = {}
 	row:SetScript("OnEnter", RowTooltip)
 	row:SetScript("OnLeave", function()
 		GameTooltip:Hide()
@@ -426,6 +425,154 @@ local function BuildRow(row)
 	row.built = true
 end
 
+local function Offerer(chip)
+	local row = chip:GetParent()
+	return row.req, chip.key
+end
+
+local function ChipTooltip(chip)
+	local req, key = Offerer(chip)
+	if not req or not key then
+		return
+	end
+	local c = LI.crafters[key]
+	local color = LI.ClassColor(c and c.class) or LI.COLOR.WHITE
+	GameTooltip:SetOwner(chip, "ANCHOR_RIGHT")
+	GameTooltip:SetText(LI.ShortName(key), color[1], color[2], color[3])
+	local at = req.offers and req.offers[key]
+	if at then
+		GameTooltip:AddLine("Offered " .. LI.Ago(at), 1, 1, 1)
+	end
+	local meta = LI.db.recipes[req.recipe] or {}
+	local p = c and meta.p and c.profs[meta.p]
+	if p then
+		local skill = p.rank and string.format(" %d", p.rank) or ""
+		if p.recipes and p.recipes[req.recipe] then
+			GameTooltip:AddLine(string.format("%s%s, knows this recipe", p.name or meta.p, skill), 0.35, 0.95, 0.45)
+		else
+			GameTooltip:AddLine((p.name or meta.p) .. skill, 0.85, 0.85, 0.85)
+		end
+	end
+	local status, seen = LI.Status(key)
+	if status == "online" then
+		GameTooltip:AddLine("Online", 0.35, 0.95, 0.45)
+	elseif seen then
+		GameTooltip:AddLine("Last seen " .. LI.Ago(seen), 0.6, 0.6, 0.6)
+	end
+	GameTooltip:AddLine(" ")
+	GameTooltip:AddLine("Click to whisper   Right-click for more", 0.5, 0.5, 0.5)
+	GameTooltip:Show()
+end
+
+local function WhisperOfferer(req, key)
+	Whisper(key, "Hi! Thanks for offering to make " .. ItemLink(req) .. ". ")
+end
+
+local function ChipMenu(chip)
+	local req, key = Offerer(chip)
+	if not req or not key then
+		return
+	end
+	Menu(chip, function(root)
+		if root.CreateTitle then
+			root:CreateTitle(LI.ShortName(key))
+		end
+		root:CreateButton("Whisper", function()
+			WhisperOfferer(req, key)
+		end)
+		root:CreateButton("Invite to group", function()
+			local invite = (C_PartyInfo and C_PartyInfo.InviteUnit) or InviteUnit
+			if invite then
+				LI.Try(invite, LI.WhisperTarget(key))
+			end
+		end)
+		root:CreateButton("Remove offer", function()
+			LI.Work.RemoveOffer(req.id, key)
+		end)
+	end)
+end
+
+local function Chip(row, i)
+	local chip = row.chips[i]
+	if chip then
+		return chip
+	end
+	chip = CreateFrame("Button", nil, row)
+	chip:SetHeight(CHIP_HEIGHT)
+	chip:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	chip.fill = chip:CreateTexture(nil, "BACKGROUND")
+	chip.fill:SetAllPoints()
+	chip.fill:SetTexture(ART .. "pill")
+	chip.fill:SetTexCoord(0, 1, 0, 0.75)
+	chip.edge = chip:CreateTexture(nil, "BORDER")
+	chip.edge:SetAllPoints()
+	chip.edge:SetTexture(ART .. "pill_edge")
+	chip.edge:SetTexCoord(0, 1, 0, 0.75)
+	chip.dot = chip:CreateTexture(nil, "ARTWORK")
+	chip.dot:SetSize(12, 12)
+	chip.dot:SetPoint("LEFT", 7, 0)
+	chip.text = Text(chip, "GameFontHighlightSmall")
+	chip.text:SetPoint("LEFT", chip.dot, "RIGHT", 3, 0)
+	chip:SetScript("OnEnter", function(self)
+		self.fill:SetAlpha(1)
+		ChipTooltip(self)
+	end)
+	chip:SetScript("OnLeave", function(self)
+		self.fill:SetAlpha(0.7)
+		GameTooltip:Hide()
+	end)
+	chip:SetScript("OnClick", function(self, button)
+		local req, key = Offerer(self)
+		if not req then
+			return
+		end
+		if button == "RightButton" then
+			ChipMenu(self)
+		else
+			WhisperOfferer(req, key)
+		end
+	end)
+	row.chips[i] = chip
+	return chip
+end
+
+local function UpdateChips(row, req, show)
+	local offers = show and LI.Work.Offers(req) or {}
+	row.offersLabel:SetShown(#offers > 0)
+	local prev = row.offersLabel
+	for i = 1, math.max(#offers, #row.chips) do
+		local chip = row.chips[i]
+		local offer = offers[i]
+		if offer and i <= CHIP_MAX then
+			chip = Chip(row, i)
+			chip.key = offer.key
+			local c = LI.crafters[offer.key]
+			local color = LI.ClassColor(c and c.class) or LI.COLOR.WHITE
+			chip.text:SetText(LI.ShortName(offer.key))
+			chip.text:SetTextColor(color[1], color[2], color[3])
+			local online = LI.Status(offer.key) == "online"
+			chip.dot:SetTexture(online and "Interface\\FriendsFrame\\StatusIcon-Online" or "Interface\\FriendsFrame\\StatusIcon-Offline")
+			chip.fill:SetVertexColor(color[1], color[2], color[3], 0.25)
+			chip.fill:SetAlpha(0.7)
+			chip.edge:SetVertexColor(color[1], color[2], color[3], 0.8)
+			local width = LI.Try(chip.text.GetStringWidth, chip.text) or 60
+			chip:SetWidth(math.max(60, width + 32))
+			chip:ClearAllPoints()
+			chip:SetPoint("LEFT", prev, "RIGHT", 6, 0)
+			chip:Show()
+			prev = chip
+		elseif chip then
+			chip:Hide()
+		end
+	end
+	row.more:SetShown(#offers > CHIP_MAX)
+	if #offers > CHIP_MAX then
+		row.more:SetText(string.format("+%d more", #offers - CHIP_MAX))
+		row.more:ClearAllPoints()
+		row.more:SetPoint("LEFT", prev, "RIGHT", 8, 0)
+	end
+end
+
 local function InitRow(row, data)
 	if not row.built then
 		BuildRow(row)
@@ -442,6 +589,7 @@ local function InitRow(row, data)
 	row.line:SetText(Details(req, data.mine))
 	row.price:SetText(WorkUI.Money(req.price))
 	row.accent:SetShown(not data.mine and req.canMake == true)
+	UpdateChips(row, req, data.mine)
 	if data.mine then
 		local offers = 0
 		for _ in pairs(req.offers or {}) do
@@ -681,7 +829,16 @@ function WorkUI.Build(parent)
 	bar:SetPoint("TOPLEFT", box, "TOPRIGHT", 4, 0)
 	bar:SetPoint("BOTTOMLEFT", box, "BOTTOMRIGHT", 4, 0)
 	local listView = CreateScrollBoxListLinearView()
-	listView:SetElementExtent(ROW)
+	if listView.SetElementExtentCalculator then
+		listView:SetElementExtentCalculator(function(_, data)
+			if data.mine and next(data.req.offers or {}) then
+				return ROW_OFFERS
+			end
+			return ROW
+		end)
+	else
+		listView:SetElementExtent(ROW)
+	end
 	listView:SetElementInitializer("Button", function(row, data)
 		LI.SafeCall(InitRow, row, data)
 	end)

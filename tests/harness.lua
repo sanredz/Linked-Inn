@@ -1552,11 +1552,28 @@ do
 	page.views[2].__scripts.OnClick(page.views[2])
 	check(#page.list.__rows == 1 and page.list.__rows[1].state.__text:find("1 offer", 1, true), "My requests shows offers", page.list.__rows[1].state.__text)
 	check(page.list.__rows[1].line.__text:find("1 crafter knows it", 1, true), "and how many crafters know it", page.list.__rows[1].line.__text)
-	page.list.__rows[1].__scripts.OnClick(page.list.__rows[1], "RightButton")
+	local mineRow = page.list.__rows[1]
+	check(page.list.__view.__extent(1, { mine = true, req = mineRow.req }) == 78 and page.list.__view.__extent(1, { req = {} }) == 50, "rows with offers are taller to fit them")
+	local chip = mineRow.chips[1]
+	check(mineRow.offersLabel:IsShown() and chip and chip:IsShown() and chip.text.__text == "Crafty Pal", "each offer shows as a named pill on the request", chip and chip.text.__text)
+	chip.__scripts.OnClick(chip, "LeftButton")
+	check(W.tells[#W.tells] == "Crafty Pal" and W.editBox.text:find("Thanks for offering", 1, true), "clicking an offer whispers that person", W.editBox.text)
+	W.typing = false
+	chip.__scripts.OnClick(chip, "RightButton")
 	local entries = {}
 	for _, e in ipairs(W.lastMenu.entries) do entries[#entries + 1] = e.text end
 	local menuText = table.concat(entries, ",")
-	check(menuText:find("Whisper Crafty Pal", 1, true) and menuText:find("Cancel request", 1, true), "right-click lists offers and cancel", menuText)
+	check(menuText:find("Invite to group", 1, true) and menuText:find("Remove offer", 1, true), "right-clicking an offer can invite or remove it", menuText)
+	local remove
+	for _, e in ipairs(W.lastMenu.entries) do if e.text == "Remove offer" then remove = e end end
+	remove.a()
+	Advance(0.2)
+	check(not next(Work.Mine()[1].offers) and not page.list.__rows[1].offersLabel:IsShown(), "a removed offer disappears")
+	page.list.__rows[1].__scripts.OnClick(page.list.__rows[1], "RightButton")
+	entries = {}
+	for _, e in ipairs(W.lastMenu.entries) do entries[#entries + 1] = e.text end
+	menuText = table.concat(entries, ",")
+	check(menuText:find("Cancel request", 1, true), "right-clicking your request can cancel it", menuText)
 
 	local hdr = main.workHeader
 	check(hdr:IsShown() and hdr.notify:GetChecked() and hdr.sound:GetChecked() and hdr.glow:GetChecked() and not hdr.allMats:GetChecked(), "notification settings sit above the list")

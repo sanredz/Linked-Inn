@@ -401,6 +401,25 @@ function Work.Offer(key)
 	return true
 end
 
+function Work.Offers(req)
+	local list = {}
+	for key, at in pairs(req.offers or {}) do
+		list[#list + 1] = { key = key, at = at }
+	end
+	table.sort(list, function(a, b) return a.at < b.at end)
+	return list
+end
+
+function Work.RemoveOffer(id, key)
+	local req = State().mine[id]
+	if req and req.offers and req.offers[key] then
+		req.offers[key] = nil
+		LI.Fire("WorkChanged")
+		return true
+	end
+	return false
+end
+
 function Work.Get(key)
 	return received[key]
 end

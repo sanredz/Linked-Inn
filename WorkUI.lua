@@ -22,6 +22,8 @@ local dialog
 local toast
 local toastQueue = {}
 local toastBusy = false
+local toastSerial = 0
+local ShowNext
 local view = "foryou"
 
 local function Text(parent, template, justify)
@@ -192,6 +194,9 @@ local function CreateToast()
 		end
 		self.done = true
 		self:Hide()
+		toastSerial = toastSerial + 1
+		toastBusy = false
+		LI.After(0.3, ShowNext)
 	end)
 	toast:SetScript("OnEnter", function(self)
 		self.hover = true
@@ -202,11 +207,13 @@ local function CreateToast()
 	toast:Hide()
 end
 
-local function ShowNext()
+ShowNext = function()
 	if toastBusy or #toastQueue == 0 then
 		return
 	end
 	toastBusy = true
+	toastSerial = toastSerial + 1
+	local serial = toastSerial
 	local t = table.remove(toastQueue, 1)
 	if not toast then
 		CreateToast()
@@ -224,7 +231,10 @@ local function ShowNext()
 	end
 	local shown = GetTime()
 	local function Close()
-		if not toast.done and (toast.hover and GetTime() - shown < 20) then
+		if serial ~= toastSerial then
+			return
+		end
+		if not toast.done and (t.stay or (toast.hover and GetTime() - shown < 20)) then
 			LI.After(1, Close)
 			return
 		end
@@ -232,6 +242,9 @@ local function ShowNext()
 			toast.fade:Play()
 		end
 		LI.After(0.5, function()
+			if serial ~= toastSerial then
+				return
+			end
 			toast:Hide()
 			toastBusy = false
 			ShowNext()
@@ -1475,21 +1488,113 @@ function WorkUI.Submit()
 	})
 end
 
+local function NewToast(req)
+	local name, icon = WorkUI.Name(req)
+	return {
+		icon = icon,
+		head = "Someone needs something you can make",
+		title = name .. (req.qty > 1 and (" \195\151" .. req.qty) or ""),
+		sub = string.format("%s  \194\183  %s  \194\183  %s", LI.ShortName(req.owner), WorkUI.Money(req.price), LI.Work.MATS[req.mats].name),
+		sound = LI.Work.Settings().sound and "UI_EPICLOOT_TOAST" or nil,
+		onClick = function()
+			view = "foryou"
+			LI.UI.Open(LI.UI.TAB.work)
+		end,
+	}
+end
+
+local function OfferToast(req, from)
+	local name, icon = WorkUI.Name(req)
+	return {
+		icon = icon,
+		head = "Someone can make it for you",
+		title = name,
+		sub = LI.ShortName(from) .. " offered. Click to whisper.",
+		sound = LI.Work.Settings().sound and "UI_EPICLOOT_TOAST" or nil,
+		onClick = function()
+			Whisper(from, "Hi! About my request for " .. ItemLink(req) .. ":")
+		end,
+	}
+end
+
+local function PostedToast(req)
+	local count, online = LI.Work.KnownCrafters(req.recipe)
+	local name, icon = WorkUI.Name(req)
+	return {
+		icon = icon,
+		head = "Request posted",
+		title = name .. (req.qty > 1 and (" \195\151" .. req.qty) or ""),
+		sub = count > 0 and string.format("%d %s on your list %s it, %d online", count, count == 1 and "crafter" or "crafters", count == 1 and "knows" or "know", online) or "Linked Inn users who can make it get a notice",
+		onClick = function()
+			view = "mine"
+			LI.UI.Open(LI.UI.TAB.work)
+		end,
+	}
+end
+
+local function SampleRecipe()
+	local own = LI.crafters[LI.playerKey]
+	for _, p in pairs(own and own.profs or {}) do
+		for id in pairs(p.recipes or {}) do
+			local meta = LI.db.recipes[id]
+			if meta and meta.n and meta.i and meta.item then
+				return id
+			end
+		end
+	end
+	for id, meta in pairs(LI.db.recipes) do
+		if meta.n and meta.i and meta.item then
+			return id
+		end
+	end
+	return nil
+end
+
+local DEMO = { new = true, offer = true, posted = true }
+
+function WorkUI.Demo(which)
+	which = which ~= "" and which or nil
+	if which and not DEMO[which] then
+		LI.Print("Try /li toast, /li toast new, /li toast offer or /li toast posted")
+		return
+	end
+	local recipe = SampleRecipe()
+	local meta = recipe and LI.db.recipes[recipe]
+	local req = {
+		id = "demo",
+		owner = "Thalia Brightwood",
+		recipe = recipe or 0,
+		item = meta and meta.item,
+		qty = 2,
+		mats = "all",
+		price = 25000,
+	}
+	local list = {}
+	if not which or which == "new" then
+		list[#list + 1] = NewToast(req)
+	end
+	if not which or which == "offer" then
+		list[#list + 1] = OfferToast(req, "Garrick Stonehand")
+	end
+	if not which or which == "posted" then
+		list[#list + 1] = PostedToast(req)
+	end
+	for _, t in ipairs(list) do
+		t.stay = true
+		t.onClick = nil
+		if not recipe then
+			t.title = "Mooncloth Bag" .. (t.title:find("\195\151") and " \195\151 2" or "")
+			t.icon = "Interface\\Icons\\INV_Misc_Bag_10"
+		end
+		WorkUI.Toast(t)
+	end
+	LI.Print("Showing sample pop-ups. Each stays until you click it.")
+end
+
 LI.Listen("WorkNew", function(req)
 	local s = LI.Work.Settings()
-	local name, icon = WorkUI.Name(req)
 	if s.notify then
-		WorkUI.Toast({
-			icon = icon,
-			head = "Someone needs something you can make",
-			title = name .. (req.qty > 1 and (" \195\151" .. req.qty) or ""),
-			sub = string.format("%s  \194\183  %s  \194\183  %s", LI.ShortName(req.owner), WorkUI.Money(req.price), LI.Work.MATS[req.mats].name),
-			sound = s.sound and "UI_EPICLOOT_TOAST" or nil,
-			onClick = function()
-				view = "foryou"
-				LI.UI.Open(LI.UI.TAB.work)
-			end,
-		})
+		WorkUI.Toast(NewToast(req))
 	elseif s.sound then
 		Sound("UI_EPICLOOT_TOAST")
 	end
@@ -1499,17 +1604,7 @@ LI.Listen("WorkNew", function(req)
 end)
 
 LI.Listen("WorkOffer", function(req, from)
-	local name, icon = WorkUI.Name(req)
-	WorkUI.Toast({
-		icon = icon,
-		head = "Someone can make it for you",
-		title = name,
-		sub = LI.ShortName(from) .. " offered. Click to whisper.",
-		sound = LI.Work.Settings().sound and "UI_EPICLOOT_TOAST" or nil,
-		onClick = function()
-			Whisper(from, "Hi! About my request for " .. ItemLink(req) .. ":")
-		end,
-	})
+	WorkUI.Toast(OfferToast(req, from))
 end)
 
 LI.Listen("WorkSeen", function()

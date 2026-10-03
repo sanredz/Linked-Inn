@@ -1966,5 +1966,30 @@ do
 	W.playerGUID = nil
 end
 
+do
+	Setup()
+	Boot()
+	Advance(5)
+	local sent0 = #W.sent
+	SlashCmdList.LINKEDINN("toast")
+	local toast = LI.WorkUI.Toaster()
+	check(toast and toast:IsShown() and toast.head.__text == "Someone needs something you can make", "/li toast shows a sample request pop-up", toast and toast.head.__text)
+	Advance(30)
+	check(toast:IsShown() and toast.head.__text == "Someone needs something you can make", "and it stays up for a screenshot")
+	toast.__scripts.OnClick(toast, "LeftButton")
+	Advance(2)
+	check(toast:IsShown() and toast.head.__text == "Someone can make it for you", "a click brings the offer pop-up", toast.head.__text)
+	toast.__scripts.OnClick(toast, "LeftButton")
+	Advance(2)
+	check(toast.head.__text == "Request posted", "then the posted one", toast.head.__text)
+	toast.__scripts.OnClick(toast, "LeftButton")
+	Advance(2)
+	check(not toast:IsShown() and #W.sent == sent0, "nothing is sent for the samples")
+	SlashCmdList.LINKEDINN("toast offer")
+	check(toast:IsShown() and toast.head.__text == "Someone can make it for you", "/li toast offer shows just that one")
+	toast.__scripts.OnClick(toast, "LeftButton")
+	Advance(2)
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

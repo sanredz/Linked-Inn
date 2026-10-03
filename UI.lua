@@ -1321,6 +1321,8 @@ SlashCmdList.LINKEDINN = function(msg)
 		LI.Sync.Ping(rest)
 	elseif cmd == "status" then
 		LI.Sync.Status()
+	elseif cmd == "toast" then
+		LI.WorkUI.Demo(rest:lower())
 	else
 		UI.Toggle()
 	end

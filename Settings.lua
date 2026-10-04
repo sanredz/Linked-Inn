@@ -153,21 +153,55 @@ local function Days(n)
 end
 
 local HOUSE_KEYS = { "off", "light", "balanced", "strict" }
+local ART = "Interface\\AddOns\\" .. ADDON .. "\\art\\"
+local SEG_GAP = 4
+local SEG_WIDTH = math.floor((WIDTH - 10 - 22 - 18 - 18 - SEG_GAP * 3) / 4)
+local PaintHouse
 
 local function ModeName(key)
 	return (LI.HousekeepingMode(key)).name
 end
 
-local function HouseText(current)
-	local lines = { "Puts away crafters who add nothing: everything they make, others make too. Rare recipes, favorites, guild, friends and Linked Inn users are always kept." }
-	for _, mode in ipairs(LI.HOUSEKEEPING) do
-		if mode.keep then
-			local wait = mode.days > 0 and string.format(", after %d %s unseen", mode.days, mode.days == 1 and "day" or "days") or ", right away"
-			local color = mode.key == current.key and "|cffffd100" or "|cff9e9a8f"
-			lines[#lines + 1] = string.format("%s%s:|r keeps the best %d per profession; others go if %d others cover them%s", color, mode.name, mode.keep, mode.rare, wait)
+local function HouseText(mode)
+	if not mode.keep then
+		return "Off: nothing is put away. Pick a mode to clear out crafters who add nothing."
+	end
+	local wait = mode.days > 0 and string.format(" and unseen for %d %s", mode.days, mode.days == 1 and "day" or "days") or ", right away"
+	return string.format("%s: the best %d per profession stay. Others go once %d others make everything they make%s.", mode.name, mode.keep, mode.rare, wait)
+end
+
+local function ChooseHouse(key)
+	local _, now = LI.HousekeepingMode(LI.settings.housekeeping)
+	local mode, want = LI.HousekeepingMode(key)
+	if want > now and StaticPopup_Show then
+		local removed, crafters = LI.Housekeep(key, true)
+		if removed > 0 then
+			StaticPopup_Show("LINKEDINN_HOUSEKEEPING", mode.name, string.format("%d %s from %d %s", removed, removed == 1 and "profession" or "professions", crafters, crafters == 1 and "crafter" or "crafters"), key)
+			return
 		end
 	end
-	return table.concat(lines, "\n")
+	LI.settings.housekeeping = key
+	LI.Housekeep()
+	Changed()
+end
+
+PaintHouse = function()
+	if not frame or not frame.segments then
+		return
+	end
+	local current = LI.HousekeepingMode(LI.settings.housekeeping).key
+	for _, b in ipairs(frame.segments) do
+		if b.key == current then
+			b.fill:SetVertexColor(1, 0.78, 0.25, b.hover and 0.5 or 0.38)
+			b.edge:SetVertexColor(1, 0.82, 0.3, 0.95)
+			b.text:SetTextColor(1, 0.92, 0.6)
+		else
+			b.fill:SetVertexColor(0.1, 0.1, 0.1, b.hover and 0.85 or 0.65)
+			b.edge:SetVertexColor(0.55, 0.5, 0.42, b.hover and 0.9 or 0.6)
+			b.text:SetTextColor(b.hover and 1 or 0.72, b.hover and 1 or 0.7, b.hover and 1 or 0.66)
+		end
+	end
+	frame.houseDesc:SetText(HouseText(LI.HousekeepingMode(frame.houseHover or current)))
 end
 
 local function LastRun()
@@ -375,24 +409,41 @@ local function Create()
 	frame.keepDesc = Below(Body(page, HEAD_X, "Lower professions are skipped when read and taken off your list. Favorites are kept."), frame.keepLabel, HEAD_X, 10)
 	frame.houseLabel = Below(Text(page, "GameFontHighlight"), frame.keepDesc, HEAD_X, 18)
 	frame.houseLabel:SetText("Housekeeping")
-	frame.house = Dropdown(page, 120, HOUSE_KEYS, ModeName, function()
-		return LI.HousekeepingMode(LI.settings.housekeeping).key
-	end, function(v)
-		local _, now = LI.HousekeepingMode(LI.settings.housekeeping)
-		local mode, want = LI.HousekeepingMode(v)
-		if want > now and StaticPopup_Show then
-			local removed, crafters = LI.Housekeep(v, true)
-			if removed > 0 then
-				StaticPopup_Show("LINKEDINN_HOUSEKEEPING", mode.name, string.format("%d %s from %d %s", removed, removed == 1 and "profession" or "professions", crafters, crafters == 1 and "crafter" or "crafters"), v)
-				return
-			end
+	frame.segments = {}
+	for i, key in ipairs(HOUSE_KEYS) do
+		local b = CreateFrame("Button", nil, page)
+		b:SetSize(SEG_WIDTH, 22)
+		if i == 1 then
+			Below(b, frame.houseLabel, HEAD_X, 8)
+		else
+			b:SetPoint("LEFT", frame.segments[i - 1], "RIGHT", SEG_GAP, 0)
 		end
-		LI.settings.housekeeping = v
-		LI.Housekeep()
-	end)
-	frame.house:SetPoint("LEFT", frame.houseLabel, "RIGHT", 8, 0)
-	frame.houseDesc = Below(Body(page, HEAD_X, ""), frame.houseLabel, HEAD_X, 10)
-	frame.houseLast = Below(Body(page, HEAD_X, ""), frame.houseDesc, HEAD_X, 4)
+		b.fill = LI.Slices(b, ART .. "pill", "BACKGROUND", 22)
+		b.edge = LI.Slices(b, ART .. "pill_edge", "BORDER", 22)
+		b.text = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		b.text:SetPoint("CENTER")
+		b.text:SetText(ModeName(key))
+		b.key = key
+		b:SetScript("OnClick", function()
+			Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
+			ChooseHouse(key)
+		end)
+		b:SetScript("OnEnter", function(self)
+			self.hover = true
+			frame.houseHover = key
+			PaintHouse()
+		end)
+		b:SetScript("OnLeave", function(self)
+			self.hover = false
+			frame.houseHover = nil
+			PaintHouse()
+		end)
+		frame.segments[i] = b
+	end
+	frame.houseDesc = Below(Body(page, HEAD_X, ""), frame.segments[1], HEAD_X, 8)
+	frame.houseDesc:SetTextColor(0.9, 0.88, 0.82)
+	frame.houseKeep = Below(Body(page, HEAD_X, "Never touches rare recipes, favorites, guild, friends or Linked Inn users."), frame.houseDesc, HEAD_X, 4)
+	frame.houseLast = Below(Body(page, HEAD_X, ""), frame.houseKeep, HEAD_X, 4)
 	frame.count = Below(Text(page, "GameFontHighlight"), frame.houseLast, HEAD_X, 16)
 	frame.wipe = CreateFrame("Button", nil, page, "UIPanelButtonTemplate")
 	frame.wipe:SetSize(130, 22)
@@ -431,8 +482,7 @@ function Settings.Refresh()
 	frame.every:Update()
 	frame.forget:Update()
 	frame.keep:Update()
-	frame.house:Update()
-	frame.houseDesc:SetText(HouseText(LI.HousekeepingMode(LI.settings.housekeeping)))
+	PaintHouse()
 	frame.houseLast:SetText(LastRun())
 	local far = LI.guildFarSide or 0
 	if far > 0 then

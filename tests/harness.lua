@@ -2586,8 +2586,21 @@ do
 	check(LI.crafters["Badge Low-TestRealm"], "Linked Inn users are always kept")
 	LI.UI.Open(LI.UI.TAB.find)
 	LinkedInnFrame.gear.__scripts.OnClick(LinkedInnFrame.gear)
-	local desc = LinkedInnSettings.houseDesc.__text
-	check(desc:find("Light:", 1, true) and desc:find("Balanced:", 1, true) and desc:find("Strict:", 1, true) and desc:find("|cffffd100Strict", 1, true), "all modes are described up front, the chosen one highlighted", desc)
+	local panel = LinkedInnSettings
+	check(#panel.segments == 4 and panel.segments[1].text.__text == "Off" and panel.segments[4].text.__text == "Strict", "housekeeping is four buttons: Off, Light, Balanced, Strict")
+	check(panel.houseDesc.__text:find("^Strict: the best 50"), "the line under them describes the current mode", panel.houseDesc.__text)
+	panel.segments[2].__scripts.OnEnter(panel.segments[2])
+	check(panel.houseDesc.__text:find("^Light: the best 100"), "hovering a mode shows what it does before clicking", panel.houseDesc.__text)
+	panel.segments[2].__scripts.OnLeave(panel.segments[2])
+	check(panel.houseDesc.__text:find("^Strict"), "and moving away shows the current one again")
+	panel.segments[1].__scripts.OnClick(panel.segments[1])
+	check(LI.settings.housekeeping == "off", "clicking a lighter mode switches straight away")
+	for r = 91, 140 do
+		Make("Tailor " .. r, r)
+	end
+	W.popup = nil
+	panel.segments[4].__scripts.OnClick(panel.segments[4])
+	check(W.popup == "LINKEDINN_HOUSEKEEPING" and LI.settings.housekeeping == "off", "clicking a stricter mode asks first when it would put anyone away")
 	LI.settings.housekeeping = "off"
 end
 

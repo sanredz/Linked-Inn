@@ -31,6 +31,7 @@ local DISCOVER_AGAIN = 24 * 3600
 local LINK_HELLO_GAP = 60
 local WHISPER_MEMORY = 15
 local RELAY = { H1 = true, R1 = true, X1 = true }
+local SEND_RANK = { ask = 1, hello = 1, ping = 1, pong = 1, work = 2, data = 3, relay = 3, discover = 4 }
 
 local queue = {}
 local channelName
@@ -280,7 +281,15 @@ local function Enqueue(kind, message, chatType, target)
 			return
 		end
 	end
-	queue[#queue + 1] = { kind = kind, message = message, chatType = chatType, target = target }
+	local item = { kind = kind, message = message, chatType = chatType, target = target, rank = SEND_RANK[kind] or 2 }
+	local at = #queue + 1
+	for i, q in ipairs(queue) do
+		if (q.rank or 2) > item.rank then
+			at = i
+			break
+		end
+	end
+	table.insert(queue, at, item)
 end
 
 local lastFailLog = -60
@@ -399,6 +408,14 @@ end
 
 function Sync.QueueSize()
 	return #queue
+end
+
+function Sync.QueuedKinds()
+	local kinds = {}
+	for i, q in ipairs(queue) do
+		kinds[i] = q.kind
+	end
+	return kinds
 end
 
 local function Own()
@@ -625,7 +642,7 @@ local function OnHello(key, parts, chatType)
 	if class and class ~= "" and class:match("^%u+$") then
 		c.class = class
 	end
-	local count = 0
+	local count, missing = 0, nil
 	for _, section in ipairs(Split(list, ";")) do
 		count = count + 1
 		if count > MAX_PROFS then
@@ -639,13 +656,23 @@ local function OnHello(key, parts, chatType)
 			p.icon = p.icon or LI.PROFESSION_ICONS[f[1]]
 			p.rank = FromB36(f[2]) or p.rank
 			p.max = FromB36(f[3]) or p.max
+			if (FromB36(f[4]) or 0) > 0 and not p.recipes then
+				missing = missing or {}
+				missing[f[1]] = true
+			end
 		end
 	end
 	c.where = c.where or "Linked Inn"
 	c.li = true
 	LI.TrimLow(key)
 	LI.Fire("CraftersChanged")
-	if LI.crafters[key] == c and c.sharedVer ~= ver then
+	local short = false
+	for profKey in pairs(missing or {}) do
+		if c.profs[profKey] then
+			short = true
+		end
+	end
+	if LI.crafters[key] == c and (c.sharedVer ~= ver or short) then
 		Ask(key, ver)
 	end
 end
@@ -695,7 +722,8 @@ local function OnData(key, parts)
 	end
 	LI.NoteHeard(key)
 	local c = LI.crafters[key]
-	if c and c.sharedVer == ver then
+	local a = asked[key]
+	if c and c.sharedVer == ver and not (a and a.ver == ver and Now() - a.at < ASK_GAP) then
 		return
 	end
 	local buf = buffers[key]

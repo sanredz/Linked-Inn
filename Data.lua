@@ -235,6 +235,12 @@ LI.On("PLAYER_LOGIN", function()
 	LI.favorites = realm.favorites
 	LI.waiting = realm.waiting
 	LI.tried = realm.tried
+	if LI.db.triedRound ~= 2 then
+		LI.db.triedRound = 2
+		for key in pairs(LI.tried) do
+			LI.tried[key] = nil
+		end
+	end
 	for key, at in pairs(LI.tried) do
 		if type(at) ~= "number" or time() - at > 7 * 86400 then
 			LI.tried[key] = nil

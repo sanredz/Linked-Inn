@@ -68,9 +68,8 @@ they use Linked Inn themselves.
 - A small gold badge marks crafters who use Linked Inn themselves. Their lists
   come straight from their own game.
 
-<p>
-  <img src="media/crafters-search.png" alt="Searching for Copper Axe" width="49%">
-  <img src="media/crafters-compact.png" alt="Compact list" width="49%">
+<p align="center">
+  <img src="media/crafters-search.png" alt="Searching for an item shows who can make it" width="62%">
 </p>
 
 ## Work

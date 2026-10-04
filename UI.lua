@@ -1499,8 +1499,6 @@ SlashCmdList.LINKEDINN = function(msg)
 		LI.Sync.Ping(rest)
 	elseif cmd == "status" then
 		LI.Sync.Status()
-	elseif cmd == "crosstest" then
-		LI.Sync.CrossTest(rest)
 	else
 		UI.Toggle()
 	end

@@ -2777,41 +2777,6 @@ end
 do
 	Setup()
 	W.playerGUID = "Player-1-ME"
-	W.groupSize = 2
-	W.guids["Player-2-FRND"] = { name = "Friend Two", realm = "ClassicBetaPvP2", class = "MAGE" }
-	Boot()
-	Advance(5)
-	LI.NoteGuid("Friend Two-TestRealm", "Player-2-FRND")
-	W.sent = {}
-	LI.Sync.CrossTest("Friend Two")
-	Advance(4)
-	local party, plain
-	for _, m in ipairs(W.sent) do
-		if m.msg:find("^P1|") and m.chatType == "PARTY" then party = m.msg:sub(4) end
-		if m.msg:find("^P1|") and m.chatType == "WHISPER" and m.target == "Friend Two" then plain = true end
-	end
-	check(party and plain, "the cross test pings by whisper and party")
-	local realmWhisper = false
-	for _, m in ipairs(W.sent) do
-		if m.chatType == "WHISPER" and m.target == "Friend Two-ClassicBetaPvP2" then realmWhisper = true end
-	end
-	check(realmWhisper, "and by whisper with their realm added")
-	Addon("P2|" .. party, "Friend Two-TestRealm", "PARTY")
-	Fire("CHAT_MSG_SYSTEM", "No player named 'Friend Two' is currently playing.")
-	Advance(8)
-	local works, missing
-	for _, e in ipairs(LI.db.log) do
-		if e.m == "Cross test Friend Two via party: works" then works = true end
-		if e.m == "Cross test Friend Two via whisper: not found" then missing = true end
-	end
-	check(works and missing, "the report says which routes reach the other realm")
-	check(LI.crossReadUntil and LI.crossReadUntil > time(), "links from the other realm are tried for a while during the test")
-	W.groupSize = nil
-end
-
-do
-	Setup()
-	W.playerGUID = "Player-1-ME"
 	W.guild = { { name = "Far Crafter-TestRealm", online = true, guid = "Player-2-FARC" } }
 	Boot()
 	Advance(40)
@@ -2852,27 +2817,6 @@ do
 	end
 	check(partyAsk, "the same works through your party")
 	W.groupSize = nil
-end
-
-do
-	Setup()
-	W.playerGUID = "Player-1-ME"
-	Boot()
-	Advance(30)
-	local refs = W.itemRefs or 0
-	LI.Reader.Want("Far Friend-TestRealm", "Tailoring", "trade:Player-2-FARF:3908:197")
-	Advance(3)
-	check((W.itemRefs or 0) == refs and LI.Reader.QueueSize() == 0, "links from the other realm are skipped normally")
-	LI.crossReadUntil = time() + 120
-	W.clickWorks = true
-	W.linkData = W.linkData or {}
-	W.linkData["trade:Player-2-FARF:3908:197"] = { linkedName = "Far Friend", prof = TAILORING, recipes = TAILOR_RECIPES }
-	LI.Reader.Want("Far Friend-TestRealm", "Tailoring", "trade:Player-2-FARF:3908:197")
-	Advance(4)
-	local c = LI.crafters["Far Friend-TestRealm"]
-	check((W.itemRefs or 0) > refs, "during the cross test they are opened the way a click does")
-	check(c and c.profs.tailoring and c.profs.tailoring.recipes and W.trade == nil, "and if the game answers, the recipes are saved and the window closed")
-	W.clickWorks, LI.crossReadUntil = false, nil
 end
 
 do

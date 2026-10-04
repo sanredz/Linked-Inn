@@ -36,7 +36,6 @@ local lastAuto
 local hooked = false
 local concealed = false
 local ours = false
-local selfClick = false
 local lastDone = GetTime and GetTime() or -60
 local userClickAt = -60
 local LATE = 15
@@ -58,7 +57,7 @@ function Reader.Want(key, profName, link, extra)
 		return
 	end
 	local guid = type(link) == "string" and link:match("^trade:(Player%-%d+%-%w+):")
-	if LI.OtherServer(guid) and not (LI.crossReadUntil and time() < LI.crossReadUntil and not (extra and extra.built)) then
+	if LI.OtherServer(guid) then
 		if not otherLogged[key] then
 			otherLogged[key] = true
 			LI.Log(string.format("%s is on the other realm; the game doesn't let us read their professions", LI.ShortName(key)))
@@ -462,18 +461,7 @@ Start = function(job)
 	local t = Tip()
 	LI.Try(t.SetOwner, t, WorldFrame or UIParent, "ANCHOR_NONE")
 	Silence()
-	local ok, err
-	local guid = job.link:match("^trade:(Player%-%d+%-%w+):")
-	if LI.OtherServer(guid) and SetItemRef then
-		job.viaClick = true
-		selfClick = true
-		local name = LI.PROFESSION_NAMES and LI.PROFESSION_NAMES[job.prof] or tostring(job.prof)
-		ok, err = pcall(SetItemRef, job.link, "|cffffd000|H" .. job.link .. "|h[" .. name .. "]|h|r", "LeftButton")
-		selfClick = false
-		LI.Log(string.format("Trying %s's %s from the other realm the way a click does", LI.ShortName(job.key), tostring(job.prof)))
-	else
-		ok, err = pcall(t.SetHyperlink, t, job.link)
-	end
+	local ok, err = pcall(t.SetHyperlink, t, job.link)
 	LI.Try(t.Hide, t)
 	if not ok then
 		LI.Log("Automatic read failed: " .. tostring(err):sub(1, 120))
@@ -1005,7 +993,7 @@ LI.Listen("Ready", function()
 	if hooksecurefunc then
 		hooksecurefunc("SetItemRef", function(link)
 			link = LI.Safe(link)
-			if type(link) ~= "string" or link:sub(1, 6) ~= "trade:" or selfClick then
+			if type(link) ~= "string" or link:sub(1, 6) ~= "trade:" then
 				return
 			end
 			userClickAt = Now()

@@ -199,7 +199,7 @@ local function Create()
 
 	local city = Section(page, nil, "City scans")
 	frame.city, frame.cityLast = Option(page, city, "Scan players in cities",
-		"Every few minutes in a city or inn, friendly nameplates flash on for half a second so Linked Inn can note everyone around you. Their professions are then read quietly in the background.\n\nAlready play with friendly nameplates on (Shift+V)? Then everyone you pass is checked all the time, and this isn't needed.",
+		"Every few minutes in a city or inn, friendly nameplates flash on for half a second so everyone around you gets checked in the background. Not needed if you already play with friendly nameplates on (Shift+V).",
 		function() return LI.settings.cityScan == true end,
 		function(on) LI.settings.cityScan = on end)
 	frame.everyLabel = Below(Text(page, "GameFontHighlightSmall"), frame.cityLast, BODY_X, 14)

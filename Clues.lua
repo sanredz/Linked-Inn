@@ -117,6 +117,8 @@ LI.Crafts = Crafts
 local UNIT_TOKENS = { "target", "mouseover", "focus" }
 local WAIT_FOR = 14 * 86400
 local WAIT_MAX = 300
+local HOUSEKEEP_FIRST = 60
+local HOUSEKEEP_EVERY = 3600
 local TRY_AGAIN = 7 * 86400
 local CLOSE_AGAIN = 12 * 3600
 local DISCOVER_EVERY = 2
@@ -391,6 +393,12 @@ function LI.DiscoverStep()
 end
 
 LI.Listen("Ready", function()
+	LI.After(HOUSEKEEP_FIRST, function()
+		LI.Housekeep()
+	end)
+	LI.Every(HOUSEKEEP_EVERY, function()
+		LI.Housekeep()
+	end)
 	LI.WaitingCount()
 	while Trim() do
 	end

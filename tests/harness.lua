@@ -2517,5 +2517,58 @@ do
 	check(LI.WaitingCount() == 300, "the waiting list is cut to 300 at login", LI.WaitingCount())
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.guild = { { name = "Guild Low-TestRealm", online = false } }
+	Boot()
+	Advance(5)
+	Fire("GUILD_ROSTER_UPDATE")
+	local old = time() - 20 * 86400
+	local function Make(name, rank, recipes)
+		local key = name .. "-TestRealm"
+		local c = LI.Crafter(key, true)
+		c.seen = old
+		local set = { [3914] = true }
+		for _, id in ipairs(recipes or {}) do
+			set[id] = true
+		end
+		c.profs.tailoring = { name = "Tailoring", rank = rank, max = 300, count = 1, recipes = set }
+		return c
+	end
+	for r = 11, 60 do
+		Make("Tailor " .. r, r)
+	end
+	Make("Tailor 1", 1).profs.alchemy = { name = "Alchemy", rank = 200, recipes = { [2330] = true } }
+	Make("Rare Pattern", 2, { 18560 })
+	Make("Fav Low", 3)
+	LI.favorites["Fav Low-TestRealm"] = true
+	Make("Guild Low", 4)
+	Make("Seen Today", 5).seen = time()
+	for r = 6, 9 do
+		Make("Shared " .. r, r, { 3915 })
+	end
+	Make("Tailor 10", 10)
+	check(LI.settings.housekeeping == "off" and LI.Housekeep() == 0, "housekeeping is off by default and does nothing")
+	check(LI.Housekeep("light", true) == 0, "light leaves a profession with fewer than 100 crafters alone")
+	local removed, crafters = LI.Housekeep("balanced", true)
+	check(removed == 3 and crafters == 3 and LI.crafters["Tailor 10-TestRealm"], "a preview counts without removing anything", removed)
+	StaticPopupDialogs.LINKEDINN_HOUSEKEEPING.OnAccept(nil, "balanced")
+	check(LI.settings.housekeeping == "balanced", "accepting saves the mode")
+	check(not LI.crafters["Tailor 10-TestRealm"] and not LI.crafters["Shared 6-TestRealm"], "old crafters below the best 50 are put away")
+	check(LI.crafters["Tailor 1-TestRealm"] and LI.crafters["Tailor 1-TestRealm"].profs.alchemy and not LI.crafters["Tailor 1-TestRealm"].profs.tailoring, "only the weak profession goes; a good alchemist stays")
+	check(LI.crafters["Rare Pattern-TestRealm"], "someone with a recipe few others know is kept")
+	check(LI.crafters["Fav Low-TestRealm"] and LI.crafters["Guild Low-TestRealm"] and LI.crafters["Seen Today-TestRealm"], "favorites, guildmates and people seen recently are kept")
+	local holders = 0
+	for r = 6, 9 do
+		if LI.crafters["Shared " .. r .. "-TestRealm"] then holders = holders + 1 end
+	end
+	check(holders == 3, "a recipe never drops below a few people who know it", holders)
+	check(LI.crafters["Tailor 11-TestRealm"] and LI.crafters["Tailor 60-TestRealm"], "the best 50 are always kept")
+	check(LI.db.housekept and LI.db.housekept.removed == 3, "the last run is remembered for the settings panel")
+	check(LI.Housekeep() == 0, "running again finds nothing more")
+	LI.settings.housekeeping = "off"
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

@@ -152,6 +152,29 @@ local function Days(n)
 	return string.format("%d days", n)
 end
 
+local HOUSE_KEYS = { "off", "light", "balanced", "strict" }
+
+local function ModeName(key)
+	return (LI.HousekeepingMode(key)).name
+end
+
+local function HouseText(mode)
+	if not mode.keep then
+		return "Recommended once your list is in the hundreds. Puts away crafters you'll never need, keeping the best ones, rare recipes, favorites, guild and friends."
+	end
+	return string.format("Keeps the best %d per profession. Others are put away after %d days unseen, unless they know a rare recipe or are a favorite, guildmate or friend.", mode.keep, mode.days)
+end
+
+local function LastRun()
+	local last = LI.db and LI.db.housekept
+	if LI.HousekeepingMode(LI.settings.housekeeping).key == "off" or type(last) ~= "table" or not last.at then
+		return ""
+	end
+	local mins = math.floor((time() - last.at) / 60)
+	local ago = mins < 1 and "just now" or mins < 60 and string.format("%d min ago", mins) or string.format("%d h ago", math.floor(mins / 60))
+	return string.format("|cff9e9a8fLast run %s: %d put away.|r", ago, last.removed or 0)
+end
+
 local function Skill(n)
 	return KEEP_NAMES[n] or tostring(n)
 end
@@ -213,6 +236,29 @@ if StaticPopupDialogs then
 			end
 			LI.settings.keepSkill = min
 			LI.ForgetBelow(min)
+			Changed()
+		end,
+		OnCancel = function()
+			Changed()
+		end,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3,
+	}
+end
+
+if StaticPopupDialogs then
+	StaticPopupDialogs["LINKEDINN_HOUSEKEEPING"] = {
+		text = "Switch housekeeping to %s?\n\nThis puts away %s now. Favorites, guild, friends and rare recipes are kept.",
+		button1 = YES or "Yes",
+		button2 = NO or "No",
+		OnAccept = function(_, key)
+			if type(key) ~= "string" then
+				return
+			end
+			LI.settings.housekeeping = key
+			LI.Housekeep()
 			Changed()
 		end,
 		OnCancel = function()
@@ -314,7 +360,27 @@ local function Create()
 	end)
 	frame.keep:SetPoint("LEFT", frame.keepLabel, "RIGHT", 8, 0)
 	frame.keepDesc = Below(Body(page, HEAD_X, "Lower professions are skipped when read and taken off your list. Favorites are kept."), frame.keepLabel, HEAD_X, 10)
-	frame.count = Below(Text(page, "GameFontHighlight"), frame.keepDesc, HEAD_X, 16)
+	frame.houseLabel = Below(Text(page, "GameFontHighlight"), frame.keepDesc, HEAD_X, 18)
+	frame.houseLabel:SetText("Housekeeping")
+	frame.house = Dropdown(page, 120, HOUSE_KEYS, ModeName, function()
+		return LI.HousekeepingMode(LI.settings.housekeeping).key
+	end, function(v)
+		local _, now = LI.HousekeepingMode(LI.settings.housekeeping)
+		local mode, want = LI.HousekeepingMode(v)
+		if want > now and StaticPopup_Show then
+			local removed, crafters = LI.Housekeep(v, true)
+			if removed > 0 then
+				StaticPopup_Show("LINKEDINN_HOUSEKEEPING", mode.name, string.format("%d %s from %d %s", removed, removed == 1 and "profession" or "professions", crafters, crafters == 1 and "crafter" or "crafters"), v)
+				return
+			end
+		end
+		LI.settings.housekeeping = v
+		LI.Housekeep()
+	end)
+	frame.house:SetPoint("LEFT", frame.houseLabel, "RIGHT", 8, 0)
+	frame.houseDesc = Below(Body(page, HEAD_X, ""), frame.houseLabel, HEAD_X, 10)
+	frame.houseLast = Below(Body(page, HEAD_X, ""), frame.houseDesc, HEAD_X, 4)
+	frame.count = Below(Text(page, "GameFontHighlight"), frame.houseLast, HEAD_X, 16)
 	frame.wipe = CreateFrame("Button", nil, page, "UIPanelButtonTemplate")
 	frame.wipe:SetSize(130, 22)
 	frame.wipe:SetText("Forget everyone")
@@ -352,6 +418,9 @@ function Settings.Refresh()
 	frame.every:Update()
 	frame.forget:Update()
 	frame.keep:Update()
+	frame.house:Update()
+	frame.houseDesc:SetText(HouseText(LI.HousekeepingMode(LI.settings.housekeeping)))
+	frame.houseLast:SetText(LastRun())
 	local on = LI.settings.cityScan == true
 	frame.everyLabel:SetTextColor(on and 1 or 0.5, on and 1 or 0.5, on and 1 or 0.5)
 	if frame.every.SetEnabled then

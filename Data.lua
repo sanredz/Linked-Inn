@@ -80,6 +80,7 @@ local DEFAULTS = {
 	forgetDays = 60,
 	hideLinks = false,
 	keepSkill = 0,
+	housekeeping = "off",
 	collapsed = {},
 }
 
@@ -202,6 +203,100 @@ function LI.ForgetBelow(min)
 		LI.Fire("CraftersChanged")
 	end
 	return touched
+end
+
+LI.HOUSEKEEPING = {
+	{ key = "off", name = "Off" },
+	{ key = "light", name = "Light", keep = 100, days = 21, rare = 5 },
+	{ key = "balanced", name = "Balanced", keep = 50, days = 10, rare = 3 },
+	{ key = "strict", name = "Strict", keep = 25, days = 5, rare = 2 },
+}
+
+function LI.HousekeepingMode(key)
+	for i, mode in ipairs(LI.HOUSEKEEPING) do
+		if mode.key == key then
+			return mode, i
+		end
+	end
+	return LI.HOUSEKEEPING[1], 1
+end
+
+local function Protected(key)
+	return key == LI.playerKey or (LI.favorites and LI.favorites[key]) or (LI.InCircle and LI.InCircle(key))
+end
+
+function LI.Housekeep(modeKey, dry)
+	local mode = LI.HousekeepingMode(modeKey or (LI.settings and LI.settings.housekeeping))
+	if not mode.keep or not LI.crafters then
+		return 0, 0
+	end
+	local now = time()
+	local pools = {}
+	for key, c in pairs(LI.crafters) do
+		if type(c) == "table" and type(c.profs) == "table" then
+			for profKey, p in pairs(c.profs) do
+				if type(p) == "table" and type(p.recipes) == "table" then
+					pools[profKey] = pools[profKey] or {}
+					table.insert(pools[profKey], { key = key, c = c, p = p })
+				end
+			end
+		end
+	end
+	local removed, touched = 0, {}
+	for profKey, pool in pairs(pools) do
+		if #pool > mode.keep then
+			local holders = {}
+			for _, e in ipairs(pool) do
+				for id in pairs(e.p.recipes) do
+					holders[id] = (holders[id] or 0) + 1
+				end
+			end
+			table.sort(pool, function(a, b)
+				local ra, rb = a.p.rank or 0, b.p.rank or 0
+				if ra ~= rb then
+					return ra > rb
+				end
+				return (a.c.seen or 0) > (b.c.seen or 0)
+			end)
+			for i = #pool, mode.keep + 1, -1 do
+				local e = pool[i]
+				local old = now - (e.c.seen or 0) > mode.days * 86400
+				local rare = false
+				for id in pairs(e.p.recipes) do
+					if holders[id] - 1 < mode.rare then
+						rare = true
+						break
+					end
+				end
+				if old and not rare and not Protected(e.key) then
+					for id in pairs(e.p.recipes) do
+						holders[id] = holders[id] - 1
+					end
+					removed = removed + 1
+					touched[e.key] = true
+					if not dry then
+						e.c.profs[profKey] = nil
+					end
+				end
+			end
+		end
+	end
+	local crafters = 0
+	for key in pairs(touched) do
+		crafters = crafters + 1
+		local c = LI.crafters[key]
+		if not dry and c and next(c.profs) == nil then
+			LI.crafters[key] = nil
+		end
+	end
+	if not dry then
+		LI.db.housekept = { at = now, removed = removed, mode = mode.key }
+		if removed > 0 then
+			LI.Log(string.format("Housekeeping (%s): put away %d %s from %d %s", mode.name, removed, removed == 1 and "profession" or "professions", crafters, crafters == 1 and "crafter" or "crafters"))
+			LI.Fire("CraftersChanged")
+		end
+	end
+	return removed, crafters
 end
 
 local function Prune(crafters, favorites)

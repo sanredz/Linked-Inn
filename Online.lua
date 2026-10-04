@@ -91,6 +91,11 @@ local function ReadGroup()
 	LI.Fire("StatusChanged")
 end
 
+function LI.InCircle(key)
+	local entry = key and roster[key]
+	return entry ~= nil and (entry.guild ~= nil or entry.friend ~= nil)
+end
+
 function LI.Status(key)
 	local c = LI.crafters and LI.crafters[key]
 	local seen = c and c.seen or nil

@@ -110,7 +110,8 @@ The gear at the top right opens the settings:
 - **Reading:** read profession links from chat automatically, and hide lines
   with profession links in trade, general, say and yell to cut the spam.
   They're still read.
-- **Guild only:** read, list and talk to your guild only, Work included.
+- **Guild and friends only:** read, list and talk to your guild and friends
+  list only, Work included.
   Everyone else stays saved and comes back when you turn it off.
 - **Your list:** forget crafters not seen for 14, 30, 60 or 90 days, or never,
   and skip professions below a skill level. Favorites are always kept.

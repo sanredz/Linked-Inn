@@ -1365,6 +1365,15 @@ do
 	Fire("CHAT_MSG_TRADESKILLS", "Some One creates Unknown Thing.", "Some One", "", "", "", "", 0, 0, "", 0, 1, "Player-1-OOO")
 	Advance(10)
 	check(LI.test.built.tries == tries2 and not LI.crafters["No Id-TestRealm"], "no id, your own crafts and unknown items are skipped")
+	W.guids["Player-1-PPP"] = { class = "ROGUE", name = "Name Only", realm = "" }
+	W.linkData["trade:Player-1-PPP:3908:197"] = { linkedName = "Name Only", prof = TAILORING, recipes = TAILOR_RECIPES }
+	W.units = { nameplate7 = { name = "Name", surname = "Only", guid = "Player-1-PPP" } }
+	Fire("CHAT_MSG_TRADESKILLS", "Name Only creates Mooncloth Bag.", "", "", "", "", "", 0, 0, "", 0, 1, "")
+	Advance(10)
+	check(LI.crafters["Name Only-TestRealm"] and LI.crafters["Name Only-TestRealm"].profs.tailoring, "with no sender or id, the name comes from the text and the id from a nameplate")
+	W.units = nil
+	local c = LI.Crafts()
+	check(c.lines == 6 and c.known == 4 and c.unknown == 1 and c.noId == 1 and c.queued == 3, "the crafting log is counted for /li status", string.format("%d %d %d %d %d", c.lines, c.known, c.unknown, c.noId, c.queued))
 
 	W.units = {
 		nameplate1 = { name = "Scan", surname = "One", guid = "Player-2-AAA" },

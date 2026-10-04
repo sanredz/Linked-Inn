@@ -105,22 +105,71 @@ local function CraftedRecipe(text)
 end
 
 local noGuidLogged = {}
+local sampleLogged = false
+
+local function Crafts()
+	local c = LI.test.crafts
+	if type(c) ~= "table" then
+		c = { lines = 0, known = 0, noId = 0, unknown = 0, queued = 0 }
+		LI.test.crafts = c
+	end
+	return c
+end
+LI.Crafts = Crafts
+
+local UNIT_TOKENS = { "target", "mouseover", "focus" }
+
+local function GuidForKey(key)
+	local function Match(unit)
+		if LI.UnitKey(unit) == key then
+			return LI.Safe(LI.Try(UnitGUID, unit))
+		end
+	end
+	for _, unit in ipairs(UNIT_TOKENS) do
+		local guid = Match(unit)
+		if guid then
+			return guid
+		end
+	end
+	for i = 1, 40 do
+		local guid = Match("nameplate" .. i) or Match("raid" .. i) or (i <= 4 and Match("party" .. i))
+		if guid then
+			return guid
+		end
+	end
+	return LI.guids and LI.guids[key] or nil
+end
 
 function LI.OnCrafted(text, sender, guid)
-	if not LI.ready or type(text) ~= "string" or type(sender) ~= "string" or sender == "" then
+	if not LI.ready or type(text) ~= "string" then
 		return false
 	end
-	local key = LI.FullName(sender)
+	local stats = Crafts()
+	stats.lines = stats.lines + 1
+	if not sampleLogged then
+		sampleLogged = true
+		LI.Log(string.format("Crafting log sample: sender '%s', id '%s', text '%s'", tostring(sender), tostring(guid), text:gsub("|", "!"):sub(1, 90)))
+	end
+	if type(sender) ~= "string" or sender == "" then
+		sender = text:match("^(.-)%s+creates%s")
+	end
+	local key = sender and sender ~= "" and LI.FullName(sender)
 	if not key or key == LI.playerKey then
 		return false
 	end
 	local recipe = CraftedRecipe(text)
 	local prof = recipe and SpellProfession(recipe)
 	if not prof then
+		stats.unknown = stats.unknown + 1
 		return false
 	end
+	stats.known = stats.known + 1
 	local seen = key .. ":" .. prof
 	if type(guid) ~= "string" or not guid:find("^Player%-") then
+		guid = GuidForKey(key)
+	end
+	if type(guid) ~= "string" or not guid:find("^Player%-") then
+		stats.noId = stats.noId + 1
 		if not noGuidLogged[seen] then
 			noGuidLogged[seen] = true
 			LI.Log(string.format("Saw %s doing %s, but the game didn't say who exactly", LI.ShortName(key), prof))
@@ -135,7 +184,11 @@ function LI.OnCrafted(text, sender, guid)
 	if GetPlayerInfoByGUID then
 		classFile = LI.Safe((select(2, LI.Try(GetPlayerInfoByGUID, guid))))
 	end
-	return LI.Clue(key, guid, prof, Zone(), classFile)
+	local queued = LI.Clue(key, guid, prof, Zone(), classFile)
+	if queued then
+		stats.queued = stats.queued + 1
+	end
+	return queued
 end
 
 LI.On("CHAT_MSG_TRADESKILLS", function(text, sender, _, _, _, _, _, _, _, _, _, guid)

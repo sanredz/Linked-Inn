@@ -208,9 +208,9 @@ end
 
 LI.HOUSEKEEPING = {
 	{ key = "off", name = "Off" },
-	{ key = "light", name = "Light", keep = 100, days = 21, rare = 5 },
-	{ key = "balanced", name = "Balanced", keep = 50, days = 10, rare = 3 },
-	{ key = "strict", name = "Strict", keep = 25, days = 5, rare = 2 },
+	{ key = "light", name = "Light", keep = 75, days = 7, rare = 5 },
+	{ key = "balanced", name = "Balanced", keep = 40, days = 2, rare = 3 },
+	{ key = "strict", name = "Strict", keep = 20, days = 0, rare = 2 },
 }
 
 function LI.HousekeepingMode(key)
@@ -261,7 +261,7 @@ function LI.Housekeep(modeKey, dry)
 			end)
 			for i = #pool, mode.keep + 1, -1 do
 				local e = pool[i]
-				local old = now - (e.c.seen or 0) > mode.days * 86400
+				local old = mode.days == 0 or now - (e.c.seen or 0) > mode.days * 86400
 				local rare = false
 				for id in pairs(e.p.recipes) do
 					if holders[id] - 1 < mode.rare then

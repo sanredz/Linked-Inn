@@ -162,7 +162,8 @@ local function HouseText(mode)
 	if not mode.keep then
 		return "Recommended once your list is in the hundreds. Puts away crafters you'll never need, keeping the best ones, rare recipes, favorites, guild and friends."
 	end
-	return string.format("Keeps the best %d per profession. Others are put away after %d days unseen, unless they know a rare recipe or are a favorite, guildmate or friend.", mode.keep, mode.days)
+	local wait = mode.days > 0 and string.format(" once not seen for %d %s", mode.days, mode.days == 1 and "day" or "days") or ""
+	return string.format("Keeps the best %d per profession. Others go%s if %d others can make everything they make. Rare recipes, favorites, guild and friends are always kept.", mode.keep, wait, mode.rare)
 end
 
 local function LastRun()

@@ -2557,12 +2557,12 @@ do
 	end
 	Make("Tailor 10", 10)
 	check(LI.settings.housekeeping == "off" and LI.Housekeep() == 0, "housekeeping is off by default and does nothing")
-	check(LI.Housekeep("light", true) == 0, "light leaves a profession with fewer than 100 crafters alone")
+	check(LI.Housekeep("light", true) == 0, "light leaves a profession with fewer than 75 crafters alone")
 	local removed, crafters = LI.Housekeep("balanced", true)
-	check(removed == 3 and crafters == 3 and LI.crafters["Tailor 10-TestRealm"], "a preview counts without removing anything", removed)
+	check(removed == 13 and crafters == 13 and LI.crafters["Tailor 10-TestRealm"], "a preview counts without removing anything", removed)
 	StaticPopupDialogs.LINKEDINN_HOUSEKEEPING.OnAccept(nil, "balanced")
 	check(LI.settings.housekeeping == "balanced", "accepting saves the mode")
-	check(not LI.crafters["Tailor 10-TestRealm"] and not LI.crafters["Shared 6-TestRealm"], "old crafters below the best 50 are put away")
+	check(not LI.crafters["Tailor 10-TestRealm"] and not LI.crafters["Shared 6-TestRealm"] and not LI.crafters["Tailor 20-TestRealm"], "crafters below the best 40 who add nothing are put away")
 	check(LI.crafters["Tailor 1-TestRealm"] and LI.crafters["Tailor 1-TestRealm"].profs.alchemy and not LI.crafters["Tailor 1-TestRealm"].profs.tailoring, "only the weak profession goes; a good alchemist stays")
 	check(LI.crafters["Rare Pattern-TestRealm"], "someone with a recipe few others know is kept")
 	check(LI.crafters["Fav Low-TestRealm"] and LI.crafters["Guild Low-TestRealm"] and LI.crafters["Seen Today-TestRealm"], "favorites, guildmates and people seen recently are kept")
@@ -2571,8 +2571,10 @@ do
 		if LI.crafters["Shared " .. r .. "-TestRealm"] then holders = holders + 1 end
 	end
 	check(holders == 3, "a recipe never drops below a few people who know it", holders)
-	check(LI.crafters["Tailor 11-TestRealm"] and LI.crafters["Tailor 60-TestRealm"], "the best 50 are always kept")
-	check(LI.db.housekept and LI.db.housekept.removed == 3, "the last run is remembered for the settings panel")
+	check(LI.crafters["Tailor 21-TestRealm"] and LI.crafters["Tailor 60-TestRealm"], "the best 40 are always kept")
+	check(LI.db.housekept and LI.db.housekept.removed == 13, "the last run is remembered for the settings panel")
+	Make("Fresh Low", 1).seen = time() - 3600
+	check(LI.Housekeep("balanced", true) == 0 and LI.Housekeep("strict", true) >= 1, "balanced gives a short grace, strict doesn't wait")
 	check(LI.Housekeep() == 0, "running again finds nothing more")
 	LI.settings.housekeeping = "off"
 end

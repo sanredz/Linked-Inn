@@ -1348,6 +1348,23 @@ do
 	Fire("UNIT_SPELLCAST_SUCCEEDED", "target", "cast-4", 18560)
 	Advance(10)
 	check(LI.test.built.tries == tries1 + 1 and W.hyperlinks[#W.hyperlinks] == "trade:Player-1-KKK:3908:197", "seeing someone craft a known recipe reads that profession", W.hyperlinks[#W.hyperlinks])
+	W.guids["Player-1-MMM"] = { class = "MAGE", name = "Bag Maker", realm = "" }
+	W.linkData["trade:Player-1-MMM:3908:197"] = { linkedName = "Bag Maker", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Fire("CHAT_MSG_TRADESKILLS", "Bag Maker creates |cff0070dd|Hitem:14155::::::::60:::::|h[Mooncloth Bag]|h|r.", "Bag Maker", "", "", "", "", 0, 0, "", 0, 1, "Player-1-MMM")
+	Advance(10)
+	local maker = LI.crafters["Bag Maker-TestRealm"]
+	check(maker and maker.profs.tailoring and maker.profs.tailoring.recipes and maker.class == "MAGE", "a 'creates' line from the crafting log reads that player's profession", maker and maker.class)
+	W.guids["Player-1-NNN"] = { class = "DRUID", name = "Plain Text", realm = "" }
+	W.linkData["trade:Player-1-NNN:3908:197"] = { linkedName = "Plain Text", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Fire("CHAT_MSG_TRADESKILLS", "Plain Text creates Mooncloth Bag x2.", "Plain Text", "", "", "", "", 0, 0, "", 0, 1, "Player-1-NNN")
+	Advance(10)
+	check(LI.crafters["Plain Text-TestRealm"] and LI.crafters["Plain Text-TestRealm"].profs.tailoring, "it also works when the item is named without a link")
+	local tries2 = LI.test.built.tries
+	Fire("CHAT_MSG_TRADESKILLS", "No Id creates Mooncloth Bag.", "No Id", "", "", "", "", 0, 0, "", 0, 1, "")
+	Fire("CHAT_MSG_TRADESKILLS", "Brew Master creates Mooncloth Bag.", "Brew Master", "", "", "", "", 0, 0, "", 0, 1, "Player-1-ME")
+	Fire("CHAT_MSG_TRADESKILLS", "Some One creates Unknown Thing.", "Some One", "", "", "", "", 0, 0, "", 0, 1, "Player-1-OOO")
+	Advance(10)
+	check(LI.test.built.tries == tries2 and not LI.crafters["No Id-TestRealm"], "no id, your own crafts and unknown items are skipped")
 
 	W.units = {
 		nameplate1 = { name = "Scan", surname = "One", guid = "Player-2-AAA" },

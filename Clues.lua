@@ -73,6 +73,75 @@ LI.On("UNIT_SPELLCAST_SUCCEEDED", function(unit, _, spellID)
 	LI.Clue(key, guid, prof, Zone(), LI.Safe(classFile))
 end)
 
+local nameIndex, nameIndexSize
+
+local function RecipeByName(name)
+	local size = 0
+	for _ in pairs(LI.db.recipes) do
+		size = size + 1
+	end
+	if not nameIndex or size ~= nameIndexSize then
+		nameIndex, nameIndexSize = {}, size
+		for id, meta in pairs(LI.db.recipes) do
+			if type(meta.n) == "string" and meta.item then
+				nameIndex[meta.n:lower()] = id
+			end
+		end
+	end
+	return nameIndex[LI.Trim(name):lower()]
+end
+
+local function CraftedRecipe(text)
+	local itemID = tonumber(text:match("|Hitem:(%d+)") or "")
+	if itemID then
+		return LI.RecipeForItem(itemID), itemID
+	end
+	local name = text:match("^.-%s+creates%s+(.-)%.?$")
+	if not name then
+		return nil
+	end
+	name = name:gsub("%s*[xX]%d+$", "")
+	return RecipeByName(name)
+end
+
+local noGuidLogged = {}
+
+function LI.OnCrafted(text, sender, guid)
+	if not LI.ready or type(text) ~= "string" or type(sender) ~= "string" or sender == "" then
+		return false
+	end
+	local key = LI.FullName(sender)
+	if not key or key == LI.playerKey then
+		return false
+	end
+	local recipe = CraftedRecipe(text)
+	local prof = recipe and SpellProfession(recipe)
+	if not prof then
+		return false
+	end
+	local seen = key .. ":" .. prof
+	if type(guid) ~= "string" or not guid:find("^Player%-") then
+		if not noGuidLogged[seen] then
+			noGuidLogged[seen] = true
+			LI.Log(string.format("Saw %s doing %s, but the game didn't say who exactly", LI.ShortName(key), prof))
+		end
+		return false
+	end
+	if not sawCraft[seen] then
+		sawCraft[seen] = true
+		LI.Log(string.format("Saw %s doing %s", LI.ShortName(key), prof))
+	end
+	local classFile
+	if GetPlayerInfoByGUID then
+		classFile = LI.Safe((select(2, LI.Try(GetPlayerInfoByGUID, guid))))
+	end
+	return LI.Clue(key, guid, prof, Zone(), classFile)
+end
+
+LI.On("CHAT_MSG_TRADESKILLS", function(text, sender, _, _, _, _, _, _, _, _, _, guid)
+	LI.OnCrafted(LI.Safe(text), LI.Safe(sender), LI.Safe(guid))
+end)
+
 local function GetCVarOn(name)
 	local getter = (C_CVar and C_CVar.GetCVarBool) or GetCVarBool
 	return getter and LI.Safe(LI.Try(getter, name)) == true

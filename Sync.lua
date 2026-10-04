@@ -31,6 +31,7 @@ local DISCOVER_AGAIN = 24 * 3600
 local LINK_HELLO_GAP = 60
 local WHISPER_MEMORY = 15
 local RELAY = { H1 = true, R1 = true, X1 = true }
+local SHARED = { GUILD = true, PARTY = true, RAID = true }
 local SEND_RANK = { ask = 1, hello = 1, ping = 1, pong = 1, work = 2, data = 3, relay = 3, discover = 4 }
 
 local queue = {}
@@ -607,8 +608,8 @@ local function Ask(key, ver, chatType)
 		return
 	end
 	asked[key] = { at = Now(), ver = ver }
-	if chatType == "GUILD" then
-		Enqueue("ask", "Q2|" .. ver .. "|" .. LI.ShortName(key), "GUILD")
+	if SHARED[chatType] then
+		Enqueue("ask", "Q2|" .. ver .. "|" .. LI.ShortName(key), chatType)
 	else
 		Enqueue("ask", "Q1|" .. ver, "WHISPER", short)
 	end
@@ -972,10 +973,10 @@ Dispatch = function(key, text, chatType)
 		OnData(key, parts)
 	elseif kind == "Q1" then
 		OnAsk(key, parts)
-	elseif kind == "Q2" and chatType == "GUILD" then
+	elseif kind == "Q2" and SHARED[chatType] then
 		local me = LI.playerKey and LI.ShortName(LI.playerKey)
 		if me and type(parts[3]) == "string" and parts[3]:lower() == me:lower() then
-			answerGuild = true
+			answerGuild = answerGuild or chatType == "GUILD"
 			OnAsk(key, parts)
 		end
 	elseif kind == "R1" and LI.Work then

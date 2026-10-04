@@ -2827,6 +2827,16 @@ do
 		if m.msg:find("^D1|") and m.chatType == "GUILD" then data = true end
 	end
 	check(data, "a guild request for you is answered with your list through the guild")
+	W.groupSize = 2
+	W.sent = {}
+	Addon("H1|abce|MAGE|alchemy~1e~2s~5", "Party Pal-TestRealm", "PARTY")
+	Advance(3)
+	local partyAsk = false
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^Q2|abce|Party Pal$") and m.chatType == "PARTY" then partyAsk = true end
+	end
+	check(partyAsk, "the same works through your party")
+	W.groupSize = nil
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

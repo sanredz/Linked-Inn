@@ -2497,7 +2497,7 @@ do
 	W.playerGUID = "Player-1-ME"
 	Boot()
 	Advance(5)
-	check(LI.db.triedRound == 3, "checks spoiled by the window bug are cleared once")
+	check(LI.db.triedRound == 4, "checks spoiled by the window bug are cleared once")
 	LI.tried["Guild Mate-TestRealm"] = time() - 2 * 86400
 	LI.tried["Passer By-TestRealm"] = time() - 2 * 86400
 	check(LI.Discover("Guild Mate-TestRealm", "Player-1-GMATE", LI.PRIO.guild), "guild and group members are checked again after half a day")
@@ -2650,6 +2650,33 @@ do
 	check(LI.Allowed("Total Stranger-TestRealm") and #LI.Search("", {}) >= 3, "switching it off brings everyone back")
 	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-STR", 2259, 171, "Alchemy"), "Total Stranger-TestRealm", "Player-1-STR", "Trade - City")
 	check(LI.crafters["Total Stranger-TestRealm"], "and everything works as normal again")
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.defaultLinks = true
+	Boot()
+	Advance(5)
+	W.autoWorks = true
+	W.linkData = W.linkData or {}
+	local guid = "Player-1-TAIL"
+	local function Link(prof)
+		return LI.BuildLink(guid, prof)
+	end
+	W.linkData[Link("alchemy")] = { linkedName = "Late Tailor", prof = ALCHEMY, recipes = {} }
+	W.linkData[Link("blacksmithing")] = { linkedName = "Late Tailor", prof = { professionName = "Blacksmithing", professionID = 164, skillLevel = 1, maxSkillLevel = 75 }, recipes = {} }
+	W.linkData[Link("tailoring")] = { linkedName = "Late Tailor", prof = TAILORING, recipes = TAILOR_RECIPES }
+	LI.Reader.Scan({ { key = "Late Tailor-TestRealm", guid = guid, profs = { "alchemy", "blacksmithing", "tailoring" } } }, true)
+	Advance(20)
+	local c = LI.crafters["Late Tailor-TestRealm"]
+	check(c and c.profs.tailoring and c.profs.tailoring.recipes, "empty answers for professions they don't have don't end the scan early")
+	local line
+	for _, e in ipairs(LI.db.log) do
+		if e.m:find("Checked Late Tailor", 1, true) then line = e.m end
+	end
+	check(line and line:find("1 profession", 1, true), "the log counts only real professions", line)
+	W.autoWorks, W.defaultLinks = false, nil
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

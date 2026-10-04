@@ -341,7 +341,7 @@ local function Finish(job, outcome)
 		pending = nil
 		nextAt = math.max(nextAt, Now() + (job.scan and GAP or 2))
 		if job.scan then
-			ScanStep(job, outcome == "ok")
+			ScanStep(job, outcome == "ok" and job.found == true)
 		elseif LI.ProbeResult and not job.notified then
 			LI.ProbeResult(job.key, outcome == "ok")
 		end
@@ -760,6 +760,7 @@ function Reader.Read()
 					c.class = c.class or job.class
 					c.where = job.where or c.where
 				end
+				job.found = count > 0
 				LI.Log(string.format("%s %s link for %s: %d recipes", job.scan and "Scan found" or "Built", name, LI.ShortName(key), count))
 			elseif not job.probe then
 				if FrameVisible() then

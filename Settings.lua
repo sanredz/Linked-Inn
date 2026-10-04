@@ -4,7 +4,6 @@ local Settings = {}
 LI.Settings = Settings
 
 local WIDTH = 340
-local TEXT_WIDTH = WIDTH - 72
 local GOLD = { 1, 0.82, 0 }
 local SOFT = { 0.62, 0.6, 0.56 }
 local TITLE_FONT = "Fonts\\MORPHEUS.TTF"
@@ -35,28 +34,51 @@ local function Changed()
 	end
 end
 
+local HEAD_X = 18
+local BOX_X = 14
+local BODY_X = 42
+local RIGHT_PAD = 18
+local PAGE_WIDTH = WIDTH - 10
+
+local function Below(region, anchor, x, gap)
+	region:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", x - (anchor.colX or 0), -(gap or 0))
+	region.colX = x
+	return region
+end
+
+local function Body(parent, x, text)
+	local fs = Text(parent, "GameFontHighlightSmall")
+	fs:SetTextColor(SOFT[1], SOFT[2], SOFT[3])
+	fs:SetWidth(PAGE_WIDTH - x - RIGHT_PAD)
+	fs:SetSpacing(2)
+	fs:SetText(text)
+	return fs
+end
+
 local function Section(parent, anchor, title, gap)
 	local head = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 	head:SetFont(TITLE_FONT, 17, "")
 	head:SetTextColor(GOLD[1], GOLD[2], GOLD[3])
 	if anchor then
-		head:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -(gap or 20))
+		Below(head, anchor, HEAD_X, gap or 22)
 	else
-		head:SetPoint("TOPLEFT", 18, -14)
+		head:SetPoint("TOPLEFT", HEAD_X, -14)
+		head.colX = HEAD_X
 	end
 	head:SetText(title)
 	local line = parent:CreateTexture(nil, "ARTWORK")
 	line:SetHeight(1)
 	line:SetPoint("TOPLEFT", head, "BOTTOMLEFT", 0, -4)
-	line:SetPoint("RIGHT", parent, "RIGHT", -18, 0)
+	line:SetPoint("RIGHT", parent, "RIGHT", -RIGHT_PAD, 0)
 	line:SetColorTexture(1, 0.82, 0, 0.3)
+	line.colX = HEAD_X
 	return line
 end
 
 local function Option(parent, anchor, label, desc, get, set)
 	local box = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
 	box:SetSize(26, 26)
-	box:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", -4, -8)
+	Below(box, anchor, BOX_X, 8)
 	box.label = Text(parent, "GameFontHighlight")
 	box.label:SetPoint("LEFT", box, "RIGHT", 2, 0)
 	box.label:SetText(label)
@@ -69,12 +91,7 @@ local function Option(parent, anchor, label, desc, get, set)
 	box.get = get
 	local last = box
 	if desc then
-		box.desc = Text(parent, "GameFontHighlightSmall")
-		box.desc:SetTextColor(SOFT[1], SOFT[2], SOFT[3])
-		box.desc:SetPoint("TOPLEFT", box, "BOTTOMLEFT", 30, 0)
-		box.desc:SetWidth(TEXT_WIDTH)
-		box.desc:SetSpacing(2)
-		box.desc:SetText(desc)
+		box.desc = Below(Body(parent, BODY_X, desc), box, BODY_X, 0)
 		last = box.desc
 	end
 	return box, last
@@ -185,52 +202,44 @@ local function Create()
 		"Every few minutes in a city or inn, friendly nameplates flash on for half a second so Linked Inn can note everyone around you. Their professions are then read quietly in the background.\n\nAlready play with friendly nameplates on (Shift+V)? Then everyone you pass is checked all the time, and this isn't needed.",
 		function() return LI.settings.cityScan == true end,
 		function(on) LI.settings.cityScan = on end)
-	frame.everyLabel = Text(page, "GameFontHighlightSmall")
-	frame.everyLabel:SetPoint("TOPLEFT", frame.cityLast, "BOTTOMLEFT", 0, -12)
+	frame.everyLabel = Below(Text(page, "GameFontHighlightSmall"), frame.cityLast, BODY_X, 14)
 	frame.everyLabel:SetText("Scan every")
 	frame.every = Dropdown(page, 120, INTERVALS, Minutes, function()
 		return tonumber(LI.settings.cityEvery) or 5
 	end, function(v)
 		LI.settings.cityEvery = v
 	end)
-	frame.every:SetPoint("LEFT", frame.everyLabel, "LEFT", 80, 0)
+	frame.every:SetPoint("LEFT", frame.everyLabel, "LEFT", 76, 0)
 
-	local reading = Section(page, frame.everyLabel, "Reading", 26)
+	local reading = Section(page, frame.everyLabel, "Reading", 28)
 	frame.read, frame.readLast = Option(page, reading, "Read profession links from chat",
 		"Saves someone's full recipe list when they link a profession, without you clicking it.",
 		function() return LI.settings.autoRead ~= false end,
 		function(on) LI.settings.autoRead = on end)
 
 	local list = Section(page, frame.readLast, "Your list")
-	frame.forgetLabel = Text(page, "GameFontHighlight")
-	frame.forgetLabel:SetPoint("TOPLEFT", list, "BOTTOMLEFT", 0, -14)
+	frame.forgetLabel = Below(Text(page, "GameFontHighlight"), list, HEAD_X, 16)
 	frame.forgetLabel:SetText("Forget crafters not seen for")
-	frame.forget = Dropdown(page, 110, FORGET, Days, function()
+	frame.forget = Dropdown(page, 104, FORGET, Days, function()
 		return tonumber(LI.settings.forgetDays) or 60
 	end, function(v)
 		LI.settings.forgetDays = v
 		LI.PruneNow()
 	end)
-	frame.forget:SetPoint("LEFT", frame.forgetLabel, "RIGHT", 10, 0)
-	frame.forgetDesc = Text(page, "GameFontHighlightSmall")
-	frame.forgetDesc:SetTextColor(SOFT[1], SOFT[2], SOFT[3])
-	frame.forgetDesc:SetPoint("TOPLEFT", frame.forgetLabel, "BOTTOMLEFT", 0, -8)
-	frame.forgetDesc:SetWidth(TEXT_WIDTH + 30)
-	frame.forgetDesc:SetText("Seeing someone anywhere, in chat, crafting or walking by, keeps them on the list. Favorites are never forgotten.")
-	frame.count = Text(page, "GameFontHighlight")
-	frame.count:SetPoint("TOPLEFT", frame.forgetDesc, "BOTTOMLEFT", 0, -14)
+	frame.forget:SetPoint("LEFT", frame.forgetLabel, "RIGHT", 8, 0)
+	frame.forgetDesc = Below(Body(page, HEAD_X, "Seeing someone anywhere, in chat, crafting or walking by, keeps them on the list. Favorites are never forgotten."), frame.forgetLabel, HEAD_X, 10)
+	frame.count = Below(Text(page, "GameFontHighlight"), frame.forgetDesc, HEAD_X, 16)
 	frame.wipe = CreateFrame("Button", nil, page, "UIPanelButtonTemplate")
-	frame.wipe:SetSize(120, 22)
+	frame.wipe:SetSize(130, 22)
 	frame.wipe:SetText("Forget everyone")
-	frame.wipe:SetPoint("RIGHT", page, "RIGHT", -18, 0)
-	frame.wipe:SetPoint("TOP", frame.count, "TOP", 0, 4)
+	Below(frame.wipe, frame.count, HEAD_X - 2, 8)
 	frame.wipe:SetScript("OnClick", function()
 		if StaticPopup_Show then
 			StaticPopup_Show("LINKEDINN_FORGET_ALL")
 		end
 	end)
 
-	local minimap = Section(page, frame.count, "Minimap", 26)
+	local minimap = Section(page, frame.wipe, "Minimap", 22)
 	frame.minimap = Option(page, minimap, "Show the minimap button", nil,
 		function() return LI.settings.showMinimap ~= false end,
 		function(on) LI.settings.showMinimap = on end)

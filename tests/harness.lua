@@ -129,7 +129,7 @@ function methods:SetHyperlink(link)
 			if data then
 				W.trade = { linked = true, linkedName = data.linkedName, prof = data.prof, recipes = data.recipes }
 				W.Fire("TRADE_SKILL_SHOW")
-				if ProfessionsFrame then ProfessionsFrame:Show() end
+				if ProfessionsFrame and not W.noFrame then ProfessionsFrame:Show() end
 				W.Fire("TRADE_SKILL_LIST_UPDATE")
 			elseif W.showEmpty and ProfessionsFrame then
 				ProfessionsFrame:Show()
@@ -569,7 +569,7 @@ Fire("TRADE_SKILL_SHOW")
 Fire("TRADE_SKILL_LIST_UPDATE")
 Advance(1)
 check(LI.test.click == 0 and LI.test.auto.ok == 1, "a late update from an automatic read is not counted as a click", LI.test.click)
-C_TradeSkillUI.CloseTradeSkill()
+check(W.trade == nil, "and the late window is closed again by itself")
 W.closed = W.closed - 1
 W.clickWorks = true
 SetItemRef("trade:Player-1-AAA:3908:197", "[Tailoring]", "LeftButton")
@@ -2339,6 +2339,32 @@ do
 	check(LI.settings.showMinimap == false and not LinkedInnMinimapButton:IsShown(), "the minimap button can be hidden")
 	main:Hide()
 	W.playerGUID = nil
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	W.autoWorks, W.noFrame = true, true
+	W.linkData = W.linkData or {}
+	local empty = "trade:Player-1-PD:2259:171"
+	W.linkData[empty] = { linkedName = "Papa Do", prof = ALCHEMY, recipes = {} }
+	LI.Reader.Want("Papa Do-TestRealm", "Alchemy", empty, { built = true })
+	Advance(5)
+	check(W.trade == nil, "an empty reply to a silent read is closed, so it can't pop up later")
+	W.noFrame = nil
+	W.replyDelay = 4
+	local late = "trade:Player-1-LT:2259:171"
+	W.linkData[late] = { linkedName = "Late Guy", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	LI.Reader.Want("Late Guy-TestRealm", "Alchemy", late, { built = true })
+	Advance(10)
+	local logged = false
+	for _, e in ipairs(LI.db.log) do
+		if e.m:find("late reply", 1, true) then logged = true end
+	end
+	check(W.trade == nil and logged, "a reply that comes after the timeout is closed too", tostring(logged))
+	W.autoWorks, W.replyDelay = false, nil
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

@@ -300,6 +300,7 @@ LI.On("PLAYER_LOGIN", function()
 	realm.tried = type(realm.tried) == "table" and realm.tried or {}
 	realm.low = type(realm.low) == "table" and realm.low or {}
 	LI.db.settings.profs = {}
+	LI.db.settings.liOnly = false
 	LI.crafters = realm.crafters
 	LI.favorites = realm.favorites
 	LI.waiting = realm.waiting
@@ -681,7 +682,7 @@ function LI.Search(query, opts)
 	end
 	for key, c in pairs(LI.crafters) do
 		local status, seenAt, sure = LI.Status(key)
-		if key ~= LI.playerKey then
+		if key ~= LI.playerKey and (not opts.liOnly or c.li) then
 			local nameMatch = q ~= "" and kind == "all" and Find(LI.ShortName(key), q)
 			local groups, top = {}, nil
 			for profKey, p in pairs(c.profs) do

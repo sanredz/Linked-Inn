@@ -129,7 +129,7 @@ function methods:SetHyperlink(link)
 			if data then
 				W.trade = { linked = true, linkedName = data.linkedName, prof = data.prof, recipes = data.recipes }
 				W.Fire("TRADE_SKILL_SHOW")
-				if ProfessionsFrame then ProfessionsFrame:Show() end
+				if ProfessionsFrame and not W.noFrame then ProfessionsFrame:Show() end
 				W.Fire("TRADE_SKILL_LIST_UPDATE")
 			elseif W.showEmpty and ProfessionsFrame then
 				ProfessionsFrame:Show()
@@ -574,7 +574,7 @@ Fire("TRADE_SKILL_SHOW")
 Fire("TRADE_SKILL_LIST_UPDATE")
 Advance(1)
 check(LI.test.click == 0 and LI.test.auto.ok == 1, "a late update from an automatic read is not counted as a click", LI.test.click)
-C_TradeSkillUI.CloseTradeSkill()
+check(W.trade == nil, "and the late window is closed again by itself")
 W.closed = W.closed - 1
 W.clickWorks = true
 SetItemRef("trade:Player-1-AAA:3908:197", "[Tailoring]", "LeftButton")
@@ -1604,7 +1604,7 @@ do
 	local sixth, why = Work.Post({ recipe = 3914 })
 	check(not sixth and why:find("5 open requests", 1, true), "at most five open requests", why)
 	for i = 3, 6 do Work.Cancel(tostring(i)) end
-	Advance(10)
+	Advance(12)
 	check(#Work.Mine() == 1 and Last("X1|").msg == "X1|6", "cancelling sends a cancel", Last("X1|") and Last("X1|").msg)
 
 	local function Req(id, recipe, item, qty, mats, price, ttl, note)
@@ -1911,6 +1911,16 @@ check(#asks == 1 and asks[1].target == "Brew Master" and asks[1].msg == "Q1|" ..
 Addon(newHello, "Brew Master-TestRealm")
 Advance(2)
 check(#Sent("Q1") == 1, "it doesn't ask twice")
+for i = 1, 5 do
+	LI.Sync.Send("W1|filler" .. i, "WHISPER", "Some One")
+end
+W.combat = true
+LI.Sync.Send("W1|first", "WHISPER", "Some One")
+LI.Sync.Ping("Ping Target")
+local kinds = LI.Sync.QueuedKinds()
+check(kinds[1] == "ping" and kinds[#kinds] == "work", "requests and hellos jump ahead of bulk messages", table.concat(kinds, ","))
+W.combat = false
+Advance(10)
 for i = #chunks, 1, -1 do
 	Addon(chunks[i], "Brew Master-TestRealm")
 end
@@ -1938,6 +1948,14 @@ for i = #chunks, 1, -1 do
 	Addon(chunks[i], "Brew Master-TestRealm")
 end
 check(LI.test.sync.lists == 1, "a list you already have is not applied again", LI.test.sync.lists)
+brew.profs.tailoring.recipes = nil
+Addon(newHello, "Brew Master-TestRealm")
+Advance(2)
+check(#Sent("Q1") == 2, "a hello asks again when recipes it names are missing, even at the same version", #Sent("Q1"))
+for i = #chunks, 1, -1 do
+	Addon(chunks[i], "Brew Master-TestRealm")
+end
+check(brew.profs.tailoring.recipes and brew.profs.tailoring.recipes[18560], "and the list comes back")
 local tiny = "tailoring~1~1~~" .. string.rep("1.", 13) .. "1"
 check(#tiny == 42 and Sync.Decode(tiny) ~= nil, "test list is valid", #tiny)
 for i = 1, 42 do
@@ -1966,7 +1984,7 @@ check(LI.crafters["Flood Er-TestRealm"].profs.tailoring.rank == 71, "the cut-off
 
 LI.UI.Open(LI.UI.TAB.test)
 local sv = LinkedInnFrame.testPage.syncValues
-check(sv[1].__text == "joined, waiting for an echo" and sv[3].__text == "3" and sv[4].__text == "1", "the test tab shows sharing", sv[1].__text .. " / " .. sv[3].__text)
+check(sv[1].__text == "joined, waiting for an echo" and sv[3].__text == "3" and sv[4].__text == "2", "the test tab shows sharing", sv[1].__text .. " / " .. sv[3].__text)
 check(#W.errors == errorsBefore, "sharing runs without errors", W.errors[errorsBefore + 1])
 
 do
@@ -2302,6 +2320,19 @@ do
 		if r.entry and r.entry.key == "Low Skill-TestRealm" and r.badge:IsShown() then badge = "wrong" end
 	end
 	check(badge == true, "crafters who use Linked Inn get a small badge, others don't", tostring(badge))
+	check(main.liToggle and LI.settings.liOnly ~= true, "there is a Linked Inn users toggle, off by default")
+	main.liToggle.__scripts.OnClick(main.liToggle)
+	check(LI.settings.liOnly == true and main.count.__text:find("^1 shown"), "it shows only crafters who use Linked Inn", main.count.__text)
+	check(#LI.Search("", { liOnly = true, minSkill = 225 }) == 0 and #LI.Search("", { liOnly = true }) == 1, "and works together with the other filters")
+	main.liToggle.__scripts.OnClick(main.liToggle)
+	check(LI.settings.liOnly == false and main.count.__text:find("^3 shown"), "clicking again shows everyone", main.count.__text)
+	LI.settings.liOnly = true
+	local saved = Logout()
+	Boot(saved)
+	check(LI.settings.liOnly == false, "it resets at login so nobody gets stuck with a short list")
+	Advance(5)
+	LI.UI.Open(LI.UI.TAB.find)
+	main = LinkedInnFrame
 
 	main.gear.__scripts.OnClick(main.gear)
 	local panel = LinkedInnSettings
@@ -2426,6 +2457,32 @@ do
 	LI.low["New Low-TestRealm|tailoring"].t = time() - 8 * 86400
 	check(not LI.IsLow("New Low-TestRealm", "tailoring"), "after a week they get another chance, in case they leveled")
 	LI.settings.keepSkill = 0
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	W.autoWorks, W.noFrame = true, true
+	W.linkData = W.linkData or {}
+	local empty = "trade:Player-1-PD:2259:171"
+	W.linkData[empty] = { linkedName = "Papa Do", prof = ALCHEMY, recipes = {} }
+	LI.Reader.Want("Papa Do-TestRealm", "Alchemy", empty, { built = true })
+	Advance(5)
+	check(W.trade == nil, "an empty reply to a silent read is closed, so it can't pop up later")
+	W.noFrame = nil
+	W.replyDelay = 4
+	local late = "trade:Player-1-LT:2259:171"
+	W.linkData[late] = { linkedName = "Late Guy", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	LI.Reader.Want("Late Guy-TestRealm", "Alchemy", late, { built = true })
+	Advance(10)
+	local logged = false
+	for _, e in ipairs(LI.db.log) do
+		if e.m:find("late reply", 1, true) then logged = true end
+	end
+	check(W.trade == nil and logged, "a reply that comes after the timeout is closed too", tostring(logged))
+	W.autoWorks, W.replyDelay = false, nil
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

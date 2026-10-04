@@ -2201,5 +2201,29 @@ do
 	W.autoWorks = false
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	W.guids["Player-2-OTH"] = { class = "MAGE", name = "Other Realm", realm = "" }
+	W.linkData["trade:Player-2-OTH:3908:197"] = { linkedName = "Other Realm", prof = TAILORING, recipes = TAILOR_RECIPES }
+	W.autoWorks = true
+	local mark = #W.hyperlinks
+	Say("CHAT_MSG_PARTY", TradeLink("Player-2-OTH", 3908, 197, "Tailoring"), "Other Realm-TestRealm", "Player-2-OTH")
+	Advance(5)
+	check(#W.hyperlinks == mark and LI.db.log[#LI.db.log].m:find("on the other realm", 1, true), "someone on the other hidden realm isn't read, and the log says why", LI.db.log[#LI.db.log].m)
+	Say("CHAT_MSG_PARTY", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA")
+	Advance(5)
+	check(W.hyperlinks[#W.hyperlinks] == "trade:Player-1-AAA:3908:197" and LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes, "someone on your realm is read right away")
+	W.units = { nameplate1 = { name = "Other", surname = "Plate", guid = "Player-2-OPL" } }
+	local queued = LI.DiscoverQueue()
+	Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+	check(LI.DiscoverQueue() == queued, "nor is anyone from the other realm lined up from nameplates")
+	W.units = nil
+	W.autoWorks = false
+	W.playerGUID = nil
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

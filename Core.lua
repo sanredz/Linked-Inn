@@ -228,6 +228,20 @@ function LI.Whisper(key, text)
 	return true
 end
 
+local myServer
+
+function LI.OtherServer(guid)
+	local server = type(guid) == "string" and guid:match("^Player%-(%d+)%-")
+	if not server then
+		return false
+	end
+	if not myServer then
+		local mine = LI.Safe(LI.Try(UnitGUID, "player"))
+		myServer = type(mine) == "string" and mine:match("^Player%-(%d+)%-") or nil
+	end
+	return myServer ~= nil and server ~= myServer
+end
+
 LI.COLOR = {
 	GOLD = { 1.00, 0.82, 0.00 },
 	GREEN = { 0.30, 0.92, 0.40 },

@@ -289,6 +289,9 @@ function LI.Discover(key, guid, prio, classFile, where)
 		return false
 	end
 	LI.NoteGuid(key, guid)
+	if LI.OtherServer(guid) then
+		return false
+	end
 	if KnownPrimaries(LI.crafters[key]) >= 2 then
 		return false
 	end

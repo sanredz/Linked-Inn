@@ -45,7 +45,17 @@ function Reader.IsBroken()
 	return Now() < pausedUntil
 end
 
+local otherLogged = {}
+
 function Reader.Want(key, profName, link, extra)
+	local guid = type(link) == "string" and link:match("^trade:(Player%-%d+%-%w+):")
+	if LI.OtherServer(guid) then
+		if not otherLogged[key] then
+			otherLogged[key] = true
+			LI.Log(string.format("%s is on the other realm; the game doesn't let us read their professions", LI.ShortName(key)))
+		end
+		return
+	end
 	local c = LI.Crafter(key)
 	local profKey = LI.ProfKey(profName)
 	local p = c and profKey and c.profs[profKey]

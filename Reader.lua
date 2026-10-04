@@ -36,7 +36,7 @@ local lastAuto
 local hooked = false
 local concealed = false
 local ours = false
-local lastDone = -60
+local lastDone = GetTime and GetTime() or -60
 local userClickAt = -60
 local LATE = 15
 local USER_CLICK = 5
@@ -891,6 +891,11 @@ LI.On("TRADE_SKILL_SHOW", function()
 	elseif LateReply() then
 		ours = true
 		LI.Log("A late reply opened a profession window; closed it")
+		LI.After(0, function()
+			if ours and not pending and FrameShown() then
+				Conceal(ProfessionsFrame)
+			end
+		end)
 		LI.After(SETTLE, function()
 			if not pending then
 				CloseHidden()
@@ -920,6 +925,10 @@ end)
 
 LI.On("PLAYER_LOGOUT", function()
 	Unsilence()
+end)
+
+LI.On("PLAYER_ENTERING_WORLD", function()
+	lastDone = Now()
 end)
 
 LI.On("TRADE_SKILL_CLOSE", function()

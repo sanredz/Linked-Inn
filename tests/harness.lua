@@ -2685,5 +2685,18 @@ do
 	W.autoWorks, W.defaultLinks = false, nil
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Fire("PLAYER_ENTERING_WORLD")
+	Advance(3)
+	W.trade = { linked = true, linkedName = "Cander Ironshire", prof = TAILORING, recipes = {} }
+	Fire("TRADE_SKILL_SHOW")
+	if ProfessionsFrame then ProfessionsFrame:Show() end
+	Advance(2)
+	check(W.trade == nil, "a reply to a read from before a reload is closed, not shown")
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

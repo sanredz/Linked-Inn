@@ -390,7 +390,7 @@ function Reader.ScanProgress()
 end
 
 function Reader.Idle()
-	return pending == nil and #probes == 0 and (#queue == 0 or Now() < nextAt)
+	return pending == nil and #probes == 0 and (#queue == 0 or Now() < nextAt - 1)
 end
 
 function Reader.Scan(candidates, quiet)

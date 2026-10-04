@@ -1048,6 +1048,7 @@ function Sync.Status()
 		"Sent: " .. Counts("tx") .. ((sync.failed or 0) > 0 and string.format("  |cffff6060failed %d (%s)|r", sync.failed, tostring(sync.lastError)) or ""),
 		"Received: " .. Counts("rx"),
 		"Users heard: " .. (#heard > 0 and table.concat(heard, ", ") or "none yet"),
+		LI.sights and string.format("Players seen: %d (%d without a name, %d without an id, %d lined up to check)", LI.sights.players, LI.sights.noName, LI.sights.noId, LI.sights.lined) or nil,
 		LI.Crafts and (function()
 			local c = LI.Crafts()
 			return string.format("Crafting log: %d lines, %d known items, %d unknown items, %d read; waiting to see again: %d (%d found so far). Players checked: %d, in line: %d. Reads waiting: %d", c.lines, c.known, c.unknown, c.queued, LI.WaitingCount(), c.found, c.checked, LI.DiscoverQueue(), LI.Reader.QueueSize())

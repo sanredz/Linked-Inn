@@ -117,7 +117,7 @@ LI.Crafts = Crafts
 local UNIT_TOKENS = { "target", "mouseover", "focus" }
 local WAIT_FOR = 90 * 86400
 local TRY_AGAIN = 7 * 86400
-local DISCOVER_EVERY = 4
+local DISCOVER_EVERY = 2
 local CANDIDATES_MAX = 300
 
 LI.PRIO = { chat = 1, guild = 2, seen = 3, group = 4 }
@@ -344,4 +344,8 @@ end
 
 LI.Listen("Ready", function()
 	LI.Every(DISCOVER_EVERY, LI.DiscoverStep)
+end)
+
+LI.Listen("ScanDone", function()
+	LI.After(0.1, LI.DiscoverStep)
 end)

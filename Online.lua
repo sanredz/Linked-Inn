@@ -161,6 +161,8 @@ function LI.Heard(key)
 	return heardAt[key] ~= nil and time() - heardAt[key] <= HEARD_ONLINE
 end
 
+LI.sights = { players = 0, noName = 0, noId = 0, lined = 0 }
+
 local function Sighted(unit)
 	if not LI.ready or not unit then
 		return
@@ -168,12 +170,22 @@ local function Sighted(unit)
 	if not LI.Safe(LI.Try(UnitIsPlayer, unit)) then
 		return
 	end
+	local sights = LI.sights
+	sights.players = sights.players + 1
 	local key = LI.UnitKey(unit)
 	local zone = GetRealZoneText and LI.Safe(LI.Try(GetRealZoneText))
+	if not key then
+		sights.noName = sights.noName + 1
+	end
 	if key and LI.Discover then
 		local guid = LI.Safe(LI.Try(UnitGUID, unit))
+		if type(guid) ~= "string" then
+			sights.noId = sights.noId + 1
+		end
 		if LI.Safe(LI.Try(UnitIsFriend, "player", unit)) ~= false then
-			LI.Discover(key, guid, LI.PRIO.seen, LI.Safe((select(2, LI.Try(UnitClass, unit)))), type(zone) == "string" and zone ~= "" and zone or nil)
+			if LI.Discover(key, guid, LI.PRIO.seen, LI.Safe((select(2, LI.Try(UnitClass, unit)))), type(zone) == "string" and zone ~= "" and zone or nil) then
+				sights.lined = sights.lined + 1
+			end
 		else
 			LI.NoteGuid(key, guid)
 		end

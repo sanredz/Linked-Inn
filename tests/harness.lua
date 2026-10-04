@@ -757,6 +757,8 @@ LI.Forget("Dee Gone-TestRealm")
 
 W.guids["Player-1-EEE"] = { class = "MAGE", name = "Eve One", realm = "" }
 W.guids["Player-1-FFF"] = { class = "MAGE", name = "Fay Two", realm = "" }
+LI.tried["Eve One-TestRealm"] = time()
+LI.tried["Fay Two-TestRealm"] = time()
 Advance(10)
 Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-EEE", 3908, 197, "Tailoring"), "Eve One-TestRealm", "Player-1-EEE", "Trade - City")
 Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-FFF", 3908, 197, "Tailoring"), "Fay Two-TestRealm", "Player-1-FFF", "Trade - City")
@@ -1112,10 +1114,11 @@ check(_G["LinkedInnFrameTab2"] ~= nil and _G["LinkedInnFrameTab3"] == nil, "only
 check(main.testPage.head.__text == "Chat alone is enough", "one clean automatic read gives the good verdict", main.testPage.head.__text)
 check(#W.errors == uiErrors, "the window builds without errors", W.errors[uiErrors + 1])
 
+local okBefore, clicksBefore = LI.test.auto.ok, LI.test.click
 local saved = Logout()
 Boot(saved)
 check(LI.crafters["Anna Smith-TestRealm"] and LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes[18560], "crafters and recipes survive a reload")
-check(LI.test.auto.ok == 1 and LI.test.click == 3, "test results survive a reload", LI.test.click)
+check(okBefore > 0 and LI.test.auto.ok == okBefore and LI.test.click == clicksBefore, "test results survive a reload", LI.test.auto.ok .. " " .. LI.test.click)
 check(LI.guids["Player-1-CCC"] == "Cora Vale-TestRealm", "the GUID index is rebuilt after a reload")
 check(LI.IsFavorite("Cora Vale-TestRealm"), "favorites survive a reload")
 LI.test.built = nil

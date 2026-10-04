@@ -2485,5 +2485,19 @@ do
 	W.autoWorks, W.replyDelay = false, nil
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	check(LI.db.triedRound == 3, "checks spoiled by the window bug are cleared once")
+	LI.tried["Guild Mate-TestRealm"] = time() - 2 * 86400
+	LI.tried["Passer By-TestRealm"] = time() - 2 * 86400
+	check(LI.Discover("Guild Mate-TestRealm", "Player-1-GMATE", LI.PRIO.guild), "guild and group members are checked again after half a day")
+	check(not LI.Discover("Passer By-TestRealm", "Player-1-PASSB", LI.PRIO.chat), "people you just walk past still wait a week")
+	LI.tried["Fresh Mate-TestRealm"] = time() - 3600
+	check(not LI.Discover("Fresh Mate-TestRealm", "Player-1-FMATE", LI.PRIO.group), "but not right after a check")
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

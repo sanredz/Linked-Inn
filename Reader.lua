@@ -259,6 +259,9 @@ local function ScanStep(job, ok)
 		for _ in pairs(run.found) do
 			crafters = crafters + 1
 		end
+		if run.quiet and run.players == 1 and run.who then
+			LI.Log(string.format("Checked %s: %d %s in %.0fs", LI.ShortName(run.who), run.found[run.who] or 0, (run.found[run.who] or 0) == 1 and "profession" or "professions", Now() - run.started))
+		end
 		if not run.quiet then
 			LI.Print(string.format("Scan done: %d %s among %d %s nearby.", crafters, crafters == 1 and "crafter" or "crafters", run.players, run.players == 1 and "player" or "players"))
 			LI.Log(string.format("Scan: %d crafters among %d players", crafters, run.players))
@@ -313,7 +316,7 @@ local function Finish(job, outcome)
 	end
 	if job.probe then
 		pending = nil
-		nextAt = math.max(nextAt, Now() + 2)
+		nextAt = math.max(nextAt, Now() + (job.scan and GAP or 2))
 		if job.scan then
 			ScanStep(job, outcome == "ok")
 		elseif LI.ProbeResult and not job.notified then
@@ -511,7 +514,7 @@ function Reader.Scan(candidates, quiet)
 		return false
 	end
 	readsSinceScan = 0
-	local run = { total = 0, done = 0, found = {}, players = #candidates, quiet = quiet }
+	local run = { total = 0, done = 0, found = {}, players = #candidates, quiet = quiet, started = Now(), who = candidates[1].key }
 	for _, cand in ipairs(candidates) do
 		for _, profKey in ipairs(cand.profs) do
 			local link = LI.BuildLink(cand.guid, profKey)

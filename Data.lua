@@ -311,8 +311,8 @@ LI.On("PLAYER_LOGIN", function()
 			LI.low[id] = nil
 		end
 	end
-	if LI.db.triedRound ~= 2 then
-		LI.db.triedRound = 2
+	if LI.db.triedRound ~= 3 then
+		LI.db.triedRound = 3
 		for key in pairs(LI.tried) do
 			LI.tried[key] = nil
 		end

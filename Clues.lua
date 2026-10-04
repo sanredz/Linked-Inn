@@ -117,6 +117,7 @@ LI.Crafts = Crafts
 local UNIT_TOKENS = { "target", "mouseover", "focus" }
 local WAIT_FOR = 90 * 86400
 local TRY_AGAIN = 7 * 86400
+local CLOSE_AGAIN = 12 * 3600
 local DISCOVER_EVERY = 2
 local CANDIDATES_MAX = 300
 
@@ -295,11 +296,11 @@ function LI.Discover(key, guid, prio, classFile, where)
 	if KnownPrimaries(LI.crafters[key]) >= 2 then
 		return false
 	end
+	prio = prio or LI.PRIO.chat
 	local tried = LI.tried[key]
-	if tried and time() - tried < TRY_AGAIN then
+	if tried and time() - tried < (prio >= LI.PRIO.guild and CLOSE_AGAIN or TRY_AGAIN) then
 		return false
 	end
-	prio = prio or LI.PRIO.chat
 	for _, cand in ipairs(candidates) do
 		if cand.key == key then
 			cand.prio = math.max(cand.prio, prio)

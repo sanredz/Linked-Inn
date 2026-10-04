@@ -1,7 +1,5 @@
 # Changelog
 
-## [Unreleased]
-
 ## [1.1.1] - 2026-10-04
 
 - Reading professions in the background no longer plays the profession window

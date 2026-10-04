@@ -21,6 +21,8 @@
 - City scans: in cities, friendly nameplates flash on for a moment every few
   minutes so everyone around you gets checked. Off by default.
 - Crafters who use Linked Inn get a small gold badge.
+- Background reads always ask for the Apprentice rank of a profession, so
+  crafters below Expert answer too.
 - Players on the other hidden realm of your ruleset are skipped: the game
   doesn't let you read their professions, so no time is wasted on them.
 - The hidden profession window used while reading can no longer catch your

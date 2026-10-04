@@ -2243,6 +2243,8 @@ do
 	local function Count(opts)
 		return #LI.Search("", opts)
 	end
+	LI.db.profLinks.engineering = { spell = 4038, line = 202 }
+	check(LI.BuildLink("Player-1-XYZ", "engineering") == "trade:Player-1-XYZ:4036:202", "reads always use the Apprentice rank, so lower-ranked crafters answer too", LI.BuildLink("Player-1-XYZ", "engineering"))
 	check(Count({ minSkill = 150 }) == 2 and Count({ minSkill = 225 }) == 1 and Count({}) == 3, "the skill filter hides crafters below a level and keeps a 298 under Artisan+")
 	LI.UI.Open(LI.UI.TAB.find)
 	local main = LinkedInnFrame

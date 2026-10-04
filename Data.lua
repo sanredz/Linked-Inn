@@ -55,14 +55,14 @@ LI.KINDS = {
 local KIND_BY_CLASS = { [0] = "consumable", [1] = "bag", [2] = "weapon", [4] = "armor", [7] = "tradegoods" }
 
 local PROF_LINKS = {
-	alchemy = { 3464, 171 },
+	alchemy = { 2259, 171 },
 	blacksmithing = { 2018, 164 },
-	enchanting = { 7413, 333 },
-	engineering = { 4038, 202 },
+	enchanting = { 7411, 333 },
+	engineering = { 4036, 202 },
 	leatherworking = { 2108, 165 },
-	tailoring = { 3909, 197 },
+	tailoring = { 3908, 197 },
 	cooking = { 2550, 185 },
-	["first aid"] = { 3274, 129 },
+	["first aid"] = { 3273, 129 },
 }
 
 local DEFAULTS = {
@@ -425,7 +425,9 @@ function LI.BuildLink(guid, profKey)
 	if type(guid) ~= "string" or not guid:find("^Player%-") or not known then
 		return nil
 	end
-	return string.format("trade:%s:%d:%d", guid, known.spell, known.line)
+	local base = PROF_LINKS[profKey]
+	local spell = base and base[2] == known.line and base[1] or known.spell
+	return string.format("trade:%s:%d:%d", guid, spell, known.line)
 end
 
 function LI.Reagents(recipeID)

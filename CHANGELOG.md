@@ -22,6 +22,7 @@
   minutes so everyone around you gets checked. On by default; turn it off in
   the settings.
 - Crafters who use Linked Inn get a small gold badge.
+- The list starts in compact mode.
 - Background reads always ask for the Apprentice rank of a profession, so
   crafters below Expert answer too.
 - Players on the other hidden realm of your ruleset are skipped: the game

@@ -70,7 +70,7 @@ local DEFAULTS = {
 	secondary = false,
 	maxOnly = false,
 	minSkill = 0,
-	compact = false,
+	compact = true,
 	profs = {},
 	kind = "all",
 	minimap = { angle = 200 },

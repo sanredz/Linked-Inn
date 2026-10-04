@@ -353,6 +353,15 @@ function LI.Discover(key, guid, prio, classFile, where)
 	return true
 end
 
+function LI.DiscoverUrgent()
+	for _, cand in ipairs(candidates) do
+		if cand.prio >= LI.PRIO.guild and LI.Allowed(cand.key) then
+			return true
+		end
+	end
+	return false
+end
+
 function LI.DiscoverQueue()
 	return #candidates
 end

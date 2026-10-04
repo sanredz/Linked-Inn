@@ -108,6 +108,8 @@ function Reader.Want(key, profName, link, extra)
 	end
 end
 
+local EndScan
+
 local function Outsiders()
 	if not LI.settings.guildOnly then
 		return
@@ -122,6 +124,18 @@ local function Outsiders()
 			table.remove(probes, i)
 		end
 	end
+end
+
+local function ScanLeft()
+	if not scanRun or pending then
+		return
+	end
+	for _, job in ipairs(probes) do
+		if job.scan then
+			return
+		end
+	end
+	EndScan(true)
 end
 
 local function NextJob()
@@ -272,6 +286,17 @@ local function ScanStep(job, ok)
 		end
 	end
 	LI.Fire("StatusChanged")
+	EndScan()
+end
+
+EndScan = function(force)
+	local run = scanRun
+	if not run then
+		return
+	end
+	if force then
+		run.total = run.done
+	end
 	if run.done >= run.total then
 		scanRun = nil
 		local crafters = 0
@@ -400,6 +425,10 @@ local Start
 
 local function Pump()
 	Outsiders()
+	ScanLeft()
+	if not pending and #probes == 0 and LI.DiscoverUrgent and LI.DiscoverUrgent() and LI.DiscoverStep() then
+		return
+	end
 	if #probes > 0 then
 		Kick()
 		return
@@ -466,6 +495,7 @@ Kick = function()
 		return
 	end
 	Outsiders()
+	ScanLeft()
 	if pending then
 		if #probes > 0 and Now() - (pending.started or 0) > 4 then
 			Waiting(pending.probe and "another check" or "a profession read")

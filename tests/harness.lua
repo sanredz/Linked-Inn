@@ -2725,5 +2725,39 @@ do
 	check(W.trade == nil, "a reply to a read from before a reload is closed, not shown")
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.discover = true
+	W.defaultLinks = true
+	W.guild = { { name = "Guild One-TestRealm", online = true, guid = "Player-1-GONE" }, { name = "Guild Two-TestRealm", online = true, guid = "Player-1-GTWO" } }
+	Boot()
+	Advance(5)
+	local function Checked(name)
+		for _, e in ipairs(LI.db.log) do
+			if e.m:find("Checked " .. name, 1, true) then return true end
+		end
+		return false
+	end
+	Advance(30)
+	LI.Reader.Scan({ { key = "Out Sider-TestRealm", guid = "Player-1-OUTS", profs = { "alchemy", "blacksmithing", "enchanting", "tailoring" } } }, true)
+	Advance(0.1)
+	LI.settings.guildOnly = true
+	Fire("GUILD_ROSTER_UPDATE")
+	Advance(40)
+	check(not LI.Reader.Scanning() and Checked("Guild One") and Checked("Guild Two"), "a scan cut short by guild only doesn't block the guild checks", tostring(LI.Reader.Scanning()))
+	LI.settings.guildOnly = false
+
+	for i = 1, 12 do
+		LI.Reader.Want("Busy " .. i .. "-TestRealm", "Alchemy", "trade:Player-1-BS" .. i .. ":2259:171", { built = true })
+	end
+	LI.tried["Guild Three-TestRealm"] = nil
+	W.guild[3] = { name = "Guild Three-TestRealm", online = true, guid = "Player-1-GTHR" }
+	Fire("GUILD_ROSTER_UPDATE")
+	Advance(12)
+	check(Checked("Guild Three") and LI.Reader.QueueSize() > 0, "guild members are checked before a busy queue of other reads", LI.Reader.QueueSize())
+	W.discover, W.defaultLinks = nil, nil
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

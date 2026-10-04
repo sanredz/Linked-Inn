@@ -26,11 +26,11 @@ local BUFFER_TTL = 90
 local MAX_BUFFERS = 20
 local LINK_LIVE = 20 * 60
 local SEEN_TTL = 10 * 60
-local DISCOVER_GAP = 45
 local DISCOVER_AGAIN = 24 * 3600
 local LINK_HELLO_GAP = 60
 local WHISPER_MEMORY = 15
 local RELAY = { H1 = true, R1 = true, X1 = true }
+local SHARED = { GUILD = true, PARTY = true, RAID = true }
 local SEND_RANK = { ask = 1, hello = 1, ping = 1, pong = 1, work = 2, data = 3, relay = 3, discover = 4 }
 
 local queue = {}
@@ -38,6 +38,7 @@ local channelName
 local joined = false
 local nextHello
 local GREET_GAP = 20
+local REPLY_GAP = 5
 local sessionHeard = {}
 local lastGreet = -GREET_GAP
 local lastChangeHello = 0
@@ -50,7 +51,6 @@ local peers = {}
 local seenMsgs = {}
 local whispered = {}
 local firstFrom = {}
-local lastDiscover = -DISCOVER_GAP
 local linkSig = ""
 local lastLinkHello = -LINK_HELLO_GAP
 local mySid
@@ -381,7 +381,7 @@ local function Broadcast(kind, message, withGuild, withFriends)
 	for _, route in ipairs(Routes(withGuild)) do
 		Enqueue(kind, message, route)
 	end
-	if withFriends and not LI.settings.guildOnly then
+	if withFriends then
 		for _, target in ipairs(OnlineFriends()) do
 			Enqueue(kind, message, "WHISPER", target)
 		end
@@ -475,6 +475,8 @@ local function LinkList()
 	return table.concat(list, ",")
 end
 
+local freshHello = true
+
 function Sync.Hello()
 	local own = OwnState()
 	if not own.payload or not own.ver then
@@ -496,7 +498,13 @@ function Sync.Hello()
 	local class = select(2, LI.Try(UnitClass, "player")) or ""
 	local base = string.format("H1|%s|%s|%s|%s|%s", own.ver, Clean(class), table.concat(parts, ";"), MyRealm(), MySid() or "")
 	local links = LinkList()
-	if links ~= "" and #base + #links + 1 <= 200 then
+	if links ~= "" and #base + #links + 1 > 200 then
+		links = ""
+	end
+	if freshHello then
+		return base .. "|" .. links .. "|J"
+	end
+	if links ~= "" then
 		return base .. "|" .. links
 	end
 	return base
@@ -506,8 +514,11 @@ local function SendHello()
 	local message = Sync.Hello()
 	if message and #message <= 250 then
 		Broadcast("hello", message, true, true)
+		freshHello = false
 	end
 end
+
+local answerGuild = false
 
 local function SendData()
 	local own = OwnState()
@@ -525,9 +536,14 @@ local function SendData()
 		targets[#targets + 1] = LI.WhisperTarget(key)
 	end
 	askers = {}
+	local toGuild = answerGuild
+	answerGuild = false
 	for i = 1, total do
 		local chunk = string.format("D1|%s|%s|%s|%s", own.ver, B36(i), B36(total), payload:sub((i - 1) * CHUNK + 1, i * CHUNK))
 		Broadcast("data", chunk, false)
+		if toGuild then
+			Enqueue("data", chunk, "GUILD")
+		end
 		for _, target in ipairs(targets) do
 			Enqueue("data", chunk, "WHISPER", target)
 		end
@@ -584,7 +600,7 @@ local function KnownProf(c, key)
 	return c and c.profs[key]
 end
 
-local function Ask(key, ver)
+local function Ask(key, ver, chatType)
 	local short = LI.WhisperTarget(key)
 	if not short then
 		return
@@ -600,7 +616,11 @@ local function Ask(key, ver)
 		return
 	end
 	asked[key] = { at = Now(), ver = ver }
-	Enqueue("ask", "Q1|" .. ver, "WHISPER", short)
+	if SHARED[chatType] then
+		Enqueue("ask", "Q2|" .. ver .. "|" .. LI.ShortName(key), chatType)
+	else
+		Enqueue("ask", "Q1|" .. ver, "WHISPER", short)
+	end
 end
 
 local function OnHello(key, parts, chatType)
@@ -644,6 +664,13 @@ local function OnHello(key, parts, chatType)
 			end)
 		end
 	end
+	if parts[8] == "J" and Now() - lastGreet >= REPLY_GAP then
+		lastGreet = Now()
+		LI.After(2 + math.random() * 4, function()
+			Sync.Refresh()
+			SendHello()
+		end)
+	end
 	local c = LI.Crafter(key, true)
 	if class and class ~= "" and class:match("^%u+$") then
 		c.class = class
@@ -679,7 +706,7 @@ local function OnHello(key, parts, chatType)
 		end
 	end
 	if LI.crafters[key] == c and (c.sharedVer ~= ver or short) then
-		Ask(key, ver)
+		Ask(key, ver, chatType)
 	end
 end
 
@@ -823,37 +850,6 @@ local function OnRelay(relayer, text, chatType)
 	Dispatch(origin, inner, "RELAY")
 end
 
-local function ForeignSighting(key, guid)
-	if not LI.ready or not joined or not key or key == LI.playerKey or peers[key] or LI.settings.guildOnly then
-		return
-	end
-	local sid, mine = SidOf(guid), MySid()
-	if not sid or not mine or sid == mine or Now() - lastDiscover < DISCOVER_GAP then
-		return
-	end
-	for _, p in pairs(peers) do
-		if p.sid == sid and Live(p) then
-			return
-		end
-	end
-	local probed = LI.db.probed
-	if type(probed) ~= "table" then
-		probed = {}
-		LI.db.probed = probed
-	end
-	if probed[key] and time() - probed[key] < DISCOVER_AGAIN then
-		return
-	end
-	local hello = Sync.Hello()
-	if not hello then
-		return
-	end
-	probed[key] = time()
-	lastDiscover = Now()
-	LI.test.sync.discover = (LI.test.sync.discover or 0) + 1
-	Enqueue("discover", hello, "WHISPER", LI.WhisperTarget(key))
-end
-Sync.ForeignSighting = ForeignSighting
 
 local function NotFoundName(msg)
 	local fmt = ERR_CHAT_PLAYER_NOT_FOUND_S
@@ -882,7 +878,10 @@ local function OnNotFound(msg)
 	if not w then
 		return
 	end
-	whispered[w.target:lower()] = nil
+	if w.failed then
+		return
+	end
+	w.failed = true
 	local key = LI.FullName(w.target)
 	local p = peers[key]
 	if p then
@@ -953,6 +952,12 @@ Dispatch = function(key, text, chatType)
 		OnData(key, parts)
 	elseif kind == "Q1" then
 		OnAsk(key, parts)
+	elseif kind == "Q2" and SHARED[chatType] then
+		local me = LI.playerKey and LI.ShortName(LI.playerKey)
+		if me and type(parts[3]) == "string" and parts[3]:lower() == me:lower() then
+			answerGuild = answerGuild or chatType == "GUILD"
+			OnAsk(key, parts)
+		end
 	elseif kind == "R1" and LI.Work then
 		LI.Work.OnRequest(key, parts)
 	elseif kind == "X1" and LI.Work then
@@ -1082,7 +1087,7 @@ function Sync.Status()
 		string.format("Realm: %s (server %s)", MyRealm(), tostring(MySid())),
 		string.format("Channel: %s%s", joined and "joined" or "NOT joined", ChannelId() and (" (#" .. ChannelId() .. ")") or ""),
 		"Other realms: " .. (#bridges > 0 and table.concat(bridges, "; ") or "none linked yet"),
-		string.format("Relayed: %d out, %d in; looked for users on other realms %d times", sync.relayOut or 0, sync.relayIn or 0, sync.discover or 0),
+		string.format("Relayed: %d out, %d in", sync.relayOut or 0, sync.relayIn or 0),
 		string.format("Your list: version %s, %d professions", tostring(OwnState().ver), OwnCount()),
 		"Sent: " .. Counts("tx") .. ((sync.failed or 0) > 0 and string.format("  |cffff6060failed %d (%s)|r", sync.failed, tostring(sync.lastError)) or ""),
 		"Received: " .. Counts("rx"),
@@ -1179,34 +1184,6 @@ end)
 LI.On("CHAT_MSG_SYSTEM", function(msg)
 	OnNotFound(LI.Safe(msg))
 end)
-
-local function SightUnit(unit)
-	unit = LI.Safe(unit)
-	if not unit or not LI.Safe(LI.Try(UnitIsPlayer, unit)) then
-		return
-	end
-	if UnitIsFriend and not LI.Safe(LI.Try(UnitIsFriend, "player", unit)) then
-		return
-	end
-	ForeignSighting(LI.UnitKey(unit), LI.Safe(LI.Try(UnitGUID, unit)))
-end
-
-LI.On("NAME_PLATE_UNIT_ADDED", SightUnit)
-LI.On("PLAYER_TARGET_CHANGED", function()
-	SightUnit("target")
-end)
-LI.On("UPDATE_MOUSEOVER_UNIT", function()
-	SightUnit("mouseover")
-end)
-
-for _, event in ipairs({ "CHAT_MSG_CHANNEL", "CHAT_MSG_SAY", "CHAT_MSG_YELL" }) do
-	LI.On(event, function(_, sender, _, _, _, _, _, _, _, _, _, guid)
-		sender = LI.Safe(sender)
-		if type(sender) == "string" then
-			ForeignSighting(LI.FullName(sender), LI.Safe(guid))
-		end
-	end)
-end
 
 LI.On("CHAT_MSG_ADDON", function(prefix, text, chatType, sender)
 	Sync.OnMessage(LI.Safe(prefix), LI.Safe(text), LI.Safe(chatType), LI.Safe(sender))

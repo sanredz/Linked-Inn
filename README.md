@@ -63,6 +63,8 @@ professions are read when you log in, so you never have to open them first.
   Compact at the bottom for bigger rows.
 - A small gold badge marks crafters who use Linked Inn themselves. Their lists
   come straight from their own game. The mug next to Secondary shows only them.
+- **Guild** and **Friend** tags show who's in your guild or on your friends
+  list.
 
 <p align="center">
   <img src="media/crafters-search.png" alt="Searching for an item shows who can make it" width="62%">
@@ -110,7 +112,8 @@ The gear at the top right opens the settings:
 - **Reading:** read profession links from chat automatically, and hide lines
   with profession links in trade, general, say and yell to cut the spam.
   They're still read.
-- **Guild only:** read, list and talk to your guild only, Work included.
+- **Guild and friends only:** read, list and talk to your guild and friends
+  list only, Work included.
   Everyone else stays saved and comes back when you turn it off.
 - **Your list:** forget crafters not seen for 14, 30, 60 or 90 days, or never,
   and skip professions below a skill level. Favorites are always kept.

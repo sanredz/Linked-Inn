@@ -263,6 +263,16 @@ local function SeenLine(entry)
 	return line
 end
 
+local function Where(where)
+	if not where then
+		return ""
+	end
+	if where == "Linked Inn" then
+		return "via Linked Inn"
+	end
+	return "in " .. where
+end
+
 local function ShowPillTooltip(pill)
 	local entry = pill:GetParent().entry
 	if not entry then
@@ -273,7 +283,7 @@ local function ShowPillTooltip(pill)
 	GameTooltip:SetText(SeenLine(entry), color[1], color[2], color[3])
 	local c = entry.crafter
 	if c.where then
-		GameTooltip:AddLine("in " .. c.where, SOFT[1], SOFT[2], SOFT[3])
+		GameTooltip:AddLine(Where(c.where), SOFT[1], SOFT[2], SOFT[3])
 	end
 	if entry.key ~= LI.playerKey then
 		GameTooltip:AddLine(LI.IsChecking(entry.key) and "Checking..." or "Click to check if they're online", 0.5, 0.5, 0.5)
@@ -306,7 +316,7 @@ local function ShowRowTooltip(row)
 	end
 	GameTooltip:AddLine(" ")
 	local _, color2 = Seen(entry)
-	GameTooltip:AddDoubleLine(SeenLine(entry), c.where and ("in " .. c.where) or "", color2[1], color2[2], color2[3], SOFT[1], SOFT[2], SOFT[3])
+	GameTooltip:AddDoubleLine(SeenLine(entry), Where(c.where), color2[1], color2[2], color2[3], SOFT[1], SOFT[2], SOFT[3])
 	if entry.recipeMeta and entry.makes > 1 then
 		GameTooltip:AddLine(string.format("Can make %d items that match your search", entry.makes), CAN[1], CAN[2], CAN[3], true)
 	end
@@ -758,6 +768,12 @@ local function InitRow(row, data)
 		end
 	end
 	local text, textColor = RowLine(data)
+	if LI.IsGuildmate(entry.key) then
+		text = text .. "  ·  |cff40ff40Guild|r"
+	end
+	if LI.IsFriend(entry.key) then
+		text = text .. "  ·  |cff82c5ffFriend|r"
+	end
 	row.line:SetText(text)
 	row.line:SetTextColor(textColor[1], textColor[2], textColor[3])
 	UpdateBooks(row, data)
@@ -956,9 +972,9 @@ local function RefreshFind()
 	if LI.settings.guildOnly then
 		local far = LI.guildFarSide or 0
 		if far > 0 then
-			main.count:SetText(string.format("|cff40ff40Guild only|r  ·  %d shown  ·  %d on the other realm", #results, far))
+			main.count:SetText(string.format("|cff40ff40Guild and friends|r  ·  %d shown  ·  %d on the other realm", #results, far))
 		else
-			main.count:SetText(string.format("|cff40ff40Guild only|r  ·  %d shown  ·  %d crafters remembered", #results, total))
+			main.count:SetText(string.format("|cff40ff40Guild and friends|r  ·  %d shown  ·  %d crafters remembered", #results, total))
 		end
 	else
 		main.count:SetText(string.format("%d shown  ·  %d crafters remembered", #results, total))
@@ -979,7 +995,7 @@ local function RefreshFind()
 		else
 			main.emptyHead:SetText("Nobody matches")
 			if LI.settings.guildOnly then
-				main.emptyText:SetText("Guild only is on, so only guildmates are shown. Everyone else is still saved; turn it off in settings to see them.")
+				main.emptyText:SetText("Guild and friends only is on, so only they are shown. Everyone else is still saved; turn it off in settings to see them.")
 			elseif LI.settings.liOnly then
 				main.emptyText:SetText("Only Linked Inn users are shown. Click the mug next to Secondary to see everyone.")
 			else

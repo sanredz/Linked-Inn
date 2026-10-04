@@ -711,7 +711,7 @@ check(main.count.__text:find("3 crafters remembered", 1, true), "the footer does
 check(rows[2].headName:IsShown() == false and rows[2].name:IsShown(), "crafter rows hide the header parts")
 check(rows[1].name:IsShown() == false, "header rows hide the crafter parts")
 local bobRow = rows[4]
-check(bobRow.line.__text == "Skill 260  ·  1 recipe", "a row describes that profession", bobRow.line.__text)
+check(bobRow.line.__text:find("^Skill 260  ·  1 recipe"), "a row describes that profession", bobRow.line.__text)
 check(rows[5].line.__text == "Skill 260  ·  2 recipes", "skill and recipe count are shown", rows[5].line.__text)
 bobRow.__scripts.OnClick(bobRow, "LeftButton")
 check(W.tells[1] == "Bob Stone", "clicking a row whispers the crafter by name without the realm", W.tells[1])
@@ -2143,7 +2143,7 @@ do
 	Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
 	Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
 	Advance(4)
-	check(Find("H1", "WHISPER", "Stranger Danger") and not Find("H1", "WHISPER", "Other One") and not Find("H1", "WHISPER", "Local Guy"), "someone from an unlinked realm gets one quiet hello, at most every 45 seconds")
+	check(not Find("H1", "WHISPER", "Stranger Danger") and not Find("H1", "WHISPER", "Other One") and not Find("H1", "WHISPER", "Local Guy"), "players seen from the other realm get no quiet whispers; those never arrive")
 	Advance(50)
 	W.sent = {}
 	Fire("NAME_PLATE_UNIT_ADDED", "nameplate4")
@@ -2156,6 +2156,7 @@ do
 	local gone = "No player named 'Far Away' is currently playing."
 	check(Sync.HideNotFound(nil, "CHAT_MSG_SYSTEM", gone), "the game's 'no player named' line is hidden for our own quiet whispers")
 	Fire("CHAT_MSG_SYSTEM", gone)
+	check(Sync.HideNotFound(nil, "CHAT_MSG_SYSTEM", gone), "it stays hidden in every chat window, whichever sees it first")
 	check(Sync.Links().OtherRealm == "Third Guy-TestRealm", "a link that can't be whispered is dropped for another one", Sync.Links().OtherRealm)
 	check(not Sync.HideNotFound(nil, "CHAT_MSG_SYSTEM", "No player named 'Someone Else' is currently playing."), "other 'no player named' lines are left alone")
 	W.playerGUID = nil
@@ -2632,9 +2633,19 @@ do
 	panel.guild:SetChecked(true)
 	panel.guild.__scripts.OnClick(panel.guild)
 	check(LI.settings.guildOnly == true, "guild only can be switched on in settings")
-	check(#LI.Search("", { guildOnly = true }) == 1 and main.count.__text:find("Guild only", 1, true), "the list shows only guildmates and says so", main.count.__text)
+	check(#LI.Search("", { guildOnly = true }) == 1 and main.count.__text:find("Guild and friends", 1, true), "the list shows only guildmates and says so", main.count.__text)
 	check(main.count.__text:find("1 on the other realm", 1, true) and panel.farSide.__text:find("1 online guildmate is on the other realm", 1, true), "guildmates the game can't read are explained", panel.farSide.__text)
 	check(LI.crafters["Out Sider-TestRealm"] and LI.crafters["Old Stranger-TestRealm"], "nobody is deleted when it's switched on")
+	W.friends = { { name = "Best Friend", connected = true, guid = "Player-1-BFRI" } }
+	LI.SetRecipes("Best Friend-TestRealm", { name = "Alchemy", rank = 100, max = 150 }, { { id = 2330, name = "Minor Healing Potion", item = 118 } }, "auto")
+	Fire("FRIENDLIST_UPDATE")
+	check(LI.Allowed("Best Friend-TestRealm") and #LI.Search("", { guildOnly = true }) == 2, "friends count too, not just the guild")
+	LI.UI.Refresh()
+	local tags = {}
+	for _, r in ipairs(main.list.__rows) do
+		if r.entry then tags[r.entry.key] = r.line.__text end
+	end
+	check(tags["Guild Pal-TestRealm"] and tags["Guild Pal-TestRealm"]:find("Guild", 1, true) and tags["Best Friend-TestRealm"] and tags["Best Friend-TestRealm"]:find("Friend", 1, true) and not tags["Best Friend-TestRealm"]:find("Guild", 1, true), "rows show who's in your guild and who's a friend", tostring(tags["Best Friend-TestRealm"]))
 
 	local queued = LI.Reader.QueueSize()
 	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-STR", 2259, 171, "Alchemy"), "Total Stranger-TestRealm", "Player-1-STR", "Trade - City")
@@ -2653,9 +2664,12 @@ do
 	LI.Sync.Send("W1|test", "CHANNEL")
 	LI.Sync.Send("W1|psst", "WHISPER", "Net Stranger")
 	Advance(5)
-	local routes = {}
-	for _, m in ipairs(W.sent) do routes[m.chatType] = true end
-	check(routes.GUILD and not routes.CHANNEL and not routes.WHISPER, "messages only go to the guild", tostring(routes.CHANNEL))
+	local routes, stranger = {}, false
+	for _, m in ipairs(W.sent) do
+		routes[m.chatType] = true
+		if m.chatType == "WHISPER" and m.target ~= "Best Friend" then stranger = true end
+	end
+	check(routes.GUILD and not routes.CHANNEL and not stranger, "messages only go to the guild and friends", tostring(routes.CHANNEL))
 	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 100, max = 150 }, PANTS, "own")
 	LI.Work.OnRequest("Net Stranger-TestRealm", { "R1", "9", LI.Sync.B36(4343), LI.Sync.B36(3914), "1", "n", "0", "5a", "" })
 	local function SeesOutsider()
@@ -2680,6 +2694,7 @@ do
 	check(LI.settings.guildOnly == true and LI.crafters["Old Stranger-TestRealm"], "it stays on after a reload and still keeps everyone")
 
 	LI.settings.guildOnly = false
+	W.friends = nil
 	check(LI.Allowed("Total Stranger-TestRealm") and #LI.Search("", {}) >= 3, "switching it off brings everyone back")
 	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-STR", 2259, 171, "Alchemy"), "Total Stranger-TestRealm", "Player-1-STR", "Trade - City")
 	check(LI.crafters["Total Stranger-TestRealm"], "and everything works as normal again")
@@ -2723,6 +2738,129 @@ do
 	if ProfessionsFrame then ProfessionsFrame:Show() end
 	Advance(2)
 	check(W.trade == nil, "a reply to a read from before a reload is closed, not shown")
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.discover = true
+	W.defaultLinks = true
+	W.guild = { { name = "Guild One-TestRealm", online = true, guid = "Player-1-GONE" }, { name = "Guild Two-TestRealm", online = true, guid = "Player-1-GTWO" } }
+	Boot()
+	Advance(5)
+	local function Checked(name)
+		for _, e in ipairs(LI.db.log) do
+			if e.m:find("Checked " .. name, 1, true) then return true end
+		end
+		return false
+	end
+	Advance(30)
+	LI.Reader.Scan({ { key = "Out Sider-TestRealm", guid = "Player-1-OUTS", profs = { "alchemy", "blacksmithing", "enchanting", "tailoring" } } }, true)
+	Advance(0.1)
+	LI.settings.guildOnly = true
+	Fire("GUILD_ROSTER_UPDATE")
+	Advance(40)
+	check(not LI.Reader.Scanning() and Checked("Guild One") and Checked("Guild Two"), "a scan cut short by guild only doesn't block the guild checks", tostring(LI.Reader.Scanning()))
+	LI.settings.guildOnly = false
+
+	for i = 1, 12 do
+		LI.Reader.Want("Busy " .. i .. "-TestRealm", "Alchemy", "trade:Player-1-BS" .. i .. ":2259:171", { built = true })
+	end
+	LI.tried["Guild Three-TestRealm"] = nil
+	W.guild[3] = { name = "Guild Three-TestRealm", online = true, guid = "Player-1-GTHR" }
+	Fire("GUILD_ROSTER_UPDATE")
+	Advance(12)
+	check(Checked("Guild Three") and LI.Reader.QueueSize() > 0, "guild members are checked before a busy queue of other reads", LI.Reader.QueueSize())
+	W.discover, W.defaultLinks = nil, nil
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.guild = { { name = "Far Crafter-TestRealm", online = true, guid = "Player-2-FARC" } }
+	Boot()
+	Advance(40)
+	W.sent = {}
+	Addon("H1|abcd|MAGE|tailoring~1e~2s~5", "Far Crafter-TestRealm", "GUILD")
+	Advance(3)
+	local q2, whispered
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^Q2|abcd|Far Crafter$") and m.chatType == "GUILD" then q2 = true end
+		if m.msg:find("^Q1|") then whispered = true end
+	end
+	check(q2 and not whispered, "a Linked Inn user heard in the guild is asked for their list through the guild")
+
+	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 100, max = 150 }, { { id = 3914, name = "Brown Linen Pants", item = 4343 } }, "own")
+	LI.Fire("OwnRecipesChanged")
+	Advance(70)
+	W.sent = {}
+	Addon("Q2|zz|Someone Else", "Far Crafter-TestRealm", "GUILD")
+	Advance(8)
+	local data = false
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^D1|") and m.chatType == "GUILD" then data = true end
+	end
+	check(not data, "a guild request for someone else isn't answered")
+	Addon("Q2|zz|" .. LI.ShortName(LI.playerKey), "Far Crafter-TestRealm", "GUILD")
+	Advance(8)
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^D1|") and m.chatType == "GUILD" then data = true end
+	end
+	check(data, "a guild request for you is answered with your list through the guild")
+	W.groupSize = 2
+	W.sent = {}
+	Addon("H1|abce|MAGE|alchemy~1e~2s~5", "Party Pal-TestRealm", "PARTY")
+	Advance(3)
+	local partyAsk = false
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^Q2|abce|Party Pal$") and m.chatType == "PARTY" then partyAsk = true end
+	end
+	check(partyAsk, "the same works through your party")
+	W.groupSize = nil
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	local POT = { { id = 2330, name = "Minor Healing Potion", item = 118 } }
+	LI.SetRecipes("More Recipes-TestRealm", { name = "Alchemy", rank = 150, max = 225 }, POT, "auto")
+	LI.SetRecipes("Seen Lately-TestRealm", { name = "Alchemy", rank = 150, max = 225 }, POT, "auto")
+	LI.crafters["More Recipes-TestRealm"].profs.alchemy.count = 32
+	LI.crafters["Seen Lately-TestRealm"].profs.alchemy.count = 31
+	LI.crafters["More Recipes-TestRealm"].seen = time() - 6 * 3600
+	LI.crafters["Seen Lately-TestRealm"].seen = time() - 3 * 3600
+	local rows
+	for _, g in ipairs(LI.Group(LI.Search("", {}))) do
+		if g.key == "alchemy" then rows = g.rows end
+	end
+	check(rows and rows[1].entry.key == "Seen Lately-TestRealm", "at the same skill, the one seen more recently comes first", rows and rows[1].entry.key)
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 100, max = 150 }, { { id = 3914, name = "Brown Linen Pants", item = 4343 } }, "own")
+	LI.Fire("OwnRecipesChanged")
+	W.sent = {}
+	Advance(60)
+	local first
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^H1|") and m.chatType == "CHANNEL" and not first then first = m.msg end
+	end
+	check(first and first:find("|J$"), "the first hello after logging in asks others to say hi back", first)
+	Addon("H1|abcd|MAGE|alchemy~1e~2s~5|TestRealm|1", "Fresh Login-TestRealm")
+	Advance(30)
+	W.sent = {}
+	Addon("H1|abcd|MAGE|alchemy~1e~2s~5|TestRealm|1||J", "Fresh Login-TestRealm")
+	Advance(8)
+	local reply
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^H1|") and m.chatType == "CHANNEL" then reply = m.msg end
+	end
+	check(reply and not reply:find("|J$"), "someone who just logged in gets a hello back within seconds, without the flag", reply)
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

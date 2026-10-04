@@ -35,16 +35,20 @@ You don't have to do anything. Linked Inn fills the list in the background:
   your ruleset.
 - **People around you.** Anyone you see crafting, your group, your guild
   and the players around you are checked quietly in the background, a few at
-  a time.
+  a time. Links in chat, your group and your guild always come first.
 
-Your own professions are read when you log in, so you never have to open
-them first.
+Crafters show up as soon as their recipes have been read. Your own
+professions are read when you log in, so you never have to open them first.
 
 > **City scans:** in a city or inn, friendly nameplates flash on for half a
 > second every few minutes, so everyone around you gets checked. You can turn
 > this off or change how often in the settings (the gear at the top right).
 > Playing with friendly nameplates on (Shift+V) checks everyone you walk past
 > all the time.
+
+WoW: Forever splits each ruleset into hidden realms, and the game doesn't let
+you read the professions of players on the other one. They still show up if
+they use Linked Inn themselves.
 
 ## Crafters
 
@@ -57,8 +61,10 @@ them first.
 - **Last seen** shows when a crafter was last around. Click it to check if
   they're online right now.
 - **Recipe books:** click a profession icon to browse that player's recipes by
-  category, with reagents. Click a recipe to ask them to make it.
-- **Compact** mode fits about twice as many people on screen.
+  category, with reagents. Click a recipe to ask them to make it. The crafter
+  whose book is open is highlighted in the list.
+- **Compact** rows are the default, so lots of people fit on screen. Untick
+  Compact at the bottom for bigger rows.
 - A small gold badge marks crafters who use Linked Inn themselves. Their lists
   come straight from their own game.
 
@@ -100,6 +106,16 @@ you, or pick up requests you can make yourself.
   whisper them, right-click to invite or remove them.
 
 ![Your requests with offers, and a new request being posted](media/work-request.png)
+
+## Settings
+
+The gear at the top right opens the settings:
+
+- **City scans:** on or off, and how often (every 2 to 15 minutes).
+- **Reading:** read profession links from chat automatically.
+- **Your list:** forget crafters not seen for 14, 30, 60 or 90 days, or never.
+  Favorites are always kept. **Forget everyone** starts the list over.
+- **Minimap:** show or hide the minimap button.
 
 ## Usage
 

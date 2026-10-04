@@ -35,6 +35,11 @@ local tip
 local lastAuto
 local hooked = false
 local concealed = false
+local ours = false
+local lastDone = -60
+local userClickAt = -60
+local LATE = 15
+local USER_CLICK = 5
 local PANELS = { "left", "center", "right", "doublewide", "fullscreen" }
 
 local function Now()
@@ -165,6 +170,17 @@ local function Reveal()
 	concealed = false
 end
 
+local function LateReply()
+	if pending or Now() - lastDone > LATE or Now() - userClickAt <= USER_CLICK then
+		return false
+	end
+	local api = C_TradeSkillUI
+	if not api or not api.IsTradeSkillLinked then
+		return false
+	end
+	return LI.Safe(LI.Try(api.IsTradeSkillLinked)) == true
+end
+
 local function HookFrame()
 	local frame = ProfessionsFrame
 	if hooked or not frame or not frame.HookScript then
@@ -172,7 +188,7 @@ local function HookFrame()
 	end
 	hooked = true
 	frame:HookScript("OnShow", function(self)
-		if pending then
+		if pending or LateReply() then
 			Conceal(self)
 		end
 	end)
@@ -208,7 +224,8 @@ local function PanelOpen()
 end
 
 local function CloseHidden()
-	if concealed then
+	if concealed or ours then
+		ours = false
 		if C_TradeSkillUI and C_TradeSkillUI.CloseTradeSkill then
 			LI.Try(C_TradeSkillUI.CloseTradeSkill)
 		end
@@ -285,6 +302,7 @@ function Reader.QuietState()
 end
 
 local function Finish(job, outcome)
+	lastDone = Now()
 	if silenced and outcome == "ok" then
 		quietWorks = quietWorks + 1
 	end
@@ -837,6 +855,21 @@ end
 
 LI.On("TRADE_SKILL_SHOW", function()
 	tradeOpen = true
+	if Now() - userClickAt <= USER_CLICK then
+		ours = false
+	elseif pending or silenced then
+		ours = true
+	elseif LateReply() then
+		ours = true
+		LI.Log("A late reply opened a profession window; closed it")
+		LI.After(SETTLE, function()
+			if not pending then
+				CloseHidden()
+			end
+		end)
+	else
+		ours = false
+	end
 	Replied()
 	ScheduleRead()
 end)
@@ -862,6 +895,7 @@ end)
 
 LI.On("TRADE_SKILL_CLOSE", function()
 	tradeOpen = false
+	ours = false
 	LI.After(0.01, function()
 		Kick()
 	end)
@@ -894,6 +928,7 @@ LI.Listen("Ready", function()
 			if type(link) ~= "string" or link:sub(1, 6) ~= "trade:" then
 				return
 			end
+			userClickAt = Now()
 			local parsed = LI.ParseTrade(link:sub(7))
 			local key = parsed and parsed.guid and LI.guids[parsed.guid]
 			clicked = key and { key = key, at = Now() } or nil

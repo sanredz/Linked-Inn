@@ -2570,5 +2570,80 @@ do
 	LI.settings.housekeeping = "off"
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.guild = { { name = "Guild Pal-TestRealm", online = true, guid = "Player-1-GPAL" } }
+	Boot()
+	Advance(5)
+	Fire("GUILD_ROSTER_UPDATE")
+	local PANTS = { { id = 3914, name = "Brown Linen Pants", item = 4343 } }
+	LI.SetRecipes("Guild Pal-TestRealm", { name = "Tailoring", rank = 200, max = 225 }, PANTS, "auto")
+	LI.SetRecipes("Out Sider-TestRealm", { name = "Tailoring", rank = 120, max = 150 }, PANTS, "auto")
+	LI.crafters["Out Sider-TestRealm"].seen = time() - 100 * 86400
+	LI.favorites["Out Sider-TestRealm"] = true
+	LI.SetRecipes("Old Stranger-TestRealm", { name = "Tailoring", rank = 90, max = 150 }, PANTS, "auto")
+	LI.crafters["Old Stranger-TestRealm"].seen = time() - 100 * 86400
+	check(LI.settings.guildOnly == false and LI.Allowed("Out Sider-TestRealm"), "guild only is off by default")
+
+	LI.UI.Open(LI.UI.TAB.find)
+	local main = LinkedInnFrame
+	main.gear.__scripts.OnClick(main.gear)
+	local panel = LinkedInnSettings
+	panel.guild:SetChecked(true)
+	panel.guild.__scripts.OnClick(panel.guild)
+	check(LI.settings.guildOnly == true, "guild only can be switched on in settings")
+	check(#LI.Search("", { guildOnly = true }) == 1 and main.count.__text:find("Guild only", 1, true), "the list shows only guildmates and says so", main.count.__text)
+	check(LI.crafters["Out Sider-TestRealm"] and LI.crafters["Old Stranger-TestRealm"], "nobody is deleted when it's switched on")
+
+	local queued = LI.Reader.QueueSize()
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-STR", 2259, 171, "Alchemy"), "Total Stranger-TestRealm", "Player-1-STR", "Trade - City")
+	check(not LI.crafters["Total Stranger-TestRealm"] and LI.Reader.QueueSize() == queued, "links from outside the guild are not added or read")
+	LI.Reader.Want("Total Stranger-TestRealm", "Alchemy", "trade:Player-1-STR:2259:171")
+	check(LI.Reader.QueueSize() == queued, "reads of outsiders are refused")
+	check(not LI.Discover("Walk Past-TestRealm", "Player-1-WALK", LI.PRIO.group), "outsiders are not scanned")
+	LI.OnCrafted("Craft Person creates Brown Linen Pants.")
+	check(not LI.waiting["Craft Person-TestRealm"] and not LI.crafters["Craft Person-TestRealm"], "the crafting log ignores outsiders")
+	Say("CHAT_MSG_GUILD", TradeLink("Player-1-GPAL", 3908, 197, "Tailoring"), "Guild Pal-TestRealm", "Player-1-GPAL")
+	check(LI.Reader.QueueSize() >= queued, "guildmates still work")
+
+	Addon("H1|abcd|MAGE|alchemy~1e~2s~5", "Net Stranger-TestRealm")
+	check(not LI.crafters["Net Stranger-TestRealm"], "Linked Inn users outside the guild are ignored")
+	W.sent = {}
+	LI.Sync.Send("W1|test", "CHANNEL")
+	LI.Sync.Send("W1|psst", "WHISPER", "Net Stranger")
+	Advance(5)
+	local routes = {}
+	for _, m in ipairs(W.sent) do routes[m.chatType] = true end
+	check(routes.GUILD and not routes.CHANNEL and not routes.WHISPER, "messages only go to the guild", tostring(routes.CHANNEL))
+	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 100, max = 150 }, PANTS, "own")
+	LI.Work.OnRequest("Net Stranger-TestRealm", { "R1", "9", LI.Sync.B36(4343), LI.Sync.B36(3914), "1", "n", "0", "5a", "" })
+	local function SeesOutsider()
+		for _, req in ipairs(LI.Work.Received()) do
+			if req.owner == "Net Stranger-TestRealm" then return true end
+		end
+		return false
+	end
+	check(not SeesOutsider(), "work requests from outside the guild are hidden")
+	LI.settings.guildOnly = false
+	check(SeesOutsider(), "and come back when guild only is off")
+	LI.settings.guildOnly = true
+
+	LI.PruneNow()
+	LI.settings.housekeeping = "strict"
+	LI.Housekeep()
+	LI.settings.housekeeping = "off"
+	check(LI.crafters["Old Stranger-TestRealm"], "no pruning or housekeeping while guild only is on")
+	local saved = Logout()
+	Boot(saved)
+	Advance(5)
+	check(LI.settings.guildOnly == true and LI.crafters["Old Stranger-TestRealm"], "it stays on after a reload and still keeps everyone")
+
+	LI.settings.guildOnly = false
+	check(LI.Allowed("Total Stranger-TestRealm") and #LI.Search("", {}) >= 3, "switching it off brings everyone back")
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-STR", 2259, 171, "Alchemy"), "Total Stranger-TestRealm", "Player-1-STR", "Trade - City")
+	check(LI.crafters["Total Stranger-TestRealm"], "and everything works as normal again")
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

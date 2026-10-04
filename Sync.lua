@@ -276,6 +276,9 @@ local function BaseName(key)
 end
 
 local function Enqueue(kind, message, chatType, target)
+	if LI.settings.guildOnly and (chatType == "CHANNEL" or (chatType == "WHISPER" and not LI.Allowed(LI.FullName(target)))) then
+		return
+	end
 	for _, q in ipairs(queue) do
 		if q.kind == kind and q.message == message and q.chatType == chatType and q.target == target then
 			return
@@ -329,6 +332,9 @@ local function Deliver(q)
 end
 
 local function Routes(withGuild)
+	if LI.settings.guildOnly then
+		return (IsInGuild and LI.Safe(LI.Try(IsInGuild))) and { "GUILD" } or {}
+	end
 	local routes = { "CHANNEL" }
 	if withGuild and IsInGuild and LI.Safe(LI.Try(IsInGuild)) then
 		routes[#routes + 1] = "GUILD"
@@ -375,7 +381,7 @@ local function Broadcast(kind, message, withGuild, withFriends)
 	for _, route in ipairs(Routes(withGuild)) do
 		Enqueue(kind, message, route)
 	end
-	if withFriends then
+	if withFriends and not LI.settings.guildOnly then
 		for _, target in ipairs(OnlineFriends()) do
 			Enqueue(kind, message, "WHISPER", target)
 		end
@@ -771,7 +777,7 @@ end
 local Dispatch
 
 Spread = function(origin, realm, inner)
-	if type(inner) ~= "string" or not RELAY[inner:sub(1, 2)] or not realm then
+	if type(inner) ~= "string" or not RELAY[inner:sub(1, 2)] or not realm or LI.settings.guildOnly then
 		return
 	end
 	local id = origin .. "\1" .. inner
@@ -818,7 +824,7 @@ local function OnRelay(relayer, text, chatType)
 end
 
 local function ForeignSighting(key, guid)
-	if not LI.ready or not joined or not key or key == LI.playerKey or peers[key] then
+	if not LI.ready or not joined or not key or key == LI.playerKey or peers[key] or LI.settings.guildOnly then
 		return
 	end
 	local sid, mine = SidOf(guid), MySid()
@@ -901,7 +907,7 @@ function Sync.OnMessage(prefix, text, chatType, sender)
 		end
 		return
 	end
-	if #text > 255 or not Allow(key) then
+	if #text > 255 or not Allow(key) or not LI.Allowed(key) then
 		return
 	end
 	Count("rx", chatType or "?")
@@ -921,6 +927,9 @@ function Sync.OnMessage(prefix, text, chatType, sender)
 end
 
 Dispatch = function(key, text, chatType)
+	if not LI.Allowed(key) then
+		return
+	end
 	local parts = Split(text, "|")
 	local kind = parts[1]
 	if kind == "P1" then

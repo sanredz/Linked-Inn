@@ -287,7 +287,7 @@ function Work.Received(onlyMine)
 	Prune()
 	local list = {}
 	for _, req in pairs(received) do
-		if not req.hidden then
+		if not req.hidden and LI.Allowed(req.owner) then
 			req.canMake = Work.CanMake(req)
 			if not onlyMine or Work.WantsNotice(req) then
 				list[#list + 1] = req
@@ -307,7 +307,7 @@ function Work.UnseenCount()
 	Prune()
 	local n = 0
 	for key in pairs(unseen) do
-		if received[key] and not received[key].hidden then
+		if received[key] and not received[key].hidden and LI.Allowed(received[key].owner) then
 			n = n + 1
 		end
 	end
@@ -404,7 +404,9 @@ end
 function Work.Offers(req)
 	local list = {}
 	for key, at in pairs(req.offers or {}) do
-		list[#list + 1] = { key = key, at = at }
+		if LI.Allowed(key) then
+			list[#list + 1] = { key = key, at = at }
+		end
 	end
 	table.sort(list, function(a, b) return a.at < b.at end)
 	return list

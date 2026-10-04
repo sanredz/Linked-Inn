@@ -53,6 +53,9 @@ end
 local otherLogged = {}
 
 function Reader.Want(key, profName, link, extra)
+	if not LI.Allowed(key) then
+		return
+	end
 	local guid = type(link) == "string" and link:match("^trade:(Player%-%d+%-%w+):")
 	if LI.OtherServer(guid) then
 		if not otherLogged[key] then
@@ -102,6 +105,22 @@ function Reader.Want(key, profName, link, extra)
 			end
 		end
 		table.remove(queue, drop)
+	end
+end
+
+local function Outsiders()
+	if not LI.settings.guildOnly then
+		return
+	end
+	for i = #queue, 1, -1 do
+		if not LI.Allowed(queue[i].key) then
+			table.remove(queue, i)
+		end
+	end
+	for i = #probes, 1, -1 do
+		if not probes[i].own and not LI.Allowed(probes[i].key) then
+			table.remove(probes, i)
+		end
 	end
 end
 
@@ -376,6 +395,7 @@ end
 local Start
 
 local function Pump()
+	Outsiders()
 	if #probes > 0 then
 		Kick()
 		return
@@ -441,6 +461,7 @@ Kick = function()
 	if not LI.ready then
 		return
 	end
+	Outsiders()
 	if pending then
 		if #probes > 0 and Now() - (pending.started or 0) > 4 then
 			Waiting(pending.probe and "another check" or "a profession read")
@@ -467,7 +488,7 @@ Kick = function()
 end
 
 function Reader.Probe(key, link)
-	if not LI.ready or not key or type(link) ~= "string" then
+	if not LI.ready or not key or type(link) ~= "string" or not LI.Allowed(key) then
 		return false
 	end
 	if pending and pending.probe and pending.key == key then
@@ -516,7 +537,7 @@ function Reader.Scan(candidates, quiet)
 	readsSinceScan = 0
 	local run = { total = 0, done = 0, found = {}, players = #candidates, quiet = quiet, started = Now(), who = candidates[1].key }
 	for _, cand in ipairs(candidates) do
-		for _, profKey in ipairs(cand.profs) do
+		for _, profKey in ipairs(LI.Allowed(cand.key) and cand.profs or {}) do
 			local link = LI.BuildLink(cand.guid, profKey)
 			if link then
 				probes[#probes + 1] = { key = cand.key, link = link, prof = profKey, probe = true, scan = true, class = cand.class, where = cand.where }

@@ -211,7 +211,7 @@ function LI.OnCrafted(text, sender, guid)
 		sender = text:match("^(.-)%s+creates%s")
 	end
 	local key = sender and sender ~= "" and LI.FullName(sender)
-	if not key or key == LI.playerKey then
+	if not key or key == LI.playerKey or not LI.Allowed(key) then
 		return false
 	end
 	local recipe = CraftedRecipe(text)
@@ -313,6 +313,9 @@ function LI.Discover(key, guid, prio, classFile, where)
 		return false
 	end
 	LI.NoteGuid(key, guid)
+	if not LI.Allowed(key) then
+		return false
+	end
 	if LI.OtherServer(guid) then
 		return false
 	end
@@ -382,11 +385,13 @@ function LI.DiscoverStep()
 	end
 	while #candidates > 0 do
 		local cand = NextCandidate()
-		LI.tried[cand.key] = time()
-		cand.profs = Unknown(LI.crafters[cand.key])
-		if #cand.profs > 0 and reader.Scan({ cand }, true) then
-			Crafts().checked = Crafts().checked + 1
-			return true
+		if LI.Allowed(cand.key) then
+			LI.tried[cand.key] = time()
+			cand.profs = Unknown(LI.crafters[cand.key])
+			if #cand.profs > 0 and reader.Scan({ cand }, true) then
+				Crafts().checked = Crafts().checked + 1
+				return true
+			end
 		end
 	end
 	return false
@@ -454,7 +459,7 @@ end
 
 function LI.CityScanDue()
 	local s = LI.settings
-	if not LI.ready or not s.cityScan or not LI.InCity() then
+	if not LI.ready or not s.cityScan or s.guildOnly or not LI.InCity() then
 		return false
 	end
 	if InCombatLockdown and InCombatLockdown() then

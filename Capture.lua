@@ -153,11 +153,14 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 		return
 	end
 	local senderKey = type(sender) == "string" and LI.FullName(sender) or nil
-	if senderKey and senderGUID and LI.Discover then
-		LI.Discover(senderKey, senderGUID, LI.PRIO.chat)
-	end
 	if senderKey and LI.crafters[senderKey] then
 		LI.MarkSeen(senderKey)
+	end
+	if not LI.Allowed(senderKey) then
+		return
+	end
+	if senderKey and senderGUID and LI.Discover then
+		LI.Discover(senderKey, senderGUID, LI.PRIO.chat)
 	end
 	if senderKey and senderKey ~= LI.playerKey and senderGUID then
 		LI.TryBuilt(msg, senderKey, senderGUID, event, channelBase)
@@ -181,7 +184,9 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 				key = senderKey
 			end
 			local name = ProfessionName(text)
-			if key and LI.IsLow(key, LI.ProfKey(name)) then
+			if key and not LI.Allowed(key) then
+				LI.NoteProfLink(LI.ProfKey(name), parsed.numbers)
+			elseif key and LI.IsLow(key, LI.ProfKey(name)) then
 				LI.NoteProfLink(LI.ProfKey(name), parsed.numbers)
 			elseif key then
 				local spellID = parsed.numbers[1]

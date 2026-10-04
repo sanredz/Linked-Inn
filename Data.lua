@@ -81,6 +81,7 @@ local DEFAULTS = {
 	hideLinks = false,
 	keepSkill = 0,
 	housekeeping = "off",
+	guildOnly = false,
 	collapsed = {},
 }
 
@@ -227,7 +228,7 @@ end
 
 function LI.Housekeep(modeKey, dry)
 	local mode = LI.HousekeepingMode(modeKey or (LI.settings and LI.settings.housekeeping))
-	if not mode.keep or not LI.crafters then
+	if not mode.keep or not LI.crafters or (not dry and LI.settings.guildOnly) then
 		return 0, 0
 	end
 	local now = time()
@@ -300,6 +301,9 @@ function LI.Housekeep(modeKey, dry)
 end
 
 local function Prune(crafters, favorites)
+	if LI.settings and LI.settings.guildOnly then
+		return 0
+	end
 	local now = time()
 	local days = tonumber(LI.settings and LI.settings.forgetDays) or 60
 	local forget = days > 0 and days * 86400 or nil
@@ -777,7 +781,7 @@ function LI.Search(query, opts)
 	end
 	for key, c in pairs(LI.crafters) do
 		local status, seenAt, sure = LI.Status(key)
-		if key ~= LI.playerKey and (not opts.liOnly or c.li) then
+		if key ~= LI.playerKey and (not opts.liOnly or c.li) and (not opts.guildOnly or LI.IsGuildmate(key)) then
 			local nameMatch = q ~= "" and kind == "all" and Find(LI.ShortName(key), q)
 			local groups, top = {}, nil
 			for profKey, p in pairs(c.profs) do

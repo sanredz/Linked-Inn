@@ -334,7 +334,12 @@ local function Create()
 		function() return LI.settings.hideLinks == true end,
 		function(on) LI.settings.hideLinks = on end)
 
-	local list = Section(page, frame.hideLast, "Your list")
+	frame.guild, frame.guildLast = Option(page, frame.hideLast, "Guild only",
+		"Only reads, lists and talks to your guild, Work included. Everyone else stays saved and comes back when you turn it off.",
+		function() return LI.settings.guildOnly == true end,
+		function(on) LI.settings.guildOnly = on end)
+
+	local list = Section(page, frame.guildLast, "Your list")
 	frame.forgetLabel = Below(Text(page, "GameFontHighlight"), list, HEAD_X, 16)
 	frame.forgetLabel:SetText("Forget crafters not seen for")
 	frame.forget = Dropdown(page, 104, FORGET, Days, function()
@@ -412,7 +417,7 @@ function Settings.Refresh()
 	if not frame then
 		return
 	end
-	for _, box in ipairs({ frame.city, frame.read, frame.hide, frame.minimap }) do
+	for _, box in ipairs({ frame.city, frame.read, frame.hide, frame.guild, frame.minimap }) do
 		box:SetChecked(box.get() and true or false)
 	end
 	frame.every:Update()

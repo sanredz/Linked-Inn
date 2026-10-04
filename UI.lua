@@ -923,7 +923,7 @@ local function UpdateChips()
 end
 
 local function RefreshFind()
-	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary, kind = LI.settings.kind, maxOnly = LI.settings.maxOnly, minSkill = LI.settings.minSkill, liOnly = LI.settings.liOnly }
+	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary, kind = LI.settings.kind, maxOnly = LI.settings.maxOnly, minSkill = LI.settings.minSkill, liOnly = LI.settings.liOnly, guildOnly = LI.settings.guildOnly }
 	local results = LI.Search(filter.search, opts)
 	local list = {}
 	local collapsed = LI.settings.collapsed or {}
@@ -953,7 +953,11 @@ local function RefreshFind()
 			end
 		end
 	end
-	main.count:SetText(string.format("%d shown  ·  %d crafters remembered", #results, total))
+	if LI.settings.guildOnly then
+		main.count:SetText(string.format("|cff40ff40Guild only|r  ·  %d shown  ·  %d crafters remembered", #results, total))
+	else
+		main.count:SetText(string.format("%d shown  ·  %d crafters remembered", #results, total))
+	end
 	local empty = #results == 0
 	main.empty:SetShown(empty)
 	if empty then
@@ -969,7 +973,9 @@ local function RefreshFind()
 			main.emptyText:SetText("No one you've seen can make that so far. Try a shorter word, or clear the filters.")
 		else
 			main.emptyHead:SetText("Nobody matches")
-			if LI.settings.liOnly then
+			if LI.settings.guildOnly then
+				main.emptyText:SetText("Guild only is on, so only guildmates are shown. Everyone else is still saved; turn it off in settings to see them.")
+			elseif LI.settings.liOnly then
 				main.emptyText:SetText("Only Linked Inn users are shown. Click the mug next to Secondary to see everyone.")
 			else
 				main.emptyText:SetText("Clear the filters to see everyone.")

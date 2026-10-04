@@ -1050,7 +1050,7 @@ function Sync.Status()
 		"Users heard: " .. (#heard > 0 and table.concat(heard, ", ") or "none yet"),
 		LI.Crafts and (function()
 			local c = LI.Crafts()
-			return string.format("Crafting log: %d lines, %d known items (%d new recipes listed), %d without an id (%d found later, %d still waiting), %d unknown items, %d sent to be read; reads waiting: %d", c.lines, c.known, c.added or 0, c.noId, c.found or 0, LI.PendingCrafters and LI.PendingCrafters() or 0, c.unknown, c.queued, LI.Reader.QueueSize())
+			return string.format("Crafting log: %d lines, %d known items, %d unknown items, %d read; waiting to see again: %d (%d found so far). Players checked: %d, in line: %d. Reads waiting: %d", c.lines, c.known, c.unknown, c.queued, LI.WaitingCount(), c.found, c.checked, LI.DiscoverQueue(), LI.Reader.QueueSize())
 		end)() or nil,
 		"Waiting to send: " .. #queue,
 	}

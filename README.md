@@ -33,12 +33,15 @@ You don't have to do anything. Linked Inn fills the list in the background:
 - **Other Linked Inn users.** Players with the addon quietly share their own
   professions with each other, including users on the other hidden realms of
   your ruleset.
-- **What you see.** Someone crafting or disenchanting near you gets added
-  too. **Scan nearby** at the bottom of the window looks up the players
-  around you.
+- **People around you.** Anyone you see crafting, your group, your guild
+  and the players around you are checked quietly in the background, a few at
+  a time.
 
 Your own professions are read when you log in, so you never have to open
 them first.
+
+> **Tip:** turn on friendly player nameplates (Shift+V by default). Linked Inn
+> then checks everyone you walk past, and your list fills up much faster.
 
 ## Crafters
 

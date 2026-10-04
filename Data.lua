@@ -169,8 +169,17 @@ LI.On("PLAYER_LOGIN", function()
 	local realm = realms[LI.realm]
 	realm.crafters = type(realm.crafters) == "table" and realm.crafters or {}
 	realm.favorites = type(realm.favorites) == "table" and realm.favorites or {}
+	realm.waiting = type(realm.waiting) == "table" and realm.waiting or {}
+	realm.tried = type(realm.tried) == "table" and realm.tried or {}
 	LI.crafters = realm.crafters
 	LI.favorites = realm.favorites
+	LI.waiting = realm.waiting
+	LI.tried = realm.tried
+	for key, at in pairs(LI.tried) do
+		if type(at) ~= "number" or time() - at > 7 * 86400 then
+			LI.tried[key] = nil
+		end
+	end
 	Prune(LI.crafters, LI.favorites)
 	LI.guids = {}
 	for key, c in pairs(LI.crafters) do
@@ -298,31 +307,6 @@ end
 function LI.GuidOf(key)
 	local c = LI.crafters and LI.crafters[key]
 	return (c and c.guid) or LI.idOf[key]
-end
-
-function LI.NoteCraft(key, profKey, recipeID, classFile, where)
-	if not LI.ready or not key or key == LI.playerKey or not profKey or not recipeID then
-		return false
-	end
-	local c = LI.Crafter(key, true)
-	c.class = c.class or classFile
-	c.where = where or c.where
-	local p = c.profs[profKey] or {}
-	c.profs[profKey] = p
-	p.name = p.name or LI.PROFESSION_NAMES[profKey]
-	p.icon = p.icon or LI.PROFESSION_ICONS[profKey]
-	p.via = p.via or "seen"
-	p.recipes = p.recipes or {}
-	local fresh = not p.recipes[recipeID]
-	if fresh then
-		p.recipes[recipeID] = true
-		p.count = (p.count or 0) + 1
-	end
-	LI.NoteHeard(key)
-	if fresh then
-		LI.Fire("CraftersChanged")
-	end
-	return fresh
 end
 
 function LI.IsFavorite(key)

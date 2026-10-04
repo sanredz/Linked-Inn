@@ -183,8 +183,10 @@ local function ScanStep(job, ok)
 		for _ in pairs(run.found) do
 			crafters = crafters + 1
 		end
-		LI.Print(string.format("Scan done: %d %s among %d %s nearby.", crafters, crafters == 1 and "crafter" or "crafters", run.players, run.players == 1 and "player" or "players"))
-		LI.Log(string.format("Scan: %d crafters among %d players", crafters, run.players))
+		if not run.quiet then
+			LI.Print(string.format("Scan done: %d %s among %d %s nearby.", crafters, crafters == 1 and "crafter" or "crafters", run.players, run.players == 1 and "player" or "players"))
+			LI.Log(string.format("Scan: %d crafters among %d players", crafters, run.players))
+		end
 		LI.Fire("ScanDone")
 	end
 end
@@ -362,11 +364,15 @@ function Reader.ScanProgress()
 	return scanRun.done, scanRun.total
 end
 
-function Reader.Scan(candidates)
+function Reader.Idle()
+	return pending == nil and #probes == 0 and #queue == 0
+end
+
+function Reader.Scan(candidates, quiet)
 	if not LI.ready or scanRun or #candidates == 0 then
 		return false
 	end
-	local run = { total = 0, done = 0, found = {}, players = #candidates }
+	local run = { total = 0, done = 0, found = {}, players = #candidates, quiet = quiet }
 	for _, cand in ipairs(candidates) do
 		for _, profKey in ipairs(cand.profs) do
 			local link = LI.BuildLink(cand.guid, profKey)

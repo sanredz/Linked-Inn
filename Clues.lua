@@ -4,14 +4,8 @@ local CAST_PROFS = {
 	[13262] = "enchanting",
 }
 
-local SCAN_COOLDOWN = 300
-local SCAN_PLAYERS = 20
-local NAMEPLATE_CVAR = "nameplateShowFriendlyPlayers"
-local NAMEPLATE_WAIT = 0.4
-
 local spellCache = {}
 local sawCraft = {}
-local lastScan
 
 local function SpellProfession(spellID)
 	if CAST_PROFS[spellID] then
@@ -110,18 +104,25 @@ local sampleLogged = false
 local function Crafts()
 	local c = LI.test.crafts
 	if type(c) ~= "table" then
-		c = { lines = 0, known = 0, noId = 0, unknown = 0, queued = 0, added = 0 }
+		c = {}
 		LI.test.crafts = c
+	end
+	for _, k in ipairs({ "lines", "known", "noId", "unknown", "queued", "found", "checked" }) do
+		c[k] = c[k] or 0
 	end
 	return c
 end
 LI.Crafts = Crafts
 
 local UNIT_TOKENS = { "target", "mouseover", "focus" }
-local SWEEP_EVERY = 60
-local PENDING_FOR = 15 * 60
-local pending = {}
-local lastSweep = -SWEEP_EVERY
+local WAIT_FOR = 90 * 86400
+local TRY_AGAIN = 7 * 86400
+local DISCOVER_EVERY = 4
+local CANDIDATES_MAX = 300
+
+LI.PRIO = { chat = 1, guild = 2, seen = 3, group = 4 }
+
+local candidates = {}
 
 local function GuidForKey(key)
 	local known = LI.GuidOf(key)
@@ -146,6 +147,30 @@ local function GuidForKey(key)
 		end
 	end
 	return nil
+end
+
+local function IsPlayerGuid(guid)
+	return type(guid) == "string" and guid:find("^Player%-") ~= nil
+end
+
+local function Wait(key, prof, where)
+	local w = LI.waiting[key] or { profs = {} }
+	LI.waiting[key] = w
+	w.profs[prof] = true
+	w.at = time()
+	w.where = where or w.where
+end
+
+function LI.WaitingCount()
+	local n = 0
+	for key, w in pairs(LI.waiting or {}) do
+		if type(w) ~= "table" or type(w.profs) ~= "table" or time() - (w.at or 0) > WAIT_FOR then
+			LI.waiting[key] = nil
+		else
+			n = n + 1
+		end
+	end
+	return n
 end
 
 function LI.OnCrafted(text, sender, guid)
@@ -173,25 +198,19 @@ function LI.OnCrafted(text, sender, guid)
 	end
 	stats.known = stats.known + 1
 	local seen = key .. ":" .. prof
-	if type(guid) ~= "string" or not guid:find("^Player%-") then
+	if not IsPlayerGuid(guid) then
 		guid = GuidForKey(key)
 	end
-	local classFile
-	if type(guid) == "string" and GetPlayerInfoByGUID then
-		classFile = LI.Safe((select(2, LI.Try(GetPlayerInfoByGUID, guid))))
-	end
-	if LI.NoteCraft(key, prof, recipe, classFile, Zone()) then
-		stats.added = (stats.added or 0) + 1
-	end
-	if type(guid) ~= "string" or not guid:find("^Player%-") then
-		stats.noId = stats.noId + 1
-		pending[key] = pending[key] or { profs = {} }
-		pending[key].profs[prof] = true
-		pending[key].at = GetTime()
-		pending[key].where = Zone()
-		if not noGuidLogged[seen] then
-			noGuidLogged[seen] = true
-			LI.Log(string.format("Saw %s doing %s, but the game didn't say who exactly", LI.ShortName(key), prof))
+	if not IsPlayerGuid(guid) then
+		local c = LI.crafters[key]
+		local p = c and c.profs[prof]
+		if not (p and p.recipes) then
+			stats.noId = stats.noId + 1
+			Wait(key, prof, Zone())
+			if not noGuidLogged[seen] then
+				noGuidLogged[seen] = true
+				LI.Log(string.format("Saw %s doing %s; waiting to see them again to read it", LI.ShortName(key), prof))
+			end
 		end
 		return false
 	end
@@ -199,6 +218,7 @@ function LI.OnCrafted(text, sender, guid)
 		sawCraft[seen] = true
 		LI.Log(string.format("Saw %s doing %s", LI.ShortName(key), prof))
 	end
+	local classFile = GetPlayerInfoByGUID and LI.Safe((select(2, LI.Try(GetPlayerInfoByGUID, guid))))
 	local queued = LI.Clue(key, guid, prof, Zone(), classFile)
 	if queued then
 		stats.queued = stats.queued + 1
@@ -207,197 +227,121 @@ function LI.OnCrafted(text, sender, guid)
 end
 
 LI.Listen("GuidFound", function(key, guid)
-	local wait = pending[key]
-	if not wait then
+	local w = LI.waiting and LI.waiting[key]
+	if not w then
 		return
 	end
-	pending[key] = nil
+	LI.waiting[key] = nil
 	local classFile = GetPlayerInfoByGUID and LI.Safe((select(2, LI.Try(GetPlayerInfoByGUID, guid))))
-	for prof in pairs(wait.profs) do
-		if LI.Clue(key, guid, prof, wait.where, classFile) then
-			local stats = Crafts()
+	local stats = Crafts()
+	for prof in pairs(w.profs) do
+		if LI.Clue(key, guid, prof, Zone() or w.where, classFile) then
 			stats.queued = stats.queued + 1
-			stats.found = (stats.found or 0) + 1
+			stats.found = stats.found + 1
 		end
 	end
 end)
 
-function LI.PendingCrafters()
+LI.On("CHAT_MSG_TRADESKILLS", function(text, sender, _, _, _, _, _, _, _, _, _, guid)
+	LI.OnCrafted(LI.Safe(text), LI.Safe(sender), LI.Safe(guid))
+end)
+
+local function KnownPrimaries(c)
 	local n = 0
-	for key, wait in pairs(pending) do
-		if GetTime() - wait.at > PENDING_FOR then
-			pending[key] = nil
-		else
+	for _, primary in ipairs(LI.PRIMARY) do
+		local p = c and c.profs[primary]
+		if p and p.recipes then
 			n = n + 1
 		end
 	end
 	return n
 end
 
-local function ReadPlates()
-	for i = 1, 40 do
-		local unit = "nameplate" .. i
-		if LI.Safe(LI.Try(UnitIsPlayer, unit)) then
-			local key = LI.UnitKey(unit)
-			if key and pending[key] then
-				LI.NoteGuid(key, LI.Safe(LI.Try(UnitGUID, unit)))
-			end
+local function Unknown(c)
+	local profs = {}
+	for _, profKey in ipairs(LI.PRIMARY) do
+		local p = c and c.profs[profKey]
+		if LI.db.profLinks[profKey] and not (p and p.recipes) then
+			profs[#profs + 1] = profKey
 		end
 	end
+	return profs
 end
-LI.ReadPlates = ReadPlates
 
-local SweepCVar
-
-function LI.Sweep()
-	if LI.PendingCrafters() == 0 or GetTime() - lastSweep < SWEEP_EVERY then
+function LI.Discover(key, guid, prio, classFile, where)
+	if not LI.ready or not key or key == LI.playerKey or not IsPlayerGuid(guid) then
 		return false
 	end
-	if (InCombatLockdown and InCombatLockdown()) or (LI.Reader.Scanning and LI.Reader.Scanning()) then
+	LI.NoteGuid(key, guid)
+	if KnownPrimaries(LI.crafters[key]) >= 2 then
 		return false
 	end
-	lastSweep = GetTime()
-	SweepCVar()
+	local tried = LI.tried[key]
+	if tried and time() - tried < TRY_AGAIN then
+		return false
+	end
+	prio = prio or LI.PRIO.chat
+	for _, cand in ipairs(candidates) do
+		if cand.key == key then
+			cand.prio = math.max(cand.prio, prio)
+			cand.at = GetTime()
+			cand.class = cand.class or classFile
+			cand.where = where or cand.where
+			return false
+		end
+	end
+	candidates[#candidates + 1] = { key = key, guid = guid, prio = prio, class = classFile, where = where, at = GetTime() }
+	if #candidates > CANDIDATES_MAX then
+		local worst = 1
+		for i, cand in ipairs(candidates) do
+			local w = candidates[worst]
+			if cand.prio < w.prio or (cand.prio == w.prio and cand.at < w.at) then
+				worst = i
+			end
+		end
+		table.remove(candidates, worst)
+	end
 	return true
 end
 
-LI.On("CHAT_MSG_TRADESKILLS", function(text, sender, _, _, _, _, _, _, _, _, _, guid)
-	LI.OnCrafted(LI.Safe(text), LI.Safe(sender), LI.Safe(guid))
-end)
-
-local function GetCVarOn(name)
-	local getter = (C_CVar and C_CVar.GetCVarBool) or GetCVarBool
-	return getter and LI.Safe(LI.Try(getter, name)) == true
+function LI.DiscoverQueue()
+	return #candidates
 end
 
-local function SetCVarValue(name, value)
-	local setter = (C_CVar and C_CVar.SetCVar) or SetCVar
-	if setter then
-		LI.Try(setter, name, value)
-	end
-end
-
-local function Tokens()
-	local tokens = { "target", "mouseover", "focus" }
-	for i = 1, 4 do
-		tokens[#tokens + 1] = "party" .. i
-	end
-	for i = 1, 40 do
-		tokens[#tokens + 1] = "raid" .. i
-	end
-	local plates = C_NamePlate and C_NamePlate.GetNamePlates and LI.Try(C_NamePlate.GetNamePlates)
-	for _, plate in ipairs(type(plates) == "table" and plates or {}) do
-		local token = plate.namePlateUnitToken or (plate.UnitFrame and plate.UnitFrame.unit)
-		if type(token) == "string" then
-			tokens[#tokens + 1] = token
+local function NextCandidate()
+	local best
+	for i, cand in ipairs(candidates) do
+		local b = best and candidates[best]
+		if not b or cand.prio > b.prio or (cand.prio == b.prio and cand.at > b.at) then
+			best = i
 		end
 	end
-	for i = 1, 40 do
-		tokens[#tokens + 1] = "nameplate" .. i
-	end
-	return tokens
+	return best and table.remove(candidates, best)
 end
 
-local function KnownPrimaries(c)
-	local n = 0
-	for profKey in pairs(c and c.profs or {}) do
-		for _, primary in ipairs(LI.PRIMARY) do
-			if primary == profKey then
-				n = n + 1
-			end
-		end
-	end
-	return n
-end
-
-function LI.ScanCandidates()
-	local seen, list = {}, {}
-	local zone = Zone()
-	for _, unit in ipairs(Tokens()) do
-		if #list >= SCAN_PLAYERS then
-			break
-		end
-		local guid = UnitGUID and LI.Safe(LI.Try(UnitGUID, unit))
-		if type(guid) == "string" and guid:find("^Player%-") and not seen[guid]
-			and LI.Safe(LI.Try(UnitIsPlayer, unit)) and LI.Safe(LI.Try(UnitIsFriend, "player", unit)) ~= false then
-			seen[guid] = true
-			local key = LI.UnitKey(unit)
-			local c = key and LI.crafters[key]
-			if key and key ~= LI.playerKey and KnownPrimaries(c) < 2 then
-				local profs = {}
-				for _, profKey in ipairs(LI.PRIMARY) do
-					local p = c and c.profs[profKey]
-					if LI.db.profLinks[profKey] and not (p and p.recipes) then
-						profs[#profs + 1] = profKey
-					end
-				end
-				if #profs > 0 then
-					list[#list + 1] = {
-						key = key,
-						guid = guid,
-						class = LI.Safe(select(2, LI.Try(UnitClass, unit))),
-						where = zone,
-						profs = profs,
-					}
-				end
-			end
-		end
-	end
-	return list
-end
-
-function LI.ScanReady()
-	if LI.Reader.Scanning() then
-		return false, "scanning"
-	end
-	if lastScan and GetTime() - lastScan < SCAN_COOLDOWN then
-		return false, "cooldown", SCAN_COOLDOWN - (GetTime() - lastScan)
+function LI.DiscoverStep()
+	if not LI.ready or not LI.settings.autoRead or #candidates == 0 then
+		return false
 	end
 	if InCombatLockdown and InCombatLockdown() then
-		return false, "combat"
+		return false
 	end
-	return true
-end
-
-local function StartScan()
-	local list = LI.ScanCandidates()
-	if #list == 0 then
-		LI.Print("Nobody new to scan around you.")
-		return
+	local reader = LI.Reader
+	if reader.Scanning() or not reader.Idle() then
+		return false
 	end
-	LI.Reader.Scan(list)
-end
-
-SweepCVar = function()
-	if GetCVarOn(NAMEPLATE_CVAR) then
-		ReadPlates()
-		return
+	while #candidates > 0 do
+		local cand = NextCandidate()
+		LI.tried[cand.key] = time()
+		cand.profs = Unknown(LI.crafters[cand.key])
+		if #cand.profs > 0 and reader.Scan({ cand }, true) then
+			Crafts().checked = Crafts().checked + 1
+			return true
+		end
 	end
-	SetCVarValue(NAMEPLATE_CVAR, "1")
-	LI.After(NAMEPLATE_WAIT, function()
-		ReadPlates()
-		SetCVarValue(NAMEPLATE_CVAR, "0")
-	end)
+	return false
 end
 
 LI.Listen("Ready", function()
-	LI.Every(5, LI.Sweep)
+	LI.Every(DISCOVER_EVERY, LI.DiscoverStep)
 end)
-
-function LI.ScanNearby()
-	if not LI.ScanReady() then
-		return false
-	end
-	lastScan = GetTime()
-	if GetCVarOn(NAMEPLATE_CVAR) then
-		StartScan()
-	else
-		SetCVarValue(NAMEPLATE_CVAR, "1")
-		LI.After(NAMEPLATE_WAIT, function()
-			StartScan()
-			SetCVarValue(NAMEPLATE_CVAR, "0")
-		end)
-	end
-	LI.Fire("StatusChanged")
-	return true
-end

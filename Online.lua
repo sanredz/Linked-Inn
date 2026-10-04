@@ -38,9 +38,12 @@ local function ReadGuild()
 	end
 	local count = LI.Safe(LI.Try(GetNumGuildMembers)) or 0
 	for i = 1, count do
-		local name, _, _, _, _, _, _, _, online = LI.Try(GetGuildRosterInfo, i)
+		local name, _, _, _, _, _, _, _, online, _, classFile, _, _, _, _, _, guid = LI.Try(GetGuildRosterInfo, i)
 		if name then
 			SetRoster("guild", name, LI.Safe(online))
+			if LI.Safe(online) and LI.Discover then
+				LI.Discover(LI.FullName(LI.Safe(name)), LI.Safe(guid), LI.PRIO.guild, LI.Safe(classFile))
+			end
 		end
 	end
 	LI.Fire("StatusChanged")
@@ -79,6 +82,9 @@ local function ReadGroup()
 			entry.group = LI.Safe(LI.Try(UnitIsConnected, unit)) ~= false
 			if entry.group then
 				LI.MarkSeen(key)
+				if LI.Discover then
+					LI.Discover(key, LI.Safe(LI.Try(UnitGUID, unit)), LI.PRIO.group, LI.Safe((select(2, LI.Try(UnitClass, unit)))))
+				end
 			end
 		end
 	end
@@ -163,13 +169,18 @@ local function Sighted(unit)
 		return
 	end
 	local key = LI.UnitKey(unit)
-	if key then
-		LI.NoteGuid(key, LI.Safe(LI.Try(UnitGUID, unit)))
+	local zone = GetRealZoneText and LI.Safe(LI.Try(GetRealZoneText))
+	if key and LI.Discover then
+		local guid = LI.Safe(LI.Try(UnitGUID, unit))
+		if LI.Safe(LI.Try(UnitIsFriend, "player", unit)) ~= false then
+			LI.Discover(key, guid, LI.PRIO.seen, LI.Safe((select(2, LI.Try(UnitClass, unit)))), type(zone) == "string" and zone ~= "" and zone or nil)
+		else
+			LI.NoteGuid(key, guid)
+		end
 	end
 	if not key or key == LI.playerKey or not LI.crafters[key] then
 		return
 	end
-	local zone = GetRealZoneText and LI.Safe(LI.Try(GetRealZoneText))
 	if LI.MarkSeen(key, type(zone) == "string" and zone ~= "" and zone or nil) then
 		LI.Fire("StatusChanged")
 	end

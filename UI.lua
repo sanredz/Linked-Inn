@@ -760,23 +760,6 @@ local function UpdateChips()
 	main.secondaryBox:SetChecked(LI.settings.secondary and true or false)
 	main.maxBox:SetChecked(LI.settings.maxOnly and true or false)
 	main.compactBox:SetChecked(LI.settings.compact and true or false)
-	local done, total = LI.Reader.ScanProgress()
-	if done then
-		main.scan.text:SetText(string.format("Scanning %d/%d", done, total))
-		main.scan:SetEnabled(false)
-	else
-		main.scan.text:SetText("Scan nearby")
-		main.scan:SetEnabled((LI.ScanReady()))
-	end
-	if main.scan:IsEnabled() then
-		main.scan.text:SetTextColor(1, 0.82, 0)
-		main.scan.icon:SetDesaturated(false)
-		main.scan.icon:SetAlpha(1)
-	else
-		main.scan.text:SetTextColor(0.5, 0.5, 0.5)
-		main.scan.icon:SetDesaturated(true)
-		main.scan.icon:SetAlpha(0.5)
-	end
 end
 
 local function RefreshFind()
@@ -994,7 +977,6 @@ function UI.Refresh()
 	main.secondaryBox:SetShown(findShown)
 	main.maxBox:SetShown(findShown)
 	main.compactBox:SetShown(findShown)
-	main.scan:SetShown(findShown)
 	main.compactLabel:SetShown(findShown)
 	main.maxLabel:SetShown(findShown)
 	main.secondaryLabel:SetShown(findShown)
@@ -1191,43 +1173,6 @@ local function CreateMain()
 	main.compactLabel = Text(main, "GameFontHighlightSmall")
 	main.compactLabel:SetPoint("LEFT", main.compactBox, "RIGHT", 0, -1)
 	main.compactLabel:SetText("Compact")
-	main.scan = CreateFrame("Button", nil, main)
-	main.scan:SetSize(110, 20)
-	main.scan:SetPoint("LEFT", main.compactLabel, "RIGHT", 18, 0)
-	main.scan.icon = main.scan:CreateTexture(nil, "ARTWORK")
-	main.scan.icon:SetSize(14, 14)
-	main.scan.icon:SetPoint("LEFT", 0, 0)
-	if not pcall(main.scan.icon.SetAtlas, main.scan.icon, "common-search-magnifyingglass") then
-		main.scan.icon:SetTexture("Interface\\Common\\UI-Searchbox-Icon")
-	end
-	main.scan.text = Text(main.scan, "GameFontNormalSmall")
-	main.scan.text:SetPoint("LEFT", main.scan.icon, "RIGHT", 4, 0)
-	main.scan.text:SetText("Scan nearby")
-	main.scan:SetScript("OnClick", function()
-		if LI.ScanNearby() then
-			Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
-		end
-		UI.Refresh()
-	end)
-	main.scan:SetMotionScriptsWhileDisabled(true)
-	main.scan:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_TOP")
-		if self:IsEnabled() then
-			self.text:SetTextColor(1, 1, 1)
-		end
-		GameTooltip:SetText("Scan nearby", 1, 0.82, 0)
-		local ready, why, left = LI.ScanReady()
-		if why == "cooldown" then
-			GameTooltip:AddLine(string.format("Ready again in %s", LI.Duration(left)), 1, 1, 1)
-		elseif why == "combat" then
-			GameTooltip:AddLine("Not in combat", 1, 1, 1)
-		end
-		GameTooltip:Show()
-	end)
-	main.scan:SetScript("OnLeave", function(self)
-		GameTooltip:Hide()
-		UI.Refresh()
-	end)
 
 	for i, name in ipairs(TABS) do
 		local tab = CreateFrame("Button", "LinkedInnFrameTab" .. i, main, "PanelTabButtonTemplate")

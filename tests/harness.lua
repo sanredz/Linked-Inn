@@ -321,7 +321,7 @@ local function InstallStubs()
 	_G.GetNumGuildMembers = function() return #W.guild end
 	_G.GetGuildRosterInfo = function(i)
 		local g = W.guild[i]
-		return g.name, "", 0, 60, "", "", "", "", g.online
+		return g.name, "", 0, 60, "", "", "", "", g.online, "", g.class or "WARRIOR", 0, 0, false, false, 0, g.guid
 	end
 	_G.C_GuildInfo = { GuildRoster = function() W.rosterRequests = (W.rosterRequests or 0) + 1 end }
 	W.who = W.who or {}
@@ -1364,29 +1364,26 @@ do
 	Fire("CHAT_MSG_TRADESKILLS", "Brew Master creates Mooncloth Bag.", "Brew Master", "", "", "", "", 0, 0, "", 0, 1, "Player-1-ME")
 	Fire("CHAT_MSG_TRADESKILLS", "Some One creates Unknown Thing.", "Some One", "", "", "", "", 0, 0, "", 0, 1, "Player-1-OOO")
 	Advance(10)
-	local noId = LI.crafters["No Id-TestRealm"]
-	check(LI.test.built.tries == tries2 and noId and noId.profs.tailoring.recipes[18560] and noId.profs.tailoring.count == 1 and not LI.crafters["Some One-TestRealm"], "without an id they're still listed with what they made, just not read in full; unknown items are skipped")
-	check(LI.Status("No Id-TestRealm") == "online", "and they show as online, since they're crafting right now")
-	local hits = LI.Search("mooncloth", {})
-	local found = false
-	for _, e in ipairs(hits) do
-		if e.key == "No Id-TestRealm" then found = true end
-	end
-	check(found, "searching the item finds them")
+	check(LI.test.built.tries == tries2 and not LI.crafters["No Id-TestRealm"] and LI.waiting["No Id-TestRealm"] and LI.waiting["No Id-TestRealm"].profs.tailoring and not LI.waiting["Some One-TestRealm"], "without an id they wait off the list; unknown items are skipped")
+	check(LinkedInnDB.realms.TestRealm.waiting["No Id-TestRealm"] ~= nil, "the waiting list is saved")
 	W.guids["Player-1-QQQ"] = { class = "PRIEST", name = "No Id", realm = "" }
 	W.linkData["trade:Player-1-QQQ:3908:197"] = { linkedName = "No Id", prof = TAILORING, recipes = TAILOR_RECIPES }
 	Say("CHAT_MSG_SAY", "anyone need bags?", "No Id-TestRealm", "Player-1-QQQ")
 	Advance(10)
-	check(noId.profs.tailoring.count == 2 and noId.profs.tailoring.rank == 260 and noId.class == "PRIEST", "once they say anything, their full list and skill are read", noId.profs.tailoring.count)
+	local noId = LI.crafters["No Id-TestRealm"]
+	check(noId and noId.profs.tailoring.count == 2 and noId.profs.tailoring.rank == 260 and noId.class == "PRIEST" and not LI.waiting["No Id-TestRealm"], "once they say anything, their full list and skill are read and they're listed", noId and noId.profs.tailoring.count)
 	W.guids["Player-1-RRR"] = { class = "HUNTER", name = "Plate Guy", realm = "" }
 	W.linkData["trade:Player-1-RRR:3908:197"] = { linkedName = "Plate Guy", prof = TAILORING, recipes = TAILOR_RECIPES }
 	Fire("CHAT_MSG_TRADESKILLS", "Plate Guy creates Mooncloth Bag.", "", "", "", "", "", 0, 0, "", 0, 1, "")
+	Advance(10)
+	check(not LI.crafters["Plate Guy-TestRealm"], "a crafter not seen yet stays off the list")
+	local cvarCount = #W.cvarLog
 	W.units = { nameplate3 = { name = "Plate", surname = "Guy", guid = "Player-1-RRR" } }
-	W.cvars.nameplateShowFriendlyPlayers = "0"
-	Advance(75)
+	Fire("NAME_PLATE_UNIT_ADDED", "nameplate3")
+	Advance(10)
 	W.units = nil
 	local plate = LI.crafters["Plate Guy-TestRealm"]
-	check(plate and plate.profs.tailoring.count == 2 and W.cvars.nameplateShowFriendlyPlayers == "0", "a quick nameplate sweep finds crafters nearby and reads them, then puts nameplates back", plate and plate.profs.tailoring.count)
+	check(plate and plate.profs.tailoring.count == 2 and #W.cvarLog == cvarCount, "seeing them on a nameplate later reads them in full, without touching nameplate settings", plate and plate.profs.tailoring.count)
 	W.guids["Player-1-PPP"] = { class = "ROGUE", name = "Name Only", realm = "" }
 	W.linkData["trade:Player-1-PPP:3908:197"] = { linkedName = "Name Only", prof = TAILORING, recipes = TAILOR_RECIPES }
 	W.units = { nameplate7 = { name = "Name", surname = "Only", guid = "Player-1-PPP" } }
@@ -1402,51 +1399,53 @@ do
 		nameplate2 = { name = "Scan", surname = "Two", guid = "Player-2-BBB" },
 		nameplate3 = { name = "Enemy", surname = "Guy", guid = "Player-2-CCC", enemy = true },
 		nameplate4 = { name = "Mob", surname = "", guid = "Creature-0", npc = true },
-		target = { name = "Scan", surname = "One", guid = "Player-2-AAA" },
 	}
-	W.plates = { "nameplate1", "nameplate2", "nameplate3", "nameplate4" }
 	LI.db.profLinks.alchemy = { spell = 2259, line = 171 }
 	W.linkData["trade:Player-2-AAA:2259:171"] = { linkedName = "Scan One", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
 	W.linkData["trade:Player-2-AAA:3908:197"] = { linkedName = "Scan One", prof = TAILORING, recipes = TAILOR_RECIPES }
 	W.linkData["trade:Player-2-AAA:7411:333"] = { linkedName = "Scan One", prof = ENCH, recipes = { { id = 7418, name = "Enchant Bracer - Minor Health" } } }
-	W.cvars.nameplateShowFriendlyPlayers = "0"
-	LI.UI.Open()
-	local main = LinkedInnFrame
-	check(main.scan:IsEnabled(), "the scan button is ready")
+	W.cvars.nameplateShowFriendlyPlayers = "1"
+	local cvars = #W.cvarLog
 	local chat0 = #W.chat
-	check(LI.ScanNearby(), "a scan starts")
-	check(W.cvars.nameplateShowFriendlyPlayers == "1", "friendly nameplates are turned on for a moment if they were off")
-	Advance(0.5)
-	check(W.cvars.nameplateShowFriendlyPlayers == "0", "and turned back off right after")
-	local done, total = LI.Reader.ScanProgress()
-	check(total == 6, "two friendly players times three known professions are asked; enemies, NPCs, duplicates are skipped", total)
-	Advance(0.1)
-	LI.UI.Refresh()
-	check(main.scan.text.__text:find("^Scanning") and not main.scan:IsEnabled(), "the button shows progress", main.scan.text.__text)
-	Advance(10)
-	check(not LI.Reader.Scanning(), "the scan finishes")
+	Advance(30)
+	local before = LI.DiscoverQueue()
+	for i = 1, 4 do
+		Fire("NAME_PLATE_UNIT_ADDED", "nameplate" .. i)
+	end
+	Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+	check(LI.DiscoverQueue() == before + 2, "friendly players on nameplates are lined up once; enemies and NPCs aren't", LI.DiscoverQueue())
+	Advance(40)
 	local one = LI.crafters["Scan One-TestRealm"]
-	check(one and one.profs.alchemy and one.profs.enchanting and one.profs.enchanting.count == 1, "a scanned player gets their professions")
+	check(one and one.profs.alchemy and one.profs.enchanting and one.profs.enchanting.count == 1, "a player you see gets their professions read in the background")
 	local askedTailoring = false
 	for _, h in ipairs(W.hyperlinks) do
 		if h == "trade:Player-2-AAA:3908:197" then askedTailoring = true end
 	end
 	check(not askedTailoring and not one.profs.tailoring, "after two professions are found, nothing more is asked")
 	check(not LI.crafters["Scan Two-TestRealm"] and not LI.crafters["Enemy Guy-TestRealm"], "players with no answer aren't added")
-	check(W.chat[#W.chat]:find("Scan done: 1 crafter among 2 players nearby.", 1, true), "a one-line summary goes to chat", W.chat[#W.chat])
-	local ready, why = LI.ScanReady()
-	check(not ready and why == "cooldown" and not LI.ScanNearby(), "then the scan has a cooldown")
-	LI.UI.Refresh()
-	check(not main.scan:IsEnabled() and main.scan.text.__text == "Scan nearby", "the button waits out the cooldown")
-	Advance(301)
-	check(LI.ScanReady(), "and is ready again after five minutes")
-	W.cvars.nameplateShowFriendlyPlayers = "1"
-	local cvars = #W.cvarLog
-	LI.ScanNearby()
-	Advance(10)
-	check(#W.cvarLog == cvars, "nameplates already on are left alone")
-	check(LI.Reader.ScanProgress() == nil, "a second scan only asks the remaining unknowns and ends")
-	main:Hide()
+	check(#W.chat == chat0 and #W.cvarLog == cvars, "it runs quietly: nothing in chat, nameplate settings untouched")
+	local tries = #W.hyperlinks
+	Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
+	Advance(20)
+	check(#W.hyperlinks == tries, "someone checked recently isn't checked again for a week")
+	LI.tried["Scan One-TestRealm"] = nil
+	check(LI.Discover("Scan One-TestRealm", "Player-2-AAA", LI.PRIO.seen) == false, "someone whose two professions are known is never lined up again")
+	W.units = nil
+	W.guild = { { name = "Guild Mate-TestRealm", online = true, guid = "Player-2-GM1" }, { name = "Gone Mate-TestRealm", online = false, guid = "Player-2-GM2" } }
+	W.groupSize = 1
+	W.units = { party1 = { name = "Group", surname = "Pal", guid = "Player-2-GP1" } }
+	W.linkData["trade:Player-2-GP1:2259:171"] = { linkedName = "Group Pal", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	W.linkData["trade:Player-2-GM1:2259:171"] = { linkedName = "Guild Mate", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	local queued = LI.DiscoverQueue()
+	Fire("GUILD_ROSTER_UPDATE")
+	Fire("GROUP_ROSTER_UPDATE")
+	check(LI.DiscoverQueue() == queued + 2, "online guild members and your group are lined up; offline ones aren't", LI.DiscoverQueue())
+	Advance(12)
+	check(LI.crafters["Group Pal-TestRealm"] and LI.crafters["Group Pal-TestRealm"].profs.alchemy, "your group comes first")
+	Advance(30)
+	check(LI.crafters["Guild Mate-TestRealm"] and LI.crafters["Guild Mate-TestRealm"].profs.alchemy, "then your guild")
+	W.guild = {}
+	W.groupSize = nil
 	W.units = nil
 	W.autoWorks = false
 end

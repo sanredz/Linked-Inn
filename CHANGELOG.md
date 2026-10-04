@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+- Crafters seen in the crafting log ("X creates Y") are remembered and read in
+  full the next time you see them.
+- Your group, your guild and the players around you are checked quietly in the
+  background. Turn on friendly nameplates to check everyone you walk past.
+- Scan nearby is gone; the background checks replace it.
+- The player whose recipe book is open is highlighted in the list.
+- Whispers from the addon open with their message filled in.
+- Online checks no longer get stuck on "Checking...", and confirmed offline
+  players sort below the rest.
+- Class icons removed from the list; name pills keep their round ends.
+
 ## [1.0.0] - 2026-10-04
 
 First release.

@@ -45,7 +45,18 @@ function methods:SetScript(k, fn) self.__scripts[k] = fn end
 function methods:GetScript(k) return self.__scripts[k] end
 function methods:RegisterEvent(ev)
 	W.events[ev] = W.events[ev] or {}
+	for _, f in ipairs(W.events[ev]) do
+		if f == self then return end
+	end
 	table.insert(W.events[ev], self)
+end
+function methods:UnregisterEvent(ev)
+	for i, f in ipairs(W.events[ev] or {}) do
+		if f == self then
+			table.remove(W.events[ev], i)
+			return
+		end
+	end
 end
 function methods:Show()
 	if not self.__shown then
@@ -212,6 +223,7 @@ local function InstallStubs()
 	end }
 	_G.GetRealZoneText = function() return W.zone or "Stormwind City" end
 	_G.IsResting = function() return W.resting == true end
+	_G.GetFramesRegisteredForEvent = function(ev) return table.unpack(W.events[ev] or {}) end
 	_G.UnitExists = function(u) return u == "player" or (W.units and W.units[u] ~= nil) or false end
 	_G.UnitClass = function() return "Mage", "MAGE" end
 	_G.C_AddOns = { GetAddOnMetadata = function(addon, field) if addon == ADDON_NAME and field == "Version" then return TOC_VERSION end end }
@@ -2229,6 +2241,27 @@ do
 	W.units = nil
 	W.autoWorks = false
 	W.playerGUID = nil
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	local sounds = 0
+	local blizz = CreateFrame("Frame")
+	blizz:RegisterEvent("TRADE_SKILL_SHOW")
+	blizz:SetScript("OnEvent", function() sounds = sounds + 1 end)
+	W.autoWorks = true
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-CCC", 2259, 171, "Alchemy"), "Cora Vale-TestRealm", "Player-1-CCC", "Trade - City")
+	Advance(15)
+	W.autoWorks = false
+	check(LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes and LI.crafters["Cora Vale-TestRealm"].profs.alchemy.recipes, "reads still work")
+	check(sounds == 0, "and Blizzard's profession window never opens for them, so it makes no sound", sounds)
+	Fire("TRADE_SKILL_SHOW")
+	check(sounds == 1, "opening a profession yourself still opens the window", sounds)
+	check(not LI.Reader.QuietState(), "quiet reading stays on while it works")
+	blizz:UnregisterEvent("TRADE_SKILL_SHOW")
 end
 
 do

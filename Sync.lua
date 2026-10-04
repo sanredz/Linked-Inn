@@ -1049,6 +1049,10 @@ function Sync.Status()
 		"Sent: " .. Counts("tx") .. ((sync.failed or 0) > 0 and string.format("  |cffff6060failed %d (%s)|r", sync.failed, tostring(sync.lastError)) or ""),
 		"Received: " .. Counts("rx"),
 		"Users heard: " .. (#heard > 0 and table.concat(heard, ", ") or "none yet"),
+		LI.Reader.QuietState and (function()
+			local off, tries, works = LI.Reader.QuietState()
+			return string.format("Quiet reading: %s (%d of %d reads answered)", off and "|cffff6060off, using the hidden window|r" or "on", works, tries)
+		end)() or nil,
 		LI.sights and string.format("Players seen: %d (%d without a name, %d without an id, %d lined up to check)", LI.sights.players, LI.sights.noName, LI.sights.noId, LI.sights.lined) or nil,
 		LI.Crafts and (function()
 			local c = LI.Crafts()

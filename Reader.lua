@@ -247,7 +247,49 @@ local function ScanStep(job, ok)
 	end
 end
 
+local silenced
+local quietTries, quietWorks, quietOff = 0, 0, false
+
+local function Silence()
+	if silenced or quietOff or not GetFramesRegisteredForEvent then
+		return
+	end
+	quietTries = quietTries + 1
+	silenced = {}
+	local frames = { LI.Try(GetFramesRegisteredForEvent, "TRADE_SKILL_SHOW") }
+	for _, frame in ipairs(frames) do
+		if type(frame) == "table" and frame ~= LI.eventFrame and frame.UnregisterEvent then
+			if pcall(frame.UnregisterEvent, frame, "TRADE_SKILL_SHOW") then
+				silenced[#silenced + 1] = frame
+			end
+		end
+	end
+end
+
+local function Unsilence()
+	if not silenced then
+		return
+	end
+	for _, frame in ipairs(silenced) do
+		pcall(frame.RegisterEvent, frame, "TRADE_SKILL_SHOW")
+	end
+	silenced = nil
+end
+Reader.Unsilence = Unsilence
+
+function Reader.QuietState()
+	return quietOff, quietTries, quietWorks
+end
+
 local function Finish(job, outcome)
+	if silenced and outcome == "ok" then
+		quietWorks = quietWorks + 1
+	end
+	Unsilence()
+	if not quietOff and quietWorks == 0 and quietTries >= 8 then
+		quietOff = true
+		LI.Log("Quiet reading got no answers; reading with the hidden window instead")
+	end
 	if job.probe then
 		pending = nil
 		nextAt = math.max(nextAt, Now() + 2)
@@ -341,6 +383,7 @@ Start = function(job)
 	job.started = Now()
 	local t = Tip()
 	LI.Try(t.SetOwner, t, WorldFrame or UIParent, "ANCHOR_NONE")
+	Silence()
 	local ok, err = pcall(t.SetHyperlink, t, job.link)
 	LI.Try(t.Hide, t)
 	if not ok then
@@ -806,6 +849,14 @@ LI.On("TRADE_SKILL_DATA_SOURCE_CHANGED", function()
 		ScheduleRead()
 	end
 end)
+LI.On("PLAYER_REGEN_DISABLED", function()
+	Unsilence()
+end)
+
+LI.On("PLAYER_LOGOUT", function()
+	Unsilence()
+end)
+
 LI.On("TRADE_SKILL_CLOSE", function()
 	tradeOpen = false
 	LI.After(0.01, function()

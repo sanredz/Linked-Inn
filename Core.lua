@@ -30,6 +30,7 @@ function LI.SafeCall(fn, ...)
 end
 
 local eventFrame = CreateFrame("Frame")
+LI.eventFrame = eventFrame
 local eventHandlers = {}
 
 function LI.On(event, fn)

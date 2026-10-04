@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Reading professions in the background no longer plays the profession window
+  sound: the window doesn't open at all for the addon's own reads.
+
 ## [1.1.0] - 2026-10-04
 
 - Crafters seen in the crafting log ("X creates Y") are remembered and read in

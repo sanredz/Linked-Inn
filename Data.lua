@@ -78,6 +78,7 @@ local DEFAULTS = {
 	cityScan = true,
 	cityEvery = 5,
 	forgetDays = 60,
+	hideLinks = false,
 	collapsed = {},
 }
 

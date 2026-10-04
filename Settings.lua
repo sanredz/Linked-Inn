@@ -3,7 +3,7 @@ local ADDON, LI = ...
 local Settings = {}
 LI.Settings = Settings
 
-local WIDTH = 340
+local WIDTH = 362
 local GOLD = { 1, 0.82, 0 }
 local SOFT = { 0.62, 0.6, 0.56 }
 local TITLE_FONT = "Fonts\\MORPHEUS.TTF"
@@ -38,7 +38,10 @@ local HEAD_X = 18
 local BOX_X = 14
 local BODY_X = 42
 local RIGHT_PAD = 18
-local PAGE_WIDTH = WIDTH - 10
+local BAR_SPACE = 22
+local SCROLL_STEP = 40
+local PAGE_PAD = 16
+local PAGE_WIDTH = WIDTH - 10 - BAR_SPACE
 
 local function Below(region, anchor, x, gap)
 	region:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", x - (anchor.colX or 0), -(gap or 0))
@@ -173,6 +176,25 @@ if StaticPopupDialogs then
 	}
 end
 
+local function Fit()
+	if not frame or not frame.last then
+		return
+	end
+	local top, bottom = frame.page:GetTop(), frame.last:GetBottom()
+	if not top or not bottom then
+		return
+	end
+	frame.page:SetHeight(math.max(1, top - bottom + PAGE_PAD))
+	local bar = frame.scroll.ScrollBar
+	if bar and bar.SetShown then
+		local scrolls = frame.page:GetHeight() > (frame.scroll:GetHeight() or 0) + 1
+		bar:SetShown(scrolls)
+		if not scrolls then
+			frame.scroll:SetVerticalScroll(0)
+		end
+	end
+end
+
 local function Create()
 	local main = LI.UI.Main()
 	frame = CreateFrame("Frame", "LinkedInnSettings", main, "ButtonFrameTemplate")
@@ -193,13 +215,28 @@ local function Create()
 		frame.Inset:SetPoint("TOPLEFT", 4, -26)
 		frame.Inset:SetPoint("BOTTOMRIGHT", -6, 26)
 	end
-	local page = CreateFrame("Frame", nil, frame.Inset or frame)
-	page:SetAllPoints()
+	local holder = frame.Inset or frame
+	local ok, scroll = pcall(CreateFrame, "ScrollFrame", nil, holder, "ScrollFrameTemplate")
+	if not ok or not scroll then
+		scroll = CreateFrame("ScrollFrame", nil, holder)
+		scroll:EnableMouseWheel(true)
+		scroll:SetScript("OnMouseWheel", function(self, delta)
+			local range = self:GetVerticalScrollRange() or 0
+			local at = (self:GetVerticalScroll() or 0) - delta * SCROLL_STEP
+			self:SetVerticalScroll(math.max(0, math.min(range, at)))
+		end)
+	end
+	scroll:SetPoint("TOPLEFT", 0, -2)
+	scroll:SetPoint("BOTTOMRIGHT", -BAR_SPACE, 2)
+	frame.scroll = scroll
+	local page = CreateFrame("Frame", nil, scroll)
+	page:SetSize(PAGE_WIDTH, 1)
+	scroll:SetScrollChild(page)
 	frame.page = page
 
 	local city = Section(page, nil, "City scans")
 	frame.city, frame.cityLast = Option(page, city, "Scan players in cities",
-		"Every few minutes in a city or inn, friendly nameplates flash on for half a second so everyone around you gets checked in the background.\n|cffe8b04aNot needed if you already play with friendly nameplates on (Shift+V).|r",
+		"Every few minutes in a city or inn, friendly nameplates flash on briefly so people around you get checked.\n|cffe8b04aNot needed if friendly nameplates are on (Shift+V).|r",
 		function() return LI.settings.cityScan == true end,
 		function(on) LI.settings.cityScan = on end)
 	frame.everyLabel = Below(Text(page, "GameFontHighlightSmall"), frame.cityLast, BODY_X, 14)
@@ -213,11 +250,15 @@ local function Create()
 
 	local reading = Section(page, frame.everyLabel, "Reading", 28)
 	frame.read, frame.readLast = Option(page, reading, "Read profession links from chat",
-		"Saves someone's full recipe list when they link a profession, without you clicking it.",
+		"Saves someone's recipes when they link a profession.",
 		function() return LI.settings.autoRead ~= false end,
 		function(on) LI.settings.autoRead = on end)
+	frame.hide, frame.hideLast = Option(page, frame.readLast, "Hide profession links in chat",
+		"Trade, general, say and yell. Still read and saved.",
+		function() return LI.settings.hideLinks == true end,
+		function(on) LI.settings.hideLinks = on end)
 
-	local list = Section(page, frame.readLast, "Your list")
+	local list = Section(page, frame.hideLast, "Your list")
 	frame.forgetLabel = Below(Text(page, "GameFontHighlight"), list, HEAD_X, 16)
 	frame.forgetLabel:SetText("Forget crafters not seen for")
 	frame.forget = Dropdown(page, 104, FORGET, Days, function()
@@ -243,6 +284,7 @@ local function Create()
 	frame.minimap = Option(page, minimap, "Show the minimap button", nil,
 		function() return LI.settings.showMinimap ~= false end,
 		function(on) LI.settings.showMinimap = on end)
+	frame.last = frame.minimap
 
 	frame.version = Text(frame, "GameFontDisableSmall", "CENTER")
 	frame.version:SetPoint("BOTTOM", 0, 8)
@@ -250,6 +292,7 @@ local function Create()
 
 	frame:SetScript("OnShow", function()
 		Settings.Refresh()
+		LI.After(0, Fit)
 	end)
 	frame:Hide()
 end
@@ -258,7 +301,7 @@ function Settings.Refresh()
 	if not frame then
 		return
 	end
-	for _, box in ipairs({ frame.city, frame.read, frame.minimap }) do
+	for _, box in ipairs({ frame.city, frame.read, frame.hide, frame.minimap }) do
 		box:SetChecked(box.get() and true or false)
 	end
 	frame.every:Update()
@@ -274,6 +317,7 @@ function Settings.Refresh()
 		text = text .. string.format("  |cff9e9a8f·  %d waiting|r", waiting)
 	end
 	frame.count:SetText(text)
+	Fit()
 end
 
 function Settings.Frame()

@@ -223,6 +223,11 @@ local function InstallStubs()
 	end }
 	_G.GetRealZoneText = function() return W.zone or "Stormwind City" end
 	_G.IsResting = function() return W.resting == true end
+	W.chatFilters = {}
+	_G.ChatFrame_AddMessageEventFilter = function(ev, fn)
+		W.chatFilters[ev] = W.chatFilters[ev] or {}
+		table.insert(W.chatFilters[ev], fn)
+	end
 	_G.GetFramesRegisteredForEvent = function(ev) return table.unpack(W.events[ev] or {}) end
 	_G.UnitExists = function(u) return u == "player" or (W.units and W.units[u] ~= nil) or false end
 	_G.UnitClass = function() return "Mage", "MAGE" end
@@ -2302,6 +2307,8 @@ do
 	local panel = LinkedInnSettings
 	check(panel and panel:IsShown() and panel.city:GetChecked() == true and panel.read:GetChecked() == true and panel.minimap:GetChecked() == true, "the gear opens settings showing the current choices")
 	check(panel.count.__text:find("3 crafters remembered", 1, true), "settings show how many crafters are remembered", panel.count.__text)
+	check(panel.scroll and panel.page:GetParent() == panel.scroll and panel.last == panel.minimap, "the settings page scrolls, so more options fit later")
+	check(panel.hide and panel.hide:GetChecked() == false, "the hide links option starts off")
 	panel.city:SetChecked(false)
 	panel.city.__scripts.OnClick(panel.city)
 	check(LI.settings.cityScan == false, "city scans are on by default and can be switched off")
@@ -2339,6 +2346,37 @@ do
 	check(LI.settings.showMinimap == false and not LinkedInnMinimapButton:IsShown(), "the minimap button can be hidden")
 	main:Hide()
 	W.playerGUID = nil
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	local function Hidden(event, msg, sender)
+		for _, fn in ipairs(W.chatFilters[event] or {}) do
+			if fn(nil, event, msg, sender) then
+				return true
+			end
+		end
+		return false
+	end
+	local link = "WTS " .. TradeLink("Player-1-HID", 3908, 197, "Tailoring") .. " pst"
+	check(W.chatFilters.CHAT_MSG_CHANNEL and W.chatFilters.CHAT_MSG_SAY and W.chatFilters.CHAT_MSG_YELL, "a chat filter is set up for public chat")
+	check(LI.settings.hideLinks == false and not Hidden("CHAT_MSG_CHANNEL", link, "Spam Mer-TestRealm"), "profession links show in chat by default")
+	LI.settings.hideLinks = true
+	check(Hidden("CHAT_MSG_CHANNEL", link, "Spam Mer-TestRealm") and Hidden("CHAT_MSG_SAY", link, "Spam Mer-TestRealm") and Hidden("CHAT_MSG_YELL", link, "Spam Mer-TestRealm"), "with the setting on, lines with a profession link are hidden in trade, say and yell")
+	check(not Hidden("CHAT_MSG_CHANNEL", "WTS [Linen Cloth] cheap", "Spam Mer-TestRealm") and not Hidden("CHAT_MSG_CHANNEL", "|Hitem:2589|h[Linen Cloth]|h", "Spam Mer-TestRealm"), "other lines and item links still show")
+	check(not W.chatFilters.CHAT_MSG_WHISPER and not W.chatFilters.CHAT_MSG_GUILD and not W.chatFilters.CHAT_MSG_PARTY, "whispers, guild and group chat are never hidden")
+	check(not Hidden("CHAT_MSG_CHANNEL", link, LI.playerKey), "your own links still show")
+	check(not Hidden("CHAT_MSG_CHANNEL", { __secret = true }, { __secret = true }), "secret chat lines are left alone")
+	local before, queued = LI.test.links, LI.Reader.QueueSize()
+	Say("CHAT_MSG_CHANNEL", link, "Spam Mer-TestRealm", "Player-1-HID", "Trade - City")
+	local c = LI.crafters["Spam Mer-TestRealm"]
+	check(LI.test.links == before + 1 and c and c.profs.tailoring, "a hidden link is still captured", LI.test.links - before)
+	check(LI.Reader.QueueSize() > queued or LI.Reader.Busy and LI.Reader.Busy(), "and still read", LI.Reader.QueueSize())
+	LI.settings.hideLinks = false
+	check(not Hidden("CHAT_MSG_CHANNEL", link, "Spam Mer-TestRealm"), "turning it off shows them again right away")
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

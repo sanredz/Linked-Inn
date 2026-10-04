@@ -208,6 +208,36 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 	LI.Fire("TestChanged")
 end
 
+local HIDE_IN = {
+	CHAT_MSG_CHANNEL = true,
+	CHAT_MSG_SAY = true,
+	CHAT_MSG_YELL = true,
+}
+
+function LI.HideLink(_, event, msg, sender)
+	if not LI.ready or not LI.settings.hideLinks or not HIDE_IN[event] then
+		return false
+	end
+	msg = LI.Safe(msg)
+	if type(msg) ~= "string" or not msg:find("|Htrade:", 1, true) then
+		return false
+	end
+	sender = LI.Safe(sender)
+	if type(sender) == "string" and LI.FullName(sender) == LI.playerKey then
+		return false
+	end
+	return true
+end
+
+LI.Listen("Ready", function()
+	local addFilter = (ChatFrameUtil and ChatFrameUtil.AddMessageEventFilter) or ChatFrame_AddMessageEventFilter
+	if addFilter then
+		for event in pairs(HIDE_IN) do
+			LI.Try(addFilter, event, LI.HideLink)
+		end
+	end
+end)
+
 for event in pairs(EVENTS) do
 	LI.On(event, function(msg, sender, _, _, _, _, _, _, channelBase, _, _, senderGUID)
 		LI.HandleChat(event, LI.Safe(msg), LI.Safe(sender), channelBase, LI.Safe(senderGUID))

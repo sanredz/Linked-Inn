@@ -158,12 +158,16 @@ local function ModeName(key)
 	return (LI.HousekeepingMode(key)).name
 end
 
-local function HouseText(mode)
-	if not mode.keep then
-		return "Recommended once your list is in the hundreds. Puts away crafters you'll never need, keeping the best ones, rare recipes, favorites, guild and friends."
+local function HouseText(current)
+	local lines = { "Puts away crafters who add nothing: everything they make, others make too. Rare recipes, favorites, guild, friends and Linked Inn users are always kept." }
+	for _, mode in ipairs(LI.HOUSEKEEPING) do
+		if mode.keep then
+			local wait = mode.days > 0 and string.format(", after %d %s unseen", mode.days, mode.days == 1 and "day" or "days") or ", right away"
+			local color = mode.key == current.key and "|cffffd100" or "|cff9e9a8f"
+			lines[#lines + 1] = string.format("%s%s:|r keeps the best %d per profession; others go if %d others cover them%s", color, mode.name, mode.keep, mode.rare, wait)
+		end
 	end
-	local wait = mode.days > 0 and string.format(" once not seen for %d %s", mode.days, mode.days == 1 and "day" or "days") or ""
-	return string.format("Keeps the best %d per profession. Others go%s if %d others can make everything they make. Rare recipes, favorites, guild and friends are always kept.", mode.keep, wait, mode.rare)
+	return table.concat(lines, "\n")
 end
 
 local function LastRun()

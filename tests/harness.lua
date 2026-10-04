@@ -2580,8 +2580,14 @@ do
 	Make("Fresh Low", 1).seen = time() - 3600
 	LI.Housekeep("balanced")
 	check(LI.crafters["Fresh Low-TestRealm"], "balanced gives someone seen recently a short grace")
+	Make("Badge Low", 1).li = true
 	LI.Housekeep("strict")
 	check(not LI.crafters["Fresh Low-TestRealm"], "strict doesn't wait")
+	check(LI.crafters["Badge Low-TestRealm"], "Linked Inn users are always kept")
+	LI.UI.Open(LI.UI.TAB.find)
+	LinkedInnFrame.gear.__scripts.OnClick(LinkedInnFrame.gear)
+	local desc = LinkedInnSettings.houseDesc.__text
+	check(desc:find("Light:", 1, true) and desc:find("Balanced:", 1, true) and desc:find("Strict:", 1, true) and desc:find("|cffffd100Strict", 1, true), "all modes are described up front, the chosen one highlighted", desc)
 	LI.settings.housekeeping = "off"
 end
 

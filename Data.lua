@@ -223,7 +223,8 @@ function LI.HousekeepingMode(key)
 end
 
 local function Protected(key)
-	return key == LI.playerKey or (LI.favorites and LI.favorites[key]) or (LI.InCircle and LI.InCircle(key))
+	local c = LI.crafters and LI.crafters[key]
+	return key == LI.playerKey or (c and c.li) or (LI.favorites and LI.favorites[key]) or (LI.InCircle and LI.InCircle(key))
 end
 
 function LI.Housekeep(modeKey, dry)

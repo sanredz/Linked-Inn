@@ -2839,5 +2839,26 @@ do
 	W.groupSize = nil
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(30)
+	local refs = W.itemRefs or 0
+	LI.Reader.Want("Far Friend-TestRealm", "Tailoring", "trade:Player-2-FARF:3908:197")
+	Advance(3)
+	check((W.itemRefs or 0) == refs and LI.Reader.QueueSize() == 0, "links from the other realm are skipped normally")
+	LI.crossReadUntil = time() + 120
+	W.clickWorks = true
+	W.linkData = W.linkData or {}
+	W.linkData["trade:Player-2-FARF:3908:197"] = { linkedName = "Far Friend", prof = TAILORING, recipes = TAILOR_RECIPES }
+	LI.Reader.Want("Far Friend-TestRealm", "Tailoring", "trade:Player-2-FARF:3908:197")
+	Advance(4)
+	local c = LI.crafters["Far Friend-TestRealm"]
+	check((W.itemRefs or 0) > refs, "during the cross test they are opened the way a click does")
+	check(c and c.profs.tailoring and c.profs.tailoring.recipes and W.trade == nil, "and if the game answers, the recipes are saved and the window closed")
+	W.clickWorks, LI.crossReadUntil = false, nil
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

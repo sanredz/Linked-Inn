@@ -19,7 +19,8 @@
 - Settings (the gear): city scans, how long crafters are kept, reading links,
   minimap button, and forget everyone.
 - City scans: in cities, friendly nameplates flash on for a moment every few
-  minutes so everyone around you gets checked. Off by default.
+  minutes so everyone around you gets checked. On by default; turn it off in
+  the settings.
 - Crafters who use Linked Inn get a small gold badge.
 - Background reads always ask for the Apprentice rank of a profession, so
   crafters below Expert answer too.

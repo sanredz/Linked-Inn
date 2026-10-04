@@ -40,10 +40,11 @@ You don't have to do anything. Linked Inn fills the list in the background:
 Your own professions are read when you log in, so you never have to open
 them first.
 
-> **Tip:** turn on friendly player nameplates (Shift+V by default). Linked Inn
-> then checks everyone you walk past, and your list fills up much faster. If
-> you'd rather keep them off, switch on **City scans** in the settings (the
-> gear at the top right) and it takes a quick look around now and then.
+> **City scans:** in a city or inn, friendly nameplates flash on for half a
+> second every few minutes, so everyone around you gets checked. You can turn
+> this off or change how often in the settings (the gear at the top right).
+> Playing with friendly nameplates on (Shift+V) checks everyone you walk past
+> all the time.
 
 ## Crafters
 

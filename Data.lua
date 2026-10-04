@@ -75,7 +75,7 @@ local DEFAULTS = {
 	kind = "all",
 	minimap = { angle = 200 },
 	showMinimap = true,
-	cityScan = false,
+	cityScan = true,
 	cityEvery = 5,
 	forgetDays = 60,
 	collapsed = {},

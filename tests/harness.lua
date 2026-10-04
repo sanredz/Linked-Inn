@@ -2263,11 +2263,13 @@ do
 
 	main.gear.__scripts.OnClick(main.gear)
 	local panel = LinkedInnSettings
-	check(panel and panel:IsShown() and panel.city:GetChecked() == false and panel.read:GetChecked() == true and panel.minimap:GetChecked() == true, "the gear opens settings showing the current choices")
+	check(panel and panel:IsShown() and panel.city:GetChecked() == true and panel.read:GetChecked() == true and panel.minimap:GetChecked() == true, "the gear opens settings showing the current choices")
 	check(panel.count.__text:find("3 crafters remembered", 1, true), "settings show how many crafters are remembered", panel.count.__text)
+	panel.city:SetChecked(false)
+	panel.city.__scripts.OnClick(panel.city)
+	check(LI.settings.cityScan == false, "city scans are on by default and can be switched off")
 	panel.city:SetChecked(true)
 	panel.city.__scripts.OnClick(panel.city)
-	check(LI.settings.cityScan == true, "city scans can be switched on")
 	W.resting = true
 	W.cvars.nameplateShowFriendlyPlayers = "0"
 	W.units = { nameplate1 = { name = "City", surname = "Walker", guid = "Player-1-CW1" } }

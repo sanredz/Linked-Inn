@@ -110,7 +110,7 @@ local sampleLogged = false
 local function Crafts()
 	local c = LI.test.crafts
 	if type(c) ~= "table" then
-		c = { lines = 0, known = 0, noId = 0, unknown = 0, queued = 0 }
+		c = { lines = 0, known = 0, noId = 0, unknown = 0, queued = 0, added = 0 }
 		LI.test.crafts = c
 	end
 	return c
@@ -168,6 +168,13 @@ function LI.OnCrafted(text, sender, guid)
 	if type(guid) ~= "string" or not guid:find("^Player%-") then
 		guid = GuidForKey(key)
 	end
+	local classFile
+	if type(guid) == "string" and GetPlayerInfoByGUID then
+		classFile = LI.Safe((select(2, LI.Try(GetPlayerInfoByGUID, guid))))
+	end
+	if LI.NoteCraft(key, prof, recipe, classFile, Zone()) then
+		stats.added = (stats.added or 0) + 1
+	end
 	if type(guid) ~= "string" or not guid:find("^Player%-") then
 		stats.noId = stats.noId + 1
 		if not noGuidLogged[seen] then
@@ -179,10 +186,6 @@ function LI.OnCrafted(text, sender, guid)
 	if not sawCraft[seen] then
 		sawCraft[seen] = true
 		LI.Log(string.format("Saw %s doing %s", LI.ShortName(key), prof))
-	end
-	local classFile
-	if GetPlayerInfoByGUID then
-		classFile = LI.Safe((select(2, LI.Try(GetPlayerInfoByGUID, guid))))
 	end
 	local queued = LI.Clue(key, guid, prof, Zone(), classFile)
 	if queued then

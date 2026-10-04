@@ -270,6 +270,31 @@ function LI.SetRecipes(key, info, recipes, via)
 	return count
 end
 
+function LI.NoteCraft(key, profKey, recipeID, classFile, where)
+	if not LI.ready or not key or key == LI.playerKey or not profKey or not recipeID then
+		return false
+	end
+	local c = LI.Crafter(key, true)
+	c.class = c.class or classFile
+	c.where = where or c.where
+	local p = c.profs[profKey] or {}
+	c.profs[profKey] = p
+	p.name = p.name or LI.PROFESSION_NAMES[profKey]
+	p.icon = p.icon or LI.PROFESSION_ICONS[profKey]
+	p.via = p.via or "seen"
+	p.recipes = p.recipes or {}
+	local fresh = not p.recipes[recipeID]
+	if fresh then
+		p.recipes[recipeID] = true
+		p.count = (p.count or 0) + 1
+	end
+	LI.NoteHeard(key)
+	if fresh then
+		LI.Fire("CraftersChanged")
+	end
+	return fresh
+end
+
 function LI.IsFavorite(key)
 	return LI.favorites ~= nil and key ~= nil and LI.favorites[key] == true
 end

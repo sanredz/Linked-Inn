@@ -1364,7 +1364,15 @@ do
 	Fire("CHAT_MSG_TRADESKILLS", "Brew Master creates Mooncloth Bag.", "Brew Master", "", "", "", "", 0, 0, "", 0, 1, "Player-1-ME")
 	Fire("CHAT_MSG_TRADESKILLS", "Some One creates Unknown Thing.", "Some One", "", "", "", "", 0, 0, "", 0, 1, "Player-1-OOO")
 	Advance(10)
-	check(LI.test.built.tries == tries2 and not LI.crafters["No Id-TestRealm"], "no id, your own crafts and unknown items are skipped")
+	local noId = LI.crafters["No Id-TestRealm"]
+	check(LI.test.built.tries == tries2 and noId and noId.profs.tailoring.recipes[18560] and noId.profs.tailoring.count == 1 and not LI.crafters["Some One-TestRealm"], "without an id they're still listed with what they made, just not read in full; unknown items are skipped")
+	check(LI.Status("No Id-TestRealm") == "online", "and they show as online, since they're crafting right now")
+	local hits = LI.Search("mooncloth", {})
+	local found = false
+	for _, e in ipairs(hits) do
+		if e.key == "No Id-TestRealm" then found = true end
+	end
+	check(found, "searching the item finds them")
 	W.guids["Player-1-PPP"] = { class = "ROGUE", name = "Name Only", realm = "" }
 	W.linkData["trade:Player-1-PPP:3908:197"] = { linkedName = "Name Only", prof = TAILORING, recipes = TAILOR_RECIPES }
 	W.units = { nameplate7 = { name = "Name", surname = "Only", guid = "Player-1-PPP" } }

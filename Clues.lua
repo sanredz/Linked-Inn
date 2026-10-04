@@ -194,6 +194,17 @@ function LI.OnCrafted(text, sender, guid)
 	local prof = recipe and SpellProfession(recipe)
 	if not prof then
 		stats.unknown = stats.unknown + 1
+		if not LI.IsListed(LI.crafters[key]) then
+			if not IsPlayerGuid(guid) then
+				guid = GuidForKey(key)
+			end
+			if IsPlayerGuid(guid) then
+				LI.tried[key] = nil
+				LI.Discover(key, guid, LI.PRIO.guild)
+			else
+				Wait(key, "any", Zone())
+			end
+		end
 		return false
 	end
 	stats.known = stats.known + 1
@@ -234,6 +245,11 @@ LI.Listen("GuidFound", function(key, guid)
 	LI.waiting[key] = nil
 	local classFile = GetPlayerInfoByGUID and LI.Safe((select(2, LI.Try(GetPlayerInfoByGUID, guid))))
 	local stats = Crafts()
+	if w.profs.any then
+		w.profs.any = nil
+		LI.tried[key] = nil
+		LI.Discover(key, guid, LI.PRIO.guild, classFile)
+	end
 	for prof in pairs(w.profs) do
 		if LI.Clue(key, guid, prof, Zone() or w.where, classFile) then
 			stats.queued = stats.queued + 1

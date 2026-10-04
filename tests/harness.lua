@@ -2182,6 +2182,23 @@ do
 	Logout()
 	Boot(SaveVars())
 	check(next(LI.settings.profs) == nil, "a profession filter doesn't stick around after a reload")
+	Advance(5)
+	LI.db.profLinks.leatherworking = { spell = 2108, line = 165 }
+	local LW = { professionName = "Leatherworking", professionID = 165, skillLevel = 60, maxSkillLevel = 75 }
+	W.guids["Player-1-LWG"] = { class = "DRUID", name = "Leather Guy", realm = "" }
+	W.linkData["trade:Player-1-LWG:2108:165"] = { linkedName = "Leather Guy", prof = LW, recipes = { { id = 2149, name = "Handstitched Leather Boots", item = 2302 } } }
+	Fire("CHAT_MSG_TRADESKILLS", "Leather Guy creates Medium Leather.", "", "", "", "", "", 0, 0, "", 0, 1, "")
+	check(LI.waiting["Leather Guy-TestRealm"] and LI.waiting["Leather Guy-TestRealm"].profs.any, "someone crafting an item no read book has yet still waits to be checked")
+	W.autoWorks = true
+	Say("CHAT_MSG_SAY", "hi", "Leather Guy-TestRealm", "Player-1-LWG")
+	for _ = 1, 40 do
+		Advance(0.5)
+		if LI.crafters["Leather Guy-TestRealm"] then break end
+	end
+	Advance(3)
+	local lw = LI.crafters["Leather Guy-TestRealm"]
+	check(lw and lw.profs.leatherworking and lw.profs.leatherworking.recipes, "once their id turns up, every profession is tried, so the first leatherworker is found too")
+	W.autoWorks = false
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

@@ -174,6 +174,12 @@ local function Sighted(unit)
 	sights.players = sights.players + 1
 	local key = LI.UnitKey(unit)
 	local zone = GetRealZoneText and LI.Safe(LI.Try(GetRealZoneText))
+	if sights.players <= 3 then
+		local name, second = LI.Try(UnitName, unit)
+		local guid = LI.Safe(LI.Try(UnitGUID, unit))
+		local _, _, _, _, _, infoName, infoRealm = LI.Try(GetPlayerInfoByGUID, guid)
+		LI.Log(string.format("Sighting sample (%s): name '%s', second '%s', key '%s', info '%s' / '%s'", tostring(unit), tostring(LI.Safe(name)), tostring(LI.Safe(second)), tostring(key), tostring(LI.Safe(infoName)), tostring(LI.Safe(infoRealm))))
+	end
 	if not key then
 		sights.noName = sights.noName + 1
 	end

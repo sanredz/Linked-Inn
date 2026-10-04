@@ -208,9 +208,9 @@ end
 
 LI.HOUSEKEEPING = {
 	{ key = "off", name = "Off" },
-	{ key = "light", name = "Light", keep = 75, days = 7, rare = 5 },
-	{ key = "balanced", name = "Balanced", keep = 40, days = 2, rare = 3 },
-	{ key = "strict", name = "Strict", keep = 20, days = 0, rare = 2 },
+	{ key = "light", name = "Light", keep = 100, days = 7, rare = 5 },
+	{ key = "balanced", name = "Balanced", keep = 75, days = 2, rare = 3 },
+	{ key = "strict", name = "Strict", keep = 50, days = 0, rare = 2 },
 }
 
 function LI.HousekeepingMode(key)

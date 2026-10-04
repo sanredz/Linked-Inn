@@ -1486,7 +1486,10 @@ do
 	Fire("GUILD_ROSTER_UPDATE")
 	Fire("GROUP_ROSTER_UPDATE")
 	check(LI.DiscoverQueue() == queued + 2, "online guild members and your group are lined up; offline ones aren't", LI.DiscoverQueue())
-	Advance(12)
+	for _ = 1, 30 do
+		Advance(1)
+		if LI.crafters["Group Pal-TestRealm"] then break end
+	end
 	check(LI.crafters["Group Pal-TestRealm"] and LI.crafters["Group Pal-TestRealm"].profs.alchemy, "your group comes first")
 	Advance(30)
 	check(LI.crafters["Guild Mate-TestRealm"] and LI.crafters["Guild Mate-TestRealm"].profs.alchemy, "then your guild")
@@ -2159,6 +2162,26 @@ do
 	end
 	check(ench == 0, "nor counted on the profession buttons", ench)
 	main:Hide()
+	W.guids["Player-1-MPL"] = { class = "MAGE", name = "Miss Play", realm = "" }
+	W.linkData["trade:Player-1-MPL:3908:197"] = { linkedName = "Miss Play", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-MPL", 3908, 197, "Tailoring"), "Miss Play-TestRealm", "Player-1-MPL", "Trade - City")
+	for i = 1, 40 do
+		LI.Reader.Want("Crafter" .. i .. "-TestRealm", "Tailoring", "trade:Player-9-C" .. i .. ":3908:197", { built = true })
+	end
+	local mark = #W.hyperlinks
+	W.autoWorks = true
+	for _ = 1, 50 do
+		Advance(0.5)
+		if #W.hyperlinks > mark then break end
+	end
+	Advance(3)
+	W.autoWorks = false
+	check(W.hyperlinks[mark + 1] == "trade:Player-1-MPL:3908:197", "a profession linked in chat is read before a flood of crafting-log guesses", W.hyperlinks[mark + 1])
+	check(LI.Search("miss")[1] and LI.Search("miss")[1].key == "Miss Play-TestRealm", "and shows up in the list right away")
+	LI.db.settings.profs = { enchanting = true }
+	Logout()
+	Boot(SaveVars())
+	check(next(LI.settings.profs) == nil, "a profession filter doesn't stick around after a reload")
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

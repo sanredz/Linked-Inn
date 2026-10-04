@@ -3,9 +3,12 @@ local ADDON, LI = ...
 local Reader = {}
 LI.Reader = Reader
 
-local PUMP_EVERY = 2
-local GAP = 3
-local TIMEOUT = 3
+local PUMP_EVERY = 0.5
+local GAP = 1
+local TIMEOUT = 2
+local SETTLE = 1
+local FAIR_TURN = 3
+local readsSinceScan = 0
 local PROBE_MIN = 0.3
 local PROBE_MAX = 1.5
 local PROBE_DEFAULT = 1.0
@@ -53,10 +56,17 @@ function Reader.Want(key, profName, link, extra)
 	if extra and extra.built and builtFailed[id] and time() - builtFailed[id] < BUILT_RETRY then
 		return
 	end
-	for _, q in ipairs(queue) do
+	for i, q in ipairs(queue) do
 		if q.id == id then
-			q.link = link
+			if q.built and not (extra and extra.built) then
+				q.link = link
+				q.built = nil
+			elseif not q.built then
+				q.link = link
+			end
 			q.at = Now()
+			table.remove(queue, i)
+			table.insert(queue, q)
 			return
 		end
 	end
@@ -66,8 +76,24 @@ function Reader.Want(key, profName, link, extra)
 	end
 	table.insert(queue, job)
 	while #queue > QUEUE_MAX do
-		table.remove(queue, 1)
+		local drop = 1
+		for i, q in ipairs(queue) do
+			if q.built then
+				drop = i
+				break
+			end
+		end
+		table.remove(queue, drop)
 	end
+end
+
+local function NextJob()
+	for i = #queue, 1, -1 do
+		if not queue[i].built then
+			return table.remove(queue, i)
+		end
+	end
+	return table.remove(queue)
 end
 
 function Reader.QueueSize()
@@ -226,6 +252,7 @@ local function Finish(job, outcome)
 		return
 	end
 	if job.built then
+		readsSinceScan = readsSinceScan + 1
 		local built = LI.test.built
 		if outcome == "ok" then
 			built.ok = built.ok + 1
@@ -242,6 +269,7 @@ local function Finish(job, outcome)
 		end)
 		return
 	end
+	readsSinceScan = readsSinceScan + 1
 	local auto = LI.test.auto
 	if outcome == "ok" then
 		auto.ok = auto.ok + 1
@@ -288,7 +316,7 @@ local function Pump()
 	if ChatActive() or PanelOpen() then
 		return
 	end
-	local job = table.remove(queue)
+	local job = NextJob()
 	if job.built then
 		LI.test.built.tries = LI.test.built.tries + 1
 	else
@@ -389,14 +417,26 @@ function Reader.ScanProgress()
 	return scanRun.done, scanRun.total
 end
 
-function Reader.Idle()
-	return pending == nil and #probes == 0 and (#queue == 0 or Now() < nextAt - 1)
+function Reader.Idle(urgent)
+	if pending ~= nil or #probes > 0 then
+		return false
+	end
+	if urgent or #queue == 0 or Now() < pausedUntil then
+		return true
+	end
+	for _, q in ipairs(queue) do
+		if not q.built then
+			return false
+		end
+	end
+	return readsSinceScan >= FAIR_TURN
 end
 
 function Reader.Scan(candidates, quiet)
 	if not LI.ready or scanRun or #candidates == 0 then
 		return false
 	end
+	readsSinceScan = 0
 	local run = { total = 0, done = 0, found = {}, players = #candidates, quiet = quiet }
 	for _, cand in ipairs(candidates) do
 		for _, profKey in ipairs(cand.profs) do
@@ -731,7 +771,7 @@ local function Replied()
 		job.notified = true
 		LI.ProbeResult(job.key, true)
 	end
-	LI.After(TIMEOUT, function()
+	LI.After(SETTLE, function()
 		if pending == job then
 			CloseHidden()
 			Finish(job, "ok")

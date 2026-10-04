@@ -120,7 +120,7 @@ local TRY_AGAIN = 7 * 86400
 local DISCOVER_EVERY = 2
 local CANDIDATES_MAX = 300
 
-LI.PRIO = { chat = 1, guild = 2, seen = 3, group = 4 }
+LI.PRIO = { chat = 1, seen = 2, guild = 3, group = 4 }
 
 local candidates = {}
 
@@ -327,7 +327,14 @@ function LI.DiscoverStep()
 		return false
 	end
 	local reader = LI.Reader
-	if reader.Scanning() or not reader.Idle() then
+	if reader.Scanning() then
+		return false
+	end
+	local top = 0
+	for _, cand in ipairs(candidates) do
+		top = math.max(top, cand.prio)
+	end
+	if not reader.Idle(top >= LI.PRIO.guild) then
 		return false
 	end
 	while #candidates > 0 do

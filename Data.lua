@@ -187,6 +187,7 @@ LI.On("PLAYER_LOGIN", function()
 	realm.favorites = type(realm.favorites) == "table" and realm.favorites or {}
 	realm.waiting = type(realm.waiting) == "table" and realm.waiting or {}
 	realm.tried = type(realm.tried) == "table" and realm.tried or {}
+	LI.db.settings.profs = {}
 	LI.crafters = realm.crafters
 	LI.favorites = realm.favorites
 	LI.waiting = realm.waiting

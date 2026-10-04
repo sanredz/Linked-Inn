@@ -10,7 +10,9 @@
 - Only crafters whose recipes have been read show up in the list.
 - Reading links no longer stops for good after a few failures; it pauses a
   minute and carries on.
-- Links are read about three times faster.
+- Profession reads are much faster, and links in chat, your group and your
+  guild always come before background checks.
+- The profession filter resets when you log in.
 - The hidden profession window used while reading can no longer catch your
   mouse clicks.
 - A fresh install can read every crafting profession right away, without

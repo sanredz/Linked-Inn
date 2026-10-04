@@ -38,6 +38,7 @@ local channelName
 local joined = false
 local nextHello
 local GREET_GAP = 20
+local REPLY_GAP = 5
 local sessionHeard = {}
 local lastGreet = -GREET_GAP
 local lastChangeHello = 0
@@ -474,6 +475,8 @@ local function LinkList()
 	return table.concat(list, ",")
 end
 
+local freshHello = true
+
 function Sync.Hello()
 	local own = OwnState()
 	if not own.payload or not own.ver then
@@ -495,7 +498,13 @@ function Sync.Hello()
 	local class = select(2, LI.Try(UnitClass, "player")) or ""
 	local base = string.format("H1|%s|%s|%s|%s|%s", own.ver, Clean(class), table.concat(parts, ";"), MyRealm(), MySid() or "")
 	local links = LinkList()
-	if links ~= "" and #base + #links + 1 <= 200 then
+	if links ~= "" and #base + #links + 1 > 200 then
+		links = ""
+	end
+	if freshHello then
+		return base .. "|" .. links .. "|J"
+	end
+	if links ~= "" then
 		return base .. "|" .. links
 	end
 	return base
@@ -505,6 +514,7 @@ local function SendHello()
 	local message = Sync.Hello()
 	if message and #message <= 250 then
 		Broadcast("hello", message, true, true)
+		freshHello = false
 	end
 end
 
@@ -653,6 +663,13 @@ local function OnHello(key, parts, chatType)
 				end
 			end)
 		end
+	end
+	if parts[8] == "J" and Now() - lastGreet >= REPLY_GAP then
+		lastGreet = Now()
+		LI.After(2 + math.random() * 4, function()
+			Sync.Refresh()
+			SendHello()
+		end)
 	end
 	local c = LI.Crafter(key, true)
 	if class and class ~= "" and class:match("^%u+$") then

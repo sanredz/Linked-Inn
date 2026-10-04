@@ -2838,5 +2838,29 @@ do
 	check(rows and rows[1].entry.key == "Seen Lately-TestRealm", "at the same skill, the one seen more recently comes first", rows and rows[1].entry.key)
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 100, max = 150 }, { { id = 3914, name = "Brown Linen Pants", item = 4343 } }, "own")
+	LI.Fire("OwnRecipesChanged")
+	W.sent = {}
+	Advance(60)
+	local first
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^H1|") and m.chatType == "CHANNEL" and not first then first = m.msg end
+	end
+	check(first and first:find("|J$"), "the first hello after logging in asks others to say hi back", first)
+	W.sent = {}
+	Advance(25)
+	Addon("H1|abcd|MAGE|alchemy~1e~2s~5|TestRealm|1||J", "Fresh Login-TestRealm")
+	Advance(8)
+	local reply
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^H1|") and m.chatType == "CHANNEL" then reply = m.msg end
+	end
+	check(reply and not reply:find("|J$"), "someone who just logged in gets a hello back within seconds, without the flag", reply)
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

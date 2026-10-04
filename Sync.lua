@@ -1088,7 +1088,13 @@ end
 
 function Sync.CrossTest(target)
 	if not target or target == "" then
-		LI.Print("Usage: /li crosstest Name Surname")
+		local far = LI.guildFarNames or {}
+		if #far == 0 then
+			LI.Print("No online guildmates on the other realm right now. Usage: /li crosstest Name Surname")
+		else
+			LI.Print(string.format("Online guildmates on the other realm (%d): %s", #far, table.concat(far, ", ")))
+			LI.Print("Run /li crosstest with any name, then ask one of them to link a profession in guild chat.")
+		end
 		return
 	end
 	if LI.settings.guildOnly then

@@ -39,7 +39,7 @@ local function ReadGuild()
 		return
 	end
 	local count = LI.Safe(LI.Try(GetNumGuildMembers)) or 0
-	local tally, online = {}, 0
+	local tally, online, far = {}, 0, {}
 	for i = 1, count do
 		local name, _, _, _, _, _, _, _, isOnline, _, classFile, _, _, _, _, _, guid = LI.Try(GetGuildRosterInfo, i)
 		if name then
@@ -48,6 +48,9 @@ local function ReadGuild()
 				online = online + 1
 				local added, why = LI.Discover(LI.FullName(LI.Safe(name)), LI.Safe(guid), LI.PRIO.guild, LI.Safe(classFile))
 				why = added and "to check" or why or "skipped"
+				if why == "other realm" then
+					far[#far + 1] = LI.ShortName(LI.FullName(LI.Safe(name)))
+				end
 				tally[why] = (tally[why] or 0) + 1
 			end
 		end
@@ -58,6 +61,8 @@ local function ReadGuild()
 	end
 	table.sort(parts)
 	LI.guildFarSide = tally["other realm"] or 0
+	table.sort(far)
+	LI.guildFarNames = far
 	local summary = string.format("Guild: %d online (%s)", online, table.concat(parts, ", "))
 	if summary ~= lastGuildSummary then
 		lastGuildSummary = summary

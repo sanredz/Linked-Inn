@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-04
+
 - Reading professions in the background no longer plays the profession window
   sound: the window doesn't open at all for the addon's own reads.
 

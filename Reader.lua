@@ -57,7 +57,7 @@ function Reader.Want(key, profName, link, extra)
 		return
 	end
 	local guid = type(link) == "string" and link:match("^trade:(Player%-%d+%-%w+):")
-	if LI.OtherServer(guid) then
+	if LI.OtherServer(guid) and not (LI.crossReadUntil and time() < LI.crossReadUntil and not (extra and extra.built)) then
 		if not otherLogged[key] then
 			otherLogged[key] = true
 			LI.Log(string.format("%s is on the other realm; the game doesn't let us read their professions", LI.ShortName(key)))

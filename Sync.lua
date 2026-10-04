@@ -864,6 +864,9 @@ local function NotFoundName(msg)
 	return msg:match(pattern)
 end
 
+local crossTest
+local CrossPong, CrossMissing
+
 local function OurWhisper(msg)
 	local name = NotFoundName(msg)
 	local w = name and whispered[name:lower()]
@@ -883,6 +886,7 @@ local function OnNotFound(msg)
 		return
 	end
 	whispered[w.target:lower()] = nil
+	CrossMissing(w.target)
 	local key = LI.FullName(w.target)
 	local p = peers[key]
 	if p then
@@ -941,6 +945,10 @@ Dispatch = function(key, text, chatType)
 		end
 		return
 	elseif kind == "P2" then
+		if CrossPong(key, parts[2]) then
+			LI.Log(string.format("Cross test answer from %s via %s", LI.ShortName(key), tostring(chatType)))
+			return
+		end
 		local sent = tonumber(parts[2] or "")
 		local took = sent and string.format(" (%.1fs)", math.max(0, GetTime() - sent / 10)) or ""
 		LI.Print(string.format("Pong from %s via %s%s", LI.ShortName(key), tostring(chatType), took))
@@ -1042,6 +1050,86 @@ function Sync.Ping(target)
 	else
 		Broadcast("ping", "P1|" .. token, true, true)
 		LI.Print("Pinging every Linked Inn user on " .. table.concat(Routes(true), ", ") .. "...")
+	end
+end
+
+local function CrossReport()
+	local t = crossTest
+	if not t then
+		return
+	end
+	crossTest = nil
+	LI.Print("Cross-realm test with " .. t.name .. ":")
+	for _, r in ipairs(t.routes) do
+		local result = r.answered and "|cff40ff40works|r" or r.missing and "|cffff6060not found|r" or "|cffe8b04ano answer|r"
+		LI.Print(string.format("  %s: %s", r.label, result))
+		LI.Log(string.format("Cross test %s via %s: %s", t.name, r.label, r.answered and "works" or r.missing and "not found" or "no answer"))
+	end
+	LI.Print("Profession links from the other realm are tried for 2 more minutes. Ask them to link a profession in party chat, then check /li status or the list.")
+end
+
+function Sync.CrossTest(target)
+	if not target or target == "" then
+		LI.Print("Usage: /li crosstest Name Surname")
+		return
+	end
+	if LI.settings.guildOnly then
+		LI.Print("Turn off Guild only for the test.")
+		return
+	end
+	local key = LI.FullName(target)
+	local short = LI.WhisperTarget(key)
+	local guid = LI.GuidOf and LI.GuidOf(key)
+	local realm
+	if guid and GetPlayerInfoByGUID then
+		realm = LI.Safe(select(7, LI.Try(GetPlayerInfoByGUID, guid)))
+	end
+	local base = math.floor(GetTime() * 10)
+	local routes = { { label = "whisper", chatType = "WHISPER", target = short } }
+	if type(realm) == "string" and realm ~= "" then
+		routes[#routes + 1] = { label = "whisper to " .. short .. "-" .. realm:gsub("%s", ""), chatType = "WHISPER", target = short .. "-" .. realm:gsub("%s", "") }
+	else
+		LI.Print("Their realm isn't known yet; target or group them first for the realm whisper test.")
+	end
+	local members = LI.Safe(LI.Try(GetNumGroupMembers)) or 0
+	if members > 0 then
+		local raid = IsInRaid and LI.Safe(LI.Try(IsInRaid))
+		routes[#routes + 1] = { label = raid and "raid" or "party", chatType = raid and "RAID" or "PARTY" }
+	end
+	if IsInGuild and LI.Safe(LI.Try(IsInGuild)) then
+		routes[#routes + 1] = { label = "guild", chatType = "GUILD" }
+	end
+	for i, r in ipairs(routes) do
+		r.token = tostring(base * 10 + i)
+		Enqueue("ping", "P1|" .. r.token, r.chatType, r.target)
+	end
+	crossTest = { name = short, key = key, routes = routes }
+	LI.crossReadUntil = time() + 150
+	LI.Print(string.format("Testing %d routes to %s; results in 8 seconds...", #routes, short))
+	LI.After(8, CrossReport)
+end
+
+CrossPong = function(key, token)
+	if not crossTest then
+		return false
+	end
+	for _, r in ipairs(crossTest.routes) do
+		if r.token == token then
+			r.answered = true
+			return true
+		end
+	end
+	return false
+end
+
+CrossMissing = function(target)
+	if not crossTest or type(target) ~= "string" then
+		return
+	end
+	for _, r in ipairs(crossTest.routes) do
+		if r.target and r.target:lower() == target:lower() then
+			r.missing = true
+		end
 	end
 end
 

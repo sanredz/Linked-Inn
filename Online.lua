@@ -163,6 +163,9 @@ local function Sighted(unit)
 		return
 	end
 	local key = LI.UnitKey(unit)
+	if key then
+		LI.NoteGuid(key, LI.Safe(LI.Try(UnitGUID, unit)))
+	end
 	if not key or key == LI.playerKey or not LI.crafters[key] then
 		return
 	end

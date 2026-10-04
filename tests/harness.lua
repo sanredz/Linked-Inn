@@ -1373,6 +1373,20 @@ do
 		if e.key == "No Id-TestRealm" then found = true end
 	end
 	check(found, "searching the item finds them")
+	W.guids["Player-1-QQQ"] = { class = "PRIEST", name = "No Id", realm = "" }
+	W.linkData["trade:Player-1-QQQ:3908:197"] = { linkedName = "No Id", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_SAY", "anyone need bags?", "No Id-TestRealm", "Player-1-QQQ")
+	Advance(10)
+	check(noId.profs.tailoring.count == 2 and noId.profs.tailoring.rank == 260 and noId.class == "PRIEST", "once they say anything, their full list and skill are read", noId.profs.tailoring.count)
+	W.guids["Player-1-RRR"] = { class = "HUNTER", name = "Plate Guy", realm = "" }
+	W.linkData["trade:Player-1-RRR:3908:197"] = { linkedName = "Plate Guy", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Fire("CHAT_MSG_TRADESKILLS", "Plate Guy creates Mooncloth Bag.", "", "", "", "", "", 0, 0, "", 0, 1, "")
+	W.units = { nameplate3 = { name = "Plate", surname = "Guy", guid = "Player-1-RRR" } }
+	W.cvars.nameplateShowFriendlyPlayers = "0"
+	Advance(75)
+	W.units = nil
+	local plate = LI.crafters["Plate Guy-TestRealm"]
+	check(plate and plate.profs.tailoring.count == 2 and W.cvars.nameplateShowFriendlyPlayers == "0", "a quick nameplate sweep finds crafters nearby and reads them, then puts nameplates back", plate and plate.profs.tailoring.count)
 	W.guids["Player-1-PPP"] = { class = "ROGUE", name = "Name Only", realm = "" }
 	W.linkData["trade:Player-1-PPP:3908:197"] = { linkedName = "Name Only", prof = TAILORING, recipes = TAILOR_RECIPES }
 	W.units = { nameplate7 = { name = "Name", surname = "Only", guid = "Player-1-PPP" } }
@@ -1381,7 +1395,7 @@ do
 	check(LI.crafters["Name Only-TestRealm"] and LI.crafters["Name Only-TestRealm"].profs.tailoring, "with no sender or id, the name comes from the text and the id from a nameplate")
 	W.units = nil
 	local c = LI.Crafts()
-	check(c.lines == 6 and c.known == 4 and c.unknown == 1 and c.noId == 1 and c.queued == 3, "the crafting log is counted for /li status", string.format("%d %d %d %d %d", c.lines, c.known, c.unknown, c.noId, c.queued))
+	check(c.lines == 7 and c.known == 5 and c.unknown == 1 and c.noId == 2 and c.queued == 5 and c.found == 2, "the crafting log is counted for /li status", string.format("%d %d %d %d %d", c.lines, c.known, c.unknown, c.noId, c.queued))
 
 	W.units = {
 		nameplate1 = { name = "Scan", surname = "One", guid = "Player-2-AAA" },

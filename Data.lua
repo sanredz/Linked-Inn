@@ -270,6 +270,36 @@ function LI.SetRecipes(key, info, recipes, via)
 	return count
 end
 
+LI.idOf = {}
+local idCount = 0
+
+function LI.NoteGuid(key, guid)
+	if not key or key == LI.playerKey or type(guid) ~= "string" or not guid:find("^Player%-") then
+		return
+	end
+	if LI.idOf[key] == guid then
+		return
+	end
+	if not LI.idOf[key] then
+		idCount = idCount + 1
+		if idCount > 5000 then
+			LI.idOf, idCount = {}, 1
+		end
+	end
+	LI.idOf[key] = guid
+	local c = LI.crafters and LI.crafters[key]
+	if c and not c.guid then
+		c.guid = guid
+		LI.guids[guid] = key
+	end
+	LI.Fire("GuidFound", key, guid)
+end
+
+function LI.GuidOf(key)
+	local c = LI.crafters and LI.crafters[key]
+	return (c and c.guid) or LI.idOf[key]
+end
+
 function LI.NoteCraft(key, profKey, recipeID, classFile, where)
 	if not LI.ready or not key or key == LI.playerKey or not profKey or not recipeID then
 		return false

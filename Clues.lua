@@ -118,8 +118,16 @@ end
 LI.Crafts = Crafts
 
 local UNIT_TOKENS = { "target", "mouseover", "focus" }
+local SWEEP_EVERY = 60
+local PENDING_FOR = 15 * 60
+local pending = {}
+local lastSweep = -SWEEP_EVERY
 
 local function GuidForKey(key)
+	local known = LI.GuidOf(key)
+	if known then
+		return known
+	end
 	local function Match(unit)
 		if LI.UnitKey(unit) == key then
 			return LI.Safe(LI.Try(UnitGUID, unit))
@@ -137,7 +145,7 @@ local function GuidForKey(key)
 			return guid
 		end
 	end
-	return LI.guids and LI.guids[key] or nil
+	return nil
 end
 
 function LI.OnCrafted(text, sender, guid)
@@ -177,6 +185,10 @@ function LI.OnCrafted(text, sender, guid)
 	end
 	if type(guid) ~= "string" or not guid:find("^Player%-") then
 		stats.noId = stats.noId + 1
+		pending[key] = pending[key] or { profs = {} }
+		pending[key].profs[prof] = true
+		pending[key].at = GetTime()
+		pending[key].where = Zone()
 		if not noGuidLogged[seen] then
 			noGuidLogged[seen] = true
 			LI.Log(string.format("Saw %s doing %s, but the game didn't say who exactly", LI.ShortName(key), prof))
@@ -192,6 +204,61 @@ function LI.OnCrafted(text, sender, guid)
 		stats.queued = stats.queued + 1
 	end
 	return queued
+end
+
+LI.Listen("GuidFound", function(key, guid)
+	local wait = pending[key]
+	if not wait then
+		return
+	end
+	pending[key] = nil
+	local classFile = GetPlayerInfoByGUID and LI.Safe((select(2, LI.Try(GetPlayerInfoByGUID, guid))))
+	for prof in pairs(wait.profs) do
+		if LI.Clue(key, guid, prof, wait.where, classFile) then
+			local stats = Crafts()
+			stats.queued = stats.queued + 1
+			stats.found = (stats.found or 0) + 1
+		end
+	end
+end)
+
+function LI.PendingCrafters()
+	local n = 0
+	for key, wait in pairs(pending) do
+		if GetTime() - wait.at > PENDING_FOR then
+			pending[key] = nil
+		else
+			n = n + 1
+		end
+	end
+	return n
+end
+
+local function ReadPlates()
+	for i = 1, 40 do
+		local unit = "nameplate" .. i
+		if LI.Safe(LI.Try(UnitIsPlayer, unit)) then
+			local key = LI.UnitKey(unit)
+			if key and pending[key] then
+				LI.NoteGuid(key, LI.Safe(LI.Try(UnitGUID, unit)))
+			end
+		end
+	end
+end
+LI.ReadPlates = ReadPlates
+
+local SweepCVar
+
+function LI.Sweep()
+	if LI.PendingCrafters() == 0 or GetTime() - lastSweep < SWEEP_EVERY then
+		return false
+	end
+	if (InCombatLockdown and InCombatLockdown()) or (LI.Reader.Scanning and LI.Reader.Scanning()) then
+		return false
+	end
+	lastSweep = GetTime()
+	SweepCVar()
+	return true
 end
 
 LI.On("CHAT_MSG_TRADESKILLS", function(text, sender, _, _, _, _, _, _, _, _, _, guid)
@@ -300,6 +367,22 @@ local function StartScan()
 	end
 	LI.Reader.Scan(list)
 end
+
+SweepCVar = function()
+	if GetCVarOn(NAMEPLATE_CVAR) then
+		ReadPlates()
+		return
+	end
+	SetCVarValue(NAMEPLATE_CVAR, "1")
+	LI.After(NAMEPLATE_WAIT, function()
+		ReadPlates()
+		SetCVarValue(NAMEPLATE_CVAR, "0")
+	end)
+end
+
+LI.Listen("Ready", function()
+	LI.Every(5, LI.Sweep)
+end)
 
 function LI.ScanNearby()
 	if not LI.ScanReady() then

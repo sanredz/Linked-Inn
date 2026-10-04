@@ -152,6 +152,9 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 		return
 	end
 	local senderKey = type(sender) == "string" and LI.FullName(sender) or nil
+	if senderKey and senderGUID then
+		LI.NoteGuid(senderKey, senderGUID)
+	end
 	if senderKey and LI.crafters[senderKey] then
 		LI.MarkSeen(senderKey)
 	end

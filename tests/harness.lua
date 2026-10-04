@@ -1428,6 +1428,15 @@ do
 	Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
 	Advance(20)
 	check(#W.hyperlinks == tries, "someone checked recently isn't checked again for a week")
+	for i = 1, 12 do
+		LI.Reader.Want("Busy" .. i .. "-TestRealm", "Tailoring", "trade:Player-9-B" .. i .. ":3908:197")
+	end
+	W.units = { nameplate5 = { name = "Busy", surname = "City", guid = "Player-2-BC1" } }
+	W.linkData["trade:Player-2-BC1:2259:171"] = { linkedName = "Busy City", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("NAME_PLATE_UNIT_ADDED", "nameplate5")
+	W.units = nil
+	Advance(30)
+	check(LI.Reader.QueueSize() > 0 and LI.crafters["Busy City-TestRealm"] and LI.crafters["Busy City-TestRealm"].profs.alchemy, "in a busy city, players you see still get checked between chat reads", LI.Reader.QueueSize())
 	LI.tried["Scan One-TestRealm"] = nil
 	check(LI.Discover("Scan One-TestRealm", "Player-2-AAA", LI.PRIO.seen) == false, "someone whose two professions are known is never lined up again")
 	W.units = nil

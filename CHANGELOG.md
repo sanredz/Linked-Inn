@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.0] - 2026-10-04
+
+- No more "No player named ..." messages popping up in chat.
+- Guild only is now Guild and friends only, and online friends get their
+  professions checked like guildmates.
+- Rows show who's in your guild and who's on your friends list.
+- At the same skill, crafters seen more recently come first.
+- Other Linked Inn users show up within seconds after you log in or reload,
+  instead of up to 15 minutes later.
+- Linked Inn users in your guild or group ask each other for their lists
+  through the guild or group.
+- Fixed guild checks stopping for good after turning on Guild only.
+- Crafters you only know through Linked Inn say "via Linked Inn" instead of a
+  location.
+
 ## [1.2.0] - 2026-10-04
 
 - Housekeeping: Light, Balanced or Strict clears out crafters who add nothing,

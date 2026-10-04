@@ -63,6 +63,8 @@ professions are read when you log in, so you never have to open them first.
   Compact at the bottom for bigger rows.
 - A small gold badge marks crafters who use Linked Inn themselves. Their lists
   come straight from their own game. The mug next to Secondary shows only them.
+- **Guild** and **Friend** tags show who's in your guild or on your friends
+  list.
 
 <p align="center">
   <img src="media/crafters-search.png" alt="Searching for an item shows who can make it" width="62%">

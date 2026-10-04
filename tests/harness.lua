@@ -2143,7 +2143,7 @@ do
 	Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
 	Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
 	Advance(4)
-	check(Find("H1", "WHISPER", "Stranger Danger") and not Find("H1", "WHISPER", "Other One") and not Find("H1", "WHISPER", "Local Guy"), "someone from an unlinked realm gets one quiet hello, at most every 45 seconds")
+	check(not Find("H1", "WHISPER", "Stranger Danger") and not Find("H1", "WHISPER", "Other One") and not Find("H1", "WHISPER", "Local Guy"), "players seen from the other realm get no quiet whispers; those never arrive")
 	Advance(50)
 	W.sent = {}
 	Fire("NAME_PLATE_UNIT_ADDED", "nameplate4")
@@ -2156,6 +2156,7 @@ do
 	local gone = "No player named 'Far Away' is currently playing."
 	check(Sync.HideNotFound(nil, "CHAT_MSG_SYSTEM", gone), "the game's 'no player named' line is hidden for our own quiet whispers")
 	Fire("CHAT_MSG_SYSTEM", gone)
+	check(Sync.HideNotFound(nil, "CHAT_MSG_SYSTEM", gone), "it stays hidden in every chat window, whichever sees it first")
 	check(Sync.Links().OtherRealm == "Third Guy-TestRealm", "a link that can't be whispered is dropped for another one", Sync.Links().OtherRealm)
 	check(not Sync.HideNotFound(nil, "CHAT_MSG_SYSTEM", "No player named 'Someone Else' is currently playing."), "other 'no player named' lines are left alone")
 	W.playerGUID = nil

@@ -26,7 +26,6 @@ local BUFFER_TTL = 90
 local MAX_BUFFERS = 20
 local LINK_LIVE = 20 * 60
 local SEEN_TTL = 10 * 60
-local DISCOVER_GAP = 45
 local DISCOVER_AGAIN = 24 * 3600
 local LINK_HELLO_GAP = 60
 local WHISPER_MEMORY = 15
@@ -51,7 +50,6 @@ local peers = {}
 local seenMsgs = {}
 local whispered = {}
 local firstFrom = {}
-local lastDiscover = -DISCOVER_GAP
 local linkSig = ""
 local lastLinkHello = -LINK_HELLO_GAP
 local mySid
@@ -835,37 +833,6 @@ local function OnRelay(relayer, text, chatType)
 	Dispatch(origin, inner, "RELAY")
 end
 
-local function ForeignSighting(key, guid)
-	if not LI.ready or not joined or not key or key == LI.playerKey or peers[key] or LI.settings.guildOnly then
-		return
-	end
-	local sid, mine = SidOf(guid), MySid()
-	if not sid or not mine or sid == mine or Now() - lastDiscover < DISCOVER_GAP then
-		return
-	end
-	for _, p in pairs(peers) do
-		if p.sid == sid and Live(p) then
-			return
-		end
-	end
-	local probed = LI.db.probed
-	if type(probed) ~= "table" then
-		probed = {}
-		LI.db.probed = probed
-	end
-	if probed[key] and time() - probed[key] < DISCOVER_AGAIN then
-		return
-	end
-	local hello = Sync.Hello()
-	if not hello then
-		return
-	end
-	probed[key] = time()
-	lastDiscover = Now()
-	LI.test.sync.discover = (LI.test.sync.discover or 0) + 1
-	Enqueue("discover", hello, "WHISPER", LI.WhisperTarget(key))
-end
-Sync.ForeignSighting = ForeignSighting
 
 local function NotFoundName(msg)
 	local fmt = ERR_CHAT_PLAYER_NOT_FOUND_S
@@ -897,7 +864,10 @@ local function OnNotFound(msg)
 	if not w then
 		return
 	end
-	whispered[w.target:lower()] = nil
+	if w.failed then
+		return
+	end
+	w.failed = true
 	CrossMissing(w.target)
 	local key = LI.FullName(w.target)
 	local p = peers[key]
@@ -1194,7 +1164,7 @@ function Sync.Status()
 		string.format("Realm: %s (server %s)", MyRealm(), tostring(MySid())),
 		string.format("Channel: %s%s", joined and "joined" or "NOT joined", ChannelId() and (" (#" .. ChannelId() .. ")") or ""),
 		"Other realms: " .. (#bridges > 0 and table.concat(bridges, "; ") or "none linked yet"),
-		string.format("Relayed: %d out, %d in; looked for users on other realms %d times", sync.relayOut or 0, sync.relayIn or 0, sync.discover or 0),
+		string.format("Relayed: %d out, %d in", sync.relayOut or 0, sync.relayIn or 0),
 		string.format("Your list: version %s, %d professions", tostring(OwnState().ver), OwnCount()),
 		"Sent: " .. Counts("tx") .. ((sync.failed or 0) > 0 and string.format("  |cffff6060failed %d (%s)|r", sync.failed, tostring(sync.lastError)) or ""),
 		"Received: " .. Counts("rx"),
@@ -1291,34 +1261,6 @@ end)
 LI.On("CHAT_MSG_SYSTEM", function(msg)
 	OnNotFound(LI.Safe(msg))
 end)
-
-local function SightUnit(unit)
-	unit = LI.Safe(unit)
-	if not unit or not LI.Safe(LI.Try(UnitIsPlayer, unit)) then
-		return
-	end
-	if UnitIsFriend and not LI.Safe(LI.Try(UnitIsFriend, "player", unit)) then
-		return
-	end
-	ForeignSighting(LI.UnitKey(unit), LI.Safe(LI.Try(UnitGUID, unit)))
-end
-
-LI.On("NAME_PLATE_UNIT_ADDED", SightUnit)
-LI.On("PLAYER_TARGET_CHANGED", function()
-	SightUnit("target")
-end)
-LI.On("UPDATE_MOUSEOVER_UNIT", function()
-	SightUnit("mouseover")
-end)
-
-for _, event in ipairs({ "CHAT_MSG_CHANNEL", "CHAT_MSG_SAY", "CHAT_MSG_YELL" }) do
-	LI.On(event, function(_, sender, _, _, _, _, _, _, _, _, _, guid)
-		sender = LI.Safe(sender)
-		if type(sender) == "string" then
-			ForeignSighting(LI.FullName(sender), LI.Safe(guid))
-		end
-	end)
-end
 
 LI.On("CHAT_MSG_ADDON", function(prefix, text, chatType, sender)
 	Sync.OnMessage(LI.Safe(prefix), LI.Safe(text), LI.Safe(chatType), LI.Safe(sender))

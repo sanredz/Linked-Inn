@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.0]
+## [1.2.0] - 2026-10-04
 
 - Housekeeping: Light, Balanced or Strict clears out crafters who add nothing,
   keeping the best 100, 75 or 50 per profession. Rare recipes, favorites,

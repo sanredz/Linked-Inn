@@ -309,23 +309,26 @@ local function Unknown(c)
 end
 
 function LI.Discover(key, guid, prio, classFile, where)
-	if not LI.ready or not key or key == LI.playerKey or not IsPlayerGuid(guid) then
-		return false
+	if not LI.ready or not key or key == LI.playerKey then
+		return false, "self"
+	end
+	if not IsPlayerGuid(guid) then
+		return false, "no id"
 	end
 	LI.NoteGuid(key, guid)
 	if not LI.Allowed(key) then
-		return false
+		return false, "outside"
 	end
 	if LI.OtherServer(guid) then
-		return false
+		return false, "other realm"
 	end
 	if KnownPrimaries(LI.crafters[key]) >= 2 then
-		return false
+		return false, "known"
 	end
 	prio = prio or LI.PRIO.chat
 	local tried = LI.tried[key]
 	if tried and time() - tried < (prio >= LI.PRIO.guild and CLOSE_AGAIN or TRY_AGAIN) then
-		return false
+		return false, "checked"
 	end
 	for _, cand in ipairs(candidates) do
 		if cand.key == key then
@@ -333,7 +336,7 @@ function LI.Discover(key, guid, prio, classFile, where)
 			cand.at = GetTime()
 			cand.class = cand.class or classFile
 			cand.where = where or cand.where
-			return false
+			return false, "in line"
 		end
 	end
 	candidates[#candidates + 1] = { key = key, guid = guid, prio = prio, class = classFile, where = where, at = GetTime() }

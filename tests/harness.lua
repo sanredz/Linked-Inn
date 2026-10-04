@@ -2110,5 +2110,24 @@ do
 	check(LI.Status("Low Skill-TestRealm") == "online", "and hearing them again brings them back online", LI.Status("Low Skill-TestRealm"))
 end
 
+do
+	Setup()
+	Boot()
+	Advance(5)
+	local c = LI.Crafter("Unread One-TestRealm", true)
+	c.profs.enchanting = { name = "Enchanting", rank = 100 }
+	LI.Fire("CraftersChanged")
+	LI.UI.Open(LI.UI.TAB.find)
+	local main = LinkedInnFrame
+	check(main.emptyHead.__text == "The inn is quiet" and main.emptyText.__text:find("1 crafter is waiting to be read", 1, true), "with only unread crafters, the list says they're being read, not that a filter hides them", main.emptyHead.__text)
+	check(main.count.__text:find("0 crafters remembered", 1, true), "unread crafters aren't counted", main.count.__text)
+	local ench = 0
+	for _, chip in ipairs(LI.ProfessionChips()) do
+		if chip.key == "enchanting" then ench = chip.count end
+	end
+	check(ench == 0, "nor counted on the profession buttons", ench)
+	main:Hide()
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

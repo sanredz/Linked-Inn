@@ -779,10 +779,14 @@ local function RefreshFind()
 	main.list:SetList(list)
 	UpdateChips()
 	main.kind:SetText(KindName(LI.settings.kind))
-	local total = 0
-	for key in pairs(LI.crafters) do
+	local total, reading = 0, LI.WaitingCount and LI.WaitingCount() or 0
+	for key, c in pairs(LI.crafters) do
 		if key ~= LI.playerKey then
-			total = total + 1
+			if LI.IsListed(c) then
+				total = total + 1
+			else
+				reading = reading + 1
+			end
 		end
 	end
 	main.count:SetText(string.format("%d shown  ·  %d crafters remembered", #results, total))
@@ -791,7 +795,11 @@ local function RefreshFind()
 	if empty then
 		if total == 0 then
 			main.emptyHead:SetText("The inn is quiet")
-			main.emptyText:SetText("Linked Inn listens to Trade, General, guild and party chat. Whenever someone links a profession, they show up here.")
+			local text = "Crafters show up here once their recipes are read. Profession links in chat, people crafting near you and everyone you pass are checked in the background. Friendly nameplates (Shift+V) help a lot."
+			if reading > 0 then
+				text = string.format("%d %s waiting to be read. ", reading, reading == 1 and "crafter is" or "crafters are") .. text
+			end
+			main.emptyText:SetText(text)
 		elseif filter.search ~= "" then
 			main.emptyHead:SetText("Nobody for \"" .. filter.search .. "\" yet")
 			main.emptyText:SetText("No one you've seen can make that so far. Try a shorter word, or clear the filters.")

@@ -681,19 +681,30 @@ function LI.Group(results)
 	return groups
 end
 
+function LI.IsListed(c)
+	for _, p in pairs(c and c.profs or {}) do
+		if p.recipes then
+			return true
+		end
+	end
+	return false
+end
+
 function LI.ProfessionChips(secondary)
 	local counts = {}
 	if LI.crafters then
 		for key, c in pairs(LI.crafters) do
 			if key ~= LI.playerKey then
 				for profKey, p in pairs(c.profs) do
-					local entry = counts[profKey]
-					if not entry then
+					local entry = p.recipes and counts[profKey]
+					if p.recipes and not entry then
 						entry = { key = profKey, name = p.name, icon = p.icon, count = 0 }
 						counts[profKey] = entry
 					end
-					entry.count = entry.count + 1
-					entry.icon = entry.icon or p.icon
+					if entry then
+						entry.count = entry.count + 1
+						entry.icon = entry.icon or p.icon
+					end
 				end
 			end
 		end

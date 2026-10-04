@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.2] - 2026-10-04
+
+- Fixed empty profession windows sometimes popping up on their own, mostly
+  while standing in a city.
+
 ## [1.1.1] - 2026-10-04
 
 - Reading professions in the background no longer plays the profession window

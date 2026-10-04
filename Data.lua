@@ -874,13 +874,13 @@ local function RowOrder(a, b)
 	if ka ~= kb then
 		return ka > kb
 	end
-	local na, nb = pa.count or 0, pb.count or 0
-	if na ~= nb then
-		return na > nb
-	end
 	local sa, sb = a.entry.seenAt or 0, b.entry.seenAt or 0
 	if sa ~= sb then
 		return sa > sb
+	end
+	local na, nb = pa.count or 0, pb.count or 0
+	if na ~= nb then
+		return na > nb
 	end
 	return a.entry.key < b.entry.key
 end

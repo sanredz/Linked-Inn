@@ -2874,5 +2874,24 @@ do
 	W.clickWorks, LI.crossReadUntil = false, nil
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	local POT = { { id = 2330, name = "Minor Healing Potion", item = 118 } }
+	LI.SetRecipes("More Recipes-TestRealm", { name = "Alchemy", rank = 150, max = 225 }, POT, "auto")
+	LI.SetRecipes("Seen Lately-TestRealm", { name = "Alchemy", rank = 150, max = 225 }, POT, "auto")
+	LI.crafters["More Recipes-TestRealm"].profs.alchemy.count = 32
+	LI.crafters["Seen Lately-TestRealm"].profs.alchemy.count = 31
+	LI.crafters["More Recipes-TestRealm"].seen = time() - 6 * 3600
+	LI.crafters["Seen Lately-TestRealm"].seen = time() - 3 * 3600
+	local rows
+	for _, g in ipairs(LI.Group(LI.Search("", {}))) do
+		if g.key == "alchemy" then rows = g.rows end
+	end
+	check(rows and rows[1].entry.key == "Seen Lately-TestRealm", "at the same skill, the one seen more recently comes first", rows and rows[1].entry.key)
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

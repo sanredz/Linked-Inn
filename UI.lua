@@ -954,7 +954,12 @@ local function RefreshFind()
 		end
 	end
 	if LI.settings.guildOnly then
-		main.count:SetText(string.format("|cff40ff40Guild only|r  ·  %d shown  ·  %d crafters remembered", #results, total))
+		local far = LI.guildFarSide or 0
+		if far > 0 then
+			main.count:SetText(string.format("|cff40ff40Guild only|r  ·  %d shown  ·  %d on the other realm", #results, far))
+		else
+			main.count:SetText(string.format("|cff40ff40Guild only|r  ·  %d shown  ·  %d crafters remembered", #results, total))
+		end
 	else
 		main.count:SetText(string.format("%d shown  ·  %d crafters remembered", #results, total))
 	end

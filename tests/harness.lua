@@ -2580,7 +2580,7 @@ end
 do
 	Setup()
 	W.playerGUID = "Player-1-ME"
-	W.guild = { { name = "Guild Pal-TestRealm", online = true, guid = "Player-1-GPAL" } }
+	W.guild = { { name = "Guild Pal-TestRealm", online = true, guid = "Player-1-GPAL" }, { name = "Far Mate-TestRealm", online = true, guid = "Player-2-FARM" } }
 	Boot()
 	Advance(5)
 	Fire("GUILD_ROSTER_UPDATE")
@@ -2592,6 +2592,11 @@ do
 	LI.SetRecipes("Old Stranger-TestRealm", { name = "Tailoring", rank = 90, max = 150 }, PANTS, "auto")
 	LI.crafters["Old Stranger-TestRealm"].seen = time() - 100 * 86400
 	check(LI.settings.guildOnly == false and LI.Allowed("Out Sider-TestRealm"), "guild only is off by default")
+	local summary
+	for _, e in ipairs(LI.db.log) do
+		if e.m:find("^Guild: ") then summary = e.m end
+	end
+	check(summary and summary:find("2 online", 1, true) and summary:find("1 other realm", 1, true), "the log says what happens to online guildmates", summary)
 
 	LI.UI.Open(LI.UI.TAB.find)
 	local main = LinkedInnFrame
@@ -2601,6 +2606,7 @@ do
 	panel.guild.__scripts.OnClick(panel.guild)
 	check(LI.settings.guildOnly == true, "guild only can be switched on in settings")
 	check(#LI.Search("", { guildOnly = true }) == 1 and main.count.__text:find("Guild only", 1, true), "the list shows only guildmates and says so", main.count.__text)
+	check(main.count.__text:find("1 on the other realm", 1, true) and panel.farSide.__text:find("1 online guildmate is on the other realm", 1, true), "guildmates the game can't read are explained", panel.farSide.__text)
 	check(LI.crafters["Out Sider-TestRealm"] and LI.crafters["Old Stranger-TestRealm"], "nobody is deleted when it's switched on")
 
 	local queued = LI.Reader.QueueSize()

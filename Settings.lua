@@ -338,6 +338,9 @@ local function Create()
 		"Only reads, lists and talks to your guild, Work included. Everyone else stays saved and comes back when you turn it off.",
 		function() return LI.settings.guildOnly == true end,
 		function(on) LI.settings.guildOnly = on end)
+	frame.farSide = Below(Body(page, BODY_X, ""), frame.guildLast, BODY_X, 4)
+	frame.farSide:SetTextColor(0.91, 0.69, 0.29)
+	frame.guildLast = frame.farSide
 
 	local list = Section(page, frame.guildLast, "Your list")
 	frame.forgetLabel = Below(Text(page, "GameFontHighlight"), list, HEAD_X, 16)
@@ -426,6 +429,12 @@ function Settings.Refresh()
 	frame.house:Update()
 	frame.houseDesc:SetText(HouseText(LI.HousekeepingMode(LI.settings.housekeeping)))
 	frame.houseLast:SetText(LastRun())
+	local far = LI.guildFarSide or 0
+	if far > 0 then
+		frame.farSide:SetText(string.format("%d online %s on the other realm. The game can't read them there, but they show up if they use Linked Inn.", far, far == 1 and "guildmate is" or "guildmates are"))
+	else
+		frame.farSide:SetText("")
+	end
 	local on = LI.settings.cityScan == true
 	frame.everyLabel:SetTextColor(on and 1 or 0.5, on and 1 or 0.5, on and 1 or 0.5)
 	if frame.every.SetEnabled then

@@ -57,6 +57,7 @@ local function ReadGuild()
 		parts[#parts + 1] = string.format("%d %s", n, why)
 	end
 	table.sort(parts)
+	LI.guildFarSide = tally["other realm"] or 0
 	local summary = string.format("Guild: %d online (%s)", online, table.concat(parts, ", "))
 	if summary ~= lastGuildSummary then
 		lastGuildSummary = summary

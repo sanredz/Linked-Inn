@@ -753,7 +753,7 @@ local function InitRow(row, data)
 	row.line:SetText(text)
 	row.line:SetTextColor(textColor[1], textColor[2], textColor[3])
 	UpdateBooks(row, data)
-	local li = c.li == true or LI.badgePreview == true
+	local li = c.li == true
 	row.badge:SetShown(li)
 	if li then
 		local width = LI.Try(row.name.GetStringWidth, row.name) or 0
@@ -1435,10 +1435,6 @@ SlashCmdList.LINKEDINN = function(msg)
 		LI.Sync.Ping(rest)
 	elseif cmd == "status" then
 		LI.Sync.Status()
-	elseif cmd == "badge" then
-		LI.badgePreview = not LI.badgePreview
-		LI.Print(LI.badgePreview and "Showing the Linked Inn badge on everyone, just for a look. Type /li badge again to stop." or "Badge preview off.")
-		UI.Refresh()
 	else
 		UI.Toggle()
 	end

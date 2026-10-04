@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-04
+
 - Crafters seen in the crafting log ("X creates Y") are remembered and read in
   full the next time you see them.
 - Your group, your guild and the players around you are checked quietly in the

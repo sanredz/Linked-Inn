@@ -46,10 +46,6 @@ professions are read when you log in, so you never have to open them first.
 > Playing with friendly nameplates on (Shift+V) checks everyone you walk past
 > all the time.
 
-WoW: Forever splits each ruleset into hidden realms, and the game doesn't let
-you read the professions of players on the other one. They still show up if
-they use Linked Inn themselves.
-
 ## Crafters
 
 - **Search** for an item, a profession or a name. Searching an item shows only

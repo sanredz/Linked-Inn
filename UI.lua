@@ -263,6 +263,16 @@ local function SeenLine(entry)
 	return line
 end
 
+local function Where(where)
+	if not where then
+		return ""
+	end
+	if where == "Linked Inn" then
+		return "via Linked Inn"
+	end
+	return "in " .. where
+end
+
 local function ShowPillTooltip(pill)
 	local entry = pill:GetParent().entry
 	if not entry then
@@ -273,7 +283,7 @@ local function ShowPillTooltip(pill)
 	GameTooltip:SetText(SeenLine(entry), color[1], color[2], color[3])
 	local c = entry.crafter
 	if c.where then
-		GameTooltip:AddLine("in " .. c.where, SOFT[1], SOFT[2], SOFT[3])
+		GameTooltip:AddLine(Where(c.where), SOFT[1], SOFT[2], SOFT[3])
 	end
 	if entry.key ~= LI.playerKey then
 		GameTooltip:AddLine(LI.IsChecking(entry.key) and "Checking..." or "Click to check if they're online", 0.5, 0.5, 0.5)
@@ -306,7 +316,7 @@ local function ShowRowTooltip(row)
 	end
 	GameTooltip:AddLine(" ")
 	local _, color2 = Seen(entry)
-	GameTooltip:AddDoubleLine(SeenLine(entry), c.where and ("in " .. c.where) or "", color2[1], color2[2], color2[3], SOFT[1], SOFT[2], SOFT[3])
+	GameTooltip:AddDoubleLine(SeenLine(entry), Where(c.where), color2[1], color2[2], color2[3], SOFT[1], SOFT[2], SOFT[3])
 	if entry.recipeMeta and entry.makes > 1 then
 		GameTooltip:AddLine(string.format("Can make %d items that match your search", entry.makes), CAN[1], CAN[2], CAN[3], true)
 	end

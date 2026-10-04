@@ -29,6 +29,8 @@ local function SetRoster(source, fullName, online)
 	end
 end
 
+local lastGuildSummary
+
 local function ReadGuild()
 	for key, entry in pairs(roster) do
 		entry.guild = nil
@@ -37,14 +39,29 @@ local function ReadGuild()
 		return
 	end
 	local count = LI.Safe(LI.Try(GetNumGuildMembers)) or 0
+	local tally, online = {}, 0
 	for i = 1, count do
-		local name, _, _, _, _, _, _, _, online, _, classFile, _, _, _, _, _, guid = LI.Try(GetGuildRosterInfo, i)
+		local name, _, _, _, _, _, _, _, isOnline, _, classFile, _, _, _, _, _, guid = LI.Try(GetGuildRosterInfo, i)
 		if name then
-			SetRoster("guild", name, LI.Safe(online))
-			if LI.Safe(online) and LI.Discover then
-				LI.Discover(LI.FullName(LI.Safe(name)), LI.Safe(guid), LI.PRIO.guild, LI.Safe(classFile))
+			SetRoster("guild", name, LI.Safe(isOnline))
+			if LI.Safe(isOnline) and LI.Discover then
+				online = online + 1
+				local added, why = LI.Discover(LI.FullName(LI.Safe(name)), LI.Safe(guid), LI.PRIO.guild, LI.Safe(classFile))
+				why = added and "to check" or why or "skipped"
+				tally[why] = (tally[why] or 0) + 1
 			end
 		end
+	end
+	local parts = {}
+	for why, n in pairs(tally) do
+		parts[#parts + 1] = string.format("%d %s", n, why)
+	end
+	table.sort(parts)
+	LI.guildFarSide = tally["other realm"] or 0
+	local summary = string.format("Guild: %d online (%s)", online, table.concat(parts, ", "))
+	if summary ~= lastGuildSummary then
+		lastGuildSummary = summary
+		LI.Log(summary)
 	end
 	LI.Fire("StatusChanged")
 end
@@ -89,6 +106,23 @@ local function ReadGroup()
 		end
 	end
 	LI.Fire("StatusChanged")
+end
+
+function LI.IsGuildmate(key)
+	local entry = key and roster[key]
+	return entry ~= nil and entry.guild ~= nil
+end
+
+function LI.Allowed(key)
+	if not LI.settings or not LI.settings.guildOnly then
+		return true
+	end
+	return key ~= nil and (key == LI.playerKey or LI.IsGuildmate(key))
+end
+
+function LI.InCircle(key)
+	local entry = key and roster[key]
+	return entry ~= nil and (entry.guild ~= nil or entry.friend ~= nil)
 end
 
 function LI.Status(key)

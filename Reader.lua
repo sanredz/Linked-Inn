@@ -36,7 +36,7 @@ local lastAuto
 local hooked = false
 local concealed = false
 local ours = false
-local lastDone = -60
+local lastDone = GetTime and GetTime() or -60
 local userClickAt = -60
 local LATE = 15
 local USER_CLICK = 5
@@ -53,6 +53,9 @@ end
 local otherLogged = {}
 
 function Reader.Want(key, profName, link, extra)
+	if not LI.Allowed(key) then
+		return
+	end
 	local guid = type(link) == "string" and link:match("^trade:(Player%-%d+%-%w+):")
 	if LI.OtherServer(guid) then
 		if not otherLogged[key] then
@@ -65,6 +68,9 @@ function Reader.Want(key, profName, link, extra)
 	local profKey = LI.ProfKey(profName)
 	local p = c and profKey and c.profs[profKey]
 	if p and p.recipes and p.read and time() - p.read < STALE then
+		return
+	end
+	if LI.IsLow(key, profKey) then
 		return
 	end
 	local id = key .. "|" .. (profKey or "")
@@ -99,6 +105,22 @@ function Reader.Want(key, profName, link, extra)
 			end
 		end
 		table.remove(queue, drop)
+	end
+end
+
+local function Outsiders()
+	if not LI.settings.guildOnly then
+		return
+	end
+	for i = #queue, 1, -1 do
+		if not LI.Allowed(queue[i].key) then
+			table.remove(queue, i)
+		end
+	end
+	for i = #probes, 1, -1 do
+		if not probes[i].own and not LI.Allowed(probes[i].key) then
+			table.remove(probes, i)
+		end
 	end
 end
 
@@ -256,6 +278,9 @@ local function ScanStep(job, ok)
 		for _ in pairs(run.found) do
 			crafters = crafters + 1
 		end
+		if run.quiet and run.players == 1 and run.who then
+			LI.Log(string.format("Checked %s: %d %s in %.0fs", LI.ShortName(run.who), run.found[run.who] or 0, (run.found[run.who] or 0) == 1 and "profession" or "professions", Now() - run.started))
+		end
 		if not run.quiet then
 			LI.Print(string.format("Scan done: %d %s among %d %s nearby.", crafters, crafters == 1 and "crafter" or "crafters", run.players, run.players == 1 and "player" or "players"))
 			LI.Log(string.format("Scan: %d crafters among %d players", crafters, run.players))
@@ -294,6 +319,10 @@ local function Unsilence()
 end
 Reader.Unsilence = Unsilence
 
+function Reader.SilentReads()
+	return not quietOff and GetFramesRegisteredForEvent ~= nil
+end
+
 function Reader.QuietState()
 	return quietOff, quietTries, quietWorks
 end
@@ -310,9 +339,9 @@ local function Finish(job, outcome)
 	end
 	if job.probe then
 		pending = nil
-		nextAt = math.max(nextAt, Now() + 2)
+		nextAt = math.max(nextAt, Now() + (job.scan and GAP or 2))
 		if job.scan then
-			ScanStep(job, outcome == "ok")
+			ScanStep(job, outcome == "ok" and job.found == true)
 		elseif LI.ProbeResult and not job.notified then
 			LI.ProbeResult(job.key, outcome == "ok")
 		end
@@ -370,6 +399,7 @@ end
 local Start
 
 local function Pump()
+	Outsiders()
 	if #probes > 0 then
 		Kick()
 		return
@@ -383,7 +413,7 @@ local function Pump()
 	if InCombatLockdown and InCombatLockdown() then
 		return
 	end
-	if ChatActive() or PanelOpen() then
+	if not Reader.SilentReads() and (ChatActive() or PanelOpen()) then
 		return
 	end
 	local job = NextJob()
@@ -435,6 +465,7 @@ Kick = function()
 	if not LI.ready then
 		return
 	end
+	Outsiders()
 	if pending then
 		if #probes > 0 and Now() - (pending.started or 0) > 4 then
 			Waiting(pending.probe and "another check" or "a profession read")
@@ -453,7 +484,7 @@ Kick = function()
 		Waiting("in combat")
 		return
 	end
-	if PanelOpen() then
+	if not Reader.SilentReads() and PanelOpen() then
 		Waiting("a game window is open")
 		return
 	end
@@ -461,7 +492,7 @@ Kick = function()
 end
 
 function Reader.Probe(key, link)
-	if not LI.ready or not key or type(link) ~= "string" then
+	if not LI.ready or not key or type(link) ~= "string" or not LI.Allowed(key) then
 		return false
 	end
 	if pending and pending.probe and pending.key == key then
@@ -508,9 +539,9 @@ function Reader.Scan(candidates, quiet)
 		return false
 	end
 	readsSinceScan = 0
-	local run = { total = 0, done = 0, found = {}, players = #candidates, quiet = quiet }
+	local run = { total = 0, done = 0, found = {}, players = #candidates, quiet = quiet, started = Now(), who = candidates[1].key }
 	for _, cand in ipairs(candidates) do
-		for _, profKey in ipairs(cand.profs) do
+		for _, profKey in ipairs(LI.Allowed(cand.key) and cand.profs or {}) do
 			local link = LI.BuildLink(cand.guid, profKey)
 			if link then
 				probes[#probes + 1] = { key = cand.key, link = link, prof = profKey, probe = true, scan = true, class = cand.class, where = cand.where }
@@ -729,6 +760,7 @@ function Reader.Read()
 					c.class = c.class or job.class
 					c.where = job.where or c.where
 				end
+				job.found = count > 0
 				LI.Log(string.format("%s %s link for %s: %d recipes", job.scan and "Scan found" or "Built", name, LI.ShortName(key), count))
 			elseif not job.probe then
 				if FrameVisible() then
@@ -859,6 +891,11 @@ LI.On("TRADE_SKILL_SHOW", function()
 	elseif LateReply() then
 		ours = true
 		LI.Log("A late reply opened a profession window; closed it")
+		LI.After(0, function()
+			if ours and not pending and FrameShown() then
+				Conceal(ProfessionsFrame)
+			end
+		end)
 		LI.After(SETTLE, function()
 			if not pending then
 				CloseHidden()
@@ -888,6 +925,10 @@ end)
 
 LI.On("PLAYER_LOGOUT", function()
 	Unsilence()
+end)
+
+LI.On("PLAYER_ENTERING_WORLD", function()
+	lastDone = Now()
 end)
 
 LI.On("TRADE_SKILL_CLOSE", function()

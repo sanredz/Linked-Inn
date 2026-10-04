@@ -148,6 +148,31 @@ local function Toggle(parent, label, width, tip, isOn, onToggle)
 	return t
 end
 
+local ROUND_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
+
+local function Badge(parent, size)
+	local b = CreateFrame("Button", nil, parent)
+	b:SetSize(size, size)
+	local ring = size >= 20 and 2 or 1.5
+	local ringMask = b:CreateMaskTexture()
+	ringMask:SetAllPoints()
+	ringMask:SetTexture(ROUND_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+	b.ring = b:CreateTexture(nil, "BACKGROUND")
+	b.ring:SetAllPoints()
+	b.ring:SetColorTexture(1, 0.8, 0.3, 1)
+	b.ring:AddMaskTexture(ringMask)
+	local iconMask = b:CreateMaskTexture()
+	iconMask:SetPoint("TOPLEFT", ring, -ring)
+	iconMask:SetPoint("BOTTOMRIGHT", -ring, ring)
+	iconMask:SetTexture(ROUND_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+	b.icon = b:CreateTexture(nil, "ARTWORK")
+	b.icon:SetPoint("TOPLEFT", ring, -ring)
+	b.icon:SetPoint("BOTTOMRIGHT", -ring, ring)
+	b.icon:SetTexture(LI.ICON)
+	b.icon:AddMaskTexture(iconMask)
+	return b
+end
+
 local function Movable(frame)
 	frame:SetMovable(true)
 	frame:SetClampedToScreen(true)
@@ -480,24 +505,7 @@ local function BuildRow(row)
 	row.selBar:SetColorTexture(1, 0.82, 0.3, 0.9)
 	row.selBar:Hide()
 
-	row.badge = CreateFrame("Button", nil, row)
-	row.badge:SetSize(16, 16)
-	local ringMask = row.badge:CreateMaskTexture()
-	ringMask:SetAllPoints()
-	ringMask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-	row.badge.ring = row.badge:CreateTexture(nil, "BACKGROUND")
-	row.badge.ring:SetAllPoints()
-	row.badge.ring:SetColorTexture(1, 0.8, 0.3, 1)
-	row.badge.ring:AddMaskTexture(ringMask)
-	local iconMask = row.badge:CreateMaskTexture()
-	iconMask:SetPoint("TOPLEFT", 1.5, -1.5)
-	iconMask:SetPoint("BOTTOMRIGHT", -1.5, 1.5)
-	iconMask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-	row.badge.icon = row.badge:CreateTexture(nil, "ARTWORK")
-	row.badge.icon:SetPoint("TOPLEFT", 1.5, -1.5)
-	row.badge.icon:SetPoint("BOTTOMRIGHT", -1.5, 1.5)
-	row.badge.icon:SetTexture(LI.ICON)
-	row.badge.icon:AddMaskTexture(iconMask)
+	row.badge = Badge(row, 16)
 	if row.badge.SetPropagateMouseClicks then
 		row.badge:SetPropagateMouseClicks(true)
 	end
@@ -906,13 +914,16 @@ local function UpdateChips()
 	end
 	main.skillPill:Update()
 	main.clearChips:ClearAllPoints()
-	main.clearChips:SetPoint("LEFT", main.secondaryToggle, "RIGHT", 6, 0)
+	main.liToggle:ClearAllPoints()
+	main.liToggle:SetPoint("LEFT", main.secondaryToggle, "RIGHT", 8, 0)
+	main.liToggle:Update()
+	main.clearChips:SetPoint("LEFT", main.liToggle, "RIGHT", 6, 0)
 	main.clearChips:SetShown(any)
 	main.compactBox:SetChecked(LI.settings.compact and true or false)
 end
 
 local function RefreshFind()
-	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary, kind = LI.settings.kind, maxOnly = LI.settings.maxOnly, minSkill = LI.settings.minSkill }
+	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary, kind = LI.settings.kind, maxOnly = LI.settings.maxOnly, minSkill = LI.settings.minSkill, liOnly = LI.settings.liOnly, guildOnly = LI.settings.guildOnly }
 	local results = LI.Search(filter.search, opts)
 	local list = {}
 	local collapsed = LI.settings.collapsed or {}
@@ -942,7 +953,16 @@ local function RefreshFind()
 			end
 		end
 	end
-	main.count:SetText(string.format("%d shown  ·  %d crafters remembered", #results, total))
+	if LI.settings.guildOnly then
+		local far = LI.guildFarSide or 0
+		if far > 0 then
+			main.count:SetText(string.format("|cff40ff40Guild only|r  ·  %d shown  ·  %d on the other realm", #results, far))
+		else
+			main.count:SetText(string.format("|cff40ff40Guild only|r  ·  %d shown  ·  %d crafters remembered", #results, total))
+		end
+	else
+		main.count:SetText(string.format("%d shown  ·  %d crafters remembered", #results, total))
+	end
 	local empty = #results == 0
 	main.empty:SetShown(empty)
 	if empty then
@@ -958,7 +978,13 @@ local function RefreshFind()
 			main.emptyText:SetText("No one you've seen can make that so far. Try a shorter word, or clear the filters.")
 		else
 			main.emptyHead:SetText("Nobody matches")
-			main.emptyText:SetText("Clear the filters to see everyone.")
+			if LI.settings.guildOnly then
+				main.emptyText:SetText("Guild only is on, so only guildmates are shown. Everyone else is still saved; turn it off in settings to see them.")
+			elseif LI.settings.liOnly then
+				main.emptyText:SetText("Only Linked Inn users are shown. Click the mug next to Secondary to see everyone.")
+			else
+				main.emptyText:SetText("Clear the filters to see everyone.")
+			end
 		end
 	end
 end
@@ -1298,6 +1324,38 @@ local function CreateMain()
 		return LI.settings.secondary == true
 	end, function(on)
 		LI.settings.secondary = on
+	end)
+	main.liToggle = Badge(main.chipBar, 22)
+	function main.liToggle:Update()
+		local on = LI.settings.liOnly == true
+		if on then
+			self.ring:SetColorTexture(1, 0.8, 0.3, 1)
+		elseif self.hover then
+			self.ring:SetColorTexture(0.8, 0.75, 0.65, 1)
+		else
+			self.ring:SetColorTexture(0.45, 0.42, 0.38, 1)
+		end
+		self.icon:SetDesaturated(not on)
+		self.icon:SetAlpha((on or self.hover) and 1 or 0.6)
+	end
+	main.liToggle:SetScript("OnClick", function(self)
+		LI.settings.liOnly = not LI.settings.liOnly
+		Sound(LI.settings.liOnly and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
+		self:Update()
+		UI.Refresh()
+	end)
+	main.liToggle:SetScript("OnEnter", function(self)
+		self.hover = true
+		self:Update()
+		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+		GameTooltip:SetText("Linked Inn users", 1, 0.82, 0)
+		GameTooltip:AddLine("Only show crafters who use Linked Inn. Their recipes come from their own game and stay up to date.", 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	main.liToggle:SetScript("OnLeave", function(self)
+		self.hover = false
+		self:Update()
+		GameTooltip:Hide()
 	end)
 
 

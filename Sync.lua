@@ -31,6 +31,7 @@ local DISCOVER_AGAIN = 24 * 3600
 local LINK_HELLO_GAP = 60
 local WHISPER_MEMORY = 15
 local RELAY = { H1 = true, R1 = true, X1 = true }
+local SEND_RANK = { ask = 1, hello = 1, ping = 1, pong = 1, work = 2, data = 3, relay = 3, discover = 4 }
 
 local queue = {}
 local channelName
@@ -275,12 +276,23 @@ local function BaseName(key)
 end
 
 local function Enqueue(kind, message, chatType, target)
+	if LI.settings.guildOnly and (chatType == "CHANNEL" or (chatType == "WHISPER" and not LI.Allowed(LI.FullName(target)))) then
+		return
+	end
 	for _, q in ipairs(queue) do
 		if q.kind == kind and q.message == message and q.chatType == chatType and q.target == target then
 			return
 		end
 	end
-	queue[#queue + 1] = { kind = kind, message = message, chatType = chatType, target = target }
+	local item = { kind = kind, message = message, chatType = chatType, target = target, rank = SEND_RANK[kind] or 2 }
+	local at = #queue + 1
+	for i, q in ipairs(queue) do
+		if (q.rank or 2) > item.rank then
+			at = i
+			break
+		end
+	end
+	table.insert(queue, at, item)
 end
 
 local lastFailLog = -60
@@ -320,6 +332,9 @@ local function Deliver(q)
 end
 
 local function Routes(withGuild)
+	if LI.settings.guildOnly then
+		return (IsInGuild and LI.Safe(LI.Try(IsInGuild))) and { "GUILD" } or {}
+	end
 	local routes = { "CHANNEL" }
 	if withGuild and IsInGuild and LI.Safe(LI.Try(IsInGuild)) then
 		routes[#routes + 1] = "GUILD"
@@ -366,7 +381,7 @@ local function Broadcast(kind, message, withGuild, withFriends)
 	for _, route in ipairs(Routes(withGuild)) do
 		Enqueue(kind, message, route)
 	end
-	if withFriends then
+	if withFriends and not LI.settings.guildOnly then
 		for _, target in ipairs(OnlineFriends()) do
 			Enqueue(kind, message, "WHISPER", target)
 		end
@@ -399,6 +414,14 @@ end
 
 function Sync.QueueSize()
 	return #queue
+end
+
+function Sync.QueuedKinds()
+	local kinds = {}
+	for i, q in ipairs(queue) do
+		kinds[i] = q.kind
+	end
+	return kinds
 end
 
 local function Own()
@@ -625,7 +648,7 @@ local function OnHello(key, parts, chatType)
 	if class and class ~= "" and class:match("^%u+$") then
 		c.class = class
 	end
-	local count = 0
+	local count, missing = 0, nil
 	for _, section in ipairs(Split(list, ";")) do
 		count = count + 1
 		if count > MAX_PROFS then
@@ -639,12 +662,23 @@ local function OnHello(key, parts, chatType)
 			p.icon = p.icon or LI.PROFESSION_ICONS[f[1]]
 			p.rank = FromB36(f[2]) or p.rank
 			p.max = FromB36(f[3]) or p.max
+			if (FromB36(f[4]) or 0) > 0 and not p.recipes then
+				missing = missing or {}
+				missing[f[1]] = true
+			end
 		end
 	end
 	c.where = c.where or "Linked Inn"
 	c.li = true
+	LI.TrimLow(key)
 	LI.Fire("CraftersChanged")
-	if c.sharedVer ~= ver then
+	local short = false
+	for profKey in pairs(missing or {}) do
+		if c.profs[profKey] then
+			short = true
+		end
+	end
+	if LI.crafters[key] == c and (c.sharedVer ~= ver or short) then
 		Ask(key, ver)
 	end
 end
@@ -694,7 +728,8 @@ local function OnData(key, parts)
 	end
 	LI.NoteHeard(key)
 	local c = LI.crafters[key]
-	if c and c.sharedVer == ver then
+	local a = asked[key]
+	if c and c.sharedVer == ver and not (a and a.ver == ver and Now() - a.at < ASK_GAP) then
 		return
 	end
 	local buf = buffers[key]
@@ -742,7 +777,7 @@ end
 local Dispatch
 
 Spread = function(origin, realm, inner)
-	if type(inner) ~= "string" or not RELAY[inner:sub(1, 2)] or not realm then
+	if type(inner) ~= "string" or not RELAY[inner:sub(1, 2)] or not realm or LI.settings.guildOnly then
 		return
 	end
 	local id = origin .. "\1" .. inner
@@ -789,7 +824,7 @@ local function OnRelay(relayer, text, chatType)
 end
 
 local function ForeignSighting(key, guid)
-	if not LI.ready or not joined or not key or key == LI.playerKey or peers[key] then
+	if not LI.ready or not joined or not key or key == LI.playerKey or peers[key] or LI.settings.guildOnly then
 		return
 	end
 	local sid, mine = SidOf(guid), MySid()
@@ -872,7 +907,7 @@ function Sync.OnMessage(prefix, text, chatType, sender)
 		end
 		return
 	end
-	if #text > 255 or not Allow(key) then
+	if #text > 255 or not Allow(key) or not LI.Allowed(key) then
 		return
 	end
 	Count("rx", chatType or "?")
@@ -892,6 +927,9 @@ function Sync.OnMessage(prefix, text, chatType, sender)
 end
 
 Dispatch = function(key, text, chatType)
+	if not LI.Allowed(key) then
+		return
+	end
 	local parts = Split(text, "|")
 	local kind = parts[1]
 	if kind == "P1" then

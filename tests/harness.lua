@@ -223,6 +223,11 @@ local function InstallStubs()
 	end }
 	_G.GetRealZoneText = function() return W.zone or "Stormwind City" end
 	_G.IsResting = function() return W.resting == true end
+	W.chatFilters = {}
+	_G.ChatFrame_AddMessageEventFilter = function(ev, fn)
+		W.chatFilters[ev] = W.chatFilters[ev] or {}
+		table.insert(W.chatFilters[ev], fn)
+	end
 	_G.GetFramesRegisteredForEvent = function(ev) return table.unpack(W.events[ev] or {}) end
 	_G.UnitExists = function(u) return u == "player" or (W.units and W.units[u] ~= nil) or false end
 	_G.UnitClass = function() return "Mage", "MAGE" end
@@ -336,7 +341,7 @@ local function InstallStubs()
 	}
 	_G.IsShiftKeyDown = function() return W.shift == true end
 	_G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
-	_G.StaticPopup_Show = function(which) W.popup = which end
+	_G.StaticPopup_Show = function(which, a1, a2, data) W.popup, W.popupArgs = which, { a1, a2, data } end
 	_G.IsInGuild = function() return #W.guild > 0 end
 	_G.GetNumGuildMembers = function() return #W.guild end
 	_G.GetGuildRosterInfo = function(i)
@@ -1326,6 +1331,12 @@ do
 	C_TradeSkillUI.CloseTradeSkill()
 	Advance(3)
 	W.openPanel = {}
+	check(LI.CheckOnline("Anna Smith-TestRealm") and LI.Reader.SilentReads(), "with silent reads a game window doesn't block checks")
+	Advance(4)
+	check(not LI.IsChecking("Anna Smith-TestRealm"), "so the check runs right away")
+	Advance(30)
+	local framesFor = GetFramesRegisteredForEvent
+	GetFramesRegisteredForEvent = nil
 	check(LI.CheckOnline("Anna Smith-TestRealm"), "a check is accepted while a game window is open")
 	Advance(10)
 	check(LI.IsChecking("Anna Smith-TestRealm"), "it waits for the window instead of giving up after a few seconds")
@@ -1338,6 +1349,7 @@ do
 	W.autoWorks = true
 	Advance(4)
 	check(not LI.IsChecking("Anna Smith-TestRealm") and LI.Status("Anna Smith-TestRealm") == "online", "once the window closes the check runs and its answer counts")
+	GetFramesRegisteredForEvent = framesFor
 	W.autoWorks = false
 	Advance(30)
 	W.openPanel = {}
@@ -1599,7 +1611,7 @@ do
 	local sixth, why = Work.Post({ recipe = 3914 })
 	check(not sixth and why:find("5 open requests", 1, true), "at most five open requests", why)
 	for i = 3, 6 do Work.Cancel(tostring(i)) end
-	Advance(10)
+	Advance(12)
 	check(#Work.Mine() == 1 and Last("X1|").msg == "X1|6", "cancelling sends a cancel", Last("X1|") and Last("X1|").msg)
 
 	local function Req(id, recipe, item, qty, mats, price, ttl, note)
@@ -1906,6 +1918,16 @@ check(#asks == 1 and asks[1].target == "Brew Master" and asks[1].msg == "Q1|" ..
 Addon(newHello, "Brew Master-TestRealm")
 Advance(2)
 check(#Sent("Q1") == 1, "it doesn't ask twice")
+for i = 1, 5 do
+	LI.Sync.Send("W1|filler" .. i, "WHISPER", "Some One")
+end
+W.combat = true
+LI.Sync.Send("W1|first", "WHISPER", "Some One")
+LI.Sync.Ping("Ping Target")
+local kinds = LI.Sync.QueuedKinds()
+check(kinds[1] == "ping" and kinds[#kinds] == "work", "requests and hellos jump ahead of bulk messages", table.concat(kinds, ","))
+W.combat = false
+Advance(10)
 for i = #chunks, 1, -1 do
 	Addon(chunks[i], "Brew Master-TestRealm")
 end
@@ -1933,6 +1955,14 @@ for i = #chunks, 1, -1 do
 	Addon(chunks[i], "Brew Master-TestRealm")
 end
 check(LI.test.sync.lists == 1, "a list you already have is not applied again", LI.test.sync.lists)
+brew.profs.tailoring.recipes = nil
+Addon(newHello, "Brew Master-TestRealm")
+Advance(2)
+check(#Sent("Q1") == 2, "a hello asks again when recipes it names are missing, even at the same version", #Sent("Q1"))
+for i = #chunks, 1, -1 do
+	Addon(chunks[i], "Brew Master-TestRealm")
+end
+check(brew.profs.tailoring.recipes and brew.profs.tailoring.recipes[18560], "and the list comes back")
 local tiny = "tailoring~1~1~~" .. string.rep("1.", 13) .. "1"
 check(#tiny == 42 and Sync.Decode(tiny) ~= nil, "test list is valid", #tiny)
 for i = 1, 42 do
@@ -1961,7 +1991,7 @@ check(LI.crafters["Flood Er-TestRealm"].profs.tailoring.rank == 71, "the cut-off
 
 LI.UI.Open(LI.UI.TAB.test)
 local sv = LinkedInnFrame.testPage.syncValues
-check(sv[1].__text == "joined, waiting for an echo" and sv[3].__text == "3" and sv[4].__text == "1", "the test tab shows sharing", sv[1].__text .. " / " .. sv[3].__text)
+check(sv[1].__text == "joined, waiting for an echo" and sv[3].__text == "3" and sv[4].__text == "2", "the test tab shows sharing", sv[1].__text .. " / " .. sv[3].__text)
 check(#W.errors == errorsBefore, "sharing runs without errors", W.errors[errorsBefore + 1])
 
 do
@@ -2297,11 +2327,26 @@ do
 		if r.entry and r.entry.key == "Low Skill-TestRealm" and r.badge:IsShown() then badge = "wrong" end
 	end
 	check(badge == true, "crafters who use Linked Inn get a small badge, others don't", tostring(badge))
+	check(main.liToggle and LI.settings.liOnly ~= true, "there is a Linked Inn users toggle, off by default")
+	main.liToggle.__scripts.OnClick(main.liToggle)
+	check(LI.settings.liOnly == true and main.count.__text:find("^1 shown"), "it shows only crafters who use Linked Inn", main.count.__text)
+	check(#LI.Search("", { liOnly = true, minSkill = 225 }) == 0 and #LI.Search("", { liOnly = true }) == 1, "and works together with the other filters")
+	main.liToggle.__scripts.OnClick(main.liToggle)
+	check(LI.settings.liOnly == false and main.count.__text:find("^3 shown"), "clicking again shows everyone", main.count.__text)
+	LI.settings.liOnly = true
+	local saved = Logout()
+	Boot(saved)
+	check(LI.settings.liOnly == false, "it resets at login so nobody gets stuck with a short list")
+	Advance(5)
+	LI.UI.Open(LI.UI.TAB.find)
+	main = LinkedInnFrame
 
 	main.gear.__scripts.OnClick(main.gear)
 	local panel = LinkedInnSettings
 	check(panel and panel:IsShown() and panel.city:GetChecked() == true and panel.read:GetChecked() == true and panel.minimap:GetChecked() == true, "the gear opens settings showing the current choices")
 	check(panel.count.__text:find("3 crafters remembered", 1, true), "settings show how many crafters are remembered", panel.count.__text)
+	check(panel.scroll and panel.page:GetParent() == panel.scroll and panel.last == panel.minimap, "the settings page scrolls, so more options fit later")
+	check(panel.hide and panel.hide:GetChecked() == false, "the hide links option starts off")
 	panel.city:SetChecked(false)
 	panel.city.__scripts.OnClick(panel.city)
 	check(LI.settings.cityScan == false, "city scans are on by default and can be switched off")
@@ -2346,6 +2391,86 @@ do
 	W.playerGUID = "Player-1-ME"
 	Boot()
 	Advance(5)
+	local function Hidden(event, msg, sender)
+		for _, fn in ipairs(W.chatFilters[event] or {}) do
+			if fn(nil, event, msg, sender) then
+				return true
+			end
+		end
+		return false
+	end
+	local link = "WTS " .. TradeLink("Player-1-HID", 3908, 197, "Tailoring") .. " pst"
+	check(W.chatFilters.CHAT_MSG_CHANNEL and W.chatFilters.CHAT_MSG_SAY and W.chatFilters.CHAT_MSG_YELL, "a chat filter is set up for public chat")
+	check(LI.settings.hideLinks == false and not Hidden("CHAT_MSG_CHANNEL", link, "Spam Mer-TestRealm"), "profession links show in chat by default")
+	LI.settings.hideLinks = true
+	check(Hidden("CHAT_MSG_CHANNEL", link, "Spam Mer-TestRealm") and Hidden("CHAT_MSG_SAY", link, "Spam Mer-TestRealm") and Hidden("CHAT_MSG_YELL", link, "Spam Mer-TestRealm"), "with the setting on, lines with a profession link are hidden in trade, say and yell")
+	check(not Hidden("CHAT_MSG_CHANNEL", "WTS [Linen Cloth] cheap", "Spam Mer-TestRealm") and not Hidden("CHAT_MSG_CHANNEL", "|Hitem:2589|h[Linen Cloth]|h", "Spam Mer-TestRealm"), "other lines and item links still show")
+	check(not W.chatFilters.CHAT_MSG_WHISPER and not W.chatFilters.CHAT_MSG_GUILD and not W.chatFilters.CHAT_MSG_PARTY, "whispers, guild and group chat are never hidden")
+	check(not Hidden("CHAT_MSG_CHANNEL", link, LI.playerKey), "your own links still show")
+	check(not Hidden("CHAT_MSG_CHANNEL", { __secret = true }, { __secret = true }), "secret chat lines are left alone")
+	local before, queued = LI.test.links, LI.Reader.QueueSize()
+	Say("CHAT_MSG_CHANNEL", link, "Spam Mer-TestRealm", "Player-1-HID", "Trade - City")
+	local c = LI.crafters["Spam Mer-TestRealm"]
+	check(LI.test.links == before + 1 and c and c.profs.tailoring, "a hidden link is still captured", LI.test.links - before)
+	check(LI.Reader.QueueSize() > queued or LI.Reader.Busy and LI.Reader.Busy(), "and still read", LI.Reader.QueueSize())
+	LI.settings.hideLinks = false
+	check(not Hidden("CHAT_MSG_CHANNEL", link, "Spam Mer-TestRealm"), "turning it off shows them again right away")
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	local PANTS = { { id = 3914, name = "Brown Linen Pants", item = 4343 } }
+	local POTION = { { id = 2330, name = "Minor Healing Potion", item = 118 } }
+	LI.SetRecipes("Low One-TestRealm", { name = "Tailoring", rank = 40, max = 75 }, PANTS, "auto")
+	LI.SetRecipes("Two Profs-TestRealm", { name = "Tailoring", rank = 40, max = 75 }, PANTS, "auto")
+	LI.SetRecipes("Two Profs-TestRealm", { name = "Alchemy", rank = 200, max = 225 }, POTION, "auto")
+	LI.SetRecipes("Fav Low-TestRealm", { name = "Tailoring", rank = 30, max = 75 }, PANTS, "auto")
+	LI.SetRecipes("Top One-TestRealm", { name = "Tailoring", rank = 298, max = 300 }, PANTS, "auto")
+	LI.NoteProfession("Not Read-TestRealm", { name = "Alchemy", link = "trade:Player-1-NR:2259:171" })
+	LI.favorites["Fav Low-TestRealm"] = true
+	check(LI.settings.keepSkill == 0 and LI.crafters["Low One-TestRealm"], "everyone is kept by default")
+	check(LI.CountBelow(150) == 2, "counting below a skill skips favorites, high crafters and unread ones", LI.CountBelow(150))
+
+	LI.UI.Open(LI.UI.TAB.find)
+	LinkedInnFrame.gear.__scripts.OnClick(LinkedInnFrame.gear)
+	local panel = LinkedInnSettings
+	check(panel.keep and panel.keepLabel.__text == "Don't keep skill below", "settings have a skill threshold")
+	W.popup = nil
+	StaticPopupDialogs.LINKEDINN_FORGET_BELOW.OnCancel()
+	check(LI.settings.keepSkill == 0 and LI.crafters["Low One-TestRealm"], "saying no keeps everything")
+	StaticPopupDialogs.LINKEDINN_FORGET_BELOW.OnAccept(nil, 150)
+	check(LI.settings.keepSkill == 150, "saying yes saves the threshold")
+	check(not LI.crafters["Low One-TestRealm"], "a crafter with only a low profession is forgotten")
+	local two = LI.crafters["Two Profs-TestRealm"]
+	check(two and two.profs.alchemy and not two.profs.tailoring, "someone with a high and a low profession keeps the high one")
+	check(LI.crafters["Fav Low-TestRealm"] and LI.crafters["Top One-TestRealm"] and LI.crafters["Not Read-TestRealm"], "favorites, high crafters and unread ones stay")
+
+	LI.SetRecipes("New Low-TestRealm", { name = "Tailoring", rank = 20, max = 75 }, PANTS, "auto")
+	check(not LI.crafters["New Low-TestRealm"], "a new low read is skipped")
+	LI.SetRecipes("New High-TestRealm", { name = "Tailoring", rank = 160, max = 225 }, PANTS, "auto")
+	check(LI.crafters["New High-TestRealm"], "a new read at the threshold or above is kept")
+	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 5, max = 75 }, PANTS, "own")
+	check(LI.crafters[LI.playerKey] and LI.crafters[LI.playerKey].profs.tailoring, "your own low profession is never dropped")
+
+	local queued = LI.Reader.QueueSize()
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-NL", 3908, 197, "Tailoring"), "New Low-TestRealm", "Player-1-NL", "Trade - City")
+	check(LI.Reader.QueueSize() == queued and not LI.crafters["New Low-TestRealm"], "a skipped crafter linking again isn't read again for a while", LI.Reader.QueueSize() - queued)
+	LI.settings.keepSkill = 0
+	check(not LI.IsLow("New Low-TestRealm", "tailoring"), "lowering the threshold wants them again right away")
+	LI.settings.keepSkill = 150
+	LI.low["New Low-TestRealm|tailoring"].t = time() - 8 * 86400
+	check(not LI.IsLow("New Low-TestRealm", "tailoring"), "after a week they get another chance, in case they leveled")
+	LI.settings.keepSkill = 0
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
 	W.autoWorks, W.noFrame = true, true
 	W.linkData = W.linkData or {}
 	local empty = "trade:Player-1-PD:2259:171"
@@ -2365,6 +2490,239 @@ do
 	end
 	check(W.trade == nil and logged, "a reply that comes after the timeout is closed too", tostring(logged))
 	W.autoWorks, W.replyDelay = false, nil
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	check(LI.db.triedRound == 4, "checks spoiled by the window bug are cleared once")
+	LI.tried["Guild Mate-TestRealm"] = time() - 2 * 86400
+	LI.tried["Passer By-TestRealm"] = time() - 2 * 86400
+	check(LI.Discover("Guild Mate-TestRealm", "Player-1-GMATE", LI.PRIO.guild), "guild and group members are checked again after half a day")
+	check(not LI.Discover("Passer By-TestRealm", "Player-1-PASSB", LI.PRIO.chat), "people you just walk past still wait a week")
+	LI.tried["Fresh Mate-TestRealm"] = time() - 3600
+	check(not LI.Discover("Fresh Mate-TestRealm", "Player-1-FMATE", LI.PRIO.group), "but not right after a check")
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	for i = 1, 320 do
+		LI.waiting["Crafter " .. i .. "-TestRealm"] = { profs = { alchemy = true }, at = time() - 1000 + i }
+	end
+	LI.waiting["Old Timer-TestRealm"] = { profs = { alchemy = true }, at = time() - 20 * 86400 }
+	check(LI.WaitingCount() == 320, "people not seen again within two weeks leave the waiting list", LI.WaitingCount())
+	LI.OnCrafted("New Person creates Minor Healing Potion.")
+	check(LI.WaitingCount() <= 320 and not LI.waiting["Crafter 1-TestRealm"] and LI.waiting["New Person-TestRealm"], "a full waiting list drops the oldest for someone new", LI.WaitingCount())
+	local saved = Logout()
+	Boot(saved)
+	Advance(1)
+	check(LI.WaitingCount() == 300, "the waiting list is cut to 300 at login", LI.WaitingCount())
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.guild = { { name = "Guild Low-TestRealm", online = false } }
+	Boot()
+	Advance(5)
+	Fire("GUILD_ROSTER_UPDATE")
+	local old = time() - 20 * 86400
+	local function Make(name, rank, recipes)
+		local key = name .. "-TestRealm"
+		local c = LI.Crafter(key, true)
+		c.seen = old
+		local set = { [3914] = true }
+		for _, id in ipairs(recipes or {}) do
+			set[id] = true
+		end
+		c.profs.tailoring = { name = "Tailoring", rank = rank, max = 300, count = 1, recipes = set }
+		return c
+	end
+	for r = 11, 60 do
+		Make("Tailor " .. r, r)
+	end
+	Make("Tailor 1", 1).profs.alchemy = { name = "Alchemy", rank = 200, recipes = { [2330] = true } }
+	Make("Rare Pattern", 2, { 18560 })
+	Make("Fav Low", 3)
+	LI.favorites["Fav Low-TestRealm"] = true
+	Make("Guild Low", 4)
+	Make("Seen Today", 5).seen = time()
+	for r = 6, 9 do
+		Make("Shared " .. r, r, { 3915 })
+	end
+	Make("Tailor 10", 10)
+	check(LI.settings.housekeeping == "off" and LI.Housekeep() == 0, "housekeeping is off by default and does nothing")
+	check(LI.Housekeep("light", true) == 0 and LI.Housekeep("balanced", true) == 0, "light and balanced leave a profession with fewer than 100 or 75 crafters alone")
+	local removed, crafters = LI.Housekeep("strict", true)
+	check(removed == 5 and crafters == 5 and LI.crafters["Tailor 10-TestRealm"], "a preview counts without removing anything", removed)
+	StaticPopupDialogs.LINKEDINN_HOUSEKEEPING.OnAccept(nil, "strict")
+	check(LI.settings.housekeeping == "strict", "accepting saves the mode")
+	check(not LI.crafters["Tailor 10-TestRealm"] and not LI.crafters["Shared 6-TestRealm"] and not LI.crafters["Seen Today-TestRealm"], "below the best 50, crafters who add nothing are put away right away on strict")
+	check(LI.crafters["Tailor 1-TestRealm"] and LI.crafters["Tailor 1-TestRealm"].profs.alchemy and not LI.crafters["Tailor 1-TestRealm"].profs.tailoring, "only the weak profession goes; a good alchemist stays")
+	check(LI.crafters["Rare Pattern-TestRealm"], "someone with a recipe few others know is kept")
+	check(LI.crafters["Fav Low-TestRealm"] and LI.crafters["Guild Low-TestRealm"], "favorites and guildmates are kept")
+	local holders = 0
+	for r = 6, 9 do
+		if LI.crafters["Shared " .. r .. "-TestRealm"] then holders = holders + 1 end
+	end
+	check(holders == 2, "a recipe never drops below a few people who know it", holders)
+	check(LI.crafters["Tailor 11-TestRealm"] and LI.crafters["Tailor 60-TestRealm"], "the best 50 are always kept")
+	check(LI.db.housekept and LI.db.housekept.removed == 5, "the last run is remembered for the settings panel")
+	check(LI.Housekeep() == 0, "running again finds nothing more")
+	for r = 61, 90 do
+		Make("Tailor " .. r, r)
+	end
+	Make("Fresh Low", 1).seen = time() - 3600
+	LI.Housekeep("balanced")
+	check(LI.crafters["Fresh Low-TestRealm"], "balanced gives someone seen recently a short grace")
+	Make("Badge Low", 1).li = true
+	LI.Housekeep("strict")
+	check(not LI.crafters["Fresh Low-TestRealm"], "strict doesn't wait")
+	check(LI.crafters["Badge Low-TestRealm"], "Linked Inn users are always kept")
+	LI.UI.Open(LI.UI.TAB.find)
+	LinkedInnFrame.gear.__scripts.OnClick(LinkedInnFrame.gear)
+	local panel = LinkedInnSettings
+	check(#panel.segments == 4 and panel.segments[1].text.__text == "Off" and panel.segments[4].text.__text == "Strict", "housekeeping is four buttons: Off, Light, Balanced, Strict")
+	check(panel.houseDesc.__text:find("^Strict: the best 50"), "the line under them describes the current mode", panel.houseDesc.__text)
+	panel.segments[2].__scripts.OnEnter(panel.segments[2])
+	check(panel.houseDesc.__text:find("^Light: the best 100"), "hovering a mode shows what it does before clicking", panel.houseDesc.__text)
+	panel.segments[2].__scripts.OnLeave(panel.segments[2])
+	check(panel.houseDesc.__text:find("^Strict"), "and moving away shows the current one again")
+	panel.segments[1].__scripts.OnClick(panel.segments[1])
+	check(LI.settings.housekeeping == "off", "clicking a lighter mode switches straight away")
+	for r = 91, 140 do
+		Make("Tailor " .. r, r)
+	end
+	W.popup = nil
+	panel.segments[4].__scripts.OnClick(panel.segments[4])
+	check(W.popup == "LINKEDINN_HOUSEKEEPING" and LI.settings.housekeeping == "off", "clicking a stricter mode asks first when it would put anyone away")
+	LI.settings.housekeeping = "off"
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.guild = { { name = "Guild Pal-TestRealm", online = true, guid = "Player-1-GPAL" }, { name = "Far Mate-TestRealm", online = true, guid = "Player-2-FARM" } }
+	Boot()
+	Advance(5)
+	Fire("GUILD_ROSTER_UPDATE")
+	local PANTS = { { id = 3914, name = "Brown Linen Pants", item = 4343 } }
+	LI.SetRecipes("Guild Pal-TestRealm", { name = "Tailoring", rank = 200, max = 225 }, PANTS, "auto")
+	LI.SetRecipes("Out Sider-TestRealm", { name = "Tailoring", rank = 120, max = 150 }, PANTS, "auto")
+	LI.crafters["Out Sider-TestRealm"].seen = time() - 100 * 86400
+	LI.favorites["Out Sider-TestRealm"] = true
+	LI.SetRecipes("Old Stranger-TestRealm", { name = "Tailoring", rank = 90, max = 150 }, PANTS, "auto")
+	LI.crafters["Old Stranger-TestRealm"].seen = time() - 100 * 86400
+	check(LI.settings.guildOnly == false and LI.Allowed("Out Sider-TestRealm"), "guild only is off by default")
+	local summary
+	for _, e in ipairs(LI.db.log) do
+		if e.m:find("^Guild: ") then summary = e.m end
+	end
+	check(summary and summary:find("2 online", 1, true) and summary:find("1 other realm", 1, true), "the log says what happens to online guildmates", summary)
+
+	LI.UI.Open(LI.UI.TAB.find)
+	local main = LinkedInnFrame
+	main.gear.__scripts.OnClick(main.gear)
+	local panel = LinkedInnSettings
+	panel.guild:SetChecked(true)
+	panel.guild.__scripts.OnClick(panel.guild)
+	check(LI.settings.guildOnly == true, "guild only can be switched on in settings")
+	check(#LI.Search("", { guildOnly = true }) == 1 and main.count.__text:find("Guild only", 1, true), "the list shows only guildmates and says so", main.count.__text)
+	check(main.count.__text:find("1 on the other realm", 1, true) and panel.farSide.__text:find("1 online guildmate is on the other realm", 1, true), "guildmates the game can't read are explained", panel.farSide.__text)
+	check(LI.crafters["Out Sider-TestRealm"] and LI.crafters["Old Stranger-TestRealm"], "nobody is deleted when it's switched on")
+
+	local queued = LI.Reader.QueueSize()
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-STR", 2259, 171, "Alchemy"), "Total Stranger-TestRealm", "Player-1-STR", "Trade - City")
+	check(not LI.crafters["Total Stranger-TestRealm"] and LI.Reader.QueueSize() == queued, "links from outside the guild are not added or read")
+	LI.Reader.Want("Total Stranger-TestRealm", "Alchemy", "trade:Player-1-STR:2259:171")
+	check(LI.Reader.QueueSize() == queued, "reads of outsiders are refused")
+	check(not LI.Discover("Walk Past-TestRealm", "Player-1-WALK", LI.PRIO.group), "outsiders are not scanned")
+	LI.OnCrafted("Craft Person creates Brown Linen Pants.")
+	check(not LI.waiting["Craft Person-TestRealm"] and not LI.crafters["Craft Person-TestRealm"], "the crafting log ignores outsiders")
+	Say("CHAT_MSG_GUILD", TradeLink("Player-1-GPAL", 3908, 197, "Tailoring"), "Guild Pal-TestRealm", "Player-1-GPAL")
+	check(LI.Reader.QueueSize() >= queued, "guildmates still work")
+
+	Addon("H1|abcd|MAGE|alchemy~1e~2s~5", "Net Stranger-TestRealm")
+	check(not LI.crafters["Net Stranger-TestRealm"], "Linked Inn users outside the guild are ignored")
+	W.sent = {}
+	LI.Sync.Send("W1|test", "CHANNEL")
+	LI.Sync.Send("W1|psst", "WHISPER", "Net Stranger")
+	Advance(5)
+	local routes = {}
+	for _, m in ipairs(W.sent) do routes[m.chatType] = true end
+	check(routes.GUILD and not routes.CHANNEL and not routes.WHISPER, "messages only go to the guild", tostring(routes.CHANNEL))
+	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 100, max = 150 }, PANTS, "own")
+	LI.Work.OnRequest("Net Stranger-TestRealm", { "R1", "9", LI.Sync.B36(4343), LI.Sync.B36(3914), "1", "n", "0", "5a", "" })
+	local function SeesOutsider()
+		for _, req in ipairs(LI.Work.Received()) do
+			if req.owner == "Net Stranger-TestRealm" then return true end
+		end
+		return false
+	end
+	check(not SeesOutsider(), "work requests from outside the guild are hidden")
+	LI.settings.guildOnly = false
+	check(SeesOutsider(), "and come back when guild only is off")
+	LI.settings.guildOnly = true
+
+	LI.PruneNow()
+	LI.settings.housekeeping = "strict"
+	LI.Housekeep()
+	LI.settings.housekeeping = "off"
+	check(LI.crafters["Old Stranger-TestRealm"], "no pruning or housekeeping while guild only is on")
+	local saved = Logout()
+	Boot(saved)
+	Advance(5)
+	check(LI.settings.guildOnly == true and LI.crafters["Old Stranger-TestRealm"], "it stays on after a reload and still keeps everyone")
+
+	LI.settings.guildOnly = false
+	check(LI.Allowed("Total Stranger-TestRealm") and #LI.Search("", {}) >= 3, "switching it off brings everyone back")
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-STR", 2259, 171, "Alchemy"), "Total Stranger-TestRealm", "Player-1-STR", "Trade - City")
+	check(LI.crafters["Total Stranger-TestRealm"], "and everything works as normal again")
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.defaultLinks = true
+	Boot()
+	Advance(5)
+	W.autoWorks = true
+	W.linkData = W.linkData or {}
+	local guid = "Player-1-TAIL"
+	local function Link(prof)
+		return LI.BuildLink(guid, prof)
+	end
+	W.linkData[Link("alchemy")] = { linkedName = "Late Tailor", prof = ALCHEMY, recipes = {} }
+	W.linkData[Link("blacksmithing")] = { linkedName = "Late Tailor", prof = { professionName = "Blacksmithing", professionID = 164, skillLevel = 1, maxSkillLevel = 75 }, recipes = {} }
+	W.linkData[Link("tailoring")] = { linkedName = "Late Tailor", prof = TAILORING, recipes = TAILOR_RECIPES }
+	LI.Reader.Scan({ { key = "Late Tailor-TestRealm", guid = guid, profs = { "alchemy", "blacksmithing", "tailoring" } } }, true)
+	Advance(20)
+	local c = LI.crafters["Late Tailor-TestRealm"]
+	check(c and c.profs.tailoring and c.profs.tailoring.recipes, "empty answers for professions they don't have don't end the scan early")
+	local line
+	for _, e in ipairs(LI.db.log) do
+		if e.m:find("Checked Late Tailor", 1, true) then line = e.m end
+	end
+	check(line and line:find("1 profession", 1, true), "the log counts only real professions", line)
+	W.autoWorks, W.defaultLinks = false, nil
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Fire("PLAYER_ENTERING_WORLD")
+	Advance(3)
+	W.trade = { linked = true, linkedName = "Cander Ironshire", prof = TAILORING, recipes = {} }
+	Fire("TRADE_SKILL_SHOW")
+	if ProfessionsFrame then ProfessionsFrame:Show() end
+	Advance(2)
+	check(W.trade == nil, "a reply to a read from before a reload is closed, not shown")
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

@@ -153,11 +153,14 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 		return
 	end
 	local senderKey = type(sender) == "string" and LI.FullName(sender) or nil
-	if senderKey and senderGUID and LI.Discover then
-		LI.Discover(senderKey, senderGUID, LI.PRIO.chat)
-	end
 	if senderKey and LI.crafters[senderKey] then
 		LI.MarkSeen(senderKey)
+	end
+	if not LI.Allowed(senderKey) then
+		return
+	end
+	if senderKey and senderGUID and LI.Discover then
+		LI.Discover(senderKey, senderGUID, LI.PRIO.chat)
 	end
 	if senderKey and senderKey ~= LI.playerKey and senderGUID then
 		LI.TryBuilt(msg, senderKey, senderGUID, event, channelBase)
@@ -180,8 +183,12 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 			else
 				key = senderKey
 			end
-			if key then
-				local name = ProfessionName(text)
+			local name = ProfessionName(text)
+			if key and not LI.Allowed(key) then
+				LI.NoteProfLink(LI.ProfKey(name), parsed.numbers)
+			elseif key and LI.IsLow(key, LI.ProfKey(name)) then
+				LI.NoteProfLink(LI.ProfKey(name), parsed.numbers)
+			elseif key then
 				local spellID = parsed.numbers[1]
 				LI.NoteProfLink(LI.ProfKey(name), parsed.numbers)
 				local info = {
@@ -207,6 +214,36 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 	end
 	LI.Fire("TestChanged")
 end
+
+local HIDE_IN = {
+	CHAT_MSG_CHANNEL = true,
+	CHAT_MSG_SAY = true,
+	CHAT_MSG_YELL = true,
+}
+
+function LI.HideLink(_, event, msg, sender)
+	if not LI.ready or not LI.settings.hideLinks or not HIDE_IN[event] then
+		return false
+	end
+	msg = LI.Safe(msg)
+	if type(msg) ~= "string" or not msg:find("|Htrade:", 1, true) then
+		return false
+	end
+	sender = LI.Safe(sender)
+	if type(sender) == "string" and LI.FullName(sender) == LI.playerKey then
+		return false
+	end
+	return true
+end
+
+LI.Listen("Ready", function()
+	local addFilter = (ChatFrameUtil and ChatFrameUtil.AddMessageEventFilter) or ChatFrame_AddMessageEventFilter
+	if addFilter then
+		for event in pairs(HIDE_IN) do
+			LI.Try(addFilter, event, LI.HideLink)
+		end
+	end
+end)
 
 for event in pairs(EVENTS) do
 	LI.On(event, function(msg, sender, _, _, _, _, _, _, channelBase, _, _, senderGUID)

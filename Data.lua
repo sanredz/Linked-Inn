@@ -78,6 +78,10 @@ local DEFAULTS = {
 	cityScan = true,
 	cityEvery = 5,
 	forgetDays = 60,
+	hideLinks = false,
+	keepSkill = 0,
+	housekeeping = "off",
+	guildOnly = false,
 	collapsed = {},
 }
 
@@ -136,7 +140,171 @@ function LI.Log(msg)
 	LI.Fire("TestChanged")
 end
 
+local LOW_FOR = 7 * 86400
+
+function LI.TooLow(key, rank, min)
+	min = min or tonumber(LI.settings and LI.settings.keepSkill) or 0
+	return min > 0 and type(rank) == "number" and rank < min and key ~= LI.playerKey and not (LI.favorites and LI.favorites[key])
+end
+
+function LI.IsLow(key, profKey)
+	local mark = LI.low and key and profKey and LI.low[key .. "|" .. profKey]
+	return type(mark) == "table" and time() - (mark.t or 0) < LOW_FOR and LI.TooLow(key, mark.r)
+end
+
+local function DropLow(key, c, min)
+	local dropped = 0
+	for profKey, p in pairs(c.profs) do
+		if type(p) == "table" and LI.TooLow(key, p.rank, min) then
+			c.profs[profKey] = nil
+			if LI.low then
+				LI.low[key .. "|" .. profKey] = { t = time(), r = p.rank }
+			end
+			dropped = dropped + 1
+		end
+	end
+	if dropped > 0 and next(c.profs) == nil then
+		LI.crafters[key] = nil
+	end
+	return dropped
+end
+
+function LI.TrimLow(key)
+	local c = LI.crafters and LI.crafters[key]
+	if type(c) ~= "table" or type(c.profs) ~= "table" then
+		return 0
+	end
+	return DropLow(key, c)
+end
+
+function LI.CountBelow(min)
+	local count = 0
+	for key, c in pairs(LI.crafters or {}) do
+		if type(c) == "table" and type(c.profs) == "table" then
+			for _, p in pairs(c.profs) do
+				if type(p) == "table" and LI.TooLow(key, p.rank, min) then
+					count = count + 1
+					break
+				end
+			end
+		end
+	end
+	return count
+end
+
+function LI.ForgetBelow(min)
+	local touched = 0
+	for key, c in pairs(LI.crafters or {}) do
+		if type(c) == "table" and type(c.profs) == "table" and DropLow(key, c, min) > 0 then
+			touched = touched + 1
+		end
+	end
+	if touched > 0 then
+		LI.Log(string.format("Forgot professions below skill %d from %d crafters", min, touched))
+		LI.Fire("CraftersChanged")
+	end
+	return touched
+end
+
+LI.HOUSEKEEPING = {
+	{ key = "off", name = "Off" },
+	{ key = "light", name = "Light", keep = 100, days = 7, rare = 5 },
+	{ key = "balanced", name = "Balanced", keep = 75, days = 2, rare = 3 },
+	{ key = "strict", name = "Strict", keep = 50, days = 0, rare = 2 },
+}
+
+function LI.HousekeepingMode(key)
+	for i, mode in ipairs(LI.HOUSEKEEPING) do
+		if mode.key == key then
+			return mode, i
+		end
+	end
+	return LI.HOUSEKEEPING[1], 1
+end
+
+local function Protected(key)
+	local c = LI.crafters and LI.crafters[key]
+	return key == LI.playerKey or (c and c.li) or (LI.favorites and LI.favorites[key]) or (LI.InCircle and LI.InCircle(key))
+end
+
+function LI.Housekeep(modeKey, dry)
+	local mode = LI.HousekeepingMode(modeKey or (LI.settings and LI.settings.housekeeping))
+	if not mode.keep or not LI.crafters or (not dry and LI.settings.guildOnly) then
+		return 0, 0
+	end
+	local now = time()
+	local pools = {}
+	for key, c in pairs(LI.crafters) do
+		if type(c) == "table" and type(c.profs) == "table" then
+			for profKey, p in pairs(c.profs) do
+				if type(p) == "table" and type(p.recipes) == "table" then
+					pools[profKey] = pools[profKey] or {}
+					table.insert(pools[profKey], { key = key, c = c, p = p })
+				end
+			end
+		end
+	end
+	local removed, touched = 0, {}
+	for profKey, pool in pairs(pools) do
+		if #pool > mode.keep then
+			local holders = {}
+			for _, e in ipairs(pool) do
+				for id in pairs(e.p.recipes) do
+					holders[id] = (holders[id] or 0) + 1
+				end
+			end
+			table.sort(pool, function(a, b)
+				local ra, rb = a.p.rank or 0, b.p.rank or 0
+				if ra ~= rb then
+					return ra > rb
+				end
+				return (a.c.seen or 0) > (b.c.seen or 0)
+			end)
+			for i = #pool, mode.keep + 1, -1 do
+				local e = pool[i]
+				local old = mode.days == 0 or now - (e.c.seen or 0) > mode.days * 86400
+				local rare = false
+				for id in pairs(e.p.recipes) do
+					if holders[id] - 1 < mode.rare then
+						rare = true
+						break
+					end
+				end
+				if old and not rare and not Protected(e.key) then
+					for id in pairs(e.p.recipes) do
+						holders[id] = holders[id] - 1
+					end
+					removed = removed + 1
+					touched[e.key] = true
+					if not dry then
+						e.c.profs[profKey] = nil
+					end
+				end
+			end
+		end
+	end
+	local crafters = 0
+	for key in pairs(touched) do
+		crafters = crafters + 1
+		local c = LI.crafters[key]
+		if not dry and c and next(c.profs) == nil then
+			LI.crafters[key] = nil
+		end
+	end
+	if not dry then
+		LI.db.housekept = { at = now, removed = removed, mode = mode.key }
+		if removed > 0 then
+			LI.Log(string.format("Housekeeping (%s): put away %d %s from %d %s", mode.name, removed, removed == 1 and "profession" or "professions", crafters, crafters == 1 and "crafter" or "crafters"))
+			LI.Fire("CraftersChanged")
+		end
+	end
+	return removed, crafters
+end
+
 local function Prune(crafters, favorites)
+	if LI.settings and LI.settings.guildOnly then
+		return 0
+	end
 	local now = time()
 	local days = tonumber(LI.settings and LI.settings.forgetDays) or 60
 	local forget = days > 0 and days * 86400 or nil
@@ -230,13 +398,21 @@ LI.On("PLAYER_LOGIN", function()
 	realm.favorites = type(realm.favorites) == "table" and realm.favorites or {}
 	realm.waiting = type(realm.waiting) == "table" and realm.waiting or {}
 	realm.tried = type(realm.tried) == "table" and realm.tried or {}
+	realm.low = type(realm.low) == "table" and realm.low or {}
 	LI.db.settings.profs = {}
+	LI.db.settings.liOnly = false
 	LI.crafters = realm.crafters
 	LI.favorites = realm.favorites
 	LI.waiting = realm.waiting
 	LI.tried = realm.tried
-	if LI.db.triedRound ~= 2 then
-		LI.db.triedRound = 2
+	LI.low = realm.low
+	for id, mark in pairs(LI.low) do
+		if type(mark) ~= "table" or type(mark.t) ~= "number" or time() - mark.t > LOW_FOR then
+			LI.low[id] = nil
+		end
+	end
+	if LI.db.triedRound ~= 4 then
+		LI.db.triedRound = 4
 		for key in pairs(LI.tried) do
 			LI.tried[key] = nil
 		end
@@ -341,6 +517,10 @@ function LI.SetRecipes(key, info, recipes, via)
 	end
 	p.recipes = set
 	p.count = count
+	if LI.TooLow(key, p.rank) then
+		LI.Log(string.format("Skipped %s's %s (skill %d, below %d)", LI.ShortName(key), info.name, p.rank, LI.settings.keepSkill))
+		DropLow(key, c)
+	end
 	LI.Fire("CraftersChanged")
 	return count
 end
@@ -602,7 +782,7 @@ function LI.Search(query, opts)
 	end
 	for key, c in pairs(LI.crafters) do
 		local status, seenAt, sure = LI.Status(key)
-		if key ~= LI.playerKey then
+		if key ~= LI.playerKey and (not opts.liOnly or c.li) and (not opts.guildOnly or LI.IsGuildmate(key)) then
 			local nameMatch = q ~= "" and kind == "all" and Find(LI.ShortName(key), q)
 			local groups, top = {}, nil
 			for profKey, p in pairs(c.profs) do

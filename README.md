@@ -62,7 +62,7 @@ professions are read when you log in, so you never have to open them first.
 - **Compact** rows are the default, so lots of people fit on screen. Untick
   Compact at the bottom for bigger rows.
 - A small gold badge marks crafters who use Linked Inn themselves. Their lists
-  come straight from their own game.
+  come straight from their own game. The mug next to Secondary shows only them.
 
 <p align="center">
   <img src="media/crafters-search.png" alt="Searching for an item shows who can make it" width="62%">
@@ -107,9 +107,18 @@ you, or pick up requests you can make yourself.
 The gear at the top right opens the settings:
 
 - **City scans:** on or off, and how often (every 2 to 15 minutes).
-- **Reading:** read profession links from chat automatically.
-- **Your list:** forget crafters not seen for 14, 30, 60 or 90 days, or never.
-  Favorites are always kept. **Forget everyone** starts the list over.
+- **Reading:** read profession links from chat automatically, and hide lines
+  with profession links in trade, general, say and yell to cut the spam.
+  They're still read.
+- **Guild only:** read, list and talk to your guild only, Work included.
+  Everyone else stays saved and comes back when you turn it off.
+- **Your list:** forget crafters not seen for 14, 30, 60 or 90 days, or never,
+  and skip professions below a skill level. Favorites are always kept.
+  **Forget everyone** starts the list over.
+- **Housekeeping:** once your list is big, Light, Balanced or Strict clears
+  out crafters who add nothing, keeping the best 100, 75 or 50 per profession.
+  Rare recipes, favorites, guild, friends and Linked Inn users are never
+  touched.
 - **Minimap:** show or hide the minimap button.
 
 ## Usage

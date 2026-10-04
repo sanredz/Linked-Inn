@@ -3,7 +3,7 @@ local ADDON, LI = ...
 local Settings = {}
 LI.Settings = Settings
 
-local WIDTH = 340
+local WIDTH = 362
 local GOLD = { 1, 0.82, 0 }
 local SOFT = { 0.62, 0.6, 0.56 }
 local TITLE_FONT = "Fonts\\MORPHEUS.TTF"
@@ -11,6 +11,8 @@ local TITLE_FONT = "Fonts\\MORPHEUS.TTF"
 local frame
 local INTERVALS = { 2, 5, 10, 15 }
 local FORGET = { 14, 30, 60, 90, 0 }
+local KEEP = { 0, 75, 150, 225 }
+local KEEP_NAMES = { [0] = "Any skill", [75] = "Journeyman 75", [150] = "Expert 150", [225] = "Artisan 225" }
 
 local function Sound(kit)
 	if PlaySound and SOUNDKIT and SOUNDKIT[kit] then
@@ -38,7 +40,10 @@ local HEAD_X = 18
 local BOX_X = 14
 local BODY_X = 42
 local RIGHT_PAD = 18
-local PAGE_WIDTH = WIDTH - 10
+local BAR_SPACE = 22
+local SCROLL_STEP = 40
+local PAGE_PAD = 16
+local PAGE_WIDTH = WIDTH - 10 - BAR_SPACE
 
 local function Below(region, anchor, x, gap)
 	region:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", x - (anchor.colX or 0), -(gap or 0))
@@ -147,6 +152,72 @@ local function Days(n)
 	return string.format("%d days", n)
 end
 
+local HOUSE_KEYS = { "off", "light", "balanced", "strict" }
+local ART = "Interface\\AddOns\\" .. ADDON .. "\\art\\"
+local SEG_GAP = 4
+local SEG_WIDTH = math.floor((WIDTH - 10 - 22 - 18 - 18 - SEG_GAP * 3) / 4)
+local PaintHouse
+
+local function ModeName(key)
+	return (LI.HousekeepingMode(key)).name
+end
+
+local function HouseText(mode)
+	if not mode.keep then
+		return "Off: nothing is put away. Pick a mode to clear out crafters who add nothing."
+	end
+	local wait = mode.days > 0 and string.format(" and unseen for %d %s", mode.days, mode.days == 1 and "day" or "days") or ", right away"
+	return string.format("%s: the best %d per profession stay. Others go once %d others make everything they make%s.", mode.name, mode.keep, mode.rare, wait)
+end
+
+local function ChooseHouse(key)
+	local _, now = LI.HousekeepingMode(LI.settings.housekeeping)
+	local mode, want = LI.HousekeepingMode(key)
+	if want > now and StaticPopup_Show then
+		local removed, crafters = LI.Housekeep(key, true)
+		if removed > 0 then
+			StaticPopup_Show("LINKEDINN_HOUSEKEEPING", mode.name, string.format("%d %s from %d %s", removed, removed == 1 and "profession" or "professions", crafters, crafters == 1 and "crafter" or "crafters"), key)
+			return
+		end
+	end
+	LI.settings.housekeeping = key
+	LI.Housekeep()
+	Changed()
+end
+
+PaintHouse = function()
+	if not frame or not frame.segments then
+		return
+	end
+	local current = LI.HousekeepingMode(LI.settings.housekeeping).key
+	for _, b in ipairs(frame.segments) do
+		if b.key == current then
+			b.fill:SetVertexColor(1, 0.78, 0.25, b.hover and 0.5 or 0.38)
+			b.edge:SetVertexColor(1, 0.82, 0.3, 0.95)
+			b.text:SetTextColor(1, 0.92, 0.6)
+		else
+			b.fill:SetVertexColor(0.1, 0.1, 0.1, b.hover and 0.85 or 0.65)
+			b.edge:SetVertexColor(0.55, 0.5, 0.42, b.hover and 0.9 or 0.6)
+			b.text:SetTextColor(b.hover and 1 or 0.72, b.hover and 1 or 0.7, b.hover and 1 or 0.66)
+		end
+	end
+	frame.houseDesc:SetText(HouseText(LI.HousekeepingMode(frame.houseHover or current)))
+end
+
+local function LastRun()
+	local last = LI.db and LI.db.housekept
+	if LI.HousekeepingMode(LI.settings.housekeeping).key == "off" or type(last) ~= "table" or not last.at then
+		return ""
+	end
+	local mins = math.floor((time() - last.at) / 60)
+	local ago = mins < 1 and "just now" or mins < 60 and string.format("%d min ago", mins) or string.format("%d h ago", math.floor(mins / 60))
+	return string.format("|cff9e9a8fLast run %s: %d put away.|r", ago, last.removed or 0)
+end
+
+local function Skill(n)
+	return KEEP_NAMES[n] or tostring(n)
+end
+
 local function Remembered()
 	local listed, waiting = 0, LI.WaitingCount and LI.WaitingCount() or 0
 	for key, c in pairs(LI.crafters or {}) do
@@ -164,6 +235,72 @@ if StaticPopupDialogs then
 		button2 = NO or "No",
 		OnAccept = function()
 			LI.ForgetEveryone()
+			Changed()
+		end,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3,
+	}
+end
+
+local function Fit()
+	if not frame or not frame.last then
+		return
+	end
+	local top, bottom = frame.page:GetTop(), frame.last:GetBottom()
+	if not top or not bottom then
+		return
+	end
+	frame.page:SetHeight(math.max(1, top - bottom + PAGE_PAD))
+	local bar = frame.scroll.ScrollBar
+	if bar and bar.SetShown then
+		local scrolls = frame.page:GetHeight() > (frame.scroll:GetHeight() or 0) + 1
+		bar:SetShown(scrolls)
+		if not scrolls then
+			frame.scroll:SetVerticalScroll(0)
+		end
+	end
+end
+
+if StaticPopupDialogs then
+	StaticPopupDialogs["LINKEDINN_FORGET_BELOW"] = {
+		text = "Only keep professions at %s and up?\n\n%s crafters on your list have lower ones. Those are forgotten now and skipped from here on. Favorites are kept.",
+		button1 = YES or "Yes",
+		button2 = NO or "No",
+		OnAccept = function(_, min)
+			min = tonumber(min)
+			if not min then
+				return
+			end
+			LI.settings.keepSkill = min
+			LI.ForgetBelow(min)
+			Changed()
+		end,
+		OnCancel = function()
+			Changed()
+		end,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3,
+	}
+end
+
+if StaticPopupDialogs then
+	StaticPopupDialogs["LINKEDINN_HOUSEKEEPING"] = {
+		text = "Switch housekeeping to %s?\n\nThis puts away %s now. Favorites, guild, friends and rare recipes are kept.",
+		button1 = YES or "Yes",
+		button2 = NO or "No",
+		OnAccept = function(_, key)
+			if type(key) ~= "string" then
+				return
+			end
+			LI.settings.housekeeping = key
+			LI.Housekeep()
+			Changed()
+		end,
+		OnCancel = function()
 			Changed()
 		end,
 		timeout = 0,
@@ -193,13 +330,28 @@ local function Create()
 		frame.Inset:SetPoint("TOPLEFT", 4, -26)
 		frame.Inset:SetPoint("BOTTOMRIGHT", -6, 26)
 	end
-	local page = CreateFrame("Frame", nil, frame.Inset or frame)
-	page:SetAllPoints()
+	local holder = frame.Inset or frame
+	local ok, scroll = pcall(CreateFrame, "ScrollFrame", nil, holder, "ScrollFrameTemplate")
+	if not ok or not scroll then
+		scroll = CreateFrame("ScrollFrame", nil, holder)
+		scroll:EnableMouseWheel(true)
+		scroll:SetScript("OnMouseWheel", function(self, delta)
+			local range = self:GetVerticalScrollRange() or 0
+			local at = (self:GetVerticalScroll() or 0) - delta * SCROLL_STEP
+			self:SetVerticalScroll(math.max(0, math.min(range, at)))
+		end)
+	end
+	scroll:SetPoint("TOPLEFT", 0, -2)
+	scroll:SetPoint("BOTTOMRIGHT", -BAR_SPACE, 2)
+	frame.scroll = scroll
+	local page = CreateFrame("Frame", nil, scroll)
+	page:SetSize(PAGE_WIDTH, 1)
+	scroll:SetScrollChild(page)
 	frame.page = page
 
 	local city = Section(page, nil, "City scans")
 	frame.city, frame.cityLast = Option(page, city, "Scan players in cities",
-		"Every few minutes in a city or inn, friendly nameplates flash on for half a second so everyone around you gets checked in the background.\n|cffe8b04aNot needed if you already play with friendly nameplates on (Shift+V).|r",
+		"Every few minutes in a city or inn, friendly nameplates flash on briefly so people around you get checked.\n|cffe8b04aNot needed if friendly nameplates are on (Shift+V).|r",
 		function() return LI.settings.cityScan == true end,
 		function(on) LI.settings.cityScan = on end)
 	frame.everyLabel = Below(Text(page, "GameFontHighlightSmall"), frame.cityLast, BODY_X, 14)
@@ -213,11 +365,23 @@ local function Create()
 
 	local reading = Section(page, frame.everyLabel, "Reading", 28)
 	frame.read, frame.readLast = Option(page, reading, "Read profession links from chat",
-		"Saves someone's full recipe list when they link a profession, without you clicking it.",
+		"Saves someone's recipes when they link a profession.",
 		function() return LI.settings.autoRead ~= false end,
 		function(on) LI.settings.autoRead = on end)
+	frame.hide, frame.hideLast = Option(page, frame.readLast, "Hide profession links in chat",
+		"Trade, general, say and yell. Still read and saved.",
+		function() return LI.settings.hideLinks == true end,
+		function(on) LI.settings.hideLinks = on end)
 
-	local list = Section(page, frame.readLast, "Your list")
+	frame.guild, frame.guildLast = Option(page, frame.hideLast, "Guild only",
+		"Only reads, lists and talks to your guild, Work included. Everyone else stays saved and comes back when you turn it off.",
+		function() return LI.settings.guildOnly == true end,
+		function(on) LI.settings.guildOnly = on end)
+	frame.farSide = Below(Body(page, BODY_X, ""), frame.guildLast, BODY_X, 4)
+	frame.farSide:SetTextColor(0.91, 0.69, 0.29)
+	frame.guildLast = frame.farSide
+
+	local list = Section(page, frame.guildLast, "Your list")
 	frame.forgetLabel = Below(Text(page, "GameFontHighlight"), list, HEAD_X, 16)
 	frame.forgetLabel:SetText("Forget crafters not seen for")
 	frame.forget = Dropdown(page, 104, FORGET, Days, function()
@@ -228,7 +392,59 @@ local function Create()
 	end)
 	frame.forget:SetPoint("LEFT", frame.forgetLabel, "RIGHT", 8, 0)
 	frame.forgetDesc = Below(Body(page, HEAD_X, "Seeing someone anywhere, in chat, crafting or walking by, keeps them on the list. Favorites are never forgotten."), frame.forgetLabel, HEAD_X, 10)
-	frame.count = Below(Text(page, "GameFontHighlight"), frame.forgetDesc, HEAD_X, 16)
+	frame.keepLabel = Below(Text(page, "GameFontHighlight"), frame.forgetDesc, HEAD_X, 18)
+	frame.keepLabel:SetText("Don't keep skill below")
+	frame.keep = Dropdown(page, 146, KEEP, Skill, function()
+		return tonumber(LI.settings.keepSkill) or 0
+	end, function(v)
+		local now = tonumber(LI.settings.keepSkill) or 0
+		local affected = v > now and LI.CountBelow(v) or 0
+		if affected > 0 and StaticPopup_Show then
+			StaticPopup_Show("LINKEDINN_FORGET_BELOW", Skill(v), affected, v)
+			return
+		end
+		LI.settings.keepSkill = v
+	end)
+	frame.keep:SetPoint("LEFT", frame.keepLabel, "RIGHT", 8, 0)
+	frame.keepDesc = Below(Body(page, HEAD_X, "Lower professions are skipped when read and taken off your list. Favorites are kept."), frame.keepLabel, HEAD_X, 10)
+	frame.houseLabel = Below(Text(page, "GameFontHighlight"), frame.keepDesc, HEAD_X, 18)
+	frame.houseLabel:SetText("Housekeeping")
+	frame.segments = {}
+	for i, key in ipairs(HOUSE_KEYS) do
+		local b = CreateFrame("Button", nil, page)
+		b:SetSize(SEG_WIDTH, 22)
+		if i == 1 then
+			Below(b, frame.houseLabel, HEAD_X, 8)
+		else
+			b:SetPoint("LEFT", frame.segments[i - 1], "RIGHT", SEG_GAP, 0)
+		end
+		b.fill = LI.Slices(b, ART .. "pill", "BACKGROUND", 22)
+		b.edge = LI.Slices(b, ART .. "pill_edge", "BORDER", 22)
+		b.text = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		b.text:SetPoint("CENTER")
+		b.text:SetText(ModeName(key))
+		b.key = key
+		b:SetScript("OnClick", function()
+			Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
+			ChooseHouse(key)
+		end)
+		b:SetScript("OnEnter", function(self)
+			self.hover = true
+			frame.houseHover = key
+			PaintHouse()
+		end)
+		b:SetScript("OnLeave", function(self)
+			self.hover = false
+			frame.houseHover = nil
+			PaintHouse()
+		end)
+		frame.segments[i] = b
+	end
+	frame.houseDesc = Below(Body(page, HEAD_X, ""), frame.segments[1], HEAD_X, 8)
+	frame.houseDesc:SetTextColor(0.9, 0.88, 0.82)
+	frame.houseKeep = Below(Body(page, HEAD_X, "Never touches rare recipes, favorites, guild, friends or Linked Inn users."), frame.houseDesc, HEAD_X, 4)
+	frame.houseLast = Below(Body(page, HEAD_X, ""), frame.houseKeep, HEAD_X, 4)
+	frame.count = Below(Text(page, "GameFontHighlight"), frame.houseLast, HEAD_X, 16)
 	frame.wipe = CreateFrame("Button", nil, page, "UIPanelButtonTemplate")
 	frame.wipe:SetSize(130, 22)
 	frame.wipe:SetText("Forget everyone")
@@ -243,6 +459,7 @@ local function Create()
 	frame.minimap = Option(page, minimap, "Show the minimap button", nil,
 		function() return LI.settings.showMinimap ~= false end,
 		function(on) LI.settings.showMinimap = on end)
+	frame.last = frame.minimap
 
 	frame.version = Text(frame, "GameFontDisableSmall", "CENTER")
 	frame.version:SetPoint("BOTTOM", 0, 8)
@@ -250,6 +467,7 @@ local function Create()
 
 	frame:SetScript("OnShow", function()
 		Settings.Refresh()
+		LI.After(0, Fit)
 	end)
 	frame:Hide()
 end
@@ -258,11 +476,20 @@ function Settings.Refresh()
 	if not frame then
 		return
 	end
-	for _, box in ipairs({ frame.city, frame.read, frame.minimap }) do
+	for _, box in ipairs({ frame.city, frame.read, frame.hide, frame.guild, frame.minimap }) do
 		box:SetChecked(box.get() and true or false)
 	end
 	frame.every:Update()
 	frame.forget:Update()
+	frame.keep:Update()
+	PaintHouse()
+	frame.houseLast:SetText(LastRun())
+	local far = LI.guildFarSide or 0
+	if far > 0 then
+		frame.farSide:SetText(string.format("%d online %s on the other realm. The game can't read them there, but they show up if they use Linked Inn.", far, far == 1 and "guildmate is" or "guildmates are"))
+	else
+		frame.farSide:SetText("")
+	end
 	local on = LI.settings.cityScan == true
 	frame.everyLabel:SetTextColor(on and 1 or 0.5, on and 1 or 0.5, on and 1 or 0.5)
 	if frame.every.SetEnabled then
@@ -274,6 +501,7 @@ function Settings.Refresh()
 		text = text .. string.format("  |cff9e9a8f·  %d waiting|r", waiting)
 	end
 	frame.count:SetText(text)
+	Fit()
 end
 
 function Settings.Frame()

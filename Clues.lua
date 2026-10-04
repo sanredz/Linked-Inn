@@ -115,8 +115,12 @@ end
 LI.Crafts = Crafts
 
 local UNIT_TOKENS = { "target", "mouseover", "focus" }
-local WAIT_FOR = 90 * 86400
+local WAIT_FOR = 14 * 86400
+local WAIT_MAX = 300
+local HOUSEKEEP_FIRST = 60
+local HOUSEKEEP_EVERY = 3600
 local TRY_AGAIN = 7 * 86400
+local CLOSE_AGAIN = 12 * 3600
 local DISCOVER_EVERY = 2
 local CANDIDATES_MAX = 300
 
@@ -153,9 +157,29 @@ local function IsPlayerGuid(guid)
 	return type(guid) == "string" and guid:find("^Player%-") ~= nil
 end
 
+local function Trim()
+	local n, oldest, oldestAt = 0, nil, nil
+	for key, w in pairs(LI.waiting) do
+		n = n + 1
+		local at = type(w) == "table" and w.at or 0
+		if not oldestAt or at < oldestAt then
+			oldest, oldestAt = key, at
+		end
+	end
+	if n > WAIT_MAX and oldest then
+		LI.waiting[oldest] = nil
+		return true
+	end
+	return false
+end
+
 local function Wait(key, prof, where)
-	local w = LI.waiting[key] or { profs = {} }
-	LI.waiting[key] = w
+	local w = LI.waiting[key]
+	if not w then
+		w = { profs = {}, at = time() }
+		LI.waiting[key] = w
+		Trim()
+	end
 	w.profs[prof] = true
 	w.at = time()
 	w.where = where or w.where
@@ -187,7 +211,7 @@ function LI.OnCrafted(text, sender, guid)
 		sender = text:match("^(.-)%s+creates%s")
 	end
 	local key = sender and sender ~= "" and LI.FullName(sender)
-	if not key or key == LI.playerKey then
+	if not key or key == LI.playerKey or not LI.Allowed(key) then
 		return false
 	end
 	local recipe = CraftedRecipe(text)
@@ -200,7 +224,7 @@ function LI.OnCrafted(text, sender, guid)
 			end
 			if IsPlayerGuid(guid) then
 				LI.tried[key] = nil
-				LI.Discover(key, guid, LI.PRIO.guild)
+				LI.Discover(key, guid, LI.PRIO.seen)
 			else
 				Wait(key, "any", Zone())
 			end
@@ -248,7 +272,7 @@ LI.Listen("GuidFound", function(key, guid)
 	if w.profs.any then
 		w.profs.any = nil
 		LI.tried[key] = nil
-		LI.Discover(key, guid, LI.PRIO.guild, classFile)
+		LI.Discover(key, guid, LI.PRIO.seen, classFile)
 	end
 	for prof in pairs(w.profs) do
 		if LI.Clue(key, guid, prof, Zone() or w.where, classFile) then
@@ -285,28 +309,34 @@ local function Unknown(c)
 end
 
 function LI.Discover(key, guid, prio, classFile, where)
-	if not LI.ready or not key or key == LI.playerKey or not IsPlayerGuid(guid) then
-		return false
+	if not LI.ready or not key or key == LI.playerKey then
+		return false, "self"
+	end
+	if not IsPlayerGuid(guid) then
+		return false, "no id"
 	end
 	LI.NoteGuid(key, guid)
+	if not LI.Allowed(key) then
+		return false, "outside"
+	end
 	if LI.OtherServer(guid) then
-		return false
+		return false, "other realm"
 	end
 	if KnownPrimaries(LI.crafters[key]) >= 2 then
-		return false
-	end
-	local tried = LI.tried[key]
-	if tried and time() - tried < TRY_AGAIN then
-		return false
+		return false, "known"
 	end
 	prio = prio or LI.PRIO.chat
+	local tried = LI.tried[key]
+	if tried and time() - tried < (prio >= LI.PRIO.guild and CLOSE_AGAIN or TRY_AGAIN) then
+		return false, "checked"
+	end
 	for _, cand in ipairs(candidates) do
 		if cand.key == key then
 			cand.prio = math.max(cand.prio, prio)
 			cand.at = GetTime()
 			cand.class = cand.class or classFile
 			cand.where = where or cand.where
-			return false
+			return false, "in line"
 		end
 	end
 	candidates[#candidates + 1] = { key = key, guid = guid, prio = prio, class = classFile, where = where, at = GetTime() }
@@ -358,17 +388,28 @@ function LI.DiscoverStep()
 	end
 	while #candidates > 0 do
 		local cand = NextCandidate()
-		LI.tried[cand.key] = time()
-		cand.profs = Unknown(LI.crafters[cand.key])
-		if #cand.profs > 0 and reader.Scan({ cand }, true) then
-			Crafts().checked = Crafts().checked + 1
-			return true
+		if LI.Allowed(cand.key) then
+			LI.tried[cand.key] = time()
+			cand.profs = Unknown(LI.crafters[cand.key])
+			if #cand.profs > 0 and reader.Scan({ cand }, true) then
+				Crafts().checked = Crafts().checked + 1
+				return true
+			end
 		end
 	end
 	return false
 end
 
 LI.Listen("Ready", function()
+	LI.After(HOUSEKEEP_FIRST, function()
+		LI.Housekeep()
+	end)
+	LI.Every(HOUSEKEEP_EVERY, function()
+		LI.Housekeep()
+	end)
+	LI.WaitingCount()
+	while Trim() do
+	end
 	LI.Every(DISCOVER_EVERY, LI.DiscoverStep)
 end)
 
@@ -421,7 +462,7 @@ end
 
 function LI.CityScanDue()
 	local s = LI.settings
-	if not LI.ready or not s.cityScan or not LI.InCity() then
+	if not LI.ready or not s.cityScan or s.guildOnly or not LI.InCity() then
 		return false
 	end
 	if InCombatLockdown and InCombatLockdown() then

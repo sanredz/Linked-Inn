@@ -2499,5 +2499,23 @@ do
 	check(not LI.Discover("Fresh Mate-TestRealm", "Player-1-FMATE", LI.PRIO.group), "but not right after a check")
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	for i = 1, 320 do
+		LI.waiting["Crafter " .. i .. "-TestRealm"] = { profs = { alchemy = true }, at = time() - 1000 + i }
+	end
+	LI.waiting["Old Timer-TestRealm"] = { profs = { alchemy = true }, at = time() - 20 * 86400 }
+	check(LI.WaitingCount() == 320, "people not seen again within two weeks leave the waiting list", LI.WaitingCount())
+	LI.OnCrafted("New Person creates Minor Healing Potion.")
+	check(LI.WaitingCount() <= 320 and not LI.waiting["Crafter 1-TestRealm"] and LI.waiting["New Person-TestRealm"], "a full waiting list drops the oldest for someone new", LI.WaitingCount())
+	local saved = Logout()
+	Boot(saved)
+	Advance(1)
+	check(LI.WaitingCount() == 300, "the waiting list is cut to 300 at login", LI.WaitingCount())
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

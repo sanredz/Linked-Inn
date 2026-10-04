@@ -115,7 +115,8 @@ end
 LI.Crafts = Crafts
 
 local UNIT_TOKENS = { "target", "mouseover", "focus" }
-local WAIT_FOR = 90 * 86400
+local WAIT_FOR = 14 * 86400
+local WAIT_MAX = 300
 local TRY_AGAIN = 7 * 86400
 local CLOSE_AGAIN = 12 * 3600
 local DISCOVER_EVERY = 2
@@ -154,9 +155,29 @@ local function IsPlayerGuid(guid)
 	return type(guid) == "string" and guid:find("^Player%-") ~= nil
 end
 
+local function Trim()
+	local n, oldest, oldestAt = 0, nil, nil
+	for key, w in pairs(LI.waiting) do
+		n = n + 1
+		local at = type(w) == "table" and w.at or 0
+		if not oldestAt or at < oldestAt then
+			oldest, oldestAt = key, at
+		end
+	end
+	if n > WAIT_MAX and oldest then
+		LI.waiting[oldest] = nil
+		return true
+	end
+	return false
+end
+
 local function Wait(key, prof, where)
-	local w = LI.waiting[key] or { profs = {} }
-	LI.waiting[key] = w
+	local w = LI.waiting[key]
+	if not w then
+		w = { profs = {}, at = time() }
+		LI.waiting[key] = w
+		Trim()
+	end
 	w.profs[prof] = true
 	w.at = time()
 	w.where = where or w.where
@@ -201,7 +222,7 @@ function LI.OnCrafted(text, sender, guid)
 			end
 			if IsPlayerGuid(guid) then
 				LI.tried[key] = nil
-				LI.Discover(key, guid, LI.PRIO.guild)
+				LI.Discover(key, guid, LI.PRIO.seen)
 			else
 				Wait(key, "any", Zone())
 			end
@@ -249,7 +270,7 @@ LI.Listen("GuidFound", function(key, guid)
 	if w.profs.any then
 		w.profs.any = nil
 		LI.tried[key] = nil
-		LI.Discover(key, guid, LI.PRIO.guild, classFile)
+		LI.Discover(key, guid, LI.PRIO.seen, classFile)
 	end
 	for prof in pairs(w.profs) do
 		if LI.Clue(key, guid, prof, Zone() or w.where, classFile) then
@@ -370,6 +391,9 @@ function LI.DiscoverStep()
 end
 
 LI.Listen("Ready", function()
+	LI.WaitingCount()
+	while Trim() do
+	end
 	LI.Every(DISCOVER_EVERY, LI.DiscoverStep)
 end)
 

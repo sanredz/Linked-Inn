@@ -341,7 +341,7 @@ local function InstallStubs()
 	}
 	_G.IsShiftKeyDown = function() return W.shift == true end
 	_G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
-	_G.StaticPopup_Show = function(which) W.popup = which end
+	_G.StaticPopup_Show = function(which, a1, a2, data) W.popup, W.popupArgs = which, { a1, a2, data } end
 	_G.IsInGuild = function() return #W.guild > 0 end
 	_G.GetNumGuildMembers = function() return #W.guild end
 	_G.GetGuildRosterInfo = function(i)
@@ -2377,6 +2377,55 @@ do
 	check(LI.Reader.QueueSize() > queued or LI.Reader.Busy and LI.Reader.Busy(), "and still read", LI.Reader.QueueSize())
 	LI.settings.hideLinks = false
 	check(not Hidden("CHAT_MSG_CHANNEL", link, "Spam Mer-TestRealm"), "turning it off shows them again right away")
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	local PANTS = { { id = 3914, name = "Brown Linen Pants", item = 4343 } }
+	local POTION = { { id = 2330, name = "Minor Healing Potion", item = 118 } }
+	LI.SetRecipes("Low One-TestRealm", { name = "Tailoring", rank = 40, max = 75 }, PANTS, "auto")
+	LI.SetRecipes("Two Profs-TestRealm", { name = "Tailoring", rank = 40, max = 75 }, PANTS, "auto")
+	LI.SetRecipes("Two Profs-TestRealm", { name = "Alchemy", rank = 200, max = 225 }, POTION, "auto")
+	LI.SetRecipes("Fav Low-TestRealm", { name = "Tailoring", rank = 30, max = 75 }, PANTS, "auto")
+	LI.SetRecipes("Top One-TestRealm", { name = "Tailoring", rank = 298, max = 300 }, PANTS, "auto")
+	LI.NoteProfession("Not Read-TestRealm", { name = "Alchemy", link = "trade:Player-1-NR:2259:171" })
+	LI.favorites["Fav Low-TestRealm"] = true
+	check(LI.settings.keepSkill == 0 and LI.crafters["Low One-TestRealm"], "everyone is kept by default")
+	check(LI.CountBelow(150) == 2, "counting below a skill skips favorites, high crafters and unread ones", LI.CountBelow(150))
+
+	LI.UI.Open(LI.UI.TAB.find)
+	LinkedInnFrame.gear.__scripts.OnClick(LinkedInnFrame.gear)
+	local panel = LinkedInnSettings
+	check(panel.keep and panel.keepLabel.__text == "Don't keep skill below", "settings have a skill threshold")
+	W.popup = nil
+	StaticPopupDialogs.LINKEDINN_FORGET_BELOW.OnCancel()
+	check(LI.settings.keepSkill == 0 and LI.crafters["Low One-TestRealm"], "saying no keeps everything")
+	StaticPopupDialogs.LINKEDINN_FORGET_BELOW.OnAccept(nil, 150)
+	check(LI.settings.keepSkill == 150, "saying yes saves the threshold")
+	check(not LI.crafters["Low One-TestRealm"], "a crafter with only a low profession is forgotten")
+	local two = LI.crafters["Two Profs-TestRealm"]
+	check(two and two.profs.alchemy and not two.profs.tailoring, "someone with a high and a low profession keeps the high one")
+	check(LI.crafters["Fav Low-TestRealm"] and LI.crafters["Top One-TestRealm"] and LI.crafters["Not Read-TestRealm"], "favorites, high crafters and unread ones stay")
+
+	LI.SetRecipes("New Low-TestRealm", { name = "Tailoring", rank = 20, max = 75 }, PANTS, "auto")
+	check(not LI.crafters["New Low-TestRealm"], "a new low read is skipped")
+	LI.SetRecipes("New High-TestRealm", { name = "Tailoring", rank = 160, max = 225 }, PANTS, "auto")
+	check(LI.crafters["New High-TestRealm"], "a new read at the threshold or above is kept")
+	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 5, max = 75 }, PANTS, "own")
+	check(LI.crafters[LI.playerKey] and LI.crafters[LI.playerKey].profs.tailoring, "your own low profession is never dropped")
+
+	local queued = LI.Reader.QueueSize()
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-NL", 3908, 197, "Tailoring"), "New Low-TestRealm", "Player-1-NL", "Trade - City")
+	check(LI.Reader.QueueSize() == queued and not LI.crafters["New Low-TestRealm"], "a skipped crafter linking again isn't read again for a while", LI.Reader.QueueSize() - queued)
+	LI.settings.keepSkill = 0
+	check(not LI.IsLow("New Low-TestRealm", "tailoring"), "lowering the threshold wants them again right away")
+	LI.settings.keepSkill = 150
+	LI.low["New Low-TestRealm|tailoring"].t = time() - 8 * 86400
+	check(not LI.IsLow("New Low-TestRealm", "tailoring"), "after a week they get another chance, in case they leveled")
+	LI.settings.keepSkill = 0
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

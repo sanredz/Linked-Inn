@@ -180,8 +180,10 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 			else
 				key = senderKey
 			end
-			if key then
-				local name = ProfessionName(text)
+			local name = ProfessionName(text)
+			if key and LI.IsLow(key, LI.ProfKey(name)) then
+				LI.NoteProfLink(LI.ProfKey(name), parsed.numbers)
+			elseif key then
 				local spellID = parsed.numbers[1]
 				LI.NoteProfLink(LI.ProfKey(name), parsed.numbers)
 				local info = {

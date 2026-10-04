@@ -62,6 +62,9 @@ function Reader.Want(key, profName, link, extra)
 	if p and p.recipes and p.read and time() - p.read < STALE then
 		return
 	end
+	if LI.IsLow(key, profKey) then
+		return
+	end
 	local id = key .. "|" .. (profKey or "")
 	if extra and extra.built and builtFailed[id] and time() - builtFailed[id] < BUILT_RETRY then
 		return

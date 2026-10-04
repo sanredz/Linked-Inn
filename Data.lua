@@ -79,6 +79,7 @@ local DEFAULTS = {
 	cityEvery = 5,
 	forgetDays = 60,
 	hideLinks = false,
+	keepSkill = 0,
 	collapsed = {},
 }
 
@@ -135,6 +136,72 @@ function LI.Log(msg)
 		table.remove(log, 1)
 	end
 	LI.Fire("TestChanged")
+end
+
+local LOW_FOR = 7 * 86400
+
+function LI.TooLow(key, rank, min)
+	min = min or tonumber(LI.settings and LI.settings.keepSkill) or 0
+	return min > 0 and type(rank) == "number" and rank < min and key ~= LI.playerKey and not (LI.favorites and LI.favorites[key])
+end
+
+function LI.IsLow(key, profKey)
+	local mark = LI.low and key and profKey and LI.low[key .. "|" .. profKey]
+	return type(mark) == "table" and time() - (mark.t or 0) < LOW_FOR and LI.TooLow(key, mark.r)
+end
+
+local function DropLow(key, c, min)
+	local dropped = 0
+	for profKey, p in pairs(c.profs) do
+		if type(p) == "table" and LI.TooLow(key, p.rank, min) then
+			c.profs[profKey] = nil
+			if LI.low then
+				LI.low[key .. "|" .. profKey] = { t = time(), r = p.rank }
+			end
+			dropped = dropped + 1
+		end
+	end
+	if dropped > 0 and next(c.profs) == nil then
+		LI.crafters[key] = nil
+	end
+	return dropped
+end
+
+function LI.TrimLow(key)
+	local c = LI.crafters and LI.crafters[key]
+	if type(c) ~= "table" or type(c.profs) ~= "table" then
+		return 0
+	end
+	return DropLow(key, c)
+end
+
+function LI.CountBelow(min)
+	local count = 0
+	for key, c in pairs(LI.crafters or {}) do
+		if type(c) == "table" and type(c.profs) == "table" then
+			for _, p in pairs(c.profs) do
+				if type(p) == "table" and LI.TooLow(key, p.rank, min) then
+					count = count + 1
+					break
+				end
+			end
+		end
+	end
+	return count
+end
+
+function LI.ForgetBelow(min)
+	local touched = 0
+	for key, c in pairs(LI.crafters or {}) do
+		if type(c) == "table" and type(c.profs) == "table" and DropLow(key, c, min) > 0 then
+			touched = touched + 1
+		end
+	end
+	if touched > 0 then
+		LI.Log(string.format("Forgot professions below skill %d from %d crafters", min, touched))
+		LI.Fire("CraftersChanged")
+	end
+	return touched
 end
 
 local function Prune(crafters, favorites)
@@ -231,11 +298,18 @@ LI.On("PLAYER_LOGIN", function()
 	realm.favorites = type(realm.favorites) == "table" and realm.favorites or {}
 	realm.waiting = type(realm.waiting) == "table" and realm.waiting or {}
 	realm.tried = type(realm.tried) == "table" and realm.tried or {}
+	realm.low = type(realm.low) == "table" and realm.low or {}
 	LI.db.settings.profs = {}
 	LI.crafters = realm.crafters
 	LI.favorites = realm.favorites
 	LI.waiting = realm.waiting
 	LI.tried = realm.tried
+	LI.low = realm.low
+	for id, mark in pairs(LI.low) do
+		if type(mark) ~= "table" or type(mark.t) ~= "number" or time() - mark.t > LOW_FOR then
+			LI.low[id] = nil
+		end
+	end
 	if LI.db.triedRound ~= 2 then
 		LI.db.triedRound = 2
 		for key in pairs(LI.tried) do
@@ -342,6 +416,10 @@ function LI.SetRecipes(key, info, recipes, via)
 	end
 	p.recipes = set
 	p.count = count
+	if LI.TooLow(key, p.rank) then
+		LI.Log(string.format("Skipped %s's %s (skill %d, below %d)", LI.ShortName(key), info.name, p.rank, LI.settings.keepSkill))
+		DropLow(key, c)
+	end
 	LI.Fire("CraftersChanged")
 	return count
 end

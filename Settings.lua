@@ -11,6 +11,8 @@ local TITLE_FONT = "Fonts\\MORPHEUS.TTF"
 local frame
 local INTERVALS = { 2, 5, 10, 15 }
 local FORGET = { 14, 30, 60, 90, 0 }
+local KEEP = { 0, 75, 150, 225 }
+local KEEP_NAMES = { [0] = "Any skill", [75] = "Journeyman 75", [150] = "Expert 150", [225] = "Artisan 225" }
 
 local function Sound(kit)
 	if PlaySound and SOUNDKIT and SOUNDKIT[kit] then
@@ -150,6 +152,10 @@ local function Days(n)
 	return string.format("%d days", n)
 end
 
+local function Skill(n)
+	return KEEP_NAMES[n] or tostring(n)
+end
+
 local function Remembered()
 	local listed, waiting = 0, LI.WaitingCount and LI.WaitingCount() or 0
 	for key, c in pairs(LI.crafters or {}) do
@@ -193,6 +199,30 @@ local function Fit()
 			frame.scroll:SetVerticalScroll(0)
 		end
 	end
+end
+
+if StaticPopupDialogs then
+	StaticPopupDialogs["LINKEDINN_FORGET_BELOW"] = {
+		text = "Only keep professions at %s and up?\n\n%s crafters on your list have lower ones. Those are forgotten now and skipped from here on. Favorites are kept.",
+		button1 = YES or "Yes",
+		button2 = NO or "No",
+		OnAccept = function(_, min)
+			min = tonumber(min)
+			if not min then
+				return
+			end
+			LI.settings.keepSkill = min
+			LI.ForgetBelow(min)
+			Changed()
+		end,
+		OnCancel = function()
+			Changed()
+		end,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3,
+	}
 end
 
 local function Create()
@@ -269,7 +299,22 @@ local function Create()
 	end)
 	frame.forget:SetPoint("LEFT", frame.forgetLabel, "RIGHT", 8, 0)
 	frame.forgetDesc = Below(Body(page, HEAD_X, "Seeing someone anywhere, in chat, crafting or walking by, keeps them on the list. Favorites are never forgotten."), frame.forgetLabel, HEAD_X, 10)
-	frame.count = Below(Text(page, "GameFontHighlight"), frame.forgetDesc, HEAD_X, 16)
+	frame.keepLabel = Below(Text(page, "GameFontHighlight"), frame.forgetDesc, HEAD_X, 18)
+	frame.keepLabel:SetText("Don't keep skill below")
+	frame.keep = Dropdown(page, 146, KEEP, Skill, function()
+		return tonumber(LI.settings.keepSkill) or 0
+	end, function(v)
+		local now = tonumber(LI.settings.keepSkill) or 0
+		local affected = v > now and LI.CountBelow(v) or 0
+		if affected > 0 and StaticPopup_Show then
+			StaticPopup_Show("LINKEDINN_FORGET_BELOW", Skill(v), affected, v)
+			return
+		end
+		LI.settings.keepSkill = v
+	end)
+	frame.keep:SetPoint("LEFT", frame.keepLabel, "RIGHT", 8, 0)
+	frame.keepDesc = Below(Body(page, HEAD_X, "Lower professions are skipped when read and taken off your list. Favorites are kept."), frame.keepLabel, HEAD_X, 10)
+	frame.count = Below(Text(page, "GameFontHighlight"), frame.keepDesc, HEAD_X, 16)
 	frame.wipe = CreateFrame("Button", nil, page, "UIPanelButtonTemplate")
 	frame.wipe:SetSize(130, 22)
 	frame.wipe:SetText("Forget everyone")
@@ -306,6 +351,7 @@ function Settings.Refresh()
 	end
 	frame.every:Update()
 	frame.forget:Update()
+	frame.keep:Update()
 	local on = LI.settings.cityScan == true
 	frame.everyLabel:SetTextColor(on and 1 or 0.5, on and 1 or 0.5, on and 1 or 0.5)
 	if frame.every.SetEnabled then

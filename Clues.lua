@@ -10,6 +10,7 @@ local NAMEPLATE_CVAR = "nameplateShowFriendlyPlayers"
 local NAMEPLATE_WAIT = 0.4
 
 local spellCache = {}
+local sawCraft = {}
 local lastScan
 
 local function SpellProfession(spellID)
@@ -64,6 +65,11 @@ LI.On("UNIT_SPELLCAST_SUCCEEDED", function(unit, _, spellID)
 	local key = LI.UnitKey(unit)
 	local guid = UnitGUID and LI.Safe(LI.Try(UnitGUID, unit))
 	local classFile = select(2, LI.Try(UnitClass, unit))
+	local seen = key and key .. ":" .. prof
+	if seen and not sawCraft[seen] then
+		sawCraft[seen] = true
+		LI.Log(string.format("Saw %s doing %s (%s)", LI.ShortName(key), prof, unit))
+	end
 	LI.Clue(key, guid, prof, Zone(), LI.Safe(classFile))
 end)
 

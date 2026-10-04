@@ -711,7 +711,7 @@ check(main.count.__text:find("3 crafters remembered", 1, true), "the footer does
 check(rows[2].headName:IsShown() == false and rows[2].name:IsShown(), "crafter rows hide the header parts")
 check(rows[1].name:IsShown() == false, "header rows hide the crafter parts")
 local bobRow = rows[4]
-check(bobRow.line.__text == "Skill 260  ·  1 recipe", "a row describes that profession", bobRow.line.__text)
+check(bobRow.line.__text:find("^Skill 260  ·  1 recipe"), "a row describes that profession", bobRow.line.__text)
 check(rows[5].line.__text == "Skill 260  ·  2 recipes", "skill and recipe count are shown", rows[5].line.__text)
 bobRow.__scripts.OnClick(bobRow, "LeftButton")
 check(W.tells[1] == "Bob Stone", "clicking a row whispers the crafter by name without the realm", W.tells[1])
@@ -2639,6 +2639,12 @@ do
 	LI.SetRecipes("Best Friend-TestRealm", { name = "Alchemy", rank = 100, max = 150 }, { { id = 2330, name = "Minor Healing Potion", item = 118 } }, "auto")
 	Fire("FRIENDLIST_UPDATE")
 	check(LI.Allowed("Best Friend-TestRealm") and #LI.Search("", { guildOnly = true }) == 2, "friends count too, not just the guild")
+	LI.UI.Refresh()
+	local tags = {}
+	for _, r in ipairs(main.list.__rows) do
+		if r.entry then tags[r.entry.key] = r.line.__text end
+	end
+	check(tags["Guild Pal-TestRealm"] and tags["Guild Pal-TestRealm"]:find("Guild", 1, true) and tags["Best Friend-TestRealm"] and tags["Best Friend-TestRealm"]:find("Friend", 1, true) and not tags["Best Friend-TestRealm"]:find("Guild", 1, true), "rows show who's in your guild and who's a friend", tostring(tags["Best Friend-TestRealm"]))
 
 	local queued = LI.Reader.QueueSize()
 	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-STR", 2259, 171, "Alchemy"), "Total Stranger-TestRealm", "Player-1-STR", "Trade - City")

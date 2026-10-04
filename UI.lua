@@ -758,6 +758,12 @@ local function InitRow(row, data)
 		end
 	end
 	local text, textColor = RowLine(data)
+	if LI.IsGuildmate(entry.key) then
+		text = text .. "  ·  |cff40ff40Guild|r"
+	end
+	if LI.IsFriend(entry.key) then
+		text = text .. "  ·  |cff82c5ffFriend|r"
+	end
 	row.line:SetText(text)
 	row.line:SetTextColor(textColor[1], textColor[2], textColor[3])
 	UpdateBooks(row, data)

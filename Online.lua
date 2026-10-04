@@ -122,6 +122,11 @@ function LI.IsGuildmate(key)
 	return entry ~= nil and entry.guild ~= nil
 end
 
+function LI.IsFriend(key)
+	local entry = key and roster[key]
+	return entry ~= nil and entry.friend ~= nil
+end
+
 function LI.Allowed(key)
 	if not LI.settings or not LI.settings.guildOnly then
 		return true

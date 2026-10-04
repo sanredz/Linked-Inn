@@ -211,6 +211,8 @@ local function InstallStubs()
 		return out
 	end }
 	_G.GetRealZoneText = function() return W.zone or "Stormwind City" end
+	_G.IsResting = function() return W.resting == true end
+	_G.UnitExists = function(u) return u == "player" or (W.units and W.units[u] ~= nil) or false end
 	_G.UnitClass = function() return "Mage", "MAGE" end
 	_G.C_AddOns = { GetAddOnMetadata = function(addon, field) if addon == ADDON_NAME and field == "Version" then return TOC_VERSION end end }
 	_G.GetRealmName = function() return "Test Realm" end
@@ -321,6 +323,8 @@ local function InstallStubs()
 		InsertLink = function(link) table.insert(W.links, link) return true end,
 	}
 	_G.IsShiftKeyDown = function() return W.shift == true end
+	_G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
+	_G.StaticPopup_Show = function(which) W.popup = which end
 	_G.IsInGuild = function() return #W.guild > 0 end
 	_G.GetNumGuildMembers = function() return #W.guild end
 	_G.GetGuildRosterInfo = function(i)
@@ -943,8 +947,8 @@ check(Shape() == "#tailoring Anna Bob", "clicking a picked profession removes it
 main.clearChips.__scripts.OnClick(main.clearChips)
 Advance(1)
 check(Shape() == "#alchemy Cora #tailoring Anna Bob" and not main.clearChips:IsShown(), "clear shows everyone again", Shape())
-main.maxBox:SetChecked(true)
-main.maxBox.__scripts.OnClick(main.maxBox)
+LI.settings.maxOnly = not LI.settings.maxOnly
+LI.UI.Refresh()
 Advance(1)
 check(Shape() == "" and main.empty:IsShown(), "max skill hides crafters below the cap", Shape())
 LI.crafters["Anna Smith-TestRealm"].profs.tailoring.rank = 300
@@ -952,8 +956,8 @@ LI.Fire("CraftersChanged")
 Advance(1)
 check(Shape() == "#tailoring Anna", "a crafter at the cap shows up", Shape())
 LI.crafters["Anna Smith-TestRealm"].profs.tailoring.rank = 260
-main.maxBox:SetChecked(false)
-main.maxBox.__scripts.OnClick(main.maxBox)
+LI.settings.maxOnly = not LI.settings.maxOnly
+LI.UI.Refresh()
 Advance(1)
 check(Shape() == "#alchemy Cora #tailoring Anna Bob", "unticking shows everyone again", Shape())
 local extent = main.list.__view.__extent
@@ -975,16 +979,14 @@ LI.SetRecipes("Dan Cook-TestRealm", { name = "Cooking", rank = 225 }, { { id = 8
 Advance(1)
 check(Shape() == "#alchemy Cora #tailoring Anna Bob", "secondary professions are hidden by default", Shape())
 check(not Chip("cooking"), "and have no filter by default")
-main.secondaryBox:SetChecked(true)
-main.secondaryBox.__scripts.OnClick(main.secondaryBox)
+main.secondaryToggle.__scripts.OnClick(main.secondaryToggle)
 Advance(1)
 check(Shape() == "#alchemy Cora #tailoring Anna Bob #cooking Dan", "the secondary checkbox shows them", Shape())
 check(Chips() == "alchemy,blacksmithing,enchanting,engineering,leatherworking,tailoring,cooking,first aid,fishing", "and adds their filters", Chips())
 Chip("cooking").__scripts.OnClick(Chip("cooking"))
 Advance(1)
 check(Shape() == "#cooking Dan", "secondary filters work like the others", Shape())
-main.secondaryBox:SetChecked(false)
-main.secondaryBox.__scripts.OnClick(main.secondaryBox)
+main.secondaryToggle.__scripts.OnClick(main.secondaryToggle)
 Advance(1)
 check(Shape() == "#alchemy Cora #tailoring Anna Bob", "unticking secondary drops its filters too", Shape())
 LI.settings.profs = {}
@@ -2222,6 +2224,79 @@ do
 	check(LI.DiscoverQueue() == queued, "nor is anyone from the other realm lined up from nameplates")
 	W.units = nil
 	W.autoWorks = false
+	W.playerGUID = nil
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	local function Make(key, rank, li)
+		local c = LI.Crafter(key, true)
+		c.profs.tailoring = { name = "Tailoring", rank = rank, max = 300, count = 3, recipes = { [3914] = true } }
+		c.li = li
+	end
+	Make("Low Skill-TestRealm", 40)
+	Make("Mid Skill-TestRealm", 160, true)
+	Make("Top Skill-TestRealm", 298)
+	local function Count(opts)
+		return #LI.Search("", opts)
+	end
+	check(Count({ minSkill = 150 }) == 2 and Count({ minSkill = 225 }) == 1 and Count({}) == 3, "the skill filter hides crafters below a level and keeps a 298 under Artisan+")
+	LI.UI.Open(LI.UI.TAB.find)
+	local main = LinkedInnFrame
+	check(main.skillPill.text.__text == "Skill: Any" and main.gear and main.secondaryToggle, "the header has a skill pill, a secondary toggle and a gear", main.skillPill.text.__text)
+	LI.settings.minSkill = 150
+	LI.UI.Refresh()
+	check(main.skillPill.text.__text == "Skill: Expert+" and main.count.__text:find("^2 shown"), "the pill names the chosen level and the list follows", main.skillPill.text.__text)
+	LI.settings.minSkill = 0
+	LI.UI.Refresh()
+	local badge
+	for _, r in ipairs(main.list.__rows) do
+		if r.entry and r.entry.key == "Mid Skill-TestRealm" then badge = r.badge:IsShown() end
+		if r.entry and r.entry.key == "Low Skill-TestRealm" and r.badge:IsShown() then badge = "wrong" end
+	end
+	check(badge == true, "crafters who use Linked Inn get a small badge, others don't", tostring(badge))
+
+	main.gear.__scripts.OnClick(main.gear)
+	local panel = LinkedInnSettings
+	check(panel and panel:IsShown() and panel.city:GetChecked() == false and panel.read:GetChecked() == true and panel.minimap:GetChecked() == true, "the gear opens settings showing the current choices")
+	check(panel.count.__text:find("3 crafters remembered", 1, true), "settings show how many crafters are remembered", panel.count.__text)
+	panel.city:SetChecked(true)
+	panel.city.__scripts.OnClick(panel.city)
+	check(LI.settings.cityScan == true, "city scans can be switched on")
+	W.resting = true
+	W.cvars.nameplateShowFriendlyPlayers = "0"
+	W.units = { nameplate1 = { name = "City", surname = "Walker", guid = "Player-1-CW1" } }
+	W.plates = { "nameplate1" }
+	local queued = LI.DiscoverQueue()
+	Advance(30)
+	check(LI.DiscoverQueue() > queued or LI.tried["City Walker-TestRealm"], "in a city, a scan notes the players around you", LI.DiscoverQueue())
+	check(W.cvars.nameplateShowFriendlyPlayers == "0" and W.cvarLog[#W.cvarLog] == "nameplateShowFriendlyPlayers=0", "and puts nameplates back off right after")
+	local scans = #W.cvarLog
+	Advance(60)
+	check(#W.cvarLog == scans, "not again before the chosen interval")
+	W.resting = false
+	Advance(400)
+	check(#W.cvarLog == scans, "and not outside cities")
+	W.units, W.plates = nil, nil
+	LI.crafters["Low Skill-TestRealm"].seen = time() - 20 * 86400
+	LI.settings.forgetDays = 14
+	LI.PruneNow()
+	check(not LI.crafters["Low Skill-TestRealm"] and LI.crafters["Top Skill-TestRealm"], "a shorter keep time forgets crafters not seen since")
+	panel.wipe.__scripts.OnClick(panel.wipe)
+	check(W.popup == "LINKEDINN_FORGET_ALL", "forget everyone asks first")
+	StaticPopupDialogs.LINKEDINN_FORGET_ALL.OnAccept()
+	local left = 0
+	for key in pairs(LI.crafters) do
+		if key ~= LI.playerKey then left = left + 1 end
+	end
+	check(left == 0, "and then clears the list", left)
+	panel.minimap:SetChecked(false)
+	panel.minimap.__scripts.OnClick(panel.minimap)
+	check(LI.settings.showMinimap == false and not LinkedInnMinimapButton:IsShown(), "the minimap button can be hidden")
+	main:Hide()
 	W.playerGUID = nil
 end
 

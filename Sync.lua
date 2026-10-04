@@ -642,6 +642,7 @@ local function OnHello(key, parts, chatType)
 		end
 	end
 	c.where = c.where or "Linked Inn"
+	c.li = true
 	LI.Fire("CraftersChanged")
 	if c.sharedVer ~= ver then
 		Ask(key, ver)

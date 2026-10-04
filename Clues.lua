@@ -372,6 +372,88 @@ LI.Listen("Ready", function()
 	LI.Every(DISCOVER_EVERY, LI.DiscoverStep)
 end)
 
+local NAMEPLATE_CVAR = "nameplateShowFriendlyPlayers"
+local NAMEPLATE_WAIT = 0.5
+local lastCityScan
+
+local function CVarOn()
+	local getter = (C_CVar and C_CVar.GetCVarBool) or GetCVarBool
+	return getter and LI.Safe(LI.Try(getter, NAMEPLATE_CVAR)) == true
+end
+
+local function SetCVarValue(value)
+	local setter = (C_CVar and C_CVar.SetCVar) or SetCVar
+	if setter then
+		LI.Try(setter, NAMEPLATE_CVAR, value)
+	end
+end
+
+local function ReadPlates()
+	local seen = 0
+	local plates = C_NamePlate and C_NamePlate.GetNamePlates and LI.Try(C_NamePlate.GetNamePlates)
+	local tokens, done = {}, {}
+	for _, plate in ipairs(type(plates) == "table" and plates or {}) do
+		local token = plate.namePlateUnitToken or (plate.UnitFrame and plate.UnitFrame.unit)
+		if type(token) == "string" then
+			tokens[#tokens + 1] = token
+		end
+	end
+	for i = 1, 60 do
+		tokens[#tokens + 1] = "nameplate" .. i
+	end
+	for _, token in ipairs(tokens) do
+		if not done[token] and LI.Safe(LI.Try(UnitExists, token)) then
+			done[token] = true
+			seen = seen + 1
+			LI.Sighted(token)
+		end
+	end
+	return seen
+end
+
+function LI.InCity()
+	if not LI.Safe(LI.Try(IsResting)) then
+		return false
+	end
+	local inInstance = IsInInstance and LI.Safe(LI.Try(IsInInstance))
+	return not inInstance
+end
+
+function LI.CityScanDue()
+	local s = LI.settings
+	if not LI.ready or not s.cityScan or not LI.InCity() then
+		return false
+	end
+	if InCombatLockdown and InCombatLockdown() then
+		return false
+	end
+	if CVarOn() then
+		return false
+	end
+	local every = math.max(1, tonumber(s.cityEvery) or 5) * 60
+	return not lastCityScan or GetTime() - lastCityScan >= every
+end
+
+function LI.CityScan()
+	lastCityScan = GetTime()
+	SetCVarValue("1")
+	LI.After(NAMEPLATE_WAIT, function()
+		local seen = ReadPlates()
+		SetCVarValue("0")
+		LI.Log(string.format("City scan: noted %d players around you", seen))
+		LI.Fire("StatusChanged")
+	end)
+end
+
+LI.Listen("Ready", function()
+	lastCityScan = GetTime() - math.max(1, tonumber(LI.settings.cityEvery) or 5) * 60 + 20
+	LI.Every(10, function()
+		if LI.CityScanDue() then
+			LI.CityScan()
+		end
+	end)
+end)
+
 LI.Listen("ScanDone", function()
 	LI.After(0.1, LI.DiscoverStep)
 end)

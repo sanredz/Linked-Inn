@@ -41,20 +41,25 @@ Your own professions are read when you log in, so you never have to open
 them first.
 
 > **Tip:** turn on friendly player nameplates (Shift+V by default). Linked Inn
-> then checks everyone you walk past, and your list fills up much faster.
+> then checks everyone you walk past, and your list fills up much faster. If
+> you'd rather keep them off, switch on **City scans** in the settings (the
+> gear at the top right) and it takes a quick look around now and then.
 
 ## Crafters
 
 - **Search** for an item, a profession or a name. Searching an item shows only
   the people who can make it.
-- **Filter** by profession (pick several), item type, max skill only, and
-  optionally the secondary professions.
+- **Filter** by profession (pick several), item type and skill level (any,
+  Journeyman, Expert, Artisan or max), and optionally the secondary
+  professions.
 - **Favorites** stay at the top. Star anyone you use a lot.
 - **Last seen** shows when a crafter was last around. Click it to check if
   they're online right now.
 - **Recipe books:** click a profession icon to browse that player's recipes by
   category, with reagents. Click a recipe to ask them to make it.
 - **Compact** mode fits about twice as many people on screen.
+- A small gold badge marks crafters who use Linked Inn themselves. Their lists
+  come straight from their own game.
 
 <p>
   <img src="media/crafters-search.png" alt="Searching for Copper Axe" width="49%">

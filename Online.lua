@@ -210,6 +210,8 @@ end)
 LI.On("PLAYER_TARGET_CHANGED", function()
 	Sighted("target")
 end)
+LI.Sighted = Sighted
+
 LI.On("NAME_PLATE_UNIT_ADDED", function(unit)
 	Sighted(LI.Safe(unit))
 end)

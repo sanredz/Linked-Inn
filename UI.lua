@@ -59,6 +59,37 @@ local function Button(parent, label, width, onClick)
 	return button
 end
 
+local PILL_CAP = 0.1875
+
+function LI.Slices(frame, file, layer, height)
+	local cap = (height or 20) / 2
+	local left = frame:CreateTexture(nil, layer)
+	left:SetTexture(file)
+	left:SetTexCoord(0, PILL_CAP, 0, 0.75)
+	left:SetPoint("TOPLEFT")
+	left:SetPoint("BOTTOMLEFT")
+	left:SetWidth(cap)
+	local right = frame:CreateTexture(nil, layer)
+	right:SetTexture(file)
+	right:SetTexCoord(1 - PILL_CAP, 1, 0, 0.75)
+	right:SetPoint("TOPRIGHT")
+	right:SetPoint("BOTTOMRIGHT")
+	right:SetWidth(cap)
+	local middle = frame:CreateTexture(nil, layer)
+	middle:SetTexture(file)
+	middle:SetTexCoord(PILL_CAP, 1 - PILL_CAP, 0, 0.75)
+	middle:SetPoint("TOPLEFT", left, "TOPRIGHT")
+	middle:SetPoint("BOTTOMRIGHT", right, "BOTTOMLEFT")
+	local parts = { left, middle, right }
+	return {
+		SetVertexColor = function(_, ...)
+			for _, t in ipairs(parts) do
+				t:SetVertexColor(...)
+			end
+		end,
+	}
+end
+
 local function Sound(kit)
 	if PlaySound and SOUNDKIT and SOUNDKIT[kit] then
 		LI.Try(PlaySound, SOUNDKIT[kit])
@@ -71,6 +102,50 @@ local function Menu(owner, build)
 			LI.SafeCall(build, root)
 		end)
 	end
+end
+
+local function Toggle(parent, label, width, tip, isOn, onToggle)
+	local t = CreateFrame("Button", nil, parent)
+	t:SetSize(width, 22)
+	t.fill = LI.Slices(t, ART .. "pill", "BACKGROUND", 22)
+	t.edge = LI.Slices(t, ART .. "pill_edge", "BORDER", 22)
+	t.text = t:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	t.text:SetPoint("CENTER", 0, 0)
+	t.text:SetText(label)
+	function t:Update()
+		local on = isOn()
+		self.on = on
+		if on then
+			self.fill:SetVertexColor(1, 0.78, 0.25, self.hover and 0.5 or 0.38)
+			self.edge:SetVertexColor(1, 0.82, 0.3, 0.95)
+			self.text:SetTextColor(1, 0.92, 0.6)
+		else
+			self.fill:SetVertexColor(0.1, 0.1, 0.1, self.hover and 0.85 or 0.65)
+			self.edge:SetVertexColor(0.55, 0.5, 0.42, self.hover and 0.9 or 0.6)
+			self.text:SetTextColor(self.hover and 1 or 0.72, self.hover and 1 or 0.7, self.hover and 1 or 0.66)
+		end
+	end
+	t:SetScript("OnClick", function(self)
+		onToggle(not isOn())
+		Sound(isOn() and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
+		self:Update()
+		UI.Refresh()
+	end)
+	t:SetScript("OnEnter", function(self)
+		self.hover = true
+		self:Update()
+		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+		GameTooltip:SetText(tip[1], 1, 0.82, 0)
+		GameTooltip:AddLine(tip[2], 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	t:SetScript("OnLeave", function(self)
+		self.hover = false
+		self:Update()
+		GameTooltip:Hide()
+	end)
+	t:Update()
+	return t
 end
 
 local function Movable(frame)
@@ -405,6 +480,37 @@ local function BuildRow(row)
 	row.selBar:SetColorTexture(1, 0.82, 0.3, 0.9)
 	row.selBar:Hide()
 
+	row.badge = CreateFrame("Button", nil, row)
+	row.badge:SetSize(16, 16)
+	local ringMask = row.badge:CreateMaskTexture()
+	ringMask:SetAllPoints()
+	ringMask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+	row.badge.ring = row.badge:CreateTexture(nil, "BACKGROUND")
+	row.badge.ring:SetAllPoints()
+	row.badge.ring:SetColorTexture(1, 0.8, 0.3, 1)
+	row.badge.ring:AddMaskTexture(ringMask)
+	local iconMask = row.badge:CreateMaskTexture()
+	iconMask:SetPoint("TOPLEFT", 1.5, -1.5)
+	iconMask:SetPoint("BOTTOMRIGHT", -1.5, 1.5)
+	iconMask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+	row.badge.icon = row.badge:CreateTexture(nil, "ARTWORK")
+	row.badge.icon:SetPoint("TOPLEFT", 1.5, -1.5)
+	row.badge.icon:SetPoint("BOTTOMRIGHT", -1.5, 1.5)
+	row.badge.icon:SetTexture(LI.ICON)
+	row.badge.icon:AddMaskTexture(iconMask)
+	if row.badge.SetPropagateMouseClicks then
+		row.badge:SetPropagateMouseClicks(true)
+	end
+	row.badge:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText("Uses Linked Inn", 1, 0.82, 0)
+		GameTooltip:AddLine("Their recipes come straight from their own game and stay up to date.", 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	row.badge:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+	row.badge:Hide()
 	row.name = Text(row, "GameFontNormalLarge")
 	row.name:SetPoint("BOTTOMLEFT", row, "LEFT", NAME_X, 1)
 	row.name:SetWordWrap(false)
@@ -561,6 +667,7 @@ local function InitHeader(row, data)
 	row.bg:SetColorTexture(0, 0, 0, 0)
 	row.sel:Hide()
 	row.selBar:Hide()
+	row.badge:Hide()
 	local collapsed = LI.settings.collapsed and LI.settings.collapsed[group.key]
 	row.toggle:SetTexture(collapsed and "Interface\\Buttons\\UI-PlusButton-Up" or "Interface\\Buttons\\UI-MinusButton-Up")
 	if group.favorites then
@@ -646,6 +753,20 @@ local function InitRow(row, data)
 	row.line:SetText(text)
 	row.line:SetTextColor(textColor[1], textColor[2], textColor[3])
 	UpdateBooks(row, data)
+	local li = c.li == true
+	row.badge:SetShown(li)
+	if li then
+		local width = LI.Try(row.name.GetStringWidth, row.name) or 0
+		local box = LI.Try(row.name.GetWidth, row.name) or 0
+		if box > 1 then
+			width = math.min(width, box)
+		end
+		row.badge:ClearAllPoints()
+		row.badge:SetPoint("LEFT", row.name, "LEFT", width + 5, 0)
+	end
+	if Compact() then
+		row.line:SetPoint("LEFT", li and row.badge or row.name, "RIGHT", li and 8 or 10, 0)
+	end
 end
 
 local function CreateList(parent)
@@ -692,11 +813,27 @@ local function AnySelected(chips)
 	return false
 end
 
+local SKILL_LEVELS = {
+	{ value = 0, name = "Any skill", short = "Any" },
+	{ value = 75, name = "Journeyman+ (75)", short = "Journeyman+" },
+	{ value = 150, name = "Expert+ (150)", short = "Expert+" },
+	{ value = 225, name = "Artisan+ (225)", short = "Artisan+" },
+	{ value = "max", name = "Max skill only", short = "Max" },
+}
+
+local function SkillLevel()
+	if LI.settings.maxOnly then
+		return "max"
+	end
+	return tonumber(LI.settings.minSkill) or 0
+end
+
 local function UpdateChips()
 	local profs = LI.ProfessionChips(LI.settings.secondary)
 	local chips = main.chips
 	local selected = ProfsSelected()
 	local any = AnySelected(profs)
+	local x, divided = 0, false
 	for i, info in ipairs(profs) do
 		local chip = chips[i]
 		if not chip then
@@ -747,23 +884,35 @@ local function UpdateChips()
 		chip.icon:SetDesaturated((any and not on) or info.count == 0)
 		chip.icon:SetAlpha(on and 1 or (any and 0.55) or (info.count == 0 and 0.45) or 1)
 		chip.count:SetText(info.count > 0 and tostring(info.count) or "")
+		if LI.SECONDARY_SET[info.key] and not divided then
+			divided = true
+			x = x + 10
+		end
 		chip:ClearAllPoints()
-		chip:SetPoint("LEFT", main.chipBar, "LEFT", (i - 1) * 36 + 3, 0)
+		chip:SetPoint("LEFT", main.chipBar, "LEFT", x + 3, 0)
+		x = x + 34
 		chip:Show()
 	end
 	for i = #profs + 1, #chips do
 		chips[i]:Hide()
 	end
+	main.secondaryToggle:ClearAllPoints()
+	main.secondaryToggle:SetPoint("LEFT", main.chipBar, "LEFT", x + 10, 0)
+	main.secondaryToggle:Update()
+	for _, level in ipairs(SKILL_LEVELS) do
+		if level.value == SkillLevel() then
+			main.skillPill.text:SetText("Skill: " .. level.short)
+		end
+	end
+	main.skillPill:Update()
 	main.clearChips:ClearAllPoints()
-	main.clearChips:SetPoint("LEFT", main.chipBar, "LEFT", #profs * 36 + 4, 0)
+	main.clearChips:SetPoint("LEFT", main.secondaryToggle, "RIGHT", 6, 0)
 	main.clearChips:SetShown(any)
-	main.secondaryBox:SetChecked(LI.settings.secondary and true or false)
-	main.maxBox:SetChecked(LI.settings.maxOnly and true or false)
 	main.compactBox:SetChecked(LI.settings.compact and true or false)
 end
 
 local function RefreshFind()
-	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary, kind = LI.settings.kind, maxOnly = LI.settings.maxOnly }
+	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary, kind = LI.settings.kind, maxOnly = LI.settings.maxOnly, minSkill = LI.settings.minSkill }
 	local results = LI.Search(filter.search, opts)
 	local list = {}
 	local collapsed = LI.settings.collapsed or {}
@@ -778,7 +927,11 @@ local function RefreshFind()
 	end
 	main.list:SetList(list)
 	UpdateChips()
-	main.kind:SetText(KindName(LI.settings.kind))
+	if main.kind.GenerateMenu then
+		main.kind:GenerateMenu()
+	else
+		main.kind:SetText(KindName(LI.settings.kind))
+	end
 	local total, reading = 0, LI.WaitingCount and LI.WaitingCount() or 0
 	for key, c in pairs(LI.crafters) do
 		if key ~= LI.playerKey then
@@ -982,12 +1135,9 @@ function UI.Refresh()
 	main.search:SetShown(findShown)
 	main.kind:SetShown(findShown)
 	main.chipBar:SetShown(findShown)
-	main.secondaryBox:SetShown(findShown)
-	main.maxBox:SetShown(findShown)
+	main.skillPill:SetShown(findShown)
 	main.compactBox:SetShown(findShown)
 	main.compactLabel:SetShown(findShown)
-	main.maxLabel:SetShown(findShown)
-	main.secondaryLabel:SetShown(findShown)
 	main.count:SetShown(findShown)
 	if findShown then
 		RefreshFind()
@@ -1036,8 +1186,8 @@ local function CreateMain()
 	tinsert(UISpecialFrames, "LinkedInnFrame")
 
 	local search = CreateFrame("EditBox", nil, main, "SearchBoxTemplate")
-	search:SetSize(250, 22)
-	search:SetPoint("TOPLEFT", 70, -32)
+	search:SetSize(190, 22)
+	search:SetPoint("TOPLEFT", 72, -32)
 	if search.Instructions then
 		search.Instructions:SetText("Search an item, profession or name")
 	end
@@ -1050,23 +1200,79 @@ local function CreateMain()
 	end)
 	main.search = search
 
-	main.kind = Button(main, KindName(LI.settings.kind), 120, function(self)
+	local function KindMenu(root)
+		for _, k in ipairs(LI.KINDS) do
+			root:CreateRadio(k.name, function()
+				return LI.settings.kind == k.key
+			end, function()
+				LI.settings.kind = k.key
+				UI.Refresh()
+			end)
+		end
+	end
+	local ok, dropdown = pcall(CreateFrame, "DropdownButton", nil, main, "WowStyle1DropdownTemplate")
+	if ok and dropdown and type(dropdown.SetupMenu) == "function" then
+		dropdown:SetWidth(124)
+		dropdown:SetupMenu(function(_, root)
+			KindMenu(root)
+		end)
+		main.kind = dropdown
+	else
+		main.kind = Button(main, KindName(LI.settings.kind), 124, function(self)
+			Menu(self, KindMenu)
+		end)
+	end
+	main.kind:SetPoint("LEFT", search, "RIGHT", 8, 0)
+
+	main.gear = CreateFrame("Button", nil, main)
+	main.gear:SetSize(24, 24)
+	main.gear:SetPoint("TOPRIGHT", -12, -31)
+	main.gear.icon = main.gear:CreateTexture(nil, "ARTWORK")
+	main.gear.icon:SetAllPoints()
+	if not pcall(main.gear.icon.SetAtlas, main.gear.icon, "questlog-icon-setting") then
+		main.gear.icon:SetTexture("Interface\\Buttons\\UI-OptionsButton")
+	end
+	main.gear.icon:SetVertexColor(0.85, 0.8, 0.7)
+	main.gear:SetScript("OnClick", function()
+		Sound("IG_MAINMENU_OPTION")
+		if LI.Settings then
+			LI.Settings.Toggle()
+		end
+	end)
+	main.gear:SetScript("OnEnter", function(self)
+		self.icon:SetVertexColor(1, 1, 1)
+		GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
+		GameTooltip:SetText("Settings", 1, 0.82, 0)
+		GameTooltip:AddLine("City scans, how long crafters are kept, and more.", 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	main.gear:SetScript("OnLeave", function(self)
+		self.icon:SetVertexColor(0.85, 0.8, 0.7)
+		GameTooltip:Hide()
+	end)
+
+	main.skillPill = Toggle(main, "Skill: Any", 118, { "Skill level", "Hide crafters below a skill level. Ranks follow the trainers: Journeyman 75, Expert 150, Artisan 225." }, function()
+		return LI.settings.maxOnly == true or (tonumber(LI.settings.minSkill) or 0) > 0
+	end, function() end)
+	main.skillPill:SetScript("OnClick", function(self)
 		Menu(self, function(root)
-			for _, k in ipairs(LI.KINDS) do
-				root:CreateRadio(k.name, function()
-					return LI.settings.kind == k.key
+			for _, level in ipairs(SKILL_LEVELS) do
+				root:CreateRadio(level.name, function()
+					return SkillLevel() == level.value
 				end, function()
-					LI.settings.kind = k.key
+					LI.settings.maxOnly = level.value == "max"
+					LI.settings.minSkill = type(level.value) == "number" and level.value or 0
+					Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
 					UI.Refresh()
 				end)
 			end
 		end)
 	end)
-	main.kind:SetPoint("LEFT", search, "RIGHT", 8, 0)
+	main.skillPill:SetPoint("RIGHT", main.gear, "LEFT", -8, 0)
 
 
 	main.chipBar = CreateFrame("Frame", nil, main)
-	main.chipBar:SetPoint("TOPLEFT", 66, -60)
+	main.chipBar:SetPoint("TOPLEFT", 68, -60)
 	main.chipBar:SetPoint("TOPRIGHT", -10, -60)
 	main.chipBar:SetHeight(36)
 	main.chips = {}
@@ -1087,46 +1293,10 @@ local function CreateMain()
 		self.text:SetTextColor(1, 0.82, 0)
 	end)
 	main.clearChips:Hide()
-	main.secondaryBox = CreateFrame("CheckButton", nil, main, "UICheckButtonTemplate")
-	main.secondaryBox:SetSize(24, 24)
-	main.secondaryBox:SetPoint("LEFT", main.kind, "RIGHT", 8, 0)
-	main.secondaryBox:SetScript("OnClick", function(self)
-		LI.settings.secondary = self:GetChecked() and true or false
-		Sound(LI.settings.secondary and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
-		UI.Refresh()
-	end)
-	main.secondaryBox:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-		GameTooltip:SetText("Secondary professions", 1, 0.82, 0)
-		GameTooltip:AddLine("Also show Cooking, First Aid and Fishing.", 1, 1, 1, true)
-		GameTooltip:Show()
-	end)
-	main.secondaryBox:SetScript("OnLeave", function()
-		GameTooltip:Hide()
-	end)
-	main.secondaryLabel = Text(main, "GameFontHighlightSmall")
-	main.secondaryLabel:SetPoint("LEFT", main.secondaryBox, "RIGHT", 0, 0)
-	main.secondaryLabel:SetText("Secondary")
-
-	main.maxBox = CreateFrame("CheckButton", nil, main, "UICheckButtonTemplate")
-	main.maxBox:SetSize(24, 24)
-	main.maxBox:SetPoint("TOPLEFT", main.secondaryBox, "BOTTOMLEFT", 0, -11)
-	main.maxLabel = Text(main, "GameFontHighlightSmall")
-	main.maxLabel:SetPoint("LEFT", main.maxBox, "RIGHT", 0, 0)
-	main.maxLabel:SetText("Max skill only")
-	main.maxBox:SetScript("OnClick", function(self)
-		LI.settings.maxOnly = self:GetChecked() and true or false
-		Sound(LI.settings.maxOnly and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
-		UI.Refresh()
-	end)
-	main.maxBox:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-		GameTooltip:SetText("Max skill only", 1, 0.82, 0)
-		GameTooltip:AddLine("Only crafters at the highest skill level.", 1, 1, 1, true)
-		GameTooltip:Show()
-	end)
-	main.maxBox:SetScript("OnLeave", function()
-		GameTooltip:Hide()
+	main.secondaryToggle = Toggle(main.chipBar, "Secondary", 84, { "Secondary professions", "Also show Cooking, First Aid and Fishing." }, function()
+		return LI.settings.secondary == true
+	end, function(on)
+		LI.settings.secondary = on
 	end)
 
 

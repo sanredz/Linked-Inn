@@ -124,7 +124,18 @@ local function Create()
 	Place()
 end
 
-LI.Listen("Ready", Create)
+LI.Listen("Ready", function()
+	Create()
+	if button then
+		button:SetShown(LI.settings.showMinimap ~= false)
+	end
+end)
+
+LI.Listen("SettingsChanged", function()
+	if button then
+		button:SetShown(LI.settings.showMinimap ~= false)
+	end
+end)
 
 LI.Listen("WorkGlow", function(on)
 	if not button or not button.glow then

@@ -1,7 +1,6 @@
 local ADDON, LI = ...
 
 local LOG_MAX = 300
-local FORGET_AFTER = 60 * 86400
 
 LI.PROFESSION_ICONS = {
 	alchemy = "Interface\\Icons\\Trade_Alchemy",
@@ -70,10 +69,15 @@ local DEFAULTS = {
 	autoRead = true,
 	secondary = false,
 	maxOnly = false,
+	minSkill = 0,
 	compact = false,
 	profs = {},
 	kind = "all",
 	minimap = { angle = 200 },
+	showMinimap = true,
+	cityScan = false,
+	cityEvery = 5,
+	forgetDays = 60,
 	collapsed = {},
 }
 
@@ -134,11 +138,50 @@ end
 
 local function Prune(crafters, favorites)
 	local now = time()
+	local days = tonumber(LI.settings and LI.settings.forgetDays) or 60
+	local forget = days > 0 and days * 86400 or nil
+	local removed = 0
 	for key, c in pairs(crafters) do
-		if type(c) ~= "table" or type(c.profs) ~= "table" or (not favorites[key] and (now - (c.seen or 0)) > FORGET_AFTER) then
+		if type(c) ~= "table" or type(c.profs) ~= "table" or (forget and not favorites[key] and (now - (c.seen or 0)) > forget) then
 			crafters[key] = nil
+			removed = removed + 1
 		end
 	end
+	return removed
+end
+
+function LI.PruneNow()
+	if not LI.crafters then
+		return 0
+	end
+	local removed = Prune(LI.crafters, LI.favorites)
+	if removed > 0 then
+		LI.Fire("CraftersChanged")
+	end
+	return removed
+end
+
+function LI.ForgetEveryone()
+	if not LI.crafters then
+		return
+	end
+	for key in pairs(LI.crafters) do
+		if key ~= LI.playerKey then
+			LI.crafters[key] = nil
+		end
+	end
+	for key in pairs(LI.favorites) do
+		LI.favorites[key] = nil
+	end
+	for key in pairs(LI.waiting) do
+		LI.waiting[key] = nil
+	end
+	for key in pairs(LI.tried) do
+		LI.tried[key] = nil
+	end
+	LI.guids = {}
+	LI.Log("Forgot everyone on the list")
+	LI.Fire("CraftersChanged")
 end
 
 LI.On("ADDON_LOADED", function(name)
@@ -531,12 +574,13 @@ function LI.Search(query, opts)
 		return not profSet or profSet[profKey] == true
 	end
 	local caps = opts.maxOnly and LI.SkillCaps() or nil
+	local minSkill = tonumber(opts.minSkill) or 0
 	local function Maxed(profKey, p)
-		if not caps then
-			return true
+		if caps then
+			local cap = caps[profKey] or 0
+			return cap > 0 and (p.rank or 0) >= cap
 		end
-		local cap = caps[profKey] or 0
-		return cap > 0 and (p.rank or 0) >= cap
+		return minSkill <= 0 or (p.rank or 0) >= minSkill
 	end
 	local recipeSearch = q ~= "" or kind ~= "all"
 	local hits, hitCount = {}, 0

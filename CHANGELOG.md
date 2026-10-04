@@ -13,6 +13,14 @@
 - Profession reads are much faster, and links in chat, your group and your
   guild always come before background checks.
 - The profession filter resets when you log in.
+- New header: search, item type, skill level and settings in one row, the
+  profession buttons with Secondary in the next.
+- Skill level filter: any, Journeyman+, Expert+, Artisan+ or max.
+- Settings (the gear): city scans, how long crafters are kept, reading links,
+  minimap button, and forget everyone.
+- City scans: in cities, friendly nameplates flash on for a moment every few
+  minutes so everyone around you gets checked. Off by default.
+- Crafters who use Linked Inn get a small gold badge.
 - Players on the other hidden realm of your ruleset are skipped: the game
   doesn't let you read their professions, so no time is wasted on them.
 - The hidden profession window used while reading can no longer catch your

@@ -525,6 +525,9 @@ function Book.Open(key, profKey, query)
 		frame:Hide()
 		return
 	end
+	if LI.Settings then
+		LI.Settings.Hide()
+	end
 	current.key, current.prof = key, profKey
 	current.query = ""
 	if query and query ~= "" then

@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.2.0]
+
+- Housekeeping: Light, Balanced or Strict clears out crafters who add nothing,
+  keeping the best 100, 75 or 50 per profession. Rare recipes, favorites,
+  guild, friends and Linked Inn users are never touched. Off by default.
+- Guild only: Linked Inn reads, lists and talks to your guild only, Work
+  included. Everyone else stays saved and comes back when you turn it off.
+  Shows how many guildmates are on the other realm, where the game can't read
+  them.
+- Don't keep skill below: skip and forget professions under a skill level.
+- Hide profession links in trade, general, say and yell. They're still read.
+- New filter: show only crafters who use Linked Inn.
+- Players seen around you, in your group or guild now get all their
+  professions checked. Before, only Alchemy and Blacksmithing were found that
+  way.
+- Guild and group members are checked again after half a day instead of a
+  week, and reading no longer waits while a game window is open.
+- Linked Inn users are asked for their list again when recipes are missing.
+- The waiting list keeps people for 14 days, at most 300.
+- Profession windows no longer pop up after a reload.
+- The settings panel scrolls.
+
 ## [1.1.2] - 2026-10-04
 
 - Fixed empty profession windows sometimes popping up on their own, mostly

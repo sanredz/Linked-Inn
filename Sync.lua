@@ -509,6 +509,8 @@ local function SendHello()
 	end
 end
 
+local answerGuild = false
+
 local function SendData()
 	local own = OwnState()
 	if not own.payload or not own.ver then
@@ -525,9 +527,14 @@ local function SendData()
 		targets[#targets + 1] = LI.WhisperTarget(key)
 	end
 	askers = {}
+	local toGuild = answerGuild
+	answerGuild = false
 	for i = 1, total do
 		local chunk = string.format("D1|%s|%s|%s|%s", own.ver, B36(i), B36(total), payload:sub((i - 1) * CHUNK + 1, i * CHUNK))
 		Broadcast("data", chunk, false)
+		if toGuild then
+			Enqueue("data", chunk, "GUILD")
+		end
 		for _, target in ipairs(targets) do
 			Enqueue("data", chunk, "WHISPER", target)
 		end
@@ -584,7 +591,7 @@ local function KnownProf(c, key)
 	return c and c.profs[key]
 end
 
-local function Ask(key, ver)
+local function Ask(key, ver, chatType)
 	local short = LI.WhisperTarget(key)
 	if not short then
 		return
@@ -600,7 +607,11 @@ local function Ask(key, ver)
 		return
 	end
 	asked[key] = { at = Now(), ver = ver }
-	Enqueue("ask", "Q1|" .. ver, "WHISPER", short)
+	if chatType == "GUILD" then
+		Enqueue("ask", "Q2|" .. ver .. "|" .. LI.ShortName(key), "GUILD")
+	else
+		Enqueue("ask", "Q1|" .. ver, "WHISPER", short)
+	end
 end
 
 local function OnHello(key, parts, chatType)
@@ -679,7 +690,7 @@ local function OnHello(key, parts, chatType)
 		end
 	end
 	if LI.crafters[key] == c and (c.sharedVer ~= ver or short) then
-		Ask(key, ver)
+		Ask(key, ver, chatType)
 	end
 end
 
@@ -961,6 +972,12 @@ Dispatch = function(key, text, chatType)
 		OnData(key, parts)
 	elseif kind == "Q1" then
 		OnAsk(key, parts)
+	elseif kind == "Q2" and chatType == "GUILD" then
+		local me = LI.playerKey and LI.ShortName(LI.playerKey)
+		if me and type(parts[3]) == "string" and parts[3]:lower() == me:lower() then
+			answerGuild = true
+			OnAsk(key, parts)
+		end
 	elseif kind == "R1" and LI.Work then
 		LI.Work.OnRequest(key, parts)
 	elseif kind == "X1" and LI.Work then

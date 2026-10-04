@@ -2794,5 +2794,40 @@ do
 	W.groupSize = nil
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.guild = { { name = "Far Crafter-TestRealm", online = true, guid = "Player-2-FARC" } }
+	Boot()
+	Advance(40)
+	W.sent = {}
+	Addon("H1|abcd|MAGE|tailoring~1e~2s~5", "Far Crafter-TestRealm", "GUILD")
+	Advance(3)
+	local q2, whispered
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^Q2|abcd|Far Crafter$") and m.chatType == "GUILD" then q2 = true end
+		if m.msg:find("^Q1|") then whispered = true end
+	end
+	check(q2 and not whispered, "a Linked Inn user heard in the guild is asked for their list through the guild")
+
+	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 100, max = 150 }, { { id = 3914, name = "Brown Linen Pants", item = 4343 } }, "own")
+	LI.Fire("OwnRecipesChanged")
+	Advance(70)
+	W.sent = {}
+	Addon("Q2|zz|Someone Else", "Far Crafter-TestRealm", "GUILD")
+	Advance(8)
+	local data = false
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^D1|") and m.chatType == "GUILD" then data = true end
+	end
+	check(not data, "a guild request for someone else isn't answered")
+	Addon("Q2|zz|" .. LI.ShortName(LI.playerKey), "Far Crafter-TestRealm", "GUILD")
+	Advance(8)
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^D1|") and m.chatType == "GUILD" then data = true end
+	end
+	check(data, "a guild request for you is answered with your list through the guild")
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

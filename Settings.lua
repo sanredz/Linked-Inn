@@ -373,8 +373,8 @@ local function Create()
 		function() return LI.settings.hideLinks == true end,
 		function(on) LI.settings.hideLinks = on end)
 
-	frame.guild, frame.guildLast = Option(page, frame.hideLast, "Guild only",
-		"Only reads, lists and talks to your guild, Work included. Everyone else stays saved and comes back when you turn it off.",
+	frame.guild, frame.guildLast = Option(page, frame.hideLast, "Guild and friends only",
+		"Only reads, lists and talks to your guild and friends list, Work included. Everyone else stays saved and comes back when you turn it off.",
 		function() return LI.settings.guildOnly == true end,
 		function(on) LI.settings.guildOnly = on end)
 	frame.farSide = Below(Body(page, BODY_X, ""), frame.guildLast, BODY_X, 4)

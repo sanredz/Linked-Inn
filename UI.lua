@@ -956,9 +956,9 @@ local function RefreshFind()
 	if LI.settings.guildOnly then
 		local far = LI.guildFarSide or 0
 		if far > 0 then
-			main.count:SetText(string.format("|cff40ff40Guild only|r  ·  %d shown  ·  %d on the other realm", #results, far))
+			main.count:SetText(string.format("|cff40ff40Guild and friends|r  ·  %d shown  ·  %d on the other realm", #results, far))
 		else
-			main.count:SetText(string.format("|cff40ff40Guild only|r  ·  %d shown  ·  %d crafters remembered", #results, total))
+			main.count:SetText(string.format("|cff40ff40Guild and friends|r  ·  %d shown  ·  %d crafters remembered", #results, total))
 		end
 	else
 		main.count:SetText(string.format("%d shown  ·  %d crafters remembered", #results, total))
@@ -979,7 +979,7 @@ local function RefreshFind()
 		else
 			main.emptyHead:SetText("Nobody matches")
 			if LI.settings.guildOnly then
-				main.emptyText:SetText("Guild only is on, so only guildmates are shown. Everyone else is still saved; turn it off in settings to see them.")
+				main.emptyText:SetText("Guild and friends only is on, so only they are shown. Everyone else is still saved; turn it off in settings to see them.")
 			elseif LI.settings.liOnly then
 				main.emptyText:SetText("Only Linked Inn users are shown. Click the mug next to Secondary to see everyone.")
 			else

@@ -782,7 +782,7 @@ function LI.Search(query, opts)
 	end
 	for key, c in pairs(LI.crafters) do
 		local status, seenAt, sure = LI.Status(key)
-		if key ~= LI.playerKey and (not opts.liOnly or c.li) and (not opts.guildOnly or LI.IsGuildmate(key)) then
+		if key ~= LI.playerKey and (not opts.liOnly or c.li) and (not opts.guildOnly or LI.InCircle(key)) then
 			local nameMatch = q ~= "" and kind == "all" and Find(LI.ShortName(key), q)
 			local groups, top = {}, nil
 			for profKey, p in pairs(c.profs) do

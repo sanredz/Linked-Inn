@@ -83,7 +83,11 @@ local function ReadFriends()
 	for i = 1, count do
 		local info = LI.Try(list.GetFriendInfoByIndex, i)
 		if type(info) == "table" and info.name then
-			SetRoster("friend", info.name, LI.Safe(info.connected))
+			local online = LI.Safe(info.connected)
+			SetRoster("friend", info.name, online)
+			if online and LI.Discover then
+				LI.Discover(LI.FullName(LI.Safe(info.name)), LI.Safe(info.guid), LI.PRIO.guild, LI.Safe(info.className))
+			end
 		end
 	end
 	LI.Fire("StatusChanged")
@@ -122,7 +126,7 @@ function LI.Allowed(key)
 	if not LI.settings or not LI.settings.guildOnly then
 		return true
 	end
-	return key ~= nil and (key == LI.playerKey or LI.IsGuildmate(key))
+	return key ~= nil and (key == LI.playerKey or LI.InCircle(key))
 end
 
 function LI.InCircle(key)

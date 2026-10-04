@@ -382,7 +382,7 @@ local function Broadcast(kind, message, withGuild, withFriends)
 	for _, route in ipairs(Routes(withGuild)) do
 		Enqueue(kind, message, route)
 	end
-	if withFriends and not LI.settings.guildOnly then
+	if withFriends then
 		for _, target in ipairs(OnlineFriends()) do
 			Enqueue(kind, message, "WHISPER", target)
 		end
@@ -1098,7 +1098,7 @@ function Sync.CrossTest(target)
 		return
 	end
 	if LI.settings.guildOnly then
-		LI.Print("Turn off Guild only for the test.")
+		LI.Print("Turn off Guild and friends only for the test.")
 		return
 	end
 	local key = LI.FullName(target)

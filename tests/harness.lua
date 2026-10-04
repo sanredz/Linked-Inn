@@ -2632,9 +2632,13 @@ do
 	panel.guild:SetChecked(true)
 	panel.guild.__scripts.OnClick(panel.guild)
 	check(LI.settings.guildOnly == true, "guild only can be switched on in settings")
-	check(#LI.Search("", { guildOnly = true }) == 1 and main.count.__text:find("Guild only", 1, true), "the list shows only guildmates and says so", main.count.__text)
+	check(#LI.Search("", { guildOnly = true }) == 1 and main.count.__text:find("Guild and friends", 1, true), "the list shows only guildmates and says so", main.count.__text)
 	check(main.count.__text:find("1 on the other realm", 1, true) and panel.farSide.__text:find("1 online guildmate is on the other realm", 1, true), "guildmates the game can't read are explained", panel.farSide.__text)
 	check(LI.crafters["Out Sider-TestRealm"] and LI.crafters["Old Stranger-TestRealm"], "nobody is deleted when it's switched on")
+	W.friends = { { name = "Best Friend", connected = true, guid = "Player-1-BFRI" } }
+	LI.SetRecipes("Best Friend-TestRealm", { name = "Alchemy", rank = 100, max = 150 }, { { id = 2330, name = "Minor Healing Potion", item = 118 } }, "auto")
+	Fire("FRIENDLIST_UPDATE")
+	check(LI.Allowed("Best Friend-TestRealm") and #LI.Search("", { guildOnly = true }) == 2, "friends count too, not just the guild")
 
 	local queued = LI.Reader.QueueSize()
 	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-STR", 2259, 171, "Alchemy"), "Total Stranger-TestRealm", "Player-1-STR", "Trade - City")
@@ -2653,9 +2657,12 @@ do
 	LI.Sync.Send("W1|test", "CHANNEL")
 	LI.Sync.Send("W1|psst", "WHISPER", "Net Stranger")
 	Advance(5)
-	local routes = {}
-	for _, m in ipairs(W.sent) do routes[m.chatType] = true end
-	check(routes.GUILD and not routes.CHANNEL and not routes.WHISPER, "messages only go to the guild", tostring(routes.CHANNEL))
+	local routes, stranger = {}, false
+	for _, m in ipairs(W.sent) do
+		routes[m.chatType] = true
+		if m.chatType == "WHISPER" and m.target ~= "Best Friend" then stranger = true end
+	end
+	check(routes.GUILD and not routes.CHANNEL and not stranger, "messages only go to the guild and friends", tostring(routes.CHANNEL))
 	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 100, max = 150 }, PANTS, "own")
 	LI.Work.OnRequest("Net Stranger-TestRealm", { "R1", "9", LI.Sync.B36(4343), LI.Sync.B36(3914), "1", "n", "0", "5a", "" })
 	local function SeesOutsider()
@@ -2680,6 +2687,7 @@ do
 	check(LI.settings.guildOnly == true and LI.crafters["Old Stranger-TestRealm"], "it stays on after a reload and still keeps everyone")
 
 	LI.settings.guildOnly = false
+	W.friends = nil
 	check(LI.Allowed("Total Stranger-TestRealm") and #LI.Search("", {}) >= 3, "switching it off brings everyone back")
 	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-STR", 2259, 171, "Alchemy"), "Total Stranger-TestRealm", "Player-1-STR", "Trade - City")
 	check(LI.crafters["Total Stranger-TestRealm"], "and everything works as normal again")

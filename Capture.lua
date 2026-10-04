@@ -118,7 +118,8 @@ end
 LI.Listen("Ready", function()
 	for _, c in pairs(LI.crafters) do
 		for profKey, p in pairs(c.profs) do
-			if not LI.db.profLinks[profKey] and type(p.link) == "string" then
+			local have = LI.db.profLinks[profKey]
+			if (not have or have.default) and type(p.link) == "string" then
 				local parsed = LI.ParseTrade(p.link:match("^trade:(.+)$"))
 				if parsed then
 					LI.NoteProfLink(profKey, parsed.numbers)

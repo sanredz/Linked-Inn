@@ -10,6 +10,9 @@
 - Only crafters whose recipes have been read show up in the list.
 - Reading links no longer stops for good after a few failures; it pauses a
   minute and carries on.
+- Links are read about three times faster.
+- A fresh install can read every crafting profession right away, without
+  first seeing someone link it.
 - The player whose recipe book is open is highlighted in the list.
 - Whispers from the addon open with their message filled in.
 - Online checks no longer get stuck on "Checking...", and confirmed offline

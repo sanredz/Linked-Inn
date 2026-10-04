@@ -437,6 +437,11 @@ local function Boot(saved)
 		chunk(ADDON_NAME, LI)
 	end
 	Fire("ADDON_LOADED", ADDON_NAME)
+	if not saved and not W.defaultLinks then
+		for k in pairs(LinkedInnDB.profLinks) do
+			LinkedInnDB.profLinks[k] = nil
+		end
+	end
 	Fire("PLAYER_LOGIN")
 	Advance(0.1)
 	return LI
@@ -497,6 +502,15 @@ Setup()
 Boot()
 check(LI.ready and LI.playerKey == "Brew Master-TestRealm" or LI.playerKey == "Brew-Master-TestRealm", "player key has the surname", LI.playerKey)
 check(LI.settings.autoRead == true, "automatic reading is on by default")
+do
+	W.defaultLinks = true
+	Boot()
+	local links = LI.db.profLinks
+	check(links.enchanting and links.engineering and links.leatherworking and links.alchemy and links.tailoring and links.blacksmithing and not links.mining, "a fresh install already knows how to read every crafting profession")
+	W.defaultLinks = nil
+	Setup()
+	Boot()
+end
 local agos = { LI.ShortAgo(time() - 30), LI.ShortAgo(time() - 300), LI.ShortAgo(time() - 7300), LI.ShortAgo(time() - 3 * 86400), LI.ShortAgo(time() - 21 * 86400), LI.ShortAgo(nil) }
 check(table.concat(agos, ",") == "now,5m,2h,3d,3w,?", "short ages read now, minutes, hours, days, weeks", table.concat(agos, ","))
 

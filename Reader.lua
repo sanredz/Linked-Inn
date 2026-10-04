@@ -4,7 +4,7 @@ local Reader = {}
 LI.Reader = Reader
 
 local PUMP_EVERY = 2
-local GAP = 8
+local GAP = 3
 local TIMEOUT = 3
 local PROBE_MIN = 0.3
 local PROBE_MAX = 1.5
@@ -372,7 +372,7 @@ function Reader.ScanProgress()
 end
 
 function Reader.Idle()
-	return pending == nil and #probes == 0 and (#queue == 0 or Now() < nextAt - 2)
+	return pending == nil and #probes == 0 and (#queue == 0 or Now() < nextAt)
 end
 
 function Reader.Scan(candidates, quiet)

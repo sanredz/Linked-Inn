@@ -1,6 +1,6 @@
 local ADDON, LI = ...
 
-local LOG_MAX = 40
+local LOG_MAX = 300
 local FORGET_AFTER = 60 * 86400
 
 LI.PROFESSION_ICONS = {
@@ -54,6 +54,17 @@ LI.KINDS = {
 }
 
 local KIND_BY_CLASS = { [0] = "consumable", [1] = "bag", [2] = "weapon", [4] = "armor", [7] = "tradegoods" }
+
+local PROF_LINKS = {
+	alchemy = { 3464, 171 },
+	blacksmithing = { 2018, 164 },
+	enchanting = { 7413, 333 },
+	engineering = { 4038, 202 },
+	leatherworking = { 2108, 165 },
+	tailoring = { 3909, 197 },
+	cooking = { 2550, 185 },
+	["first aid"] = { 3274, 129 },
+}
 
 local DEFAULTS = {
 	autoRead = true,
@@ -140,6 +151,11 @@ LI.On("ADDON_LOADED", function(name)
 	db.recipes = type(db.recipes) == "table" and db.recipes or {}
 	db.cats = type(db.cats) == "table" and db.cats or {}
 	db.profLinks = type(db.profLinks) == "table" and db.profLinks or {}
+	for profKey, nums in pairs(PROF_LINKS) do
+		if type(db.profLinks[profKey]) ~= "table" then
+			db.profLinks[profKey] = { spell = nums[1], line = nums[2], default = true }
+		end
+	end
 	db.settings = type(db.settings) == "table" and db.settings or {}
 	for k, v in pairs(DEFAULTS) do
 		if db.settings[k] == nil then

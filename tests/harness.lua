@@ -2851,8 +2851,9 @@ do
 		if m.msg:find("^H1|") and m.chatType == "CHANNEL" and not first then first = m.msg end
 	end
 	check(first and first:find("|J$"), "the first hello after logging in asks others to say hi back", first)
+	Addon("H1|abcd|MAGE|alchemy~1e~2s~5|TestRealm|1", "Fresh Login-TestRealm")
+	Advance(30)
 	W.sent = {}
-	Advance(25)
 	Addon("H1|abcd|MAGE|alchemy~1e~2s~5|TestRealm|1||J", "Fresh Login-TestRealm")
 	Advance(8)
 	local reply

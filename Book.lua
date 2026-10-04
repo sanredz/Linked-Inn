@@ -386,7 +386,7 @@ local function Refresh()
 		info = "Recipes not read yet"
 	else
 		local source = ({ auto = "from a link", click = "from a link", shared = "shared by them", own = "yours" })[p.via] or ""
-		info = string.format("%d recipes  ·  %s %s", p.count or 0, source, p.read and LI.Ago(p.read) or "")
+		info = string.format("%d %s  ·  %s %s", p.count or 0, (p.count or 0) == 1 and "recipe" or "recipes", source, p.read and LI.Ago(p.read) or "")
 	end
 	frame.info:SetText(info)
 	frame.empty:SetShown(#list == 0)

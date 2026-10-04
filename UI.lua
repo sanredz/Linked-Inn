@@ -194,7 +194,7 @@ local function ShowRowTooltip(row)
 		local p = item.p
 		local right
 		if p.recipes then
-			right = string.format("%d recipes", p.count or 0)
+			right = string.format("%d %s", p.count or 0, (p.count or 0) == 1 and "recipe" or "recipes")
 		else
 			right = "recipes not read yet"
 		end
@@ -595,7 +595,7 @@ local function RowLine(data)
 		parts[#parts + 1] = string.format("Skill %d", p.rank)
 	end
 	if p.recipes then
-		parts[#parts + 1] = string.format("%d recipes", p.count or 0)
+		parts[#parts + 1] = string.format("%d %s", p.count or 0, (p.count or 0) == 1 and "recipe" or "recipes")
 	else
 		parts[#parts + 1] = "recipes not read yet"
 	end

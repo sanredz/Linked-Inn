@@ -11,6 +11,8 @@ local PROBE_MAX = 1.5
 local PROBE_DEFAULT = 1.0
 local latencies = {}
 local GIVE_UP = 5
+local PAUSE = 60
+local pausedUntil = 0
 local QUEUE_MAX = 30
 local STALE = 3 * 86400
 local CLICK_WINDOW = 20
@@ -37,7 +39,7 @@ local function Now()
 end
 
 function Reader.IsBroken()
-	return (LI.test and LI.test.auto.streak or 0) >= GIVE_UP
+	return Now() < pausedUntil
 end
 
 function Reader.Want(key, profName, link, extra)
@@ -236,8 +238,13 @@ local function Finish(job, outcome)
 		auto.err = auto.err + 1
 		auto.streak = auto.streak + 1
 	end
+	if auto.streak >= GIVE_UP then
+		auto.streak = 0
+		pausedUntil = Now() + PAUSE
+		LI.Log(string.format("%d links in a row got no answer; pausing a minute", GIVE_UP))
+	end
 	pending = nil
-	nextAt = Now() + GAP
+	nextAt = math.max(Now() + GAP, pausedUntil)
 	LI.Fire("TestChanged")
 	LI.After(0.05, function()
 		Kick()
@@ -461,6 +468,7 @@ end)
 
 function Reader.Retry()
 	LI.test.auto.streak = 0
+	pausedUntil = 0
 	nextAt = 0
 	LI.Fire("TestChanged")
 end

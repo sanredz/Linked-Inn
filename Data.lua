@@ -522,15 +522,12 @@ function LI.Search(query, opts)
 		return cap > 0 and (p.rank or 0) >= cap
 	end
 	local recipeSearch = q ~= "" or kind ~= "all"
-	local hits, hitCount, hitProfs = {}, 0, {}
+	local hits, hitCount = {}, 0
 	if recipeSearch then
 		for id, meta in pairs(LI.db.recipes) do
 			if KindMatch(meta, kind) and (q == "" or Find(meta.n, q)) then
 				hits[id] = meta
 				hitCount = hitCount + 1
-				if meta.p then
-					hitProfs[meta.p] = true
-				end
 			end
 		end
 	end
@@ -540,9 +537,9 @@ function LI.Search(query, opts)
 			local nameMatch = q ~= "" and kind == "all" and Find(LI.ShortName(key), q)
 			local groups, top = {}, nil
 			for profKey, p in pairs(c.profs) do
-				if Allowed(profKey) and Maxed(profKey, p) then
+				if p.recipes and Allowed(profKey) and Maxed(profKey, p) then
 					local g = { key = profKey, confidence = 0, makes = 0 }
-					if recipeSearch and hitCount > 0 and p.recipes then
+					if recipeSearch and hitCount > 0 then
 						for id in pairs(p.recipes) do
 							local meta = hits[id]
 							if meta then
@@ -557,8 +554,6 @@ function LI.Search(query, opts)
 						g.confidence = 3
 					elseif not recipeSearch or nameMatch or (kind == "all" and Find(p.name, q)) then
 						g.confidence = 2
-					elseif recipeSearch and not p.recipes and hitProfs[profKey] then
-						g.confidence = 1
 					end
 					if g.confidence > 0 then
 						groups[#groups + 1] = g

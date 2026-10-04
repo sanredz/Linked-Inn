@@ -557,14 +557,15 @@ check(LI.crafters["Bob Stone-TestRealm"].where == "Guild", "guild chat links are
 Advance(30)
 check(LI.test.auto.tries == 1, "automatic reading can be switched off")
 
+check(#LI.Search("bob") == 0, "a crafter whose recipes aren't read yet stays off the list")
+LI.SetRecipes("Bob Stone-TestRealm", { name = "Tailoring", rank = 260, max = 300 }, { { id = 3914, name = "Brown Linen Pants", item = 4343 } }, "auto")
 local results = LI.Search("mooncloth")
-check(#results == 2, "searching an item finds the crafter who can make it and a tailor who might", #results)
-check(results[1].key == "Bob Stone-TestRealm" and results[1].status == "online" and results[1].confidence == 1, "online crafters come first even when unsure", results[1] and results[1].key)
-check(results[2].key == "Anna Smith-TestRealm" and results[2].recipeMeta and results[2].recipeMeta.n == "Mooncloth Bag", "the matching recipe is attached", results[2] and results[2].key)
-check(results[2].status == "recent", "someone seen in chat a moment ago counts as recently active", results[2].status)
+check(#results == 1, "searching an item finds only the crafter who can make it", #results)
+check(results[1].key == "Anna Smith-TestRealm" and results[1].recipeMeta and results[1].recipeMeta.n == "Mooncloth Bag", "the matching recipe is attached", results[1] and results[1].key)
+check(results[1].status == "recent", "someone seen in chat a moment ago counts as recently active", results[1].status)
 
 results = LI.Search("", { kind = "bag" })
-check(#results == 2 and results[2].makes == 1, "the item type filter works without a search")
+check(#results == 1 and results[1].makes == 1, "the item type filter works without a search")
 results = LI.Search("", { kind = "consumable" })
 check(#results == 0, "nobody shows up for a type nobody makes")
 results = LI.Search("anna")
@@ -671,7 +672,7 @@ check(main.count.__text:find("3 crafters remembered", 1, true), "the footer does
 check(rows[2].headName:IsShown() == false and rows[2].name:IsShown(), "crafter rows hide the header parts")
 check(rows[1].name:IsShown() == false, "header rows hide the crafter parts")
 local bobRow = rows[4]
-check(bobRow.line.__text == "Skill 260  ·  recipes not read yet" or bobRow.line.__text == "recipes not read yet", "a row describes that profession", bobRow.line.__text)
+check(bobRow.line.__text == "Skill 260  ·  1 recipe", "a row describes that profession", bobRow.line.__text)
 check(rows[5].line.__text == "Skill 260  ·  2 recipes", "skill and recipe count are shown", rows[5].line.__text)
 bobRow.__scripts.OnClick(bobRow, "LeftButton")
 check(W.tells[1] == "Bob Stone", "clicking a row whispers the crafter by name without the realm", W.tells[1])
@@ -943,7 +944,7 @@ Advance(1)
 check(LI.settings.compact and extent(1, { entry = {} }) == 24 and extent(1, { header = true }) == 34, "compact rows are about half the height, headers stay")
 local compactRow = main.list.__rows[2]
 check(compactRow.compact and compactRow.pill.__w == 44 and compactRow.books[1].__w == 18, "compact shrinks the pill and profession buttons")
-check(compactRow.line.__text == "Skill 150  ·  1 recipes" and compactRow.name:IsShown(), "skill and recipes sit next to the name", compactRow.line.__text)
+check(compactRow.line.__text == "Skill 150  ·  1 recipe" and compactRow.name:IsShown(), "skill and recipes sit next to the name", compactRow.line.__text)
 check(not compactRow.books[1].rank:IsShown(), "compact hides the skill number on the buttons, it's in the text")
 main.compactBox:SetChecked(false)
 main.compactBox.__scripts.OnClick(main.compactBox)
@@ -1131,16 +1132,20 @@ for i = 1, 6 do
 	W.guids["Player-2-" .. i] = { class = "MAGE", name = "Mage" .. i .. " Test", realm = "" }
 	Say("CHAT_MSG_CHANNEL", TradeLink("Player-2-" .. i, 3908, 197, "Tailoring"), "Mage" .. i .. " Test-TestRealm", "Player-2-" .. i, "Trade - City")
 end
-Advance(200)
-check(LI.test.auto.tries == 5 and LI.test.auto.timeout == 5, "reading stops after five links get no reply", LI.test.auto.tries)
-check(LI.Reader.IsBroken(), "the reader reports that automatic reading doesn't work")
+for _ = 1, 120 do
+	Advance(1)
+	if LI.test.auto.tries >= 5 then break end
+end
+Advance(10)
+check(LI.test.auto.tries == 5 and LI.test.auto.timeout == 5, "reading pauses after five links in a row get no reply", LI.test.auto.tries)
+check(LI.Reader.IsBroken(), "the reader reports the pause")
 local st, _, sure = LI.Status("Mage6 Test-TestRealm")
 check(st == "offline" and sure == true, "a link that gets no reply marks its owner offline", st)
+Advance(60)
+check(LI.test.auto.tries > 5 and not LI.Reader.IsBroken(), "after a minute it carries on by itself", LI.test.auto.tries)
 Advance(200)
-check(LI.test.auto.tries == 5, "no more tries once it gave up")
 LI.UI.Open(LI.UI.TAB.test)
 check(LinkedInnFrame.testPage.head.__text == "Links need a click", "the test page says links need a click", LinkedInnFrame.testPage.head.__text)
-check(LinkedInnFrame.testPage.retry:IsShown(), "a retry button appears")
 LinkedInnFrame:Hide()
 LI.Reader.Retry()
 W.autoWorks = true

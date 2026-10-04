@@ -95,6 +95,10 @@ function methods:HookScript(k, fn)
 	end
 end
 function methods:SetAlpha(a) self.__alpha = a end
+function methods:SetScale(v) self.__scale = v end
+function methods:GetScale() return self.__scale or 1 end
+function methods:EnableMouse(v) self.__mouse = v and true or false end
+function methods:IsMouseEnabled() if self.__mouse == nil then return true end return self.__mouse end
 function methods:SetEnabled(v) self.__disabled = not v end
 function methods:SetSize(w, h) self.__w, self.__h = w, h end
 function methods:SetNumber(n) self.__text = tostring(n) end
@@ -1180,14 +1184,25 @@ _G.ProfessionsFrame_LoadUI = function()
 	return true
 end
 local alphas = {}
+local clickable
 W.linkData["trade:Player-2-2:3908:197"] = { linkedName = "Mage2 Test", prof = TAILORING, recipes = TAILOR_RECIPES }
 Say("CHAT_MSG_CHANNEL", TradeLink("Player-2-2", 3908, 197, "Tailoring"), "Mage2 Test-TestRealm", "Player-2-2", "Trade - City")
-for _ = 1, 30 do
-	Advance(1)
-	if ProfessionsFrame and ProfessionsFrame:IsShown() then alphas[#alphas + 1] = ProfessionsFrame:GetAlpha() end
+for _ = 1, 300 do
+	Advance(0.1)
+	if ProfessionsFrame and ProfessionsFrame:IsShown() then
+		alphas[#alphas + 1] = ProfessionsFrame:GetAlpha()
+		if ProfessionsFrame:GetScale() > 0.05 or ProfessionsFrame:IsMouseEnabled() then
+			clickable = (clickable or 0) + 1
+		end
+	end
 end
 check(loads == 1, "the professions window is loaded before the first automatic read", loads)
 check(#alphas == 0 or math.max(table.unpack(alphas)) == 0, "the profession window stays invisible during automatic reads", alphas[1])
+check(#alphas > 0 and clickable == nil, "while hidden it's shrunk to a speck and ignores the mouse, so it never blocks your clicks", clickable)
+check(not ProfessionsFrame:IsShown() or (ProfessionsFrame:GetScale() == 1 and ProfessionsFrame:IsMouseEnabled()), "afterwards its size and mouse are as before")
+ProfessionsFrame:Show()
+check(ProfessionsFrame:GetAlpha() ~= 0 and ProfessionsFrame:GetScale() == 1 and ProfessionsFrame:IsMouseEnabled(), "opening it yourself shows it normally", ProfessionsFrame:GetScale())
+ProfessionsFrame:Hide()
 check(LI.test.auto.flashed == 0, "no flash is counted when the window stays hidden", LI.test.auto.flashed)
 check(ProfessionsFrame:GetAlpha() == 1 and not ProfessionsFrame:IsShown(), "the window is closed and made visible again afterwards")
 check(LI.crafters["Mage2 Test-TestRealm"].profs.tailoring.via == "auto", "the hidden read still saves recipes")

@@ -100,9 +100,28 @@ local function FrameVisible()
 	return (alpha or 1) > 0.05
 end
 
+local TINY = 0.01
+local savedScale, savedMouse
+
+local function Conceal(frame)
+	if not concealed then
+		savedScale = LI.Try(frame.GetScale, frame) or 1
+		savedMouse = LI.Try(frame.IsMouseEnabled, frame)
+	end
+	frame:SetAlpha(0)
+	LI.Try(frame.SetScale, frame, TINY)
+	LI.Try(frame.EnableMouse, frame, false)
+	concealed = true
+end
+
 local function Reveal()
 	if concealed and ProfessionsFrame then
-		LI.Try(ProfessionsFrame.SetAlpha, ProfessionsFrame, 1)
+		local frame = ProfessionsFrame
+		LI.Try(frame.SetAlpha, frame, 1)
+		LI.Try(frame.SetScale, frame, savedScale or 1)
+		if savedMouse ~= nil then
+			LI.Try(frame.EnableMouse, frame, savedMouse)
+		end
 	end
 	concealed = false
 end
@@ -115,8 +134,7 @@ local function HookFrame()
 	hooked = true
 	frame:HookScript("OnShow", function(self)
 		if pending then
-			self:SetAlpha(0)
-			concealed = true
+			Conceal(self)
 		end
 	end)
 	frame:HookScript("OnHide", Reveal)

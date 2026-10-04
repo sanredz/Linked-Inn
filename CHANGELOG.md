@@ -11,6 +11,8 @@
 - Reading links no longer stops for good after a few failures; it pauses a
   minute and carries on.
 - Links are read about three times faster.
+- The hidden profession window used while reading can no longer catch your
+  mouse clicks.
 - A fresh install can read every crafting profession right away, without
   first seeing someone link it.
 - The player whose recipe book is open is highlighted in the list.

@@ -1331,6 +1331,12 @@ do
 	C_TradeSkillUI.CloseTradeSkill()
 	Advance(3)
 	W.openPanel = {}
+	check(LI.CheckOnline("Anna Smith-TestRealm") and LI.Reader.SilentReads(), "with silent reads a game window doesn't block checks")
+	Advance(4)
+	check(not LI.IsChecking("Anna Smith-TestRealm"), "so the check runs right away")
+	Advance(30)
+	local framesFor = GetFramesRegisteredForEvent
+	GetFramesRegisteredForEvent = nil
 	check(LI.CheckOnline("Anna Smith-TestRealm"), "a check is accepted while a game window is open")
 	Advance(10)
 	check(LI.IsChecking("Anna Smith-TestRealm"), "it waits for the window instead of giving up after a few seconds")
@@ -1343,6 +1349,7 @@ do
 	W.autoWorks = true
 	Advance(4)
 	check(not LI.IsChecking("Anna Smith-TestRealm") and LI.Status("Anna Smith-TestRealm") == "online", "once the window closes the check runs and its answer counts")
+	GetFramesRegisteredForEvent = framesFor
 	W.autoWorks = false
 	Advance(30)
 	W.openPanel = {}

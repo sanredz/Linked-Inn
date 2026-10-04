@@ -319,6 +319,10 @@ local function Unsilence()
 end
 Reader.Unsilence = Unsilence
 
+function Reader.SilentReads()
+	return not quietOff and GetFramesRegisteredForEvent ~= nil
+end
+
 function Reader.QuietState()
 	return quietOff, quietTries, quietWorks
 end
@@ -409,7 +413,7 @@ local function Pump()
 	if InCombatLockdown and InCombatLockdown() then
 		return
 	end
-	if ChatActive() or PanelOpen() then
+	if not Reader.SilentReads() and (ChatActive() or PanelOpen()) then
 		return
 	end
 	local job = NextJob()
@@ -480,7 +484,7 @@ Kick = function()
 		Waiting("in combat")
 		return
 	end
-	if PanelOpen() then
+	if not Reader.SilentReads() and PanelOpen() then
 		Waiting("a game window is open")
 		return
 	end

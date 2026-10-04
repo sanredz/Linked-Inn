@@ -1189,7 +1189,8 @@ local function CreateMain()
 	search:SetSize(190, 22)
 	search:SetPoint("TOPLEFT", 72, -32)
 	if search.Instructions then
-		search.Instructions:SetText("Search an item, profession or name")
+		search.Instructions:SetText("Item, profession or name")
+		search.Instructions:SetWordWrap(false)
 	end
 	search:SetScript("OnTextChanged", function(self)
 		if SearchBoxTemplate_OnTextChanged then

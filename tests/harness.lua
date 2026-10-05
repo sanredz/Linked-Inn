@@ -304,8 +304,16 @@ local function InstallStubs()
 		end,
 		InChatMessagingLockdown = function() return W.lockdown == true end,
 	}
-	_G.JoinTemporaryChannel = function(name) if not W.noJoin then W.channels[name] = 5 end end
-	_G.JoinChannelByName = function(name, password, frame) W.joinFrame = frame if not W.noJoin then W.channels[name] = 5 end end
+	_G.JoinTemporaryChannel = function(name) if not W.noJoin and not W.joinDelay then W.channels[name] = 5 end end
+	_G.JoinChannelByName = function(name, password, frame)
+		W.joinFrame = frame
+		if W.noJoin then return end
+		if W.joinDelay then
+			C_Timer.After(W.joinDelay, function() W.channels[name] = 5 end)
+		else
+			W.channels[name] = 5
+		end
+	end
 	_G.GetChannelName = function(name) local id = W.channels[name] if id then return id, name end return 0, nil end
 	_G.RemoveChatWindowChannel = function(i, name) W.hidden = (W.hidden or 0) + 1 end
 	_G.IsInInstance = function() return W.inInstance == true end
@@ -3042,6 +3050,19 @@ do
 	check(Bridge.Share() == 0, "Guild and friends only turns the bridge off")
 	LI.settings.guildOnly = false
 	W.units, W.groupSize, W.bnet, W.faction = nil, nil, nil, nil
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.joinDelay = 2
+	W.channels = { [1] = 1 }
+	W.profs = { { name = "Tailoring", rank = 100, max = 150 } }
+	Boot()
+	W.sent = {}
+	Advance(8)
+	check(LI.Sync.IsJoined() and #Sent("H1", "CHANNEL") >= 1, "when the game confirms the channel a moment later, the first hello still goes out within seconds", #Sent("H1", "CHANNEL"))
+	W.joinDelay = nil
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

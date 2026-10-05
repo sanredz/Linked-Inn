@@ -430,6 +430,7 @@ LI.On("PLAYER_LOGIN", function()
 		end
 	end
 	LI.ready = true
+	LI.readyAt = GetTime and GetTime() or 0
 	LI.Fire("Ready")
 end)
 

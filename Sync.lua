@@ -8,6 +8,8 @@ local CHANNEL = "LinkedInnSync"
 local JOIN_DELAY = 1
 local JOIN_DEFER = 2
 local JOIN_DEFER_MAX = 15
+local JOIN_WAIT = 15
+local JOIN_RETRY = 30
 local FIRST_HELLO = 1
 local SECOND_HELLO = 15
 local HELLO_EVERY = 12 * 60
@@ -1112,37 +1114,17 @@ local function SlotOneTaken()
 	return type(id) == "number" and id > 0
 end
 
-local function Join()
-	if joined then
-		return
-	end
-	channelName = CHANNEL
-	if not ChannelId() then
-		if not SlotOneTaken() and joinDeferred < JOIN_DEFER_MAX then
-			joinDeferred = joinDeferred + 1
-			LI.After(JOIN_DEFER, Join)
-			return
-		end
-		if JoinChannelByName then
-			LI.Secure(JoinChannelByName, CHANNEL, nil, 0, 0)
-		end
-		if not ChannelId() and JoinTemporaryChannel then
-			LI.Secure(JoinTemporaryChannel, CHANNEL)
-		end
-	end
+local function Settle()
 	local windows = NUM_CHAT_WINDOWS or 10
 	if RemoveChatWindowChannel then
 		for i = 1, windows do
 			LI.Try(RemoveChatWindowChannel, i, CHANNEL)
 		end
 	end
-	joined = ChannelId() ~= nil
-	LI.test.sync.joined = joined
+	joined = true
+	LI.test.sync.joined = true
+	LI.Log(string.format("Joined the hidden channel %.0fs after login", Now() - (LI.readyAt or Now())))
 	LI.Fire("TestChanged")
-	if not joined then
-		LI.After(30, Join)
-		return
-	end
 	if not nextHello then
 		nextHello = Now() + FIRST_HELLO
 		LI.After(SECOND_HELLO, function()
@@ -1152,6 +1134,46 @@ local function Join()
 			end
 		end)
 	end
+end
+
+local Join
+
+local function Confirm(tries)
+	if joined then
+		return
+	end
+	if ChannelId() then
+		Settle()
+	elseif tries < JOIN_WAIT then
+		LI.After(1, function()
+			Confirm(tries + 1)
+		end)
+	else
+		LI.After(JOIN_RETRY, Join)
+	end
+end
+
+Join = function()
+	if joined then
+		return
+	end
+	channelName = CHANNEL
+	if ChannelId() then
+		Settle()
+		return
+	end
+	if not SlotOneTaken() and joinDeferred < JOIN_DEFER_MAX then
+		joinDeferred = joinDeferred + 1
+		LI.After(JOIN_DEFER, Join)
+		return
+	end
+	if JoinChannelByName then
+		LI.Secure(JoinChannelByName, CHANNEL, nil, 0, 0)
+	end
+	if not ChannelId() and JoinTemporaryChannel then
+		LI.Secure(JoinTemporaryChannel, CHANNEL)
+	end
+	Confirm(0)
 end
 
 function Sync.Ping(target)

@@ -25,8 +25,6 @@ local ownProf, ownAt = nil, -60
 local REST = 3
 local restUntil = 0
 local lateAt = -60
-local userLine, userLineAt, lastOwnLine = nil, -60, nil
-local selfOpening = false
 local UserFrame
 local userShown = false
 
@@ -348,7 +346,7 @@ EndScan = function(force)
 end
 
 local silenced
-local QUIET_EVENTS = { "TRADE_SKILL_SHOW", "TRADE_SKILL_LIST_UPDATE", "TRADE_SKILL_NAME_UPDATE", "TRADE_SKILL_DATA_SOURCE_CHANGING", "TRADE_SKILL_DATA_SOURCE_CHANGED" }
+local QUIET_EVENTS = { "TRADE_SKILL_SHOW" }
 local quietTries, quietWorks, quietOff = 0, 0, false
 
 local function Silence()
@@ -509,39 +507,10 @@ local function UserOpened()
 	end
 end
 
-local function FirstOwnLine()
-	local links = LI.ownLinks or {}
-	for _, key in ipairs(LI.PROFESSION_ORDER) do
-		if links[key] and links[key].line then
-			return links[key].line
-		end
-	end
-	return nil
-end
-
-local function ReloadOwn()
-	local api = C_TradeSkillUI
-	local line = (Now() - userLineAt <= 2 and userLine) or lastOwnLine or FirstOwnLine()
-	ownProf = line or ownProf
-	if line and api and api.OpenTradeSkill then
-		selfOpening = true
-		LI.Try(api.OpenTradeSkill, line)
-		selfOpening = false
-		LI.Log("Your profession window opened during a background read; loaded it again")
-	elseif api and api.CloseTradeSkill then
-		LI.Try(api.CloseTradeSkill)
-		LI.Log("Your profession window opened during a background read; closed it so it can open cleanly")
-	end
-end
-
 UserFrame = function(frame)
 	if Reader.SilentReads() then
 		if Now() - lateAt > 0.5 then
-			local missed = pending ~= nil
 			UserOpened()
-			if missed then
-				LI.After(0, ReloadOwn)
-			end
 		end
 		return
 	end
@@ -946,7 +915,6 @@ function Reader.Read()
 		if not ownJob then
 			Reveal()
 		end
-		lastOwnLine = LI.Safe(base.professionID) or lastOwnLine
 		if #list == 0 or not LI.playerKey then
 			return
 		end
@@ -1062,11 +1030,6 @@ LI.On("TRADE_SKILL_SHOW", function()
 		LI.After(SETTLE, function()
 			if not pending then
 				CloseHidden()
-				local api = C_TradeSkillUI
-				if ownProf and Now() - ownAt <= OWN_BACK + SETTLE and api and api.OpenTradeSkill then
-					userClickAt = Now()
-					LI.Try(api.OpenTradeSkill, ownProf)
-				end
 			end
 		end)
 	else
@@ -1130,14 +1093,6 @@ LI.On("NEW_RECIPE_LEARNED", function(recipeID)
 end)
 
 LI.Listen("Ready", function()
-	if hooksecurefunc and C_TradeSkillUI and C_TradeSkillUI.OpenTradeSkill then
-		hooksecurefunc(C_TradeSkillUI, "OpenTradeSkill", function(line)
-			if not selfOpening then
-				userLine = LI.Safe(line)
-				userLineAt = Now()
-			end
-		end)
-	end
 	LI.After(15, function()
 		Reader.ReadOwn()
 	end)

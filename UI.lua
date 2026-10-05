@@ -952,7 +952,7 @@ local function RefreshFind()
 		end
 		LI.Theme.ProfessionArt(main.listArt, only or nil)
 	end
-	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary or LI.settings.liOnly, kind = LI.settings.kind, maxOnly = LI.settings.maxOnly, minSkill = LI.settings.minSkill, liOnly = LI.settings.liOnly, guildOnly = LI.settings.guildOnly }
+	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary, kind = LI.settings.kind, maxOnly = LI.settings.maxOnly, minSkill = LI.settings.minSkill, liOnly = LI.settings.liOnly, guildOnly = LI.settings.guildOnly }
 	local results = LI.Search(filter.search, opts)
 	local list = {}
 	local collapsed = LI.settings.collapsed or {}

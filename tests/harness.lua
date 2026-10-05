@@ -3208,20 +3208,10 @@ do
 	Addon("H1|cook1|MAGE|cooking~5k~69~1|TestRealm|1", "Cook Only-TestRealm")
 	Addon("D1|cook1|1|1|" .. payload, "Cook Only-TestRealm", "WHISPER")
 	Addon("P2|1", "No Profs-TestRealm", "CHANNEL")
-	LI.settings.secondary = false
-	LI.settings.liOnly = true
-	LI.UI.Open(LI.UI.TAB.find)
-	LI.UI.Refresh()
-	local seen = false
-	for _, r in ipairs(LinkedInnFrame.list.__rows) do
-		if r.entry and r.entry.key == "Cook Only-TestRealm" then seen = true end
-	end
-	check(seen, "the Linked Inn filter shows users with only secondary professions too")
 	local chat0 = #W.chat
 	SlashCmdList.LINKEDINN("status")
 	local report = table.concat({ table.unpack(W.chat, chat0 + 1) }, "\n")
 	check(report:find("No Profs (nothing shared)", 1, true) and report:find("Cook Only (Cooking only", 1, true), "/li status says what each Linked Inn user heard has shared", report)
-	LI.settings.liOnly = false
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

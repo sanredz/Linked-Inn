@@ -1517,6 +1517,8 @@ SlashCmdList.LINKEDINN = function(msg)
 		LI.Sync.Status()
 	elseif cmd == "guide" then
 		LI.Guide.Show(1)
+	elseif cmd == "art" and LI.ArtPreview then
+		LI.ArtPreview.Next(rest)
 	else
 		UI.Toggle()
 	end

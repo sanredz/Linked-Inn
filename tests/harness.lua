@@ -288,7 +288,7 @@ local function InstallStubs()
 		GetSpellName = function(id) return W.spellNames and W.spellNames[id] or nil end,
 	}
 	W.sent = {}
-	W.channels = W.channels or {}
+	W.channels = W.channels or { [1] = 1 }
 	_G.NUM_CHAT_WINDOWS = 10
 	_G.C_ChatInfo = {
 		RegisterAddonMessagePrefix = function(prefix) W.prefix = prefix return true end,
@@ -305,6 +305,7 @@ local function InstallStubs()
 		InChatMessagingLockdown = function() return W.lockdown == true end,
 	}
 	_G.JoinTemporaryChannel = function(name) if not W.noJoin then W.channels[name] = 5 end end
+	_G.JoinChannelByName = function(name, password, frame) W.joinFrame = frame if not W.noJoin then W.channels[name] = 5 end end
 	_G.GetChannelName = function(name) local id = W.channels[name] if id then return id, name end return 0, nil end
 	_G.RemoveChatWindowChannel = function(i, name) W.hidden = (W.hidden or 0) + 1 end
 	_G.IsInInstance = function() return W.inInstance == true end
@@ -2888,6 +2889,24 @@ do
 	end
 	Advance(4)
 	check(#Sent("Q1", "WHISPER") == 10, "ten Linked Inn users heard at once are all asked for their lists within seconds", #Sent("Q1", "WHISPER"))
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.channels = {}
+	Boot()
+	Advance(10)
+	check(not LI.Sync.IsJoined(), "the hidden channel waits while General hasn't taken /1 yet, so it never steals it")
+	W.channels[1] = 1
+	Advance(3)
+	check(LI.Sync.IsJoined() and W.joinFrame == 0, "it joins once /1 is taken, without attaching to a chat window")
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.channels = {}
+	Boot()
+	Advance(35)
+	check(LI.Sync.IsJoined(), "someone who left every server channel still joins after half a minute")
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

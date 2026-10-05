@@ -1057,20 +1057,32 @@ local function Tick()
 	end
 end
 
+local joinDeferred = 0
+
+local function SlotOneTaken()
+	if not GetChannelName then
+		return true
+	end
+	local id = LI.Safe(LI.Try(GetChannelName, 1))
+	return type(id) == "number" and id > 0
+end
+
 local function Join()
 	if joined then
 		return
 	end
 	channelName = CHANNEL
 	if not ChannelId() then
-		local joins = { JoinTemporaryChannel, JoinChannelByName }
-		for _, fn in ipairs(joins) do
-			if type(fn) == "function" then
-				LI.Try(fn, CHANNEL)
-				if ChannelId() then
-					break
-				end
-			end
+		if not SlotOneTaken() and joinDeferred < JOIN_DEFER_MAX then
+			joinDeferred = joinDeferred + 1
+			LI.After(JOIN_DEFER, Join)
+			return
+		end
+		if JoinChannelByName then
+			LI.Secure(JoinChannelByName, CHANNEL, nil, 0, 0)
+		end
+		if not ChannelId() and JoinTemporaryChannel then
+			LI.Secure(JoinTemporaryChannel, CHANNEL)
 		end
 	end
 	local windows = NUM_CHAT_WINDOWS or 10

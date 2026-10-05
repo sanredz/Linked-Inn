@@ -2370,6 +2370,33 @@ end
 
 do
 	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	W.autoWorks = true
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Advance(6)
+	W.autoWorks = false
+	check(LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes, "a background read just finished")
+	local closed = W.closed
+	W.trade = { linked = true, linkedName = "Brew Master", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	ProfessionsFrame:Show()
+	Advance(4)
+	check(ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() == 1 and ProfessionsFrame:GetScale() == 1, "your own profession, shown as linked under your own name, isn't mistaken for a late reply")
+	check(W.closed == closed, "and it is never closed for you", W.closed - closed)
+	C_TradeSkillUI.CloseTradeSkill()
+	Advance(1)
+	W.trade = { linked = true, linkedName = "Cora Vale", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	ProfessionsFrame:Show()
+	Advance(2)
+	check(not ProfessionsFrame:IsShown(), "a late reply from someone else is still closed")
+end
+
+do
+	Setup()
 	W.playerGUID = "Player-1-ME"
 	Boot()
 	Advance(5)

@@ -205,15 +205,23 @@ local function Reveal()
 	concealed = false
 end
 
+local function LinkState()
+	local api = C_TradeSkillUI
+	if not api or not api.IsTradeSkillLinked then
+		return nil, false
+	end
+	local linked, name = LI.Try(api.IsTradeSkillLinked)
+	linked, name = LI.Safe(linked), LI.Safe(name)
+	local mine = linked == true and type(name) == "string" and name ~= "" and LI.playerKey ~= nil and Reader.NameMatches(name, LI.playerKey)
+	return linked, mine
+end
+
 local function LateReply()
 	if pending or Now() - lastDone > LATE or Now() - userClickAt <= USER_CLICK then
 		return false
 	end
-	local api = C_TradeSkillUI
-	if not api or not api.IsTradeSkillLinked then
-		return false
-	end
-	return LI.Safe(LI.Try(api.IsTradeSkillLinked)) == true
+	local linked, mine = LinkState()
+	return linked == true and not mine
 end
 
 local function HookFrame()
@@ -438,10 +446,8 @@ end
 
 local function OwnShown()
 	local api = C_TradeSkillUI
-	if not api or not api.IsTradeSkillLinked then
-		return false
-	end
-	if LI.Safe(LI.Try(api.IsTradeSkillLinked)) ~= false then
+	local linked, mine = LinkState()
+	if linked ~= false and not mine then
 		return false
 	end
 	if pending and pending.own then

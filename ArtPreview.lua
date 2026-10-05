@@ -18,8 +18,16 @@ local list
 local index = 0
 local top, bottom, back, label
 
+local force = false
+
 local function Exists(atlas)
-	if not atlas or not C_Texture or not C_Texture.GetAtlasInfo then
+	if not atlas then
+		return false
+	end
+	if force then
+		return true
+	end
+	if not C_Texture or not C_Texture.GetAtlasInfo then
 		return false
 	end
 	return type(LI.Try(C_Texture.GetAtlasInfo, atlas)) == "table"
@@ -54,10 +62,10 @@ local function Place(tex, atlas, main, anchor, rel, y)
 		tex:Hide()
 		return
 	end
-	local info = C_Texture.GetAtlasInfo(atlas)
-	tex:SetAtlas(atlas, false)
+	local info = LI.Try(C_Texture.GetAtlasInfo, atlas) or {}
+	LI.Try(tex.SetAtlas, tex, atlas, false)
 	local w = main:GetWidth() + 20
-	tex:SetSize(w, (info.height or 40) * w / math.max(1, info.width or w))
+	tex:SetSize(w, (info.height or 120) * w / math.max(1, info.width or w))
 	tex:ClearAllPoints()
 	tex:SetPoint(anchor, main, rel, 0, y)
 	tex:Show()
@@ -68,7 +76,7 @@ local function Back(atlas, main)
 		back:Hide()
 		return
 	end
-	back:SetAtlas(atlas, false)
+	LI.Try(back.SetAtlas, back, atlas, false)
 	back:ClearAllPoints()
 	back:SetAllPoints(main.Inset or main)
 	back:SetAlpha(0.5)
@@ -94,6 +102,10 @@ function Art.Next(arg)
 		back:Hide()
 		label:SetText("")
 		return
+	end
+	if arg == "all" then
+		force, list, index = true, nil, 0
+		LI.Print("Trying every art name without asking the game first; missing ones show blank.")
 	end
 	list = list or Build()
 	if #list == 0 then

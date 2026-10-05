@@ -305,6 +305,8 @@ local function Enqueue(kind, message, chatType, target)
 end
 
 local lastFailLog = -60
+Sync.Enqueue = Enqueue
+Sync.PREFIX = PREFIX
 
 local function Count(field, chatType)
 	local sync = LI.test.sync
@@ -319,8 +321,19 @@ local function Throttled(result)
 	return result == addonCode or result == channelCode
 end
 
+local BNET_MAX = 4000
+
 local function Deliver(q)
 	local chatType, target = q.chatType, q.target
+	if chatType == "BNET" then
+		if not (C_BattleNet and C_BattleNet.SendGameData) or #q.message > BNET_MAX then
+			return false
+		end
+		LI.Secure(C_BattleNet.SendGameData, target, PREFIX, q.message)
+		LI.test.sync.sent = LI.test.sync.sent + 1
+		Count("tx", chatType)
+		return true
+	end
 	if chatType == "CHANNEL" then
 		target = ChannelId()
 		if not target then
@@ -762,6 +775,9 @@ local function OnHello(key, parts, chatType)
 	end
 end
 
+local payloads = {}
+local quietApply = false
+
 local function Apply(key, ver, payload)
 	local profs = Sync.Decode(payload)
 	if not profs then
@@ -795,9 +811,69 @@ local function Apply(key, ver, payload)
 	end
 	c.sharedVer = ver
 	asked[key] = nil
+	payloads[key] = { ver = ver, payload = payload }
 	LI.test.sync.lists = LI.test.sync.lists + 1
-	LI.Log(string.format("Got %s's professions from Linked Inn", LI.ShortName(key)))
+	if not quietApply then
+		LI.Log(string.format("Got %s's professions from Linked Inn", LI.ShortName(key)))
+	end
 	LI.Fire("CraftersChanged")
+	return true
+end
+
+function Sync.ApplyCard(key, ver, payload, class, via)
+	if not key or key == LI.playerKey or not FromB36(ver) or type(payload) ~= "string" then
+		return false
+	end
+	quietApply = true
+	local ok = Apply(key, ver, payload)
+	quietApply = false
+	local c = LI.crafters[key]
+	if not ok or not c then
+		return false
+	end
+	c.li = true
+	c.where = c.where or "Linked Inn"
+	if type(class) == "string" and class:match("^%u+$") then
+		c.class = class
+	end
+	LI.NoteHeard(key)
+	LI.Log(string.format("Got %s's professions through %s (Linked Inn bridge)", LI.ShortName(key), tostring(via)))
+	return true
+end
+
+function Sync.Cached(key)
+	return payloads[key]
+end
+
+function Sync.OwnCard()
+	local own = OwnState()
+	if not own.payload or not own.ver or not LI.playerKey then
+		return nil
+	end
+	local class = select(2, LI.Try(UnitClass, "player"))
+	return { origin = LI.playerKey, ver = own.ver, payload = own.payload, class = LI.Safe(class) }
+end
+
+function Sync.LivePeers()
+	local out = {}
+	for key, p in pairs(peers) do
+		if Live(p) and key ~= LI.playerKey then
+			out[#out + 1] = key
+		end
+	end
+	return out
+end
+
+function Sync.MySid()
+	return MySid()
+end
+
+function Sync.Allow(key)
+	return Allow(key)
+end
+
+function Sync.FromB36(s)
+	return FromB36(s)
 end
 
 local function OnData(key, parts)
@@ -1010,6 +1086,8 @@ Dispatch = function(key, text, chatType)
 			answerGuild = answerGuild or chatType == "GUILD"
 			OnAsk(key, parts)
 		end
+	elseif kind == "C1" and LI.Bridge then
+		LI.Bridge.OnCard(key, text, chatType)
 	elseif kind == "R1" and LI.Work then
 		LI.Work.OnRequest(key, parts)
 	elseif kind == "X1" and LI.Work then
@@ -1157,7 +1235,7 @@ function Sync.Status()
 		string.format("Realm: %s (server %s)", MyRealm(), tostring(MySid())),
 		string.format("Channel: %s%s", joined and "joined" or "NOT joined", ChannelId() and (" (#" .. ChannelId() .. ")") or ""),
 		"Other realms: " .. (#bridges > 0 and table.concat(bridges, "; ") or "none linked yet"),
-		string.format("Relayed: %d out, %d in", sync.relayOut or 0, sync.relayIn or 0),
+		LI.Bridge and LI.Bridge.Status() or "Bridge: off",
 		string.format("Your list: version %s, %d professions", tostring(OwnState().ver), OwnCount()),
 		"Sent: " .. Counts("tx") .. ((sync.failed or 0) > 0 and string.format("  |cffff6060failed %d (%s)|r", sync.failed, tostring(sync.lastError)) or ""),
 		"Received: " .. Counts("rx"),

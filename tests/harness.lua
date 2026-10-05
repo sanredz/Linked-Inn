@@ -364,6 +364,25 @@ local function InstallStubs()
 	_G.WHO_NUM_RESULTS = "%d |4player:players; total"
 	_G.Enum = { SocialWhoOrigin = { Item = 3 } }
 	_G.GetNumGroupMembers = function() return W.groupSize or 0 end
+	_G.UnitFactionGroup = function() return W.faction end
+	W.bnetSent = {}
+	local function Game(f)
+		return f and { gameAccountID = f.id, isOnline = f.online ~= false, clientProgram = f.program or "WoW", wowProjectID = f.project, characterName = f.name, realmName = f.realm, factionName = f.faction, isInCurrentRegion = true } or nil
+	end
+	_G.BNGetNumFriends = function() return #(W.bnet or {}) end
+	_G.C_BattleNet = {
+		GetFriendNumGameAccounts = function(i) return (W.bnet and W.bnet[i]) and 1 or 0 end,
+		GetFriendGameAccountInfo = function(i) return Game(W.bnet and W.bnet[i]) end,
+		GetGameAccountInfoByID = function(id)
+			for _, f in ipairs(W.bnet or {}) do
+				if f.id == id then return Game(f) end
+			end
+		end,
+		SendGameData = function(id, prefix, msg)
+			assert(#msg <= 4000, "Battle.net message too long")
+			table.insert(W.bnetSent, { id = id, prefix = prefix, msg = msg })
+		end,
+	}
 	_G.IsInRaid = function() return false end
 	_G.ERR_CHAT_PLAYER_NOT_FOUND_S = "No player named '%s' is currently playing."
 	_G.C_TradeSkillUI = {
@@ -2907,6 +2926,119 @@ do
 	Boot()
 	Advance(35)
 	check(LI.Sync.IsJoined(), "someone who left every server channel still joins after half a minute")
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.faction = "Alliance"
+	W.bnet = {
+		{ id = 101, name = "Far Friend", realm = "TestRealm2", faction = "Alliance", project = 18 },
+		{ id = 102, name = "Near Friend", realm = "TestRealm", faction = "Alliance", project = 18 },
+		{ id = 103, name = "Enemy Friend", realm = "TestRealm2", faction = "Horde", project = 18 },
+		{ id = 104, name = "Retail Friend", realm = "Area52", faction = "Alliance", project = 1 },
+		{ id = 105, name = "Other Ruleset", realm = "TestRealmPvE", faction = "Alliance", project = 18 },
+		{ id = 106, name = "Nosurname", realm = "TestRealm2", faction = "Alliance", project = 18 },
+	}
+	Boot()
+	Advance(3)
+	local Bridge, Sync = LI.Bridge, LI.Sync
+	local list = Bridge.Friends()
+	local names = {}
+	for _, f in ipairs(list) do names[#names + 1] = LI.ShortName(f.key) .. (f.sameHalf and "=" or "~") end
+	check(table.concat(names, ",") == "Far Friend~,Near Friend=", "Battle.net friends in Forever on your faction and ruleset are found, and it knows who's on the other half", table.concat(names, ","))
+
+	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 100, max = 150 }, { { id = 3914, name = "Brown Linen Pants", item = 4343 } }, "own")
+	LI.Fire("OwnRecipesChanged")
+	local payload = Sync.Encode({ alchemy = { rank = 100, max = 150, recipes = { [2330] = true } } })
+	Addon("H1|abc1|PRIEST|alchemy~2s~46~1|TestRealm|1", "Chan Pal-TestRealm")
+	Addon("D1|abc1|1|1|" .. payload, "Chan Pal-TestRealm", "WHISPER")
+	check(LI.crafters["Chan Pal-TestRealm"].profs.alchemy.recipes and Sync.Cached("Chan Pal-TestRealm"), "a list heard on the channel is kept as received")
+	W.bnetSent = {}
+	Advance(25)
+	local to = {}
+	for _, m in ipairs(W.bnetSent) do
+		local who, hops = m.msg:match("^C1|([^|]+)|(%d)|")
+		if who then to[m.id .. ":" .. who .. ":" .. hops] = true end
+	end
+	check(to["101:" .. LI.ShortName(LI.playerKey) .. ":1"] and to["101:Chan Pal:2"], "your card and the cards of users you hear go to a Battle.net friend on the other half")
+	local wrong = false
+	for _, m in ipairs(W.bnetSent) do
+		if m.id ~= 101 then wrong = true end
+	end
+	check(not wrong, "not to friends on your half, the other faction, another ruleset or another game")
+	W.bnetSent = {}
+	Advance(25)
+	check(#W.bnetSent == 0, "the same cards aren't sent again for half an hour")
+
+	local far = Sync.Encode({ tailoring = { rank = 200, max = 225, recipes = { [3914] = true, [18560] = true } } })
+	local card = { origin = "Distant Crafter-TestRealm", ver = "zz9", payload = far, class = "MAGE", faction = "A" }
+	W.sent = {}
+	for _, line in ipairs(Bridge.Lines(card, 1, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 101)
+	end
+	local distant = LI.crafters["Distant Crafter-TestRealm"]
+	check(distant and distant.li and distant.profs.tailoring and distant.profs.tailoring.recipes[18560], "a card from a Battle.net friend lists that user with all their recipes")
+	check(LI.Status("Distant Crafter-TestRealm") == "online", "and shows them as around")
+	Advance(10)
+	local passed
+	for _, m in ipairs(W.sent) do
+		if m.chatType == "CHANNEL" and m.msg:find("^C1|Distant Crafter|2|") then passed = true end
+	end
+	check(passed, "it is passed on to everyone on your channel after a short wait")
+
+	local second = { origin = "Second Distant-TestRealm", ver = "zz8", payload = far, class = "PRIEST", faction = "A" }
+	W.sent = {}
+	for _, line in ipairs(Bridge.Lines(second, 1, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 101)
+	end
+	for _, line in ipairs(Bridge.Lines(second, 2)) do
+		Addon(line, "Other Bridge-TestRealm")
+	end
+	Advance(10)
+	local again = false
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^C1|Second Distant|") then again = true end
+	end
+	check(LI.crafters["Second Distant-TestRealm"] and not again, "if another bridge already put it on the channel, it isn't repeated")
+
+	local enemy = { origin = "Horde Guy-TestRealm", ver = "zz7", payload = far, class = "MAGE", faction = "H" }
+	for _, line in ipairs(Bridge.Lines(enemy, 1, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 101)
+	end
+	local tooFar = { origin = "Too Far-TestRealm", ver = "zz6", payload = far, class = "MAGE", faction = "A" }
+	for _, line in ipairs(Bridge.Lines(tooFar, 4, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 101)
+	end
+	local fromEnemy = { origin = "Via Enemy-TestRealm", ver = "zz5", payload = far, class = "MAGE", faction = "A" }
+	for _, line in ipairs(Bridge.Lines(fromEnemy, 1, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 103)
+	end
+	local fake = { origin = LI.playerKey, ver = "zz4", payload = far, class = "MAGE", faction = "A" }
+	for _, line in ipairs(Bridge.Lines(fake, 1, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 101)
+	end
+	check(not LI.crafters["Horde Guy-TestRealm"] and not LI.crafters["Too Far-TestRealm"] and not LI.crafters["Via Enemy-TestRealm"] and not LI.crafters[LI.playerKey].profs.tailoring.recipes[18560], "cards of the other faction, too many hops, through an enemy friend or claiming to be you are ignored")
+	for _, line in ipairs(Bridge.Lines({ origin = "Chan Pal-TestRealm", ver = "abc1", payload = far, class = "PRIEST", faction = "A" }, 2, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 101)
+	end
+	check(not LI.crafters["Chan Pal-TestRealm"].profs.tailoring, "a card can't overwrite a list you already have at that version")
+
+	W.units = { party1 = { name = "Party", surname = "Pal", guid = "Player-2-PRTY" } }
+	W.groupSize = 1
+	W.sent = {}
+	Fire("GROUP_ROSTER_UPDATE")
+	Advance(5)
+	local grouped = false
+	for _, m in ipairs(W.sent) do
+		if m.chatType == "PARTY" and m.msg:find("^C1|") then grouped = true end
+	end
+	check(grouped, "being grouped with someone from the other half bridges too")
+	check(Bridge.Status():find("2 Battle.net friends in Forever (1 on the other half)", 1, true), "/li status shows the bridge", Bridge.Status())
+	LI.settings.guildOnly = true
+	check(Bridge.Share() == 0, "Guild and friends only turns the bridge off")
+	LI.settings.guildOnly = false
+	W.units, W.groupSize, W.bnet, W.faction = nil, nil, nil, nil
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

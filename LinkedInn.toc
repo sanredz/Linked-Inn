@@ -19,6 +19,7 @@ Capture.lua
 Reader.lua
 Clues.lua
 Sync.lua
+Bridge.lua
 Work.lua
 UI.lua
 Book.lua

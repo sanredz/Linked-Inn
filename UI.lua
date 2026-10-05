@@ -1428,6 +1428,8 @@ local function CreateMain()
 	main.compactLabel:SetText("Compact")
 	main.health = LI.Health.Create(main)
 	main.health:SetPoint("LEFT", main, "BOTTOMLEFT", 92, 15)
+	main.guideButton = LI.Guide.CreateButton(main)
+	main.guideButton:SetPoint("LEFT", main.health, "RIGHT", 4, 0)
 
 	for i, name in ipairs(TABS) do
 		local tab = CreateFrame("Button", "LinkedInnFrameTab" .. i, main, "PanelTabButtonTemplate")
@@ -1451,6 +1453,7 @@ local function CreateMain()
 	end
 
 	main:SetScript("OnShow", function()
+		LI.After(0.3, LI.Guide.MaybeShow)
 		Sound("IG_CHARACTER_INFO_OPEN")
 		UI.Refresh()
 	end)
@@ -1511,6 +1514,8 @@ SlashCmdList.LINKEDINN = function(msg)
 		LI.Sync.Ping(rest)
 	elseif cmd == "status" then
 		LI.Sync.Status()
+	elseif cmd == "guide" then
+		LI.Guide.Show(1)
 	else
 		UI.Toggle()
 	end

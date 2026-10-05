@@ -3125,5 +3125,32 @@ do
 	W.noJoin = nil
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(2)
+	LI.UI.Open(LI.UI.TAB.find)
+	Advance(1)
+	local guide = LinkedInnGuide
+	check(guide and guide:IsShown() and guide.head.__text == "Welcome to Linked Inn", "the guide opens the first time the window does")
+	guide.next.__scripts.OnClick(guide.next)
+	check(guide.head.__text == "Helping it fill up" and guide.body.__text:find("Shift+V", 1, true), "Next shows how to help it fill up")
+	guide.next.__scripts.OnClick(guide.next)
+	check(guide.next:GetText() == "Get started", "the last page ends with Get started", guide.next:GetText())
+	guide.next.__scripts.OnClick(guide.next)
+	check(not guide:IsShown() and LI.db.guideSeen, "and closes it for good")
+	LinkedInnFrame:Hide()
+	LI.UI.Open(LI.UI.TAB.find)
+	Advance(1)
+	check(not guide:IsShown(), "it doesn't come back on its own")
+	LinkedInnFrame.guideButton.__scripts.OnClick(LinkedInnFrame.guideButton)
+	check(guide:IsShown() and guide.head.__text == "Welcome to Linked Inn", "the ? next to the status light opens it again")
+	guide:Hide()
+	SlashCmdList.LINKEDINN("guide")
+	check(guide:IsShown(), "so does /li guide")
+	guide:Hide()
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

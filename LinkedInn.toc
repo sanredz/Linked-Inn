@@ -21,6 +21,7 @@ Clues.lua
 Sync.lua
 Bridge.lua
 Health.lua
+Guide.lua
 Work.lua
 UI.lua
 Book.lua

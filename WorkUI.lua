@@ -38,7 +38,7 @@ local function Text(parent, template, justify)
 end
 
 local function Button(parent, label, width, onClick)
-	local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+	local button = LI.Theme.Button(CreateFrame("Button", nil, parent, "UIPanelButtonTemplate"))
 	button:SetSize(width or 120, 22)
 	button:SetText(label)
 	button:SetScript("OnClick", function(self, ...)
@@ -762,8 +762,8 @@ end
 
 function WorkUI.BuildHeader(main)
 	header = CreateFrame("Frame", nil, main)
-	header:SetPoint("TOPLEFT", 66, -28)
-	header:SetPoint("TOPRIGHT", -10, -28)
+	header:SetPoint("TOPLEFT", 18, -68)
+	header:SetPoint("TOPRIGHT", -14, -68)
 	header:SetHeight(68)
 
 	header.howLabel = Text(header, "GameFontNormal", "RIGHT")
@@ -1231,7 +1231,7 @@ end
 local function CreateDialog()
 	local main = LI.UI.Main()
 	dialog = CreateFrame("Frame", "LinkedInnRequest", main, "ButtonFrameTemplate")
-	dialog:SetSize(360, 580)
+	dialog:SetSize(360, 620)
 	dialog:SetPoint("TOPLEFT", main, "TOPRIGHT", 4, 0)
 	dialog:SetFrameStrata("HIGH")
 	if ButtonFrameTemplate_HidePortrait then
@@ -1246,13 +1246,14 @@ local function CreateDialog()
 	if dialog.Inset then
 		dialog.Inset:Hide()
 	end
+	LI.Theme.Skin(dialog, "New request", { titleSize = 18, card = false })
 
 	dialog.ask = Label(dialog, "What do you need made?")
-	dialog.ask:SetPoint("TOPLEFT", 20, -34)
+	dialog.ask:SetPoint("TOPLEFT", 20, -44)
 
 	dialog.search = CreateFrame("EditBox", nil, dialog, "SearchBoxTemplate")
 	dialog.search:SetSize(316, 22)
-	dialog.search:SetPoint("TOPLEFT", 24, -54)
+	dialog.search:SetPoint("TOPLEFT", 24, -64)
 	if dialog.search.Instructions then
 		dialog.search.Instructions:SetText("Type an item name")
 	end
@@ -1263,14 +1264,14 @@ local function CreateDialog()
 		ShowResults()
 	end)
 	dialog.hint = Text(dialog, "GameFontDisableSmall")
-	dialog.hint:SetPoint("TOPLEFT", 26, -84)
+	dialog.hint:SetPoint("TOPLEFT", 26, -94)
 	dialog.hint:SetWidth(310)
 	dialog.hint:SetText("Anything from the recipes Linked Inn has seen.")
 	dialog.results = {}
 	for i = 1, 10 do
 		local r = CreateFrame("Button", nil, dialog)
 		r:SetSize(316, 26)
-		r:SetPoint("TOPLEFT", 24, -80 - (i - 1) * 26)
+		r:SetPoint("TOPLEFT", 24, -90 - (i - 1) * 26)
 		r.hl = r:CreateTexture(nil, "HIGHLIGHT")
 		r.hl:SetAllPoints()
 		r.hl:SetColorTexture(1, 0.82, 0.3, 0.12)
@@ -1294,12 +1295,12 @@ local function CreateDialog()
 		dialog.results[i] = r
 	end
 	dialog.noResults = Text(dialog, "GameFontDisableSmall")
-	dialog.noResults:SetPoint("TOPLEFT", 26, -84)
+	dialog.noResults:SetPoint("TOPLEFT", 26, -94)
 	dialog.noResults:SetText("No recipe by that name yet.")
 	dialog.noResults:Hide()
 
 	dialog.pick = CreateFrame("Frame", nil, dialog)
-	dialog.pick:SetPoint("TOPLEFT", 18, -52)
+	dialog.pick:SetPoint("TOPLEFT", 18, -62)
 	dialog.pick:SetPoint("RIGHT", -18, 0)
 	dialog.pick:SetHeight(44)
 	dialog.pick.edge = dialog.pick:CreateTexture(nil, "BORDER")
@@ -1335,7 +1336,7 @@ local function CreateDialog()
 	dialog.pick:Hide()
 
 	dialog.body = CreateFrame("Frame", nil, dialog)
-	dialog.body:SetPoint("TOPLEFT", 0, -108)
+	dialog.body:SetPoint("TOPLEFT", 0, -118)
 	dialog.body:SetPoint("BOTTOMRIGHT", 0, 90)
 	dialog.matsHead = Label(dialog.body, "Materials you bring")
 	dialog.matsHead:SetPoint("TOPLEFT", 20, 0)
@@ -1451,6 +1452,7 @@ local function CreateDialog()
 	dialog.cancel:SetPoint("RIGHT", dialog.post, "LEFT", -6, 0)
 	dialog.body:Hide()
 	dialog:Hide()
+	LI.UI.Side(dialog)
 end
 
 function WorkUI.Dialog()

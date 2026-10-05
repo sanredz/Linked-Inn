@@ -374,6 +374,9 @@ local function Refresh()
 	frame.who:SetText(LI.ShortName(current.key))
 	frame.who:SetTextColor(color[1], color[2], color[3])
 	frame.profIcon:SetTexture(LI.ProfIcon(current.prof, p.icon))
+	if frame.art then
+		LI.Theme.ProfessionArt(frame.art, current.prof)
+	end
 	local title = p.name or current.prof
 	if p.rank and p.rank > 0 then
 		title = string.format("%s  %d/%d", title, p.rank, p.max or p.rank)
@@ -416,7 +419,7 @@ end
 local function Create()
 	local main = LI.UI.Main()
 	frame = CreateFrame("Frame", "LinkedInnBook", main, "ButtonFrameTemplate")
-	frame:SetSize(WIDTH, 580)
+	frame:SetSize(WIDTH, 620)
 	frame:SetPoint("TOPLEFT", main, "TOPRIGHT", 4, 0)
 	frame:SetFrameStrata("HIGH")
 	if ButtonFrameTemplate_HidePortrait then
@@ -428,9 +431,17 @@ local function Create()
 	if frame.SetTitle then
 		frame:SetTitle("Recipes")
 	end
+	LI.Theme.Skin(frame, "Recipes", { titleSize = 20 })
+	if frame.Inset then
+		frame.art = frame.Inset:CreateTexture(nil, "BACKGROUND", nil, 2)
+		frame.art:SetPoint("TOPLEFT", 4, -4)
+		frame.art:SetPoint("BOTTOMRIGHT", -4, 4)
+		frame.art:SetAlpha(0.55)
+		frame.art:Hide()
+	end
 	frame.profIcon = frame:CreateTexture(nil, "ARTWORK")
 	frame.profIcon:SetSize(36, 36)
-	frame.profIcon:SetPoint("TOPLEFT", 14, -30)
+	frame.profIcon:SetPoint("TOPLEFT", 18, -46)
 	frame.profIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 	frame.who = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 	frame.who:SetPoint("TOPLEFT", frame.profIcon, "TOPRIGHT", 10, -1)
@@ -439,7 +450,7 @@ local function Create()
 	frame.prof:SetPoint("BOTTOMLEFT", frame.profIcon, "BOTTOMRIGHT", 10, 1)
 	frame.search = CreateFrame("EditBox", nil, frame, "SearchBoxTemplate")
 	frame.search:SetSize(WIDTH - 40, 20)
-	frame.search:SetPoint("TOPLEFT", 22, -74)
+	frame.search:SetPoint("TOPLEFT", 24, -92)
 	frame.search:SetScript("OnTextChanged", function(self)
 		if SearchBoxTemplate_OnTextChanged then
 			pcall(SearchBoxTemplate_OnTextChanged, self)
@@ -449,8 +460,8 @@ local function Create()
 	end)
 	if frame.Inset then
 		frame.Inset:ClearAllPoints()
-		frame.Inset:SetPoint("TOPLEFT", 4, -100)
-		frame.Inset:SetPoint("BOTTOMRIGHT", -6, 54)
+		frame.Inset:SetPoint("TOPLEFT", 12, -120)
+		frame.Inset:SetPoint("BOTTOMRIGHT", -12, 58)
 	end
 	local parent = frame.Inset or frame
 	frame.list = CreateFrame("Frame", nil, parent, "WowScrollBoxList")
@@ -477,7 +488,7 @@ local function Create()
 	frame.empty:SetSpacing(3)
 	frame.info = Text(frame, "GameFontDisableSmall")
 	frame.info:SetPoint("BOTTOMLEFT", 14, 34)
-	frame.live = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	frame.live = LI.Theme.Button(CreateFrame("Button", nil, frame, "UIPanelButtonTemplate"))
 	frame.live:SetSize(150, 22)
 	frame.live:SetText("Open in game")
 	frame.live:SetPoint("BOTTOMRIGHT", -10, 8)
@@ -512,6 +523,7 @@ local function Create()
 		LI.Fire("BookChanged")
 	end)
 	frame:Hide()
+	LI.UI.Side(frame)
 end
 
 function Book.Open(key, profKey, query)

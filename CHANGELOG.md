@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.4.0] - 2026-10-05
+
+- A new look: wood and brass windows, a gold title, and profession artwork
+  behind recipe books and behind the list when you filter by one profession.
+- Only one side window (recipes, settings or requests) is open at a time.
+- Other Linked Inn users show up much faster, usually within seconds.
+- Linked Inn users on your Battle.net friends list help pass lists along, so
+  users on the other half of your realm can show up too.
+- A status light in the bottom bar shows whether Linked Inn is working. Hover
+  it for a plain explanation.
+- A short welcome guide for new users. Open it again with the ? button or
+  /li guide.
+- Fixed your own profession window sometimes not opening, opening empty or
+  closing on its own in busy places.
+- Ping replies only show for the person who pinged.
+
 ## [1.3.0] - 2026-10-04
 
 - No more "No player named ..." messages popping up in chat.

@@ -121,6 +121,7 @@ end
 function methods:SetElementExtentCalculator(fn) self.__extent = fn end
 function methods:IsEnabled() return not self.__disabled end
 function methods:GetAlpha() return self.__alpha or 1 end
+function methods:GetObjectType() return self.__kind end
 function methods:SetHyperlink(link)
 	table.insert(W.hyperlinks, link)
 	if W.autoWorks then
@@ -129,7 +130,7 @@ function methods:SetHyperlink(link)
 			if data then
 				W.trade = { linked = true, linkedName = data.linkedName, prof = data.prof, recipes = data.recipes }
 				W.Fire("TRADE_SKILL_SHOW")
-				if ProfessionsFrame and not W.noFrame then ProfessionsFrame:Show() end
+				if ProfessionsFrame and not W.noFrame and W.UIHears() then ProfessionsFrame:Show() end
 				W.Fire("TRADE_SKILL_LIST_UPDATE")
 			elseif W.showEmpty and ProfessionsFrame then
 				ProfessionsFrame:Show()
@@ -288,7 +289,7 @@ local function InstallStubs()
 		GetSpellName = function(id) return W.spellNames and W.spellNames[id] or nil end,
 	}
 	W.sent = {}
-	W.channels = W.channels or {}
+	W.channels = W.channels or { [1] = 1 }
 	_G.NUM_CHAT_WINDOWS = 10
 	_G.C_ChatInfo = {
 		RegisterAddonMessagePrefix = function(prefix) W.prefix = prefix return true end,
@@ -304,7 +305,23 @@ local function InstallStubs()
 		end,
 		InChatMessagingLockdown = function() return W.lockdown == true end,
 	}
-	_G.JoinTemporaryChannel = function(name) if not W.noJoin then W.channels[name] = 5 end end
+	_G.JoinTemporaryChannel = function(name)
+		if W.noJoin then return end
+		if W.joinDelay then
+			C_Timer.After(W.joinDelay, function() W.channels[name] = 5 end)
+		else
+			W.channels[name] = 5
+		end
+	end
+	_G.JoinChannelByName = function(name, password, frame)
+		W.joinFrame = frame
+		if W.noJoin then return end
+		if W.joinDelay then
+			C_Timer.After(W.joinDelay, function() W.channels[name] = 5 end)
+		else
+			W.channels[name] = 5
+		end
+	end
 	_G.GetChannelName = function(name) local id = W.channels[name] if id then return id, name end return 0, nil end
 	_G.RemoveChatWindowChannel = function(i, name) W.hidden = (W.hidden or 0) + 1 end
 	_G.IsInInstance = function() return W.inInstance == true end
@@ -363,6 +380,25 @@ local function InstallStubs()
 	_G.WHO_NUM_RESULTS = "%d |4player:players; total"
 	_G.Enum = { SocialWhoOrigin = { Item = 3 } }
 	_G.GetNumGroupMembers = function() return W.groupSize or 0 end
+	_G.UnitFactionGroup = function() return W.faction end
+	W.bnetSent = {}
+	local function Game(f)
+		return f and { gameAccountID = f.id, isOnline = f.online ~= false, clientProgram = f.program or "WoW", wowProjectID = f.project, characterName = f.name, realmName = f.realm, factionName = f.faction, isInCurrentRegion = true } or nil
+	end
+	_G.BNGetNumFriends = function() return #(W.bnet or {}) end
+	_G.C_BattleNet = {
+		GetFriendNumGameAccounts = function(i) return (W.bnet and W.bnet[i]) and 1 or 0 end,
+		GetFriendGameAccountInfo = function(i) return Game(W.bnet and W.bnet[i]) end,
+		GetGameAccountInfoByID = function(id)
+			for _, f in ipairs(W.bnet or {}) do
+				if f.id == id then return Game(f) end
+			end
+		end,
+		SendGameData = function(id, prefix, msg)
+			assert(#msg <= 4000, "Battle.net message too long")
+			table.insert(W.bnetSent, { id = id, prefix = prefix, msg = msg })
+		end,
+	}
 	_G.IsInRaid = function() return false end
 	_G.ERR_CHAT_PLAYER_NOT_FOUND_S = "No player named '%s' is currently playing."
 	_G.C_TradeSkillUI = {
@@ -455,6 +491,14 @@ local LI
 local function Boot(saved)
 	W = W or { clock = 0 }
 	InstallStubs()
+	W.ui = CreateFrame("Frame")
+	W.ui:RegisterEvent("TRADE_SKILL_SHOW")
+	W.UIHears = function()
+		for _, f in ipairs(W.events.TRADE_SKILL_SHOW or {}) do
+			if f == W.ui then return true end
+		end
+		return false
+	end
 	LinkedInnDB = saved and load("return " .. saved)() or nil
 	LI = {}
 	for _, file in ipairs(FILES) do
@@ -801,10 +845,13 @@ W.autoWorks = false
 LI.CheckOnline("Anna Smith-TestRealm")
 W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
 Fire("TRADE_SKILL_SHOW")
+local hyperlinksAtOpen = #W.hyperlinks
 Advance(0.1)
 check(LI.IsChecking("Anna Smith-TestRealm"), "opening your own profession during a check doesn't count as their reply")
 C_TradeSkillUI.CloseTradeSkill()
-Advance(3)
+Advance(1)
+check(LI.IsChecking("Anna Smith-TestRealm") and #W.hyperlinks == hyperlinksAtOpen, "nothing is read right after you close your own window", #W.hyperlinks - hyperlinksAtOpen)
+Advance(6)
 check(LI.Status("Anna Smith-TestRealm") == "offline", "the check still ends as offline")
 Advance(5)
 W.combat = true
@@ -1809,7 +1856,7 @@ do
 	end
 	check(posted and posted.qty == 3 and posted.mats == "some" and posted.price == 155000 and posted.recipe == 18560, "Post creates the request from the panel", posted and posted.mats)
 	check(posted and posted.have[14342] == 12 and posted.have[14256] == 1 and not posted.have[8343], "it records exactly what you bring")
-	Advance(2)
+	Advance(3)
 	local sent = Last("R1|")
 	check(sent and sent.msg:find("|" .. LI.Sync.B36(14256) .. ":1", 1, true) and sent.msg:find(LI.Sync.B36(14342) .. ":c", 1, true), "what you bring travels with the request", sent and sent.msg)
 	local back = Work.Decode("Me Again-TestRealm", { "R1", "9", LI.Sync.B36(14155), LI.Sync.B36(18560), "3", "s", "0", "100", "", LI.Sync.B36(14342) .. ":c," .. LI.Sync.B36(14256) .. ":1" })
@@ -1849,45 +1896,54 @@ check(dec and #dec == 2 and dec[1].key == "first aid" and dec[1].ids == nil and 
 check(Sync.Decode("tailoring~1~1~~zz.-1") == nil and Sync.Decode("tai|loring~1~1~~1") == nil and Sync.Decode("mining~1~1~~1") == nil, "broken or gathering lists are rejected")
 check(W.prefix == "LinkedInn", "the addon message prefix is registered")
 check(LI.crafters[LI.playerKey].profs.tailoring.rank == 260 and not LI.crafters[LI.playerKey].profs.mining, "your crafting professions are read at login, gathering ones skipped")
-Advance(5)
-check(not Sync.IsJoined(), "the hidden channel waits a moment after login")
-Advance(10)
-check(Sync.IsJoined() and W.hidden == 10, "it joins the hidden channel and keeps it out of every chat window", W.hidden)
-check(#Sent("H1") == 0, "no hello right away")
-Advance(35)
+Advance(3)
+check(Sync.IsJoined() and W.hidden == 10, "it joins the hidden channel within seconds and keeps it out of every chat window", W.hidden)
 local hellos = Sent("H1", "CHANNEL")
-check(#hellos == 1 and hellos[1].target == "5", "a hello goes to the hidden channel", #hellos)
+check(#hellos == 1 and hellos[1].target == "5" and hellos[1].msg:find("|J$"), "a hello goes to the hidden channel right after joining, asking others to say hi", #hellos)
+Advance(17)
+check(#Sent("H1", "CHANNEL") == 2 and Sent("H1", "CHANNEL")[2].msg:find("|J$"), "a second one follows for anyone who missed the first", #Sent("H1", "CHANNEL"))
+Advance(5)
 local hello = hellos[1] and hellos[1].msg or ""
 check(hello:find("tailoring~", 1, true) and not hello:find("mining", 1, true) and hello:find("|MAGE|", 1, true), "the hello lists crafting professions and class", hello)
 Addon(hello, "Brew Master-TestRealm")
 check(LI.test.sync.echo == true, "hearing your own hello proves the channel works")
+local beforeRepeat = #Sent("H1")
 Advance(13 * 60 + 200)
-check(#Sent("H1") == 2, "hellos repeat every 12 to 15 minutes", #Sent("H1"))
+check(#Sent("H1") == beforeRepeat + 1, "hellos repeat every 12 to 15 minutes", #Sent("H1"))
 
 W.trade = { linked = false, prof = TAILORING, recipes = TAILOR_RECIPES }
 Fire("TRADE_SKILL_SHOW")
 Advance(1)
 C_TradeSkillUI.CloseTradeSkill()
+local beforeLearn = #Sent("H1")
 Advance(12)
-check(#Sent("H1") == 3, "learning recipes sends a hello soon", #Sent("H1"))
-local newHello = Sent("H1")[3].msg
+check(#Sent("H1") == beforeLearn + 1, "learning recipes sends a hello soon", #Sent("H1"))
+local newHello = Sent("H1")[#Sent("H1")].msg
 check(newHello:find("tailoring~78~8c~2", 1, true), "the new hello counts your recipes", newHello)
 local ver = newHello:match("^H1|([^|]+)|")
 
 Addon("Q1|" .. ver, "Other Person-TestRealm", "WHISPER")
-Advance(1)
-check(#Sent("D1") == 0, "answers wait a few seconds to gather requests")
 Addon("Q1|" .. ver, "Third Guy-TestRealm", "WHISPER")
-Advance(5)
-local data = Sent("D1", "CHANNEL")
-check(#data >= 1 and LI.test.sync.answered == 1, "two requests are answered with one broadcast", #data)
+check(#Sent("D1") == 0, "answers wait a moment to gather requests")
+Advance(3)
+local data, toThird = {}, false
+for _, m in ipairs(W.sent) do
+	if m.msg:find("^D1|") and m.chatType == "WHISPER" then
+		if m.target == "Other Person" then data[#data + 1] = m end
+		if m.target == "Third Guy" then toThird = true end
+	end
+end
+check(#data >= 1 and toThird and #Sent("D1", "CHANNEL") == 0 and LI.test.sync.answered == 1, "two requests within a second are answered together, by whisper, within seconds", #data)
 local chunks = {}
 for _, m in ipairs(data) do chunks[#chunks + 1] = m.msg end
 Addon("Q1|" .. ver, "Fourth Gal-TestRealm", "WHISPER")
-Advance(30)
-check(LI.test.sync.answered == 1, "answers are spaced at least a minute apart")
-Advance(40)
-check(LI.test.sync.answered == 2, "a later request is still answered", LI.test.sync.answered)
+Advance(8)
+check(LI.test.sync.answered == 2, "a later request is answered seconds later, not a minute", LI.test.sync.answered)
+for _, name in ipairs({ "Ask One", "Ask Two", "Ask Three" }) do
+	Addon("Q1|" .. ver, name .. "-TestRealm", "WHISPER")
+end
+Advance(10)
+check(LI.test.sync.answered == 3 and #Sent("D1", "CHANNEL") >= 1, "three or more at once get one broadcast on the channel instead", #Sent("D1", "CHANNEL"))
 
 local sentBefore = #W.sent
 W.combat = true
@@ -2032,6 +2088,10 @@ do
 	Addon("P1|124", "Ping Gal-TestRealm", "WHISPER")
 	Advance(4)
 	check(SentOn("P2") == "PARTY,WHISPER@Ping Gal", "a ping is answered the way it came", SentOn("P2"))
+	local lines = #W.chat
+	Addon("P2|" .. math.floor(W.clock * 10), "Ping Guy-TestRealm", "CHANNEL")
+	check(#W.chat == lines, "someone else's pong isn't printed when you didn't ping", W.chat[#W.chat])
+	LI.Sync.Ping()
 	Addon("P2|" .. math.floor(W.clock * 10), "Ping Guy-TestRealm", "PARTY")
 	check(W.chat[#W.chat]:find("Pong from Ping Guy via PARTY", 1, true), "a pong is printed with its route", W.chat[#W.chat])
 	W.sent = {}
@@ -2043,9 +2103,14 @@ do
 	Advance(3)
 	check(SentOn("P1") == "WHISPER@Pal Friend", "/li ping Name whispers that person", SentOn("P1"))
 	W.sendResult = 3
+	W.sent = {}
 	SlashCmdList.LINKEDINN("ping")
 	Advance(4)
-	check(LI.test.sync.failed == 1 and LI.test.sync.lastError == "code 3 on CHANNEL", "a send the game refuses is counted with its code", LI.test.sync.lastError)
+	check(LI.test.sync.throttled == 1 and (LI.test.sync.failed or 0) == 0 and SentOn("P1") == "CHANNEL@5,CHANNEL@5,PARTY", "a send the game throttles is tried again a moment later, not lost", SentOn("P1"))
+	W.sendResult = 9
+	SlashCmdList.LINKEDINN("ping")
+	Advance(4)
+	check(LI.test.sync.failed == 1 and LI.test.sync.lastError == "code 9 on CHANNEL", "a send the game refuses is counted with its code", LI.test.sync.lastError)
 	local chat0 = #W.chat
 	SlashCmdList.LINKEDINN("status")
 	local report = table.concat({ table.unpack(W.chat, chat0 + 1) }, "\n")
@@ -2066,7 +2131,7 @@ do
 	Addon("Q1|" .. LI.Sync.Version(), "Buddy Pal-TestRealm", "WHISPER")
 	Advance(70)
 	local whispered = SentOn("D1")
-	check(whispered:find("CHANNEL@5", 1, true) and whispered:find("WHISPER@Buddy Pal", 1, true), "someone who asks gets your list by whisper too, not only on the channel", whispered)
+	check(whispered:find("WHISPER@Buddy Pal", 1, true) and not whispered:find("CHANNEL@5", 1, true), "someone who asks gets your list by whisper, without filling the channel", whispered)
 	W.friends = nil
 end
 
@@ -2107,24 +2172,18 @@ do
 	W.sent = {}
 	Addon("H1|abd|MAGE|tailoring~5~a~-|TestRealm|1", "Near By-TestRealm", "CHANNEL")
 	Advance(6)
-	check(Find("B1|Near By-TestRealm|H1|abd", "WHISPER", "Far Away"), "a hello on your channel is passed to the other realm")
-	W.sent = {}
-	Addon("H1|abd|MAGE|tailoring~5~a~-|TestRealm|1", "Near By-TestRealm", "CHANNEL")
-	Advance(4)
-	check(not Find("B1|Near By", "WHISPER"), "the same message is passed on only once")
 	Sync.Send("X1|abc", "CHANNEL")
 	Advance(8)
-	check(Find("B1|Brew Master-TestRealm|X1|abc", "WHISPER", "Far Away"), "your own work messages cross too")
+	check(not Find("B1|", "WHISPER"), "nothing is passed to the other realm by addon whisper, which never arrives there; the Battle.net bridge does that")
 	Addon("H1|abf|MAGE|tailoring~5~a~-|TestRealm|1|OtherRealm", "Aaa Bridge-TestRealm", "CHANNEL")
 	Advance(6)
 	W.sent = {}
 	Sync.Send("X1|zz", "CHANNEL")
 	Advance(8)
-	check(not Find("B1|Brew Master-TestRealm|X1|zz", "WHISPER"), "only one user per realm passes messages on")
 	local chat0 = #W.chat
 	SlashCmdList.LINKEDINN("status")
 	local report = table.concat({ table.unpack(W.chat, chat0 + 1) }, "\n")
-	check(report:find("Realm: TestRealm", 1, true) and report:find("OtherRealm via Far Away", 1, true) and report:find("Aaa Bridge relays", 1, true) and report:find("Far Away (OtherRealm)", 1, true), "/li status shows realms and who relays", report)
+	check(report:find("Realm: TestRealm", 1, true) and report:find("OtherRealm via Far Away", 1, true) and report:find("Aaa Bridge relays", 1, true) and report:find("Far Away on OtherRealm (", 1, true), "/li status shows realms and who relays", report)
 	Advance(120)
 	W.sent = {}
 	Addon("B1|Third Guy-OtherRealm|H1|abe|PRIEST|alchemy~5~a~-|OtherRealm|2", "Far Away-OtherRealm", "WHISPER")
@@ -2294,6 +2353,217 @@ do
 	check(not LI.Reader.QuietState(), "quiet reading stays on while it works")
 	blizz:UnregisterEvent("TRADE_SKILL_SHOW")
 end
+
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	ProfessionsFrame:RegisterEvent("TRADE_SKILL_SHOW")
+	ProfessionsFrame:SetScript("OnEvent", function(self) self:Show() end)
+	local showUI = ShowUIPanel
+	ShowUIPanel = function(f) f:Show() end
+	W.autoWorks = true
+	W.replyDelay = 1
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Advance(0.6)
+	local listens = false
+	for _, f in ipairs({ GetFramesRegisteredForEvent("TRADE_SKILL_SHOW") }) do
+		if f == ProfessionsFrame then listens = true end
+	end
+	local closed = W.closed
+	W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	Advance(0.1)
+	check(ProfessionsFrame:IsShown() and ProfessionsFrame:GetScale() == 1 and ProfessionsFrame:GetAlpha() == 1 and ProfessionsFrame:IsMouseEnabled(), "opening your own profession during a background read shows the window")
+	check(not listens, "the window was muted while the read ran")
+	check(W.closed == closed, "and it is not closed again", W.closed - closed)
+	local back = false
+	for _, f in ipairs({ GetFramesRegisteredForEvent("TRADE_SKILL_SHOW") }) do
+		if f == ProfessionsFrame then back = true end
+	end
+	check(back, "the profession window hears profession events again", listens)
+	Advance(6)
+	C_TradeSkillUI.CloseTradeSkill()
+	Advance(5)
+	check(LI.crafters["Anna Smith-TestRealm"] and LI.crafters["Anna Smith-TestRealm"].profs.tailoring and LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes, "the paused read finishes after you close it")
+	W.autoWorks = false
+	W.replyDelay = nil
+	ShowUIPanel = showUI
+	ProfessionsFrame:UnregisterEvent("TRADE_SKILL_SHOW")
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	ProfessionsFrame:RegisterEvent("TRADE_SKILL_SHOW")
+	ProfessionsFrame:SetScript("OnEvent", function(self) self:Show() end)
+	W.autoWorks = true
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = {} }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Advance(12)
+	W.autoWorks = false
+	local listens = false
+	for _, f in ipairs({ GetFramesRegisteredForEvent("TRADE_SKILL_SHOW") }) do
+		if f == ProfessionsFrame then listens = true end
+	end
+	check(listens, "a read that answers with no recipes never leaves the profession window deaf")
+	check(LI.Reader.Idle(true), "and it doesn't stay stuck")
+	ProfessionsFrame:UnregisterEvent("TRADE_SKILL_SHOW")
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	W.autoWorks = true
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Advance(6)
+	W.autoWorks = false
+	check(LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes, "a background read just finished")
+	local closed = W.closed
+	W.trade = { linked = true, linkedName = "Brew Master", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	ProfessionsFrame:Show()
+	Advance(4)
+	check(ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() == 1 and ProfessionsFrame:GetScale() == 1, "your own profession, shown as linked under your own name, isn't mistaken for a late reply")
+	check(W.closed == closed, "and it is never closed for you", W.closed - closed)
+	C_TradeSkillUI.CloseTradeSkill()
+	Advance(1)
+	W.trade = { linked = true, linkedName = "Cora Vale", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	ProfessionsFrame:Show()
+	Advance(2)
+	check(not ProfessionsFrame:IsShown(), "a late reply from someone else is still closed")
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	W.autoWorks = true
+	for i, who in ipairs({ "AAA", "BBB", "CCC" }) do
+		W.linkData["trade:Player-1-" .. who .. ":3908:197"] = { linkedName = W.guids["Player-1-" .. who].name, prof = TAILORING, recipes = TAILOR_RECIPES }
+		Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-" .. who, 3908, 197, "Tailoring"), W.guids["Player-1-" .. who].name .. "-TestRealm", "Player-1-" .. who, "Trade - City")
+	end
+	for _ = 1, 40 do
+		Advance(0.1)
+		if LI.crafters["Cora Vale-TestRealm"].profs.tailoring.recipes then break end
+	end
+	Advance(0.1)
+	local closed, asked = W.closed, #W.hyperlinks
+	W.trade = { linked = true, linkedName = "Cora Vale", prof = TAILORING, recipes = TAILOR_RECIPES }
+	ProfessionsFrame:Show()
+	Advance(0.1)
+	check(ProfessionsFrame:GetAlpha() == 1 and ProfessionsFrame:GetScale() == 1 and ProfessionsFrame:IsMouseEnabled(), "a profession window you open right after a background read is never hidden")
+	Advance(8)
+	check(ProfessionsFrame:IsShown() and W.closed == closed, "and it stays open", W.closed - closed)
+	check(#W.hyperlinks <= asked + 1, "background reads wait while it's open", #W.hyperlinks - asked)
+	ProfessionsFrame:Hide()
+	local hidden = #W.hyperlinks
+	Advance(1)
+	check(#W.hyperlinks == hidden, "and for a moment after you close it")
+	Advance(8)
+	check(#W.hyperlinks > hidden, "then reading carries on", #W.hyperlinks - hidden)
+	W.autoWorks = false
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	W.autoWorks = true
+	W.replyDelay = 1
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	W.linkData["trade:Player-1-BBB:3908:197"] = { linkedName = "Bob Stone", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-BBB", 3908, 197, "Tailoring"), "Bob Stone-TestRealm", "Player-1-BBB", "Trade - City")
+	for _ = 1, 40 do
+		Advance(0.1)
+		if #W.hyperlinks > 0 then break end
+	end
+	Advance(1.05)
+	check(W.trade and W.trade.linked, "a hidden read has someone's profession open")
+	local closed, asked = W.closed, #W.hyperlinks
+	GetMouseFoci = function() return { WorldFrame } end
+	Fire("GLOBAL_MOUSE_DOWN", "RightButton")
+	check(W.closed == closed and W.trade and W.trade.linked, "turning the camera doesn't interrupt a read")
+	GetMouseFoci = function() return { UIParent } end
+	Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
+	GetMouseFoci = nil
+	check(W.closed == closed + 1 and not W.trade, "pressing the mouse on the interface closes the hidden read before your click lands", W.closed - closed)
+	W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	ProfessionsFrame:Show()
+	Advance(4)
+	check(ProfessionsFrame:IsShown() and W.trade and W.trade.linked == false and ProfessionsFrame:GetAlpha() == 1, "so your own profession opens and stays open")
+	check(#W.hyperlinks == asked, "and nothing is read while it's open", #W.hyperlinks - asked)
+	C_TradeSkillUI.CloseTradeSkill()
+	Advance(12)
+	check(LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes and LI.crafters["Bob Stone-TestRealm"].profs.tailoring.recipes, "the reads it stepped aside for happen afterwards")
+	local before = #W.hyperlinks
+	Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
+	check(#W.hyperlinks == before, "a click with nothing being read changes nothing")
+	W.autoWorks = false
+	W.replyDelay = nil
+end
+
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	W.autoWorks = true
+	W.replyDelay = 1
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	for _ = 1, 40 do
+		Advance(0.1)
+		if #W.hyperlinks > 0 then break end
+	end
+	Advance(0.2)
+	W.autoWorks = false
+	Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
+	Advance(10)
+	W.autoWorks = true
+	W.replyDelay = nil
+	Advance(10)
+	check(LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes, "a background read cancelled by your click is tried again later")
+	W.autoWorks = false
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	W.autoWorks = true
+	W.replyDelay = 1
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	for _ = 1, 40 do
+		Advance(0.1)
+		if #W.hyperlinks > 0 then break end
+	end
+	Advance(1.05)
+	local closed = W.closed
+	ProfessionsFrame:Show()
+	Advance(0.1)
+	check(W.closed == closed + 1 and not ProfessionsFrame:IsShown(), "a window opened by a key onto someone else's hidden read is closed, not left showing their book")
+	Advance(4)
+	W.autoWorks = false
+	W.replyDelay = nil
+end
+
 
 do
 	Setup()
@@ -2861,6 +3131,314 @@ do
 		if m.msg:find("^H1|") and m.chatType == "CHANNEL" then reply = m.msg end
 	end
 	check(reply and not reply:find("|J$"), "someone who just logged in gets a hello back within seconds, without the flag", reply)
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(3)
+	W.sent = {}
+	for i = 1, 10 do
+		Addon(string.format("H1|v%d|MAGE|alchemy~1e~2s~5|TestRealm|1", i), "Speedy " .. string.char(64 + i) .. "-TestRealm")
+	end
+	Advance(4)
+	check(#Sent("Q1", "WHISPER") == 10, "ten Linked Inn users heard at once are all asked for their lists within seconds", #Sent("Q1", "WHISPER"))
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.channels = {}
+	Boot()
+	Advance(10)
+	check(not LI.Sync.IsJoined(), "the hidden channel waits while General hasn't taken /1 yet, so it never steals it")
+	W.channels[1] = 1
+	Advance(3)
+	check(LI.Sync.IsJoined(), "it joins once /1 is taken")
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.channels = {}
+	Boot()
+	Advance(35)
+	check(LI.Sync.IsJoined(), "someone who left every server channel still joins after half a minute")
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.faction = "Alliance"
+	W.bnet = {
+		{ id = 101, name = "Far Friend", realm = "TestRealm2", faction = "Alliance", project = 18 },
+		{ id = 102, name = "Near Friend", realm = "TestRealm", faction = "Alliance", project = 18 },
+		{ id = 103, name = "Enemy Friend", realm = "TestRealm2", faction = "Horde", project = 18 },
+		{ id = 104, name = "Retail Friend", realm = "Area52", faction = "Alliance", project = 1 },
+		{ id = 105, name = "Other Ruleset", realm = "TestRealmPvE", faction = "Alliance", project = 18 },
+		{ id = 106, name = "Nosurname", realm = "TestRealm2", faction = "Alliance", project = 18 },
+	}
+	Boot()
+	Advance(3)
+	local Bridge, Sync = LI.Bridge, LI.Sync
+	local list = Bridge.Friends()
+	local names = {}
+	for _, f in ipairs(list) do names[#names + 1] = LI.ShortName(f.key) .. (f.sameHalf and "=" or "~") end
+	check(table.concat(names, ",") == "Far Friend~,Near Friend=", "Battle.net friends in Forever on your faction and ruleset are found, and it knows who's on the other half", table.concat(names, ","))
+
+	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 100, max = 150 }, { { id = 3914, name = "Brown Linen Pants", item = 4343 } }, "own")
+	LI.Fire("OwnRecipesChanged")
+	local payload = Sync.Encode({ alchemy = { rank = 100, max = 150, recipes = { [2330] = true } } })
+	Addon("H1|abc1|PRIEST|alchemy~2s~46~1|TestRealm|1", "Chan Pal-TestRealm")
+	Addon("D1|abc1|1|1|" .. payload, "Chan Pal-TestRealm", "WHISPER")
+	check(LI.crafters["Chan Pal-TestRealm"].profs.alchemy.recipes and Sync.Cached("Chan Pal-TestRealm"), "a list heard on the channel is kept as received")
+	W.bnetSent = {}
+	Advance(25)
+	local to = {}
+	for _, m in ipairs(W.bnetSent) do
+		local who, hops = m.msg:match("^C1|([^|]+)|(%d)|")
+		if who then to[m.id .. ":" .. who .. ":" .. hops] = true end
+	end
+	check(to["101:" .. LI.ShortName(LI.playerKey) .. ":1"] and to["101:Chan Pal:2"], "your card and the cards of users you hear go to your Battle.net friends in Forever")
+	local wrong = false
+	for _, m in ipairs(W.bnetSent) do
+		if m.id ~= 101 and m.id ~= 102 then wrong = true end
+	end
+	check(not wrong, "not to friends on the other faction, another ruleset or another game")
+	W.bnetSent = {}
+	Advance(25)
+	check(#W.bnetSent == 0, "the same cards aren't sent again for half an hour")
+
+	local far = Sync.Encode({ tailoring = { rank = 200, max = 225, recipes = { [3914] = true, [18560] = true } } })
+	local card = { origin = "Distant Crafter-TestRealm", ver = "zz9", payload = far, class = "MAGE", faction = "A" }
+	W.sent = {}
+	for _, line in ipairs(Bridge.Lines(card, 1, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 101)
+	end
+	local distant = LI.crafters["Distant Crafter-TestRealm"]
+	check(distant and distant.li and distant.profs.tailoring and distant.profs.tailoring.recipes[18560], "a card from a Battle.net friend lists that user with all their recipes")
+	check(LI.Status("Distant Crafter-TestRealm") == "online", "and shows them as around")
+	Advance(10)
+	local passed
+	for _, m in ipairs(W.sent) do
+		if m.chatType == "CHANNEL" and m.msg:find("^C1|Distant Crafter|2|") then passed = true end
+	end
+	check(passed, "it is passed on to everyone on your channel after a short wait")
+
+	local second = { origin = "Second Distant-TestRealm", ver = "zz8", payload = far, class = "PRIEST", faction = "A" }
+	W.sent = {}
+	for _, line in ipairs(Bridge.Lines(second, 1, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 101)
+	end
+	for _, line in ipairs(Bridge.Lines(second, 2)) do
+		Addon(line, "Other Bridge-TestRealm")
+	end
+	Advance(10)
+	local again = false
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^C1|Second Distant|") then again = true end
+	end
+	check(LI.crafters["Second Distant-TestRealm"] and not again, "if another bridge already put it on the channel, it isn't repeated")
+
+	local enemy = { origin = "Horde Guy-TestRealm", ver = "zz7", payload = far, class = "MAGE", faction = "H" }
+	for _, line in ipairs(Bridge.Lines(enemy, 1, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 101)
+	end
+	local tooFar = { origin = "Too Far-TestRealm", ver = "zz6", payload = far, class = "MAGE", faction = "A" }
+	for _, line in ipairs(Bridge.Lines(tooFar, 4, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 101)
+	end
+	local fromEnemy = { origin = "Via Enemy-TestRealm", ver = "zz5", payload = far, class = "MAGE", faction = "A" }
+	for _, line in ipairs(Bridge.Lines(fromEnemy, 1, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 103)
+	end
+	local fake = { origin = LI.playerKey, ver = "zz4", payload = far, class = "MAGE", faction = "A" }
+	for _, line in ipairs(Bridge.Lines(fake, 1, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 101)
+	end
+	check(not LI.crafters["Horde Guy-TestRealm"] and not LI.crafters["Too Far-TestRealm"] and not LI.crafters["Via Enemy-TestRealm"] and not LI.crafters[LI.playerKey].profs.tailoring.recipes[18560], "cards of the other faction, too many hops, through an enemy friend or claiming to be you are ignored")
+	for _, line in ipairs(Bridge.Lines({ origin = "Chan Pal-TestRealm", ver = "abc1", payload = far, class = "PRIEST", faction = "A" }, 2, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 101)
+	end
+	W.sent = {}
+	for _, line in ipairs(Bridge.Lines({ origin = "Chan Pal-TestRealm", ver = "abc1", payload = far, class = "PRIEST", faction = "A" }, 2, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 102)
+	end
+	Advance(10)
+	local repeated = false
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^C1|Chan Pal|") then repeated = true end
+	end
+	check(not LI.crafters["Chan Pal-TestRealm"].profs.tailoring and not repeated, "a card you already have neither overwrites your list nor gets repeated on your channel")
+
+	W.units = { party1 = { name = "Party", surname = "Pal", guid = "Player-2-PRTY" } }
+	W.groupSize = 1
+	W.sent = {}
+	Fire("GROUP_ROSTER_UPDATE")
+	Advance(5)
+	local grouped = false
+	for _, m in ipairs(W.sent) do
+		if m.chatType == "PARTY" and m.msg:find("^C1|") then grouped = true end
+	end
+	check(grouped, "being grouped with someone from the other half bridges too")
+	check(Bridge.Status():find("2 Battle.net friends in Forever (1 on the other half)", 1, true), "/li status shows the bridge", Bridge.Status())
+	LI.settings.guildOnly = true
+	check(Bridge.Share() == 0, "Guild and friends only turns the bridge off")
+	LI.settings.guildOnly = false
+	W.units, W.groupSize, W.bnet, W.faction = nil, nil, nil, nil
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.joinDelay = 2
+	W.channels = { [1] = 1 }
+	W.profs = { { name = "Tailoring", rank = 100, max = 150 } }
+	Boot()
+	W.sent = {}
+	Advance(8)
+	check(LI.Sync.IsJoined() and #Sent("H1", "CHANNEL") >= 1, "when the game confirms the channel a moment later, the first hello still goes out within seconds", #Sent("H1", "CHANNEL"))
+	W.joinDelay = nil
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	W.sent = {}
+	Addon("P2|123", "Quiet User-TestRealm", "CHANNEL")
+	Advance(2)
+	local asked = false
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^Q1|") and m.chatType == "WHISPER" and m.target == "Quiet User" then asked = true end
+	end
+	check(asked, "any message from a Linked Inn user whose list you don't have asks for it right away")
+	local payload = LI.Sync.Encode({ alchemy = { rank = 100, max = 150, recipes = { [2330] = true } } })
+	Addon("D1|abcd|1|1|" .. payload, "Quiet User-TestRealm", "WHISPER")
+	check(LI.crafters["Quiet User-TestRealm"] and LI.crafters["Quiet User-TestRealm"].profs.alchemy.recipes, "and their answer fills them in")
+	W.sent = {}
+	Advance(200)
+	Addon("P2|124", "Quiet User-TestRealm", "CHANNEL")
+	Advance(2)
+	check(#Sent("Q1") == 0, "someone whose list you have isn't asked again")
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.profs = { { name = "Tailoring", rank = 100, max = 150 } }
+	Boot()
+	Advance(5)
+	LI.UI.Open(LI.UI.TAB.find)
+	local dot = LinkedInnFrame.health
+	local level, rows = LI.Health.Compute()
+	local text = {}
+	for _, r in ipairs(rows) do text[#text + 1] = r.title .. ": " .. r.text end
+	check(dot and level == "ok" and table.concat(text, "; "):find("Hidden channel: joined", 1, true), "the status light is green with a joined channel", table.concat(text, "; "))
+	local errors = #W.errors
+	dot.__scripts.OnEnter(dot)
+	check(#W.errors == errors, "hovering it shows the explanation without errors", W.errors[#W.errors])
+	W.sendResult = 9
+	LI.Sync.Ping()
+	Advance(4)
+	check(LI.Health.Compute() == "warn", "a refused send makes it yellow")
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.noJoin = true
+	Boot()
+	Advance(30)
+	check(LI.Health.Compute() == "ok", "joining takes a moment before it worries")
+	Advance(40)
+	check(LI.Health.Compute() == "bad", "a channel still not joined after a minute makes it red")
+	W.noJoin = nil
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(2)
+	LI.UI.Open(LI.UI.TAB.find)
+	Advance(1)
+	local guide = LinkedInnGuide
+	check(guide and guide:IsShown() and guide.head.__text == "Welcome to Linked Inn", "the guide opens the first time the window does")
+	guide.next.__scripts.OnClick(guide.next)
+	check(guide.head.__text == "Helping it fill up" and guide.body.__text:find("Shift+V", 1, true), "Next shows how to help it fill up")
+	guide.next.__scripts.OnClick(guide.next)
+	check(guide.next:GetText() == "Get started", "the last page ends with Get started", guide.next:GetText())
+	guide.next.__scripts.OnClick(guide.next)
+	check(not guide:IsShown() and LI.db.guideSeen, "and closes it for good")
+	LinkedInnFrame:Hide()
+	LI.UI.Open(LI.UI.TAB.find)
+	Advance(1)
+	check(not guide:IsShown(), "it doesn't come back on its own")
+	LinkedInnFrame.guideButton.__scripts.OnClick(LinkedInnFrame.guideButton)
+	check(guide:IsShown() and guide.head.__text == "Welcome to Linked Inn", "the ? next to the status light opens it again")
+	guide:Hide()
+	SlashCmdList.LINKEDINN("guide")
+	check(guide:IsShown(), "so does /li guide")
+	guide:Hide()
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(2)
+	LI.UI.Open(LI.UI.TAB.find)
+	local main = LinkedInnFrame
+	local hit = main.premiumHit
+	for _ = 1, 6 do
+		hit.__scripts.OnClick(hit)
+		Advance(1)
+	end
+	check(not LI.db.premium and not main.premiumCheck:IsShown(), "slow clicks on the mug do nothing")
+	local chat0 = #W.chat
+	for _ = 1, 7 do
+		hit.__scripts.OnClick(hit)
+		Advance(0.2)
+	end
+	check(LI.db.premium and main.premiumCheck:IsShown(), "seven quick clicks on the mug unlock Linked Inn Premium")
+	check(W.chat[chat0 + 1] and W.chat[chat0 + 1]:find("smugly", 1, true), "with an appropriately smug message", W.chat[chat0 + 1])
+	main.premiumCheck.__scripts.OnClick(main.premiumCheck)
+	check(#W.chat == chat0 + 2, "clicking the checkmark gets a quip")
+	local saved = Logout()
+	Boot(saved)
+	Advance(2)
+	LI.UI.Open(LI.UI.TAB.find)
+	check(LinkedInnFrame.premiumCheck:IsShown(), "Premium survives a reload")
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(2)
+	LI.SetRecipes("Anna Book-TestRealm", { name = "Tailoring", rank = 100, max = 150 }, { { id = 3914, name = "Brown Linen Pants", item = 4343 } }, "auto")
+	LI.UI.Open(LI.UI.TAB.find)
+	LI.Book.Open("Anna Book-TestRealm", "tailoring", "")
+	local book = LinkedInnBook
+	check(book:IsShown(), "a recipe book opens beside the window")
+	LinkedInnFrame.gear.__scripts.OnClick(LinkedInnFrame.gear)
+	check(LinkedInnSettings:IsShown() and not book:IsShown(), "opening settings closes the book, so they never overlap")
+	LI.Book.Open("Anna Book-TestRealm", "tailoring", "")
+	check(book:IsShown() and not LinkedInnSettings:IsShown(), "and the other way round")
+	LI.UI.Open(LI.UI.TAB.work)
+	check(not book:IsShown(), "switching to Work closes the recipe book")
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	local payload = LI.Sync.Encode({ cooking = { rank = 200, max = 225, recipes = { [2550] = true } } })
+	Addon("H1|cook1|MAGE|cooking~5k~69~1|TestRealm|1", "Cook Only-TestRealm")
+	Addon("D1|cook1|1|1|" .. payload, "Cook Only-TestRealm", "WHISPER")
+	Addon("P2|1", "No Profs-TestRealm", "CHANNEL")
+	local chat0 = #W.chat
+	SlashCmdList.LINKEDINN("status")
+	local report = table.concat({ table.unpack(W.chat, chat0 + 1) }, "\n")
+	check(report:find("No Profs (nothing shared)", 1, true) and report:find("Cook Only (Cooking only", 1, true), "/li status says what each Linked Inn user heard has shared", report)
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

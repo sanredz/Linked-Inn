@@ -593,7 +593,11 @@ local function BuildRow(row)
 	row.headLine:SetHeight(1)
 	row.headLine:SetPoint("BOTTOMLEFT", ICON_X, 2)
 	row.headLine:SetPoint("BOTTOMRIGHT", -PILL_RIGHT, 2)
-	row.headLine:SetColorTexture(1, 0.82, 0, 0.35)
+	row.headLine:SetColorTexture(1, 0.82, 0, 0)
+	row.headBar = LI.Theme.HeaderBar(row)
+	row.headBar:SetPoint("LEFT", row, "LEFT", 0, 0)
+	row.headBar:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+	row.headBar:SetHeight(30)
 
 	row.star = CreateFrame("Button", nil, row)
 	row.star:SetSize(16, 16)
@@ -620,7 +624,7 @@ local function BuildRow(row)
 	end)
 
 	row.rowParts = { row.name, row.line, row.pill, row.star }
-	row.headParts = { row.toggle, row.headIcon, row.headName, row.headCount, row.headLine }
+	row.headParts = { row.toggle, row.headIcon, row.headName, row.headCount, row.headLine, row.headBar }
 
 	row:SetScript("OnEnter", function(self)
 		self.hover = true
@@ -939,6 +943,15 @@ local function UpdateChips()
 end
 
 local function RefreshFind()
+	if main.listArt then
+		local only
+		for key, on in pairs(ProfsSelected()) do
+			if on then
+				only = only == nil and key or false
+			end
+		end
+		LI.Theme.ProfessionArt(main.listArt, only or nil)
+	end
 	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary, kind = LI.settings.kind, maxOnly = LI.settings.maxOnly, minSkill = LI.settings.minSkill, liOnly = LI.settings.liOnly, guildOnly = LI.settings.guildOnly }
 	local results = LI.Search(filter.search, opts)
 	local list = {}
@@ -1201,8 +1214,25 @@ local function QueueRefresh()
 	end)
 end
 
+local sides = {}
+
+function UI.Side(frame)
+	sides[#sides + 1] = frame
+	frame:HookScript("OnShow", function(self)
+		for _, other in ipairs(sides) do
+			if other ~= self and other:IsShown() then
+				other:Hide()
+			end
+		end
+	end)
+end
+
 local function SelectTab(index)
 	main.selectedTab = index
+	local book = LI.Book and LI.Book.Frame and LI.Book.Frame()
+	if index ~= TAB.find and book and book:IsShown() then
+		book:Hide()
+	end
 	if PanelTemplates_SetTab then
 		PanelTemplates_SetTab(main, index)
 	end
@@ -1211,7 +1241,7 @@ end
 
 local function CreateMain()
 	main = CreateFrame("Frame", "LinkedInnFrame", UIParent, "ButtonFrameTemplate")
-	main:SetSize(560, 580)
+	main:SetSize(560, 620)
 	main:SetPoint("CENTER", 0, 20)
 	main:SetFrameStrata("HIGH")
 	main:SetToplevel(true)
@@ -1226,10 +1256,21 @@ local function CreateMain()
 		ButtonFrameTemplate_HideButtonBar(main)
 	end
 	tinsert(UISpecialFrames, "LinkedInnFrame")
+	LI.Theme.Skin(main)
+	main.emblem = LI.Theme.Emblem(main, 62)
+	main.emblem:SetPoint("TOPLEFT", main, "TOPLEFT", -10, 12)
+	main.liTitle = LI.Theme.Title(main, LI.TITLE, 30)
+	main.liTitle:SetPoint("TOP", main, "TOP", 0, -14)
+	main.subtitle = main:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	main.subtitle:SetPoint("TOP", main.liTitle, "BOTTOM", 0, -1)
+	main.subtitle:SetTextColor(LI.Theme.MUTED[1], LI.Theme.MUTED[2], LI.Theme.MUTED[3])
+	main.subtitle:SetText("Profession Finder")
+	main.filigreeLeft = LI.Theme.Filigree(main, main.liTitle, "LEFT")
+	main.filigreeRight = LI.Theme.Filigree(main, main.liTitle, "RIGHT")
 
 	local search = CreateFrame("EditBox", nil, main, "SearchBoxTemplate")
 	search:SetSize(190, 22)
-	search:SetPoint("TOPLEFT", 72, -32)
+	search:SetPoint("TOPLEFT", 22, -72)
 	if search.Instructions then
 		search.Instructions:SetText("Item, profession or name")
 		search.Instructions:SetWordWrap(false)
@@ -1269,7 +1310,7 @@ local function CreateMain()
 
 	main.gear = CreateFrame("Button", nil, main)
 	main.gear:SetSize(24, 24)
-	main.gear:SetPoint("TOPRIGHT", -12, -31)
+	main.gear:SetPoint("TOPRIGHT", -14, -71)
 	main.gear.icon = main.gear:CreateTexture(nil, "ARTWORK")
 	main.gear.icon:SetAllPoints()
 	if not pcall(main.gear.icon.SetAtlas, main.gear.icon, "questlog-icon-setting") then
@@ -1315,8 +1356,8 @@ local function CreateMain()
 
 
 	main.chipBar = CreateFrame("Frame", nil, main)
-	main.chipBar:SetPoint("TOPLEFT", 68, -60)
-	main.chipBar:SetPoint("TOPRIGHT", -10, -60)
+	main.chipBar:SetPoint("TOPLEFT", 16, -100)
+	main.chipBar:SetPoint("TOPRIGHT", -12, -100)
 	main.chipBar:SetHeight(36)
 	main.chips = {}
 	main.clearChips = CreateFrame("Button", nil, main.chipBar)
@@ -1377,8 +1418,13 @@ local function CreateMain()
 
 	if main.Inset then
 		main.Inset:ClearAllPoints()
-		main.Inset:SetPoint("TOPLEFT", 4, -100)
-		main.Inset:SetPoint("BOTTOMRIGHT", -6, 26)
+		main.Inset:SetPoint("TOPLEFT", 12, -140)
+		main.Inset:SetPoint("BOTTOMRIGHT", -12, 32)
+		main.listArt = main.Inset:CreateTexture(nil, "BACKGROUND", nil, 2)
+		main.listArt:SetPoint("TOPLEFT", 4, -4)
+		main.listArt:SetPoint("BOTTOMRIGHT", -4, 4)
+		main.listArt:SetAlpha(0.5)
+		main.listArt:Hide()
 	end
 
 	main.findPage = CreateFrame("Frame", nil, main.Inset)
@@ -1414,18 +1460,23 @@ local function CreateMain()
 	main.workPage:Hide()
 
 	main.count = Text(main, "GameFontDisableSmall", "RIGHT")
-	main.count:SetPoint("RIGHT", main, "BOTTOMRIGHT", -12, 14)
+	main.count:SetPoint("RIGHT", main, "BOTTOMRIGHT", -18, 20)
 	main.compactBox = CreateFrame("CheckButton", nil, main, "UICheckButtonTemplate")
 	main.compactBox:SetSize(22, 22)
-	main.compactBox:SetPoint("LEFT", main, "BOTTOMLEFT", 8, 15)
+	main.compactBox:SetPoint("LEFT", main, "BOTTOMLEFT", 14, 20)
 	main.compactBox:SetScript("OnClick", function(self)
 		LI.settings.compact = self:GetChecked() and true or false
 		Sound(LI.settings.compact and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
 		UI.Refresh()
 	end)
 	main.compactLabel = Text(main, "GameFontHighlightSmall")
-	main.compactLabel:SetPoint("LEFT", main.compactBox, "RIGHT", 0, -1)
+	main.compactLabel:SetPoint("LEFT", main.compactBox, "RIGHT", 0, 0)
 	main.compactLabel:SetText("Compact")
+	main.health = LI.Health.Create(main)
+	main.health:SetPoint("LEFT", main, "BOTTOMLEFT", 98, 20)
+	main.guideButton = LI.Guide.CreateButton(main)
+	main.guideButton:SetPoint("LEFT", main.health, "RIGHT", 4, 0)
+	LI.Premium.Attach(main)
 
 	for i, name in ipairs(TABS) do
 		local tab = CreateFrame("Button", "LinkedInnFrameTab" .. i, main, "PanelTabButtonTemplate")
@@ -1449,6 +1500,7 @@ local function CreateMain()
 	end
 
 	main:SetScript("OnShow", function()
+		LI.After(0.3, LI.Guide.MaybeShow)
 		Sound("IG_CHARACTER_INFO_OPEN")
 		UI.Refresh()
 	end)
@@ -1509,6 +1561,8 @@ SlashCmdList.LINKEDINN = function(msg)
 		LI.Sync.Ping(rest)
 	elseif cmd == "status" then
 		LI.Sync.Status()
+	elseif cmd == "guide" then
+		LI.Guide.Show(1)
 	else
 		UI.Toggle()
 	end

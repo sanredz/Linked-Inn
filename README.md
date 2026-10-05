@@ -126,7 +126,9 @@ The gear at the top right opens the settings:
 
 ## Usage
 
-Open it with `/li`, the minimap button, or the addon menu.
+Open it with `/li`, the minimap button, or the addon menu. The light in the
+bottom bar shows whether everything is working; hover it for details. The `?`
+button (or `/li guide`) shows a short guide.
 
 ## What gets shared
 
@@ -134,6 +136,9 @@ Only with other Linked Inn users, and only inside the game:
 
 - Your professions, skill levels and known recipes.
 - Your Work requests and offers.
+
+Linked Inn users on your Battle.net friends list help pass these lists along,
+so users on the other half of your realm can show up too.
 
 Nothing is sent outside the game, and there's no website or account.
 

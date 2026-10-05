@@ -1225,9 +1225,31 @@ function Sync.Status()
 		return #parts > 0 and table.concat(parts, ", ") or "none"
 	end
 	local heard = {}
-	for key in pairs(sessionHeard) do
+	for key in pairs(firstFrom) do
+		local c = LI.crafters[key]
+		local crafting, other = {}, {}
+		for profKey, p in pairs(c and c.profs or {}) do
+			if p.recipes then
+				if LI.SECONDARY_SET[profKey] then
+					other[#other + 1] = p.name or profKey
+				else
+					crafting[#crafting + 1] = p.name or profKey
+				end
+			end
+		end
+		table.sort(crafting)
+		table.sort(other)
+		local what
+		if #crafting > 0 then
+			what = table.concat(crafting, ", ")
+		elseif #other > 0 then
+			what = table.concat(other, ", ") .. " only, shown with Secondary"
+		else
+			what = "nothing shared"
+		end
 		local realm = Sync.RealmOf(key)
-		heard[#heard + 1] = LI.ShortName(key) .. ((realm and realm ~= MyRealm()) and (" (" .. realm .. ")") or "")
+		local where = (realm and realm ~= MyRealm()) and (" on " .. realm) or ""
+		heard[#heard + 1] = string.format("%s%s (%s)", LI.ShortName(key), where, what)
 	end
 	table.sort(heard)
 	local bridges = {}

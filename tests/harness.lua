@@ -2167,7 +2167,7 @@ do
 	local chat0 = #W.chat
 	SlashCmdList.LINKEDINN("status")
 	local report = table.concat({ table.unpack(W.chat, chat0 + 1) }, "\n")
-	check(report:find("Realm: TestRealm", 1, true) and report:find("OtherRealm via Far Away", 1, true) and report:find("Aaa Bridge relays", 1, true) and report:find("Far Away (OtherRealm)", 1, true), "/li status shows realms and who relays", report)
+	check(report:find("Realm: TestRealm", 1, true) and report:find("OtherRealm via Far Away", 1, true) and report:find("Aaa Bridge relays", 1, true) and report:find("Far Away on OtherRealm (", 1, true), "/li status shows realms and who relays", report)
 	Advance(120)
 	W.sent = {}
 	Addon("B1|Third Guy-OtherRealm|H1|abe|PRIEST|alchemy~5~a~-|OtherRealm|2", "Far Away-OtherRealm", "WHISPER")
@@ -3197,6 +3197,31 @@ do
 	check(book:IsShown() and not LinkedInnSettings:IsShown(), "and the other way round")
 	LI.UI.Open(LI.UI.TAB.work)
 	check(not book:IsShown(), "switching to Work closes the recipe book")
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	local payload = LI.Sync.Encode({ cooking = { rank = 200, max = 225, recipes = { [2550] = true } } })
+	Addon("H1|cook1|MAGE|cooking~5k~69~1|TestRealm|1", "Cook Only-TestRealm")
+	Addon("D1|cook1|1|1|" .. payload, "Cook Only-TestRealm", "WHISPER")
+	Addon("P2|1", "No Profs-TestRealm", "CHANNEL")
+	LI.settings.secondary = false
+	LI.settings.liOnly = true
+	LI.UI.Open(LI.UI.TAB.find)
+	LI.UI.Refresh()
+	local seen = false
+	for _, r in ipairs(LinkedInnFrame.list.__rows) do
+		if r.entry and r.entry.key == "Cook Only-TestRealm" then seen = true end
+	end
+	check(seen, "the Linked Inn filter shows users with only secondary professions too")
+	local chat0 = #W.chat
+	SlashCmdList.LINKEDINN("status")
+	local report = table.concat({ table.unpack(W.chat, chat0 + 1) }, "\n")
+	check(report:find("No Profs (nothing shared)", 1, true) and report:find("Cook Only (Cooking only", 1, true), "/li status says what each Linked Inn user heard has shared", report)
+	LI.settings.liOnly = false
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

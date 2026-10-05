@@ -3181,5 +3181,23 @@ do
 	check(LinkedInnFrame.premiumCheck:IsShown(), "Premium survives a reload")
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(2)
+	LI.SetRecipes("Anna Book-TestRealm", { name = "Tailoring", rank = 100, max = 150 }, { { id = 3914, name = "Brown Linen Pants", item = 4343 } }, "auto")
+	LI.UI.Open(LI.UI.TAB.find)
+	LI.Book.Open("Anna Book-TestRealm", "tailoring", "")
+	local book = LinkedInnBook
+	check(book:IsShown(), "a recipe book opens beside the window")
+	LinkedInnFrame.gear.__scripts.OnClick(LinkedInnFrame.gear)
+	check(LinkedInnSettings:IsShown() and not book:IsShown(), "opening settings closes the book, so they never overlap")
+	LI.Book.Open("Anna Book-TestRealm", "tailoring", "")
+	check(book:IsShown() and not LinkedInnSettings:IsShown(), "and the other way round")
+	LI.UI.Open(LI.UI.TAB.work)
+	check(not book:IsShown(), "switching to Work closes the recipe book")
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

@@ -1205,8 +1205,25 @@ local function QueueRefresh()
 	end)
 end
 
+local sides = {}
+
+function UI.Side(frame)
+	sides[#sides + 1] = frame
+	frame:HookScript("OnShow", function(self)
+		for _, other in ipairs(sides) do
+			if other ~= self and other:IsShown() then
+				other:Hide()
+			end
+		end
+	end)
+end
+
 local function SelectTab(index)
 	main.selectedTab = index
+	local book = LI.Book and LI.Book.Frame and LI.Book.Frame()
+	if index ~= TAB.find and book and book:IsShown() then
+		book:Hide()
+	end
 	if PanelTemplates_SetTab then
 		PanelTemplates_SetTab(main, index)
 	end

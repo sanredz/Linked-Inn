@@ -463,7 +463,7 @@ local function Create()
 	frame.last = frame.minimap
 
 	frame.version = Text(frame, "GameFontDisableSmall", "CENTER")
-	frame.version:SetPoint("BOTTOM", 0, 8)
+	frame.version:SetPoint("BOTTOM", 0, 15)
 	frame.version:SetText(string.format("%s %s", LI.TITLE, LI.VERSION))
 
 	frame:SetScript("OnShow", function()
@@ -471,6 +471,7 @@ local function Create()
 		LI.After(0, Fit)
 	end)
 	frame:Hide()
+	LI.UI.Side(frame)
 end
 
 function Settings.Refresh()

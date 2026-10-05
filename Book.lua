@@ -513,6 +513,7 @@ local function Create()
 		LI.Fire("BookChanged")
 	end)
 	frame:Hide()
+	LI.UI.Side(frame)
 end
 
 function Book.Open(key, profKey, query)

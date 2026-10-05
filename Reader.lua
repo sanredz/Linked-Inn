@@ -22,6 +22,9 @@ local CLICK_WINDOW = 20
 local AUTO_ECHO = 10
 local OWN_BACK = 5
 local ownProf, ownAt = nil, -60
+local REST = 3
+local restUntil = 0
+local userShown = false
 
 local queue = {}
 local builtFailed = {}
@@ -507,7 +510,7 @@ local function Pump()
 		Kick()
 		return
 	end
-	if not LI.ready or not LI.settings.autoRead or pending or tradeOpen or Reader.IsBroken() then
+	if not LI.ready or not LI.settings.autoRead or pending or tradeOpen or Reader.IsBroken() or Now() < restUntil then
 		return
 	end
 	if #queue == 0 or Now() < nextAt then
@@ -580,7 +583,7 @@ Kick = function()
 		CloseHidden()
 		return
 	end
-	if tradeOpen and (FrameVisible() or Now() - ownAt <= OWN_BACK + SETTLE) then
+	if (tradeOpen and (FrameVisible() or Now() - ownAt <= OWN_BACK + SETTLE)) or Now() < restUntil then
 		Waiting("a profession window is open")
 		return
 	end
@@ -1015,6 +1018,7 @@ LI.On("TRADE_SKILL_SHOW", function()
 	else
 		ours = false
 	end
+	userShown = not ours
 	Replied()
 	ScheduleRead()
 end)
@@ -1043,6 +1047,10 @@ LI.On("PLAYER_ENTERING_WORLD", function()
 end)
 
 LI.On("TRADE_SKILL_CLOSE", function()
+	if userShown then
+		restUntil = Now() + REST
+	end
+	userShown = false
 	tradeOpen = false
 	ours = false
 	LI.After(0.01, function()

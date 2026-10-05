@@ -801,10 +801,13 @@ W.autoWorks = false
 LI.CheckOnline("Anna Smith-TestRealm")
 W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
 Fire("TRADE_SKILL_SHOW")
+local hyperlinksAtOpen = #W.hyperlinks
 Advance(0.1)
 check(LI.IsChecking("Anna Smith-TestRealm"), "opening your own profession during a check doesn't count as their reply")
 C_TradeSkillUI.CloseTradeSkill()
-Advance(3)
+Advance(1)
+check(LI.IsChecking("Anna Smith-TestRealm") and #W.hyperlinks == hyperlinksAtOpen, "nothing is read right after you close your own window", #W.hyperlinks - hyperlinksAtOpen)
+Advance(6)
 check(LI.Status("Anna Smith-TestRealm") == "offline", "the check still ends as offline")
 Advance(5)
 W.combat = true

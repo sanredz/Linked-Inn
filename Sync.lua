@@ -280,10 +280,6 @@ function Sync.Elected(realm)
 	return true
 end
 
-local function BaseName(key)
-	return key:match("^(.+)%-[^%-]+$") or key
-end
-
 local function Enqueue(kind, message, chatType, target)
 	if LI.settings.guildOnly and (chatType == "CHANNEL" or (chatType == "WHISPER" and not LI.Allowed(LI.FullName(target)))) then
 		return
@@ -405,12 +401,7 @@ local function OnlineFriends()
 	return list
 end
 
-local Spread
-
 local function Broadcast(kind, message, withGuild, withFriends)
-	if Spread and LI.playerKey then
-		Spread(LI.playerKey, MyRealm(), message)
-	end
 	for _, route in ipairs(Routes(withGuild)) do
 		Enqueue(kind, message, route)
 	end
@@ -931,28 +922,6 @@ end
 
 local Dispatch
 
-Spread = function(origin, realm, inner)
-	if type(inner) ~= "string" or not RELAY[inner:sub(1, 2)] or not realm or LI.settings.guildOnly then
-		return
-	end
-	local id = origin .. "\1" .. inner
-	if seenMsgs[id] then
-		return
-	end
-	seenMsgs[id] = Now()
-	local message = string.format("B1|%s-%s|%s", BaseName(origin), realm, inner)
-	if #message > 255 then
-		return
-	end
-	local mine = MyRealm()
-	for target, key in pairs(Sync.Links()) do
-		if target ~= realm and target ~= mine and Sync.Elected(target) then
-			Enqueue("relay", message, "WHISPER", LI.WhisperTarget(key))
-			LI.test.sync.relayOut = (LI.test.sync.relayOut or 0) + 1
-		end
-	end
-end
-
 local function OnRelay(relayer, text, chatType)
 	local originName, inner = text:match("^B1|([^|]+)|(.+)$")
 	if not originName or not RELAY[inner:sub(1, 2)] then
@@ -963,9 +932,11 @@ local function OnRelay(relayer, text, chatType)
 	if not realm or not origin or origin == LI.playerKey or origin == relayer then
 		return
 	end
-	if seenMsgs[origin .. "\1" .. inner] or not Allow(origin) then
+	local id = origin .. "\1" .. inner
+	if seenMsgs[id] or not Allow(origin) then
 		return
 	end
+	seenMsgs[id] = Now()
 	Touch(relayer)
 	LI.test.sync.relayIn = (LI.test.sync.relayIn or 0) + 1
 	if realm ~= MyRealm() then
@@ -974,7 +945,6 @@ local function OnRelay(relayer, text, chatType)
 	if chatType == "WHISPER" then
 		Enqueue("relay", text, "CHANNEL")
 	end
-	Spread(origin, realm, inner)
 	Dispatch(origin, inner, "RELAY")
 end
 
@@ -1046,9 +1016,6 @@ function Sync.OnMessage(prefix, text, chatType, sender)
 	if text:sub(1, 3) == "B1|" then
 		OnRelay(key, text, chatType)
 		return
-	end
-	if chatType == "CHANNEL" then
-		Spread(key, MyRealm(), text)
 	end
 	Dispatch(key, text, chatType)
 end

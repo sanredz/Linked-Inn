@@ -2141,20 +2141,14 @@ do
 	W.sent = {}
 	Addon("H1|abd|MAGE|tailoring~5~a~-|TestRealm|1", "Near By-TestRealm", "CHANNEL")
 	Advance(6)
-	check(Find("B1|Near By-TestRealm|H1|abd", "WHISPER", "Far Away"), "a hello on your channel is passed to the other realm")
-	W.sent = {}
-	Addon("H1|abd|MAGE|tailoring~5~a~-|TestRealm|1", "Near By-TestRealm", "CHANNEL")
-	Advance(4)
-	check(not Find("B1|Near By", "WHISPER"), "the same message is passed on only once")
 	Sync.Send("X1|abc", "CHANNEL")
 	Advance(8)
-	check(Find("B1|Brew Master-TestRealm|X1|abc", "WHISPER", "Far Away"), "your own work messages cross too")
+	check(not Find("B1|", "WHISPER"), "nothing is passed to the other realm by addon whisper, which never arrives there; the Battle.net bridge does that")
 	Addon("H1|abf|MAGE|tailoring~5~a~-|TestRealm|1|OtherRealm", "Aaa Bridge-TestRealm", "CHANNEL")
 	Advance(6)
 	W.sent = {}
 	Sync.Send("X1|zz", "CHANNEL")
 	Advance(8)
-	check(not Find("B1|Brew Master-TestRealm|X1|zz", "WHISPER"), "only one user per realm passes messages on")
 	local chat0 = #W.chat
 	SlashCmdList.LINKEDINN("status")
 	local report = table.concat({ table.unpack(W.chat, chat0 + 1) }, "\n")

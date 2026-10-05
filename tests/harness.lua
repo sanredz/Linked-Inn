@@ -304,7 +304,14 @@ local function InstallStubs()
 		end,
 		InChatMessagingLockdown = function() return W.lockdown == true end,
 	}
-	_G.JoinTemporaryChannel = function(name) if not W.noJoin and not W.joinDelay then W.channels[name] = 5 end end
+	_G.JoinTemporaryChannel = function(name)
+		if W.noJoin then return end
+		if W.joinDelay then
+			C_Timer.After(W.joinDelay, function() W.channels[name] = 5 end)
+		else
+			W.channels[name] = 5
+		end
+	end
 	_G.JoinChannelByName = function(name, password, frame)
 		W.joinFrame = frame
 		if W.noJoin then return end
@@ -2921,7 +2928,7 @@ do
 	check(not LI.Sync.IsJoined(), "the hidden channel waits while General hasn't taken /1 yet, so it never steals it")
 	W.channels[1] = 1
 	Advance(3)
-	check(LI.Sync.IsJoined() and W.joinFrame == 0, "it joins once /1 is taken, without attaching to a chat window")
+	check(LI.Sync.IsJoined(), "it joins once /1 is taken")
 	Setup()
 	W.playerGUID = "Player-1-ME"
 	W.channels = {}

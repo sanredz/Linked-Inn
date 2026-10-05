@@ -990,6 +990,8 @@ local function OnNotFound(msg)
 	LI.Log(string.format("Could not whisper %s (%s): offline", w.target, tostring(w.kind)))
 end
 
+local heardThisSession = false
+
 function Sync.OnMessage(prefix, text, chatType, sender)
 	if prefix ~= PREFIX or type(text) ~= "string" or type(sender) ~= "string" or not LI.ready then
 		return
@@ -997,6 +999,10 @@ function Sync.OnMessage(prefix, text, chatType, sender)
 	local key = LI.FullName(sender)
 	if not key then
 		return
+	end
+	if not heardThisSession then
+		heardThisSession = true
+		LI.Log(string.format("First message on %s this session, from %s", tostring(chatType), key == LI.playerKey and "yourself" or LI.ShortName(key)))
 	end
 	if key == LI.playerKey then
 		if not LI.test.sync.echo then
@@ -1167,11 +1173,10 @@ Join = function()
 		LI.After(JOIN_DEFER, Join)
 		return
 	end
-	if JoinChannelByName then
-		LI.Secure(JoinChannelByName, CHANNEL, nil, 0, 0)
-	end
-	if not ChannelId() and JoinTemporaryChannel then
-		LI.Secure(JoinTemporaryChannel, CHANNEL)
+	if JoinTemporaryChannel then
+		LI.Try(JoinTemporaryChannel, CHANNEL)
+	elseif JoinChannelByName then
+		LI.Try(JoinChannelByName, CHANNEL)
 	end
 	Confirm(0)
 end

@@ -121,6 +121,7 @@ end
 function methods:SetElementExtentCalculator(fn) self.__extent = fn end
 function methods:IsEnabled() return not self.__disabled end
 function methods:GetAlpha() return self.__alpha or 1 end
+function methods:GetObjectType() return self.__kind end
 function methods:SetHyperlink(link)
 	table.insert(W.hyperlinks, link)
 	if W.autoWorks then
@@ -2470,6 +2471,31 @@ do
 	check(#W.hyperlinks == before, "a click with nothing being read changes nothing")
 	W.autoWorks = false
 	W.replyDelay = nil
+end
+
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	W.autoWorks = true
+	W.replyDelay = 1
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	for _ = 1, 40 do
+		Advance(0.1)
+		if #W.hyperlinks > 0 then break end
+	end
+	Advance(0.2)
+	W.autoWorks = false
+	Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
+	Advance(10)
+	W.autoWorks = true
+	W.replyDelay = nil
+	Advance(10)
+	check(LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes, "a background read cancelled by your click is tried again later")
+	W.autoWorks = false
 end
 
 do

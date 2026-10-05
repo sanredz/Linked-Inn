@@ -159,6 +159,16 @@ function Reader.QueueSize()
 	return #queue
 end
 
+local function MouseFocus()
+	if GetMouseFoci then
+		local foci = LI.Try(GetMouseFoci)
+		return type(foci) == "table" and foci[1] or nil, true
+	elseif GetMouseFocus then
+		return LI.Try(GetMouseFocus), true
+	end
+	return nil, false
+end
+
 local function ChatActive()
 	local util = ChatFrameUtil and ChatFrameUtil.GetActiveWindow
 	local active = util and LI.Try(util) or (ChatEdit_GetActiveWindow and LI.Try(ChatEdit_GetActiveWindow))
@@ -478,13 +488,15 @@ local function Yield(why)
 	pending = nil
 	lastDone = Now()
 	Unsilence()
+	local again = {}
+	for k, v in pairs(job) do
+		again[k] = v
+	end
+	again.replied, again.started, again.notified, again.found = nil, nil, nil, nil
 	if job.probe then
-		local again = {}
-		for k, v in pairs(job) do
-			again[k] = v
-		end
-		again.replied, again.started, again.notified, again.found = nil, nil, nil, nil
 		table.insert(probes, 1, again)
+	else
+		queue[#queue + 1] = again
 	end
 	LI.Log(why or "You opened a profession window; background reading waits until it closes")
 end
@@ -1066,13 +1078,8 @@ LI.On("TRADE_SKILL_SHOW", function()
 	ScheduleRead()
 end)
 local function OnInterface()
-	local focus
-	if GetMouseFoci then
-		local foci = LI.Try(GetMouseFoci)
-		focus = type(foci) == "table" and foci[1] or nil
-	elseif GetMouseFocus then
-		focus = LI.Try(GetMouseFocus)
-	else
+	local focus, known = MouseFocus()
+	if not known then
 		return true
 	end
 	return focus ~= nil and focus ~= WorldFrame

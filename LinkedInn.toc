@@ -23,6 +23,7 @@ Bridge.lua
 Health.lua
 Guide.lua
 Premium.lua
+Chrome.lua
 ArtPreview.lua
 Work.lua
 UI.lua

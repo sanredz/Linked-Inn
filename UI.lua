@@ -1431,6 +1431,7 @@ local function CreateMain()
 	main.guideButton = LI.Guide.CreateButton(main)
 	main.guideButton:SetPoint("LEFT", main.health, "RIGHT", 4, 0)
 	LI.Premium.Attach(main)
+	LI.Chrome.Apply(main)
 
 	for i, name in ipairs(TABS) do
 		local tab = CreateFrame("Button", "LinkedInnFrameTab" .. i, main, "PanelTabButtonTemplate")

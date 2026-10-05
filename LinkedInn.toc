@@ -20,6 +20,7 @@ Reader.lua
 Clues.lua
 Sync.lua
 Bridge.lua
+Health.lua
 Work.lua
 UI.lua
 Book.lua

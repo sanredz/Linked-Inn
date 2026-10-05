@@ -2,6 +2,7 @@ local ADDON, LI = ...
 
 local Sync = {}
 LI.Sync = Sync
+Sync.session = { sent = 0, failed = 0, throttled = 0 }
 
 local PREFIX = "LinkedInn"
 local CHANNEL = "LinkedInnSync"
@@ -329,6 +330,7 @@ local function Deliver(q)
 		end
 		LI.Secure(C_BattleNet.SendGameData, target, PREFIX, q.message)
 		LI.test.sync.sent = LI.test.sync.sent + 1
+		Sync.session.sent = Sync.session.sent + 1
 		Count("tx", chatType)
 		return true
 	end
@@ -343,10 +345,12 @@ local function Deliver(q)
 	result = LI.Safe(result)
 	if Throttled(result) then
 		LI.test.sync.throttled = (LI.test.sync.throttled or 0) + 1
+		Sync.session.throttled = Sync.session.throttled + 1
 		return false, "throttle"
 	end
 	if ok and (result == nil or result == 0 or result == true) then
 		LI.test.sync.sent = LI.test.sync.sent + 1
+		Sync.session.sent = Sync.session.sent + 1
 		Count("tx", chatType)
 		if chatType == "WHISPER" and type(target) == "string" then
 			whispered[target:lower()] = { target = target, at = Now(), kind = q.kind }
@@ -354,6 +358,7 @@ local function Deliver(q)
 		return true
 	end
 	LI.test.sync.failed = (LI.test.sync.failed or 0) + 1
+	Sync.session.failed = Sync.session.failed + 1
 	LI.test.sync.lastError = string.format("%s on %s", ok and ("code " .. tostring(result)) or tostring(result):sub(1, 60), chatType)
 	if Now() - lastFailLog > 60 then
 		lastFailLog = Now()
@@ -1259,6 +1264,14 @@ end
 
 function Sync.IsJoined()
 	return joined
+end
+
+function Sync.IsPaused()
+	return Paused()
+end
+
+function Sync.LiveCount()
+	return #Sync.LivePeers()
 end
 
 local function ReadOwnBasics()

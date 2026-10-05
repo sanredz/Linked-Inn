@@ -3095,5 +3095,35 @@ do
 	check(#Sent("Q1") == 0, "someone whose list you have isn't asked again")
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.profs = { { name = "Tailoring", rank = 100, max = 150 } }
+	Boot()
+	Advance(5)
+	LI.UI.Open(LI.UI.TAB.find)
+	local dot = LinkedInnFrame.health
+	local level, rows = LI.Health.Compute()
+	local text = {}
+	for _, r in ipairs(rows) do text[#text + 1] = r.title .. ": " .. r.text end
+	check(dot and level == "ok" and table.concat(text, "; "):find("Hidden channel: joined", 1, true), "the status light is green with a joined channel", table.concat(text, "; "))
+	local errors = #W.errors
+	dot.__scripts.OnEnter(dot)
+	check(#W.errors == errors, "hovering it shows the explanation without errors", W.errors[#W.errors])
+	W.sendResult = 9
+	LI.Sync.Ping()
+	Advance(4)
+	check(LI.Health.Compute() == "warn", "a refused send makes it yellow")
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.noJoin = true
+	Boot()
+	Advance(30)
+	check(LI.Health.Compute() == "ok", "joining takes a moment before it worries")
+	Advance(40)
+	check(LI.Health.Compute() == "bad", "a channel still not joined after a minute makes it red")
+	W.noJoin = nil
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

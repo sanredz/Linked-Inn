@@ -1426,6 +1426,8 @@ local function CreateMain()
 	main.compactLabel = Text(main, "GameFontHighlightSmall")
 	main.compactLabel:SetPoint("LEFT", main.compactBox, "RIGHT", 0, -1)
 	main.compactLabel:SetText("Compact")
+	main.health = LI.Health.Create(main)
+	main.health:SetPoint("LEFT", main, "BOTTOMLEFT", 92, 15)
 
 	for i, name in ipairs(TABS) do
 		local tab = CreateFrame("Button", "LinkedInnFrameTab" .. i, main, "PanelTabButtonTemplate")

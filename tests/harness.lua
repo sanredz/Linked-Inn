@@ -1809,7 +1809,7 @@ do
 	end
 	check(posted and posted.qty == 3 and posted.mats == "some" and posted.price == 155000 and posted.recipe == 18560, "Post creates the request from the panel", posted and posted.mats)
 	check(posted and posted.have[14342] == 12 and posted.have[14256] == 1 and not posted.have[8343], "it records exactly what you bring")
-	Advance(2)
+	Advance(3)
 	local sent = Last("R1|")
 	check(sent and sent.msg:find("|" .. LI.Sync.B36(14256) .. ":1", 1, true) and sent.msg:find(LI.Sync.B36(14342) .. ":c", 1, true), "what you bring travels with the request", sent and sent.msg)
 	local back = Work.Decode("Me Again-TestRealm", { "R1", "9", LI.Sync.B36(14155), LI.Sync.B36(18560), "3", "s", "0", "100", "", LI.Sync.B36(14342) .. ":c," .. LI.Sync.B36(14256) .. ":1" })
@@ -1849,45 +1849,54 @@ check(dec and #dec == 2 and dec[1].key == "first aid" and dec[1].ids == nil and 
 check(Sync.Decode("tailoring~1~1~~zz.-1") == nil and Sync.Decode("tai|loring~1~1~~1") == nil and Sync.Decode("mining~1~1~~1") == nil, "broken or gathering lists are rejected")
 check(W.prefix == "LinkedInn", "the addon message prefix is registered")
 check(LI.crafters[LI.playerKey].profs.tailoring.rank == 260 and not LI.crafters[LI.playerKey].profs.mining, "your crafting professions are read at login, gathering ones skipped")
-Advance(5)
-check(not Sync.IsJoined(), "the hidden channel waits a moment after login")
-Advance(10)
-check(Sync.IsJoined() and W.hidden == 10, "it joins the hidden channel and keeps it out of every chat window", W.hidden)
-check(#Sent("H1") == 0, "no hello right away")
-Advance(35)
+Advance(3)
+check(Sync.IsJoined() and W.hidden == 10, "it joins the hidden channel within seconds and keeps it out of every chat window", W.hidden)
 local hellos = Sent("H1", "CHANNEL")
-check(#hellos == 1 and hellos[1].target == "5", "a hello goes to the hidden channel", #hellos)
+check(#hellos == 1 and hellos[1].target == "5" and hellos[1].msg:find("|J$"), "a hello goes to the hidden channel right after joining, asking others to say hi", #hellos)
+Advance(17)
+check(#Sent("H1", "CHANNEL") == 2 and Sent("H1", "CHANNEL")[2].msg:find("|J$"), "a second one follows for anyone who missed the first", #Sent("H1", "CHANNEL"))
+Advance(5)
 local hello = hellos[1] and hellos[1].msg or ""
 check(hello:find("tailoring~", 1, true) and not hello:find("mining", 1, true) and hello:find("|MAGE|", 1, true), "the hello lists crafting professions and class", hello)
 Addon(hello, "Brew Master-TestRealm")
 check(LI.test.sync.echo == true, "hearing your own hello proves the channel works")
+local beforeRepeat = #Sent("H1")
 Advance(13 * 60 + 200)
-check(#Sent("H1") == 2, "hellos repeat every 12 to 15 minutes", #Sent("H1"))
+check(#Sent("H1") == beforeRepeat + 1, "hellos repeat every 12 to 15 minutes", #Sent("H1"))
 
 W.trade = { linked = false, prof = TAILORING, recipes = TAILOR_RECIPES }
 Fire("TRADE_SKILL_SHOW")
 Advance(1)
 C_TradeSkillUI.CloseTradeSkill()
+local beforeLearn = #Sent("H1")
 Advance(12)
-check(#Sent("H1") == 3, "learning recipes sends a hello soon", #Sent("H1"))
-local newHello = Sent("H1")[3].msg
+check(#Sent("H1") == beforeLearn + 1, "learning recipes sends a hello soon", #Sent("H1"))
+local newHello = Sent("H1")[#Sent("H1")].msg
 check(newHello:find("tailoring~78~8c~2", 1, true), "the new hello counts your recipes", newHello)
 local ver = newHello:match("^H1|([^|]+)|")
 
 Addon("Q1|" .. ver, "Other Person-TestRealm", "WHISPER")
-Advance(1)
-check(#Sent("D1") == 0, "answers wait a few seconds to gather requests")
 Addon("Q1|" .. ver, "Third Guy-TestRealm", "WHISPER")
-Advance(5)
-local data = Sent("D1", "CHANNEL")
-check(#data >= 1 and LI.test.sync.answered == 1, "two requests are answered with one broadcast", #data)
+check(#Sent("D1") == 0, "answers wait a moment to gather requests")
+Advance(3)
+local data, toThird = {}, false
+for _, m in ipairs(W.sent) do
+	if m.msg:find("^D1|") and m.chatType == "WHISPER" then
+		if m.target == "Other Person" then data[#data + 1] = m end
+		if m.target == "Third Guy" then toThird = true end
+	end
+end
+check(#data >= 1 and toThird and #Sent("D1", "CHANNEL") == 0 and LI.test.sync.answered == 1, "two requests within a second are answered together, by whisper, within seconds", #data)
 local chunks = {}
 for _, m in ipairs(data) do chunks[#chunks + 1] = m.msg end
 Addon("Q1|" .. ver, "Fourth Gal-TestRealm", "WHISPER")
-Advance(30)
-check(LI.test.sync.answered == 1, "answers are spaced at least a minute apart")
-Advance(40)
-check(LI.test.sync.answered == 2, "a later request is still answered", LI.test.sync.answered)
+Advance(8)
+check(LI.test.sync.answered == 2, "a later request is answered seconds later, not a minute", LI.test.sync.answered)
+for _, name in ipairs({ "Ask One", "Ask Two", "Ask Three" }) do
+	Addon("Q1|" .. ver, name .. "-TestRealm", "WHISPER")
+end
+Advance(10)
+check(LI.test.sync.answered == 3 and #Sent("D1", "CHANNEL") >= 1, "three or more at once get one broadcast on the channel instead", #Sent("D1", "CHANNEL"))
 
 local sentBefore = #W.sent
 W.combat = true
@@ -2043,9 +2052,14 @@ do
 	Advance(3)
 	check(SentOn("P1") == "WHISPER@Pal Friend", "/li ping Name whispers that person", SentOn("P1"))
 	W.sendResult = 3
+	W.sent = {}
 	SlashCmdList.LINKEDINN("ping")
 	Advance(4)
-	check(LI.test.sync.failed == 1 and LI.test.sync.lastError == "code 3 on CHANNEL", "a send the game refuses is counted with its code", LI.test.sync.lastError)
+	check(LI.test.sync.throttled == 1 and (LI.test.sync.failed or 0) == 0 and SentOn("P1") == "CHANNEL@5,CHANNEL@5,PARTY", "a send the game throttles is tried again a moment later, not lost", SentOn("P1"))
+	W.sendResult = 9
+	SlashCmdList.LINKEDINN("ping")
+	Advance(4)
+	check(LI.test.sync.failed == 1 and LI.test.sync.lastError == "code 9 on CHANNEL", "a send the game refuses is counted with its code", LI.test.sync.lastError)
 	local chat0 = #W.chat
 	SlashCmdList.LINKEDINN("status")
 	local report = table.concat({ table.unpack(W.chat, chat0 + 1) }, "\n")
@@ -2066,7 +2080,7 @@ do
 	Addon("Q1|" .. LI.Sync.Version(), "Buddy Pal-TestRealm", "WHISPER")
 	Advance(70)
 	local whispered = SentOn("D1")
-	check(whispered:find("CHANNEL@5", 1, true) and whispered:find("WHISPER@Buddy Pal", 1, true), "someone who asks gets your list by whisper too, not only on the channel", whispered)
+	check(whispered:find("WHISPER@Buddy Pal", 1, true) and not whispered:find("CHANNEL@5", 1, true), "someone who asks gets your list by whisper, without filling the channel", whispered)
 	W.friends = nil
 end
 
@@ -2861,6 +2875,19 @@ do
 		if m.msg:find("^H1|") and m.chatType == "CHANNEL" then reply = m.msg end
 	end
 	check(reply and not reply:find("|J$"), "someone who just logged in gets a hello back within seconds, without the flag", reply)
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(3)
+	W.sent = {}
+	for i = 1, 10 do
+		Addon(string.format("H1|v%d|MAGE|alchemy~1e~2s~5|TestRealm|1", i), "Speedy " .. string.char(64 + i) .. "-TestRealm")
+	end
+	Advance(4)
+	check(#Sent("Q1", "WHISPER") == 10, "ten Linked Inn users heard at once are all asked for their lists within seconds", #Sent("Q1", "WHISPER"))
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

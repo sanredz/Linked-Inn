@@ -5,17 +5,26 @@ LI.Sync = Sync
 
 local PREFIX = "LinkedInn"
 local CHANNEL = "LinkedInnSync"
-local JOIN_DELAY = 10
-local FIRST_HELLO = 30
+local JOIN_DELAY = 1
+local JOIN_DEFER = 2
+local JOIN_DEFER_MAX = 15
+local FIRST_HELLO = 1
+local SECOND_HELLO = 15
 local HELLO_EVERY = 12 * 60
 local HELLO_JITTER = 3 * 60
 local CHANGE_HELLO = 10
 local CHANGE_GAP = 120
-local SEND_EVERY = 1
-local ANSWER_WAIT = 3
-local ANSWER_GAP = 60
+local TICK_EVERY = 1
+local SEND_GAP = 0.2
+local CHANNEL_GAP = 1
+local BYTES_PER_SEC = 1000
+local BYTES_BURST = 2000
+local THROTTLE_PAUSE = 1
+local ANSWER_WAIT = 1
+local ANSWER_GAP = 5
 local ASK_GAP = 120
-local ASK_MAX = 3
+local ASK_MAX = 30
+local BROADCAST_ASKERS = 3
 local CHUNK = 200
 local MAX_CHUNKS = 40
 local MAX_PROFS = 8
@@ -303,6 +312,13 @@ local function Count(field, chatType)
 	sync[field][chatType] = (sync[field][chatType] or 0) + 1
 end
 
+local function Throttled(result)
+	local codes = Enum and Enum.SendAddonMessageResult
+	local addonCode = codes and codes.AddonMessageThrottle or 3
+	local channelCode = codes and codes.ChannelThrottle or 8
+	return result == addonCode or result == channelCode
+end
+
 local function Deliver(q)
 	local chatType, target = q.chatType, q.target
 	if chatType == "CHANNEL" then
@@ -312,8 +328,12 @@ local function Deliver(q)
 		end
 		target = tostring(target)
 	end
-	local ok, result = pcall(C_ChatInfo.SendAddonMessage, PREFIX, q.message, chatType, target)
+	local ok, result = true, LI.Secure(C_ChatInfo.SendAddonMessage, PREFIX, q.message, chatType, target)
 	result = LI.Safe(result)
+	if Throttled(result) then
+		LI.test.sync.throttled = (LI.test.sync.throttled or 0) + 1
+		return false, "throttle"
+	end
 	if ok and (result == nil or result == 0 or result == true) then
 		LI.test.sync.sent = LI.test.sync.sent + 1
 		Count("tx", chatType)
@@ -347,7 +367,7 @@ local function Routes(withGuild)
 end
 
 local MAX_FRIENDS = 20
-local MAX_ASKERS = 5
+local MAX_ASKERS = 30
 local askers = {}
 
 local function OnlineFriends()
@@ -388,15 +408,40 @@ local function Broadcast(kind, message, withGuild, withFriends)
 	end
 end
 
+local tokens, tokensAt = BYTES_BURST, 0
+local nextChannel = 0
+local blockedUntil = {}
+
 local function Pump()
 	if #queue == 0 or not C_ChatInfo or not C_ChatInfo.SendAddonMessage or Paused() then
 		return
 	end
-	local q = table.remove(queue, 1)
-	if not Deliver(q) and q.chatType == "CHANNEL" then
-		q.tries = (q.tries or 0) + 1
-		if q.tries < 5 then
-			table.insert(queue, 1, q)
+	local now = Now()
+	tokens = math.min(BYTES_BURST, tokens + math.max(0, now - tokensAt) * BYTES_PER_SEC)
+	tokensAt = now
+	for i, q in ipairs(queue) do
+		local wait = (blockedUntil[q.chatType] or 0) > now or (q.chatType == "CHANNEL" and now < nextChannel)
+		if not wait then
+			if tokens < #q.message then
+				return
+			end
+			table.remove(queue, i)
+			local sent, why = Deliver(q)
+			if sent then
+				tokens = tokens - #q.message
+				if q.chatType == "CHANNEL" then
+					nextChannel = now + CHANNEL_GAP
+				end
+			elseif why == "throttle" then
+				blockedUntil[q.chatType] = now + THROTTLE_PAUSE
+				table.insert(queue, i, q)
+			elseif q.chatType == "CHANNEL" then
+				q.tries = (q.tries or 0) + 1
+				if q.tries < 5 then
+					table.insert(queue, i, q)
+				end
+			end
+			return
 		end
 	end
 end
@@ -538,14 +583,21 @@ local function SendData()
 	askers = {}
 	local toGuild = answerGuild
 	answerGuild = false
+	local toChannel = #targets >= BROADCAST_ASKERS
 	for i = 1, total do
 		local chunk = string.format("D1|%s|%s|%s|%s", own.ver, B36(i), B36(total), payload:sub((i - 1) * CHUNK + 1, i * CHUNK))
-		Broadcast("data", chunk, false)
+		for _, route in ipairs(Routes(false)) do
+			if route ~= "CHANNEL" or toChannel then
+				Enqueue("data", chunk, route)
+			end
+		end
 		if toGuild then
 			Enqueue("data", chunk, "GUILD")
 		end
-		for _, target in ipairs(targets) do
-			Enqueue("data", chunk, "WHISPER", target)
+		if not toChannel then
+			for _, target in ipairs(targets) do
+				Enqueue("data", chunk, "WHISPER", target)
+			end
 		end
 	end
 	lastAnswer = Now()
@@ -1036,6 +1088,12 @@ local function Join()
 	end
 	if not nextHello then
 		nextHello = Now() + FIRST_HELLO
+		LI.After(SECOND_HELLO, function()
+			if joined then
+				freshHello = true
+				nextHello = math.min(nextHello or math.huge, Now())
+			end
+		end)
 	end
 end
 
@@ -1223,8 +1281,6 @@ LI.Listen("Ready", function()
 	ReadOwnBasics()
 	Sync.Refresh()
 	LI.After(JOIN_DELAY, Join)
-	LI.Every(SEND_EVERY, function()
-		Pump()
-		Tick()
-	end)
+	LI.Every(SEND_GAP, Pump)
+	LI.Every(TICK_EVERY, Tick)
 end)

@@ -31,6 +31,20 @@ end
 
 local eventFrame = CreateFrame("Frame")
 LI.eventFrame = eventFrame
+
+function LI.Secure(fn, ...)
+	if type(fn) ~= "function" then
+		return nil
+	end
+	if securecall then
+		return securecall(fn, ...)
+	end
+	local result = { pcall(fn, ...) }
+	if result[1] then
+		return unpack(result, 2)
+	end
+	return nil
+end
 local eventHandlers = {}
 
 function LI.On(event, fn)

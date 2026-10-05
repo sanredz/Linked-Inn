@@ -23,6 +23,7 @@ local AUTO_ECHO = 10
 local OWN_BACK = 5
 local ownProf, ownAt = nil, -60
 local REST = 3
+local CLICK_HOLD = 1
 local restUntil = 0
 local lateAt = -60
 local UserFrame
@@ -469,7 +470,7 @@ local function OwnShown()
 	return true
 end
 
-local function Yield()
+local function Yield(why)
 	local job = pending
 	if not job then
 		return
@@ -485,7 +486,7 @@ local function Yield()
 		again.replied, again.started, again.notified, again.found = nil, nil, nil, nil
 		table.insert(probes, 1, again)
 	end
-	LI.Log("You opened a profession window; background reading waits until it closes")
+	LI.Log(why or "You opened a profession window; background reading waits until it closes")
 end
 
 local function UserOpened()
@@ -507,10 +508,35 @@ local function UserOpened()
 	end
 end
 
+local function ClearForUser()
+	restUntil = math.max(restUntil, Now() + CLICK_HOLD)
+	local hidden = tradeOpen and not FrameVisible()
+	if not pending and not hidden then
+		return
+	end
+	ours = false
+	Yield("Stepped aside for your click")
+	local api = C_TradeSkillUI
+	if hidden and api and api.CloseTradeSkill then
+		LI.Try(api.CloseTradeSkill)
+	end
+	Reveal()
+	restUntil = math.max(restUntil, Now() + REST)
+end
+
 UserFrame = function(frame)
 	if Reader.SilentReads() then
 		if Now() - lateAt > 0.5 then
+			local linked, mine = LinkState()
+			local foreign = tradeOpen and linked == true and not mine and Now() - userClickAt > USER_CLICK
 			UserOpened()
+			if foreign then
+				local api = C_TradeSkillUI
+				LI.Log("Your profession window opened on someone else's book; closed it so it opens on yours next time")
+				if api and api.CloseTradeSkill then
+					LI.Try(api.CloseTradeSkill)
+				end
+			end
 		end
 		return
 	end
@@ -1038,6 +1064,24 @@ LI.On("TRADE_SKILL_SHOW", function()
 	userShown = not ours
 	Replied()
 	ScheduleRead()
+end)
+local function OnInterface()
+	local focus
+	if GetMouseFoci then
+		local foci = LI.Try(GetMouseFoci)
+		focus = type(foci) == "table" and foci[1] or nil
+	elseif GetMouseFocus then
+		focus = LI.Try(GetMouseFocus)
+	else
+		return true
+	end
+	return focus ~= nil and focus ~= WorldFrame
+end
+
+LI.On("GLOBAL_MOUSE_DOWN", function()
+	if LI.ready and OnInterface() then
+		ClearForUser()
+	end
 end)
 LI.On("TRADE_SKILL_LIST_UPDATE", function()
 	Replied()

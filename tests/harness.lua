@@ -2431,6 +2431,70 @@ do
 	W.autoWorks = false
 end
 
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	W.autoWorks = true
+	W.replyDelay = 1
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	W.linkData["trade:Player-1-BBB:3908:197"] = { linkedName = "Bob Stone", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-BBB", 3908, 197, "Tailoring"), "Bob Stone-TestRealm", "Player-1-BBB", "Trade - City")
+	for _ = 1, 40 do
+		Advance(0.1)
+		if #W.hyperlinks > 0 then break end
+	end
+	Advance(1.05)
+	check(W.trade and W.trade.linked, "a hidden read has someone's profession open")
+	local closed, asked = W.closed, #W.hyperlinks
+	GetMouseFoci = function() return { WorldFrame } end
+	Fire("GLOBAL_MOUSE_DOWN", "RightButton")
+	check(W.closed == closed and W.trade and W.trade.linked, "turning the camera doesn't interrupt a read")
+	GetMouseFoci = function() return { UIParent } end
+	Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
+	GetMouseFoci = nil
+	check(W.closed == closed + 1 and not W.trade, "pressing the mouse on the interface closes the hidden read before your click lands", W.closed - closed)
+	W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	ProfessionsFrame:Show()
+	Advance(4)
+	check(ProfessionsFrame:IsShown() and W.trade and W.trade.linked == false and ProfessionsFrame:GetAlpha() == 1, "so your own profession opens and stays open")
+	check(#W.hyperlinks == asked, "and nothing is read while it's open", #W.hyperlinks - asked)
+	C_TradeSkillUI.CloseTradeSkill()
+	Advance(12)
+	check(LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes and LI.crafters["Bob Stone-TestRealm"].profs.tailoring.recipes, "the reads it stepped aside for happen afterwards")
+	local before = #W.hyperlinks
+	Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
+	check(#W.hyperlinks == before, "a click with nothing being read changes nothing")
+	W.autoWorks = false
+	W.replyDelay = nil
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	W.autoWorks = true
+	W.replyDelay = 1
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	for _ = 1, 40 do
+		Advance(0.1)
+		if #W.hyperlinks > 0 then break end
+	end
+	Advance(1.05)
+	local closed = W.closed
+	ProfessionsFrame:Show()
+	Advance(0.1)
+	check(W.closed == closed + 1 and not ProfessionsFrame:IsShown(), "a window opened by a key onto someone else's hidden read is closed, not left showing their book")
+	Advance(4)
+	W.autoWorks = false
+	W.replyDelay = nil
+end
+
 
 do
 	Setup()

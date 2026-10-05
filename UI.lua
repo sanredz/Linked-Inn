@@ -1423,7 +1423,7 @@ local function CreateMain()
 		main.listArt = main.Inset:CreateTexture(nil, "BACKGROUND", nil, 2)
 		main.listArt:SetPoint("TOPLEFT", 4, -4)
 		main.listArt:SetPoint("BOTTOMRIGHT", -4, 4)
-		main.listArt:SetAlpha(0.32)
+		main.listArt:SetAlpha(0.5)
 		main.listArt:Hide()
 	end
 

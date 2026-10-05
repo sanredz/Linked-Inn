@@ -803,6 +803,7 @@ local function Apply(key, ver, payload)
 		end
 	end
 	c.sharedVer = ver
+	c.li = true
 	asked[key] = nil
 	payloads[key] = { ver = ver, payload = payload }
 	LI.test.sync.lists = LI.test.sync.lists + 1
@@ -1020,6 +1021,11 @@ function Sync.OnMessage(prefix, text, chatType, sender)
 	if not firstFrom[key] then
 		firstFrom[key] = true
 		LI.Log(string.format("First message from %s via %s (sender %s)", LI.ShortName(key), tostring(chatType), sender))
+	end
+	local known = LI.crafters[key]
+	local kind = text:sub(1, 3)
+	if not (known and known.li and known.sharedVer) and kind ~= "H1|" and kind ~= "D1|" and kind ~= "B1|" then
+		Ask(key, "0", chatType)
 	end
 	if text:sub(1, 3) == "B1|" then
 		OnRelay(key, text, chatType)

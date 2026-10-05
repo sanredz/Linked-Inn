@@ -3072,5 +3072,28 @@ do
 	W.joinDelay = nil
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	W.sent = {}
+	Addon("P2|123", "Quiet User-TestRealm", "CHANNEL")
+	Advance(2)
+	local asked = false
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^Q1|") and m.chatType == "WHISPER" and m.target == "Quiet User" then asked = true end
+	end
+	check(asked, "any message from a Linked Inn user whose list you don't have asks for it right away")
+	local payload = LI.Sync.Encode({ alchemy = { rank = 100, max = 150, recipes = { [2330] = true } } })
+	Addon("D1|abcd|1|1|" .. payload, "Quiet User-TestRealm", "WHISPER")
+	check(LI.crafters["Quiet User-TestRealm"] and LI.crafters["Quiet User-TestRealm"].profs.alchemy.recipes, "and their answer fills them in")
+	W.sent = {}
+	Advance(200)
+	Addon("P2|124", "Quiet User-TestRealm", "CHANNEL")
+	Advance(2)
+	check(#Sent("Q1") == 0, "someone whose list you have isn't asked again")
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

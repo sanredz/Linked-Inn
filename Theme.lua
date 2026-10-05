@@ -186,6 +186,58 @@ function Theme.Button(btn)
 	return btn
 end
 
+Theme.PROFESSION_ART = {
+	alchemy = true, blacksmithing = true, cooking = true, enchanting = true, engineering = true, fishing = true,
+	herbalism = true, inscription = true, jewelcrafting = true, leatherworking = true, mining = true,
+	skinning = true, tailoring = true,
+}
+
+function Theme.SetAtlas(tex, atlas)
+	if not tex or not atlas or not tex.SetAtlas then
+		return false
+	end
+	return pcall(tex.SetAtlas, tex, atlas, false) and true or false
+end
+
+function Theme.ProfessionArt(tex, profKey)
+	local name = Theme.PROFESSION_ART[profKey or ""] and ("professions-recipe-background-" .. profKey) or "professions-recipe-background"
+	if Theme.SetAtlas(tex, name) or Theme.SetAtlas(tex, "professions-recipe-background") then
+		tex:Show()
+		return true
+	end
+	tex:Hide()
+	return false
+end
+
+function Theme.Crest(frame, atlas, width)
+	local crest = frame:CreateTexture(nil, "ARTWORK", nil, 7)
+	if not Theme.SetAtlas(crest, atlas) then
+		crest:Hide()
+		return nil
+	end
+	local w = width or (frame:GetWidth() + 24)
+	crest:SetSize(w, w * 108 / 527)
+	crest:SetPoint("BOTTOM", frame, "TOP", 0, -8)
+	return crest
+end
+
+function Theme.Filigree(parent, anchor, side)
+	local tex = parent:CreateTexture(nil, "ARTWORK")
+	if not Theme.SetAtlas(tex, "Banner-SmallFiligree") then
+		tex:Hide()
+		return nil
+	end
+	tex:SetSize(61, 19)
+	tex:SetVertexColor(1, 0.86, 0.5, 0.95)
+	if side == "LEFT" then
+		tex:SetPoint("RIGHT", anchor, "LEFT", -8, -2)
+		tex:SetTexCoord(1, 0, 0, 1)
+	else
+		tex:SetPoint("LEFT", anchor, "RIGHT", 8, -2)
+	end
+	return tex
+end
+
 function Theme.HeaderBar(parent)
 	local bar = parent:CreateTexture(nil, "BACKGROUND", nil, 1)
 	bar:SetTexture(Theme.HEADER_BAR)

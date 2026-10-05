@@ -374,6 +374,9 @@ local function Refresh()
 	frame.who:SetText(LI.ShortName(current.key))
 	frame.who:SetTextColor(color[1], color[2], color[3])
 	frame.profIcon:SetTexture(LI.ProfIcon(current.prof, p.icon))
+	if frame.art then
+		LI.Theme.ProfessionArt(frame.art, current.prof)
+	end
 	local title = p.name or current.prof
 	if p.rank and p.rank > 0 then
 		title = string.format("%s  %d/%d", title, p.rank, p.max or p.rank)
@@ -429,6 +432,13 @@ local function Create()
 		frame:SetTitle("Recipes")
 	end
 	LI.Theme.Skin(frame, "Recipes", { titleSize = 20 })
+	if frame.Inset then
+		frame.art = frame.Inset:CreateTexture(nil, "BACKGROUND", nil, 2)
+		frame.art:SetPoint("TOPLEFT", 4, -4)
+		frame.art:SetPoint("BOTTOMRIGHT", -4, 4)
+		frame.art:SetAlpha(0.55)
+		frame.art:Hide()
+	end
 	frame.profIcon = frame:CreateTexture(nil, "ARTWORK")
 	frame.profIcon:SetSize(36, 36)
 	frame.profIcon:SetPoint("TOPLEFT", 18, -46)

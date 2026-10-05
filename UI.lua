@@ -1256,7 +1256,6 @@ local function CreateMain()
 	main.subtitle:SetPoint("TOP", main.liTitle, "BOTTOM", 0, -1)
 	main.subtitle:SetTextColor(LI.Theme.MUTED[1], LI.Theme.MUTED[2], LI.Theme.MUTED[3])
 	main.subtitle:SetText("Profession Finder")
-	main.crest = LI.Theme.Crest(main, "perks-theme-brewfest-tp-topbig")
 	main.filigreeLeft = LI.Theme.Filigree(main, main.liTitle, "LEFT")
 	main.filigreeRight = LI.Theme.Filigree(main, main.liTitle, "RIGHT")
 

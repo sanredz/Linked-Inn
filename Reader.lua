@@ -24,6 +24,8 @@ local OWN_BACK = 5
 local ownProf, ownAt = nil, -60
 local REST = 3
 local restUntil = 0
+local lateAt = -60
+local UserFrame
 local userShown = false
 
 local queue = {}
@@ -234,11 +236,14 @@ local function HookFrame()
 	end
 	hooked = true
 	frame:HookScript("OnShow", function(self)
-		if pending or LateReply() then
-			Conceal(self)
-		end
+		UserFrame(self)
 	end)
-	frame:HookScript("OnHide", Reveal)
+	frame:HookScript("OnHide", function()
+		if not concealed then
+			restUntil = Now() + REST
+		end
+		Reveal()
+	end)
 	return true
 end
 
@@ -341,6 +346,7 @@ EndScan = function(force)
 end
 
 local silenced
+local QUIET_EVENTS = { "TRADE_SKILL_SHOW", "TRADE_SKILL_LIST_UPDATE", "TRADE_SKILL_NAME_UPDATE", "TRADE_SKILL_DATA_SOURCE_CHANGING", "TRADE_SKILL_DATA_SOURCE_CHANGED" }
 local quietTries, quietWorks, quietOff = 0, 0, false
 
 local function Silence()
@@ -349,11 +355,13 @@ local function Silence()
 	end
 	quietTries = quietTries + 1
 	silenced = {}
-	local frames = { LI.Try(GetFramesRegisteredForEvent, "TRADE_SKILL_SHOW") }
-	for _, frame in ipairs(frames) do
-		if type(frame) == "table" and frame ~= LI.eventFrame and frame.UnregisterEvent then
-			if pcall(frame.UnregisterEvent, frame, "TRADE_SKILL_SHOW") then
-				silenced[#silenced + 1] = frame
+	for _, event in ipairs(QUIET_EVENTS) do
+		local frames = { LI.Try(GetFramesRegisteredForEvent, event) }
+		for _, frame in ipairs(frames) do
+			if type(frame) == "table" and frame ~= LI.eventFrame and frame.UnregisterEvent then
+				if pcall(frame.UnregisterEvent, frame, event) then
+					silenced[#silenced + 1] = { frame = frame, event = event }
+				end
 			end
 		end
 	end
@@ -363,8 +371,8 @@ local function Unsilence()
 	if not silenced then
 		return
 	end
-	for _, frame in ipairs(silenced) do
-		pcall(frame.RegisterEvent, frame, "TRADE_SKILL_SHOW")
+	for _, entry in ipairs(silenced) do
+		pcall(entry.frame.RegisterEvent, entry.frame, entry.event)
 	end
 	silenced = nil
 end
@@ -482,6 +490,7 @@ end
 
 local function UserOpened()
 	ours = false
+	userShown = true
 	local api = C_TradeSkillUI
 	local base = api and api.GetBaseProfessionInfo and LI.Try(api.GetBaseProfessionInfo)
 	ownProf = type(base) == "table" and LI.Safe(base.professionID) or nil
@@ -498,6 +507,18 @@ local function UserOpened()
 	end
 end
 
+UserFrame = function(frame)
+	if Reader.SilentReads() then
+		if Now() - lateAt > 0.5 then
+			UserOpened()
+		end
+		return
+	end
+	if pending or LateReply() then
+		Conceal(frame)
+	end
+end
+
 local Start
 
 local function Pump()
@@ -510,7 +531,7 @@ local function Pump()
 		Kick()
 		return
 	end
-	if not LI.ready or not LI.settings.autoRead or pending or tradeOpen or Reader.IsBroken() or Now() < restUntil then
+	if not LI.ready or not LI.settings.autoRead or pending or tradeOpen or FrameVisible() or Reader.IsBroken() or Now() < restUntil then
 		return
 	end
 	if #queue == 0 or Now() < nextAt then
@@ -583,7 +604,7 @@ Kick = function()
 		CloseHidden()
 		return
 	end
-	if (tradeOpen and (FrameVisible() or Now() - ownAt <= OWN_BACK + SETTLE)) or Now() < restUntil then
+	if FrameVisible() or (tradeOpen and Now() - ownAt <= OWN_BACK + SETTLE) or Now() < restUntil then
 		Waiting("a profession window is open")
 		return
 	end
@@ -999,6 +1020,7 @@ LI.On("TRADE_SKILL_SHOW", function()
 		ours = true
 	elseif LateReply() then
 		ours = true
+		lateAt = Now()
 		LI.Log("A late reply opened a profession window; closed it")
 		LI.After(0, function()
 			if ours and not pending and FrameShown() then

@@ -2297,6 +2297,79 @@ end
 
 do
 	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	ProfessionsFrame:RegisterEvent("TRADE_SKILL_SHOW")
+	ProfessionsFrame:SetScript("OnEvent", function(self) self:Show() end)
+	local showUI = ShowUIPanel
+	ShowUIPanel = function(f) f:Show() end
+	local opened = {}
+	C_TradeSkillUI.OpenTradeSkill = function(id)
+		opened[#opened + 1] = id
+		W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+		Fire("TRADE_SKILL_SHOW")
+		ProfessionsFrame:Show()
+		return true
+	end
+	W.autoWorks = true
+	W.replyDelay = 1
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Advance(0.6)
+	local listens = false
+	for _, f in ipairs({ GetFramesRegisteredForEvent("TRADE_SKILL_SHOW") }) do
+		if f == ProfessionsFrame then listens = true end
+	end
+	local closed = W.closed
+	W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	Advance(0.1)
+	check(ProfessionsFrame:IsShown() and ProfessionsFrame:GetScale() == 1 and ProfessionsFrame:GetAlpha() == 1 and ProfessionsFrame:IsMouseEnabled(), "opening your own profession during a background read shows the window")
+	check(not listens, "the window was muted while the read ran")
+	check(W.closed == closed, "and it is not closed again", W.closed - closed)
+	local back = false
+	for _, f in ipairs({ GetFramesRegisteredForEvent("TRADE_SKILL_SHOW") }) do
+		if f == ProfessionsFrame then back = true end
+	end
+	check(back, "the profession window hears profession events again", listens)
+	Advance(3)
+	check(ProfessionsFrame:IsShown() and W.trade and W.trade.linked == false, "a late reply to the paused read gives you your own profession back", #opened)
+	Advance(3)
+	check(ProfessionsFrame:IsShown(), "no new reads start while your window is open")
+	C_TradeSkillUI.CloseTradeSkill()
+	Advance(5)
+	check(LI.crafters["Anna Smith-TestRealm"] and LI.crafters["Anna Smith-TestRealm"].profs.tailoring and LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes, "the paused read finishes after you close it")
+	W.autoWorks = false
+	W.replyDelay = nil
+	C_TradeSkillUI.OpenTradeSkill = nil
+	ShowUIPanel = showUI
+	ProfessionsFrame:UnregisterEvent("TRADE_SKILL_SHOW")
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	ProfessionsFrame:RegisterEvent("TRADE_SKILL_SHOW")
+	ProfessionsFrame:SetScript("OnEvent", function(self) self:Show() end)
+	W.autoWorks = true
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = {} }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Advance(12)
+	W.autoWorks = false
+	local listens = false
+	for _, f in ipairs({ GetFramesRegisteredForEvent("TRADE_SKILL_SHOW") }) do
+		if f == ProfessionsFrame then listens = true end
+	end
+	check(listens, "a read that answers with no recipes never leaves the profession window deaf")
+	check(LI.Reader.Idle(true), "and it doesn't stay stuck")
+	ProfessionsFrame:UnregisterEvent("TRADE_SKILL_SHOW")
+end
+
+do
+	Setup()
 	W.playerGUID = "Player-1-ME"
 	Boot()
 	Advance(5)

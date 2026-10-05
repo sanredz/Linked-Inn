@@ -20,6 +20,8 @@ local QUEUE_MAX = 30
 local STALE = 3 * 86400
 local CLICK_WINDOW = 20
 local AUTO_ECHO = 10
+local OWN_BACK = 5
+local ownProf, ownAt = nil, -60
 
 local queue = {}
 local builtFailed = {}
@@ -268,6 +270,19 @@ end
 
 local Kick
 
+local function ShowOwnFrame()
+	local frame = ProfessionsFrame
+	if not frame or FrameShown() then
+		return
+	end
+	if ShowUIPanel then
+		LI.Try(ShowUIPanel, frame)
+	end
+	if not FrameShown() and frame.Show then
+		LI.Try(frame.Show, frame)
+	end
+end
+
 local function ScanStep(job, ok)
 	local run = scanRun
 	if not run then
@@ -421,6 +436,59 @@ local function Finish(job, outcome)
 	end)
 end
 
+local function OwnShown()
+	local api = C_TradeSkillUI
+	if not api or not api.IsTradeSkillLinked then
+		return false
+	end
+	if LI.Safe(LI.Try(api.IsTradeSkillLinked)) ~= false then
+		return false
+	end
+	if pending and pending.own then
+		local base = api.GetBaseProfessionInfo and LI.Try(api.GetBaseProfessionInfo)
+		local name = type(base) == "table" and LI.Safe(base.professionName)
+		return type(name) == "string" and LI.ProfKey(name) ~= pending.prof
+	end
+	return true
+end
+
+local function Yield()
+	local job = pending
+	if not job then
+		return
+	end
+	pending = nil
+	lastDone = Now()
+	Unsilence()
+	if job.probe then
+		local again = {}
+		for k, v in pairs(job) do
+			again[k] = v
+		end
+		again.replied, again.started, again.notified, again.found = nil, nil, nil, nil
+		table.insert(probes, 1, again)
+	end
+	LI.Log("You opened a profession window; background reading waits until it closes")
+end
+
+local function UserOpened()
+	ours = false
+	local api = C_TradeSkillUI
+	local base = api and api.GetBaseProfessionInfo and LI.Try(api.GetBaseProfessionInfo)
+	ownProf = type(base) == "table" and LI.Safe(base.professionID) or nil
+	ownAt = Now()
+	local missed = silenced ~= nil
+	Yield()
+	Reveal()
+	if missed then
+		LI.After(0, function()
+			if tradeOpen then
+				ShowOwnFrame()
+			end
+		end)
+	end
+end
+
 local Start
 
 local function Pump()
@@ -506,7 +574,7 @@ Kick = function()
 		CloseHidden()
 		return
 	end
-	if tradeOpen and FrameVisible() then
+	if tradeOpen and (FrameVisible() or Now() - ownAt <= OWN_BACK + SETTLE) then
 		Waiting("a profession window is open")
 		return
 	end
@@ -914,7 +982,9 @@ end
 
 LI.On("TRADE_SKILL_SHOW", function()
 	tradeOpen = true
-	if Now() - userClickAt <= USER_CLICK then
+	if OwnShown() then
+		UserOpened()
+	elseif Now() - userClickAt <= USER_CLICK then
 		ours = false
 	elseif pending or silenced then
 		ours = true
@@ -929,6 +999,11 @@ LI.On("TRADE_SKILL_SHOW", function()
 		LI.After(SETTLE, function()
 			if not pending then
 				CloseHidden()
+				local api = C_TradeSkillUI
+				if ownProf and Now() - ownAt <= OWN_BACK + SETTLE and api and api.OpenTradeSkill then
+					userClickAt = Now()
+					LI.Try(api.OpenTradeSkill, ownProf)
+				end
 			end
 		end)
 	else

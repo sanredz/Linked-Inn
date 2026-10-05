@@ -2955,12 +2955,12 @@ do
 		local who, hops = m.msg:match("^C1|([^|]+)|(%d)|")
 		if who then to[m.id .. ":" .. who .. ":" .. hops] = true end
 	end
-	check(to["101:" .. LI.ShortName(LI.playerKey) .. ":1"] and to["101:Chan Pal:2"], "your card and the cards of users you hear go to a Battle.net friend on the other half")
+	check(to["101:" .. LI.ShortName(LI.playerKey) .. ":1"] and to["101:Chan Pal:2"], "your card and the cards of users you hear go to your Battle.net friends in Forever")
 	local wrong = false
 	for _, m in ipairs(W.bnetSent) do
-		if m.id ~= 101 then wrong = true end
+		if m.id ~= 101 and m.id ~= 102 then wrong = true end
 	end
-	check(not wrong, "not to friends on your half, the other faction, another ruleset or another game")
+	check(not wrong, "not to friends on the other faction, another ruleset or another game")
 	W.bnetSent = {}
 	Advance(25)
 	check(#W.bnetSent == 0, "the same cards aren't sent again for half an hour")
@@ -3016,7 +3016,16 @@ do
 	for _, line in ipairs(Bridge.Lines({ origin = "Chan Pal-TestRealm", ver = "abc1", payload = far, class = "PRIEST", faction = "A" }, 2, 1500)) do
 		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 101)
 	end
-	check(not LI.crafters["Chan Pal-TestRealm"].profs.tailoring, "a card can't overwrite a list you already have at that version")
+	W.sent = {}
+	for _, line in ipairs(Bridge.Lines({ origin = "Chan Pal-TestRealm", ver = "abc1", payload = far, class = "PRIEST", faction = "A" }, 2, 1500)) do
+		Fire("BN_CHAT_MSG_ADDON", "LinkedInn", line, "WHISPER", 102)
+	end
+	Advance(10)
+	local repeated = false
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^C1|Chan Pal|") then repeated = true end
+	end
+	check(not LI.crafters["Chan Pal-TestRealm"].profs.tailoring and not repeated, "a card you already have neither overwrites your list nor gets repeated on your channel")
 
 	W.units = { party1 = { name = "Party", surname = "Pal", guid = "Player-2-PRTY" } }
 	W.groupSize = 1

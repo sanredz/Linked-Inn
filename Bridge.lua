@@ -229,12 +229,10 @@ function Bridge.Share()
 	end
 	local count = 0
 	for _, f in ipairs(Bridge.Friends()) do
-		if not f.sameHalf then
-			for _, card in ipairs(cards) do
-				if card.origin ~= f.key and Due(f.key, card) and Send(card, card.hops, "BNET", f.id) then
-					Mark(f.key, card)
-					count = count + 1
-				end
+		for _, card in ipairs(cards) do
+			if card.origin ~= f.key and Due(f.key, card) and Send(card, card.hops, "BNET", f.id) then
+				Mark(f.key, card)
+				count = count + 1
 			end
 		end
 	end

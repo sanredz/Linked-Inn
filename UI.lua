@@ -943,6 +943,15 @@ local function UpdateChips()
 end
 
 local function RefreshFind()
+	if main.listArt then
+		local only
+		for key, on in pairs(ProfsSelected()) do
+			if on then
+				only = only == nil and key or false
+			end
+		end
+		LI.Theme.ProfessionArt(main.listArt, only or nil)
+	end
 	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary, kind = LI.settings.kind, maxOnly = LI.settings.maxOnly, minSkill = LI.settings.minSkill, liOnly = LI.settings.liOnly, guildOnly = LI.settings.guildOnly }
 	local results = LI.Search(filter.search, opts)
 	local list = {}
@@ -1411,6 +1420,11 @@ local function CreateMain()
 		main.Inset:ClearAllPoints()
 		main.Inset:SetPoint("TOPLEFT", 12, -140)
 		main.Inset:SetPoint("BOTTOMRIGHT", -12, 32)
+		main.listArt = main.Inset:CreateTexture(nil, "BACKGROUND", nil, 2)
+		main.listArt:SetPoint("TOPLEFT", 4, -4)
+		main.listArt:SetPoint("BOTTOMRIGHT", -4, 4)
+		main.listArt:SetAlpha(0.32)
+		main.listArt:Hide()
 	end
 
 	main.findPage = CreateFrame("Frame", nil, main.Inset)

@@ -77,6 +77,9 @@ local function Section(parent, anchor, title, gap)
 	line:SetPoint("RIGHT", parent, "RIGHT", -RIGHT_PAD, 0)
 	line:SetColorTexture(1, 0.82, 0, 0.3)
 	line.colX = HEAD_X
+	if LI.Theme.Parchment(parent, head, PAGE_WIDTH - HEAD_X - RIGHT_PAD + 30) then
+		line:SetColorTexture(0, 0, 0, 0)
+	end
 	return line
 end
 

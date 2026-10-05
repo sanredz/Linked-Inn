@@ -96,6 +96,122 @@ function Theme.Title(parent, text, size)
 	return fs
 end
 
+local function AtlasCoords(atlas)
+	if not C_Texture or not C_Texture.GetAtlasInfo then
+		return nil
+	end
+	local info = LI.Try(C_Texture.GetAtlasInfo, atlas)
+	if type(info) ~= "table" or not (info.file or info.filename) or not info.leftTexCoord then
+		return nil
+	end
+	return info
+end
+
+function Theme.FlippedAtlas(tex, atlas, horizontal, vertical)
+	if not horizontal and not vertical then
+		return Theme.SetAtlas(tex, atlas)
+	end
+	local info = AtlasCoords(atlas)
+	if not info then
+		return Theme.SetAtlas(tex, atlas)
+	end
+	tex:SetTexture(info.file or info.filename)
+	local l, r, t, b = info.leftTexCoord, info.rightTexCoord, info.topTexCoord, info.bottomTexCoord
+	if horizontal then
+		l, r = r, l
+	end
+	if vertical then
+		t, b = b, t
+	end
+	tex:SetTexCoord(l, r, t, b)
+	return true
+end
+
+local WOOD_CORNER = "Garr_WoodFrameCorner"
+local WOOD_TOP = "_Garr_WoodFrameTile-Top"
+local WOOD_BOTTOM = "_Garr_WoodFrameTile-Bottom"
+local WOOD_SIDE = "!Garr_WoodFrameTile-Left"
+local WOOD_EDGE = 26
+local WOOD_CORNER_SIZE = 50
+local WOOD_OUT = 13
+
+function Theme.WoodFrame(frame)
+	local probe = frame:CreateTexture(nil, "BORDER", nil, 6)
+	if not Theme.SetAtlas(probe, WOOD_CORNER) then
+		probe:Hide()
+		return false
+	end
+	local parts = {}
+	local function Corner(tex, point, x, y, h, v)
+		Theme.FlippedAtlas(tex, WOOD_CORNER, h, v)
+		tex:SetSize(WOOD_CORNER_SIZE, WOOD_CORNER_SIZE)
+		tex:SetPoint(point, frame, point, x, y)
+		parts[#parts + 1] = tex
+		return tex
+	end
+	local tl = Corner(probe, "TOPLEFT", -WOOD_OUT, WOOD_OUT, false, false)
+	local tr = Corner(frame:CreateTexture(nil, "BORDER", nil, 6), "TOPRIGHT", WOOD_OUT, WOOD_OUT, true, false)
+	local bl = Corner(frame:CreateTexture(nil, "BORDER", nil, 6), "BOTTOMLEFT", -WOOD_OUT, -WOOD_OUT, false, true)
+	local br = Corner(frame:CreateTexture(nil, "BORDER", nil, 6), "BOTTOMRIGHT", WOOD_OUT, -WOOD_OUT, true, true)
+	local function Edge(atlas, horiz)
+		local tex = frame:CreateTexture(nil, "BORDER", nil, 5)
+		Theme.SetAtlas(tex, atlas)
+		if horiz and tex.SetHorizTile then
+			tex:SetHorizTile(true)
+		elseif not horiz and tex.SetVertTile then
+			tex:SetVertTile(true)
+		end
+		parts[#parts + 1] = tex
+		return tex
+	end
+	local top = Edge(WOOD_TOP, true)
+	top:SetPoint("TOPLEFT", tl, "TOPRIGHT", 0, 0)
+	top:SetPoint("TOPRIGHT", tr, "TOPLEFT", 0, 0)
+	top:SetHeight(WOOD_EDGE)
+	local bottom = Edge(WOOD_BOTTOM, true)
+	bottom:SetPoint("BOTTOMLEFT", bl, "BOTTOMRIGHT", 0, 0)
+	bottom:SetPoint("BOTTOMRIGHT", br, "BOTTOMLEFT", 0, 0)
+	bottom:SetHeight(WOOD_EDGE)
+	local left = Edge(WOOD_SIDE, false)
+	left:SetPoint("TOPLEFT", tl, "BOTTOMLEFT", 0, 0)
+	left:SetPoint("BOTTOMLEFT", bl, "TOPLEFT", 0, 0)
+	left:SetWidth(WOOD_EDGE)
+	local right = Edge(WOOD_SIDE, false)
+	right:SetPoint("TOPRIGHT", tr, "BOTTOMRIGHT", 0, 0)
+	right:SetPoint("BOTTOMRIGHT", br, "TOPRIGHT", 0, 0)
+	right:SetWidth(WOOD_EDGE)
+	frame.woodFrame = parts
+	return true
+end
+
+local PARCH_END = "GarrMission_ParchmentHeader-End"
+local PARCH_MID = "_GarrMission_ParchmentHeader-Mid"
+
+function Theme.Parchment(parent, fontString, width)
+	local left = parent:CreateTexture(nil, "BACKGROUND", nil, 3)
+	if not Theme.SetAtlas(left, PARCH_END) then
+		left:Hide()
+		return nil
+	end
+	local h = 34
+	left:SetSize(h * 65 / 41, h)
+	left:SetPoint("LEFT", fontString, "LEFT", -22, 0)
+	local right = parent:CreateTexture(nil, "BACKGROUND", nil, 3)
+	Theme.FlippedAtlas(right, PARCH_END, true, false)
+	right:SetSize(h * 65 / 41, h)
+	right:SetPoint("LEFT", fontString, "LEFT", width - 22 - h * 65 / 41, 0)
+	local mid = parent:CreateTexture(nil, "BACKGROUND", nil, 3)
+	Theme.SetAtlas(mid, PARCH_MID)
+	if mid.SetHorizTile then
+		mid:SetHorizTile(true)
+	end
+	mid:SetPoint("TOPLEFT", left, "TOPRIGHT", 0, 0)
+	mid:SetPoint("BOTTOMRIGHT", right, "BOTTOMLEFT", 0, 0)
+	fontString:SetTextColor(0.28, 0.17, 0.07)
+	fontString:SetShadowColor(0, 0, 0, 0)
+	return { left, mid, right }
+end
+
 function Theme.Skin(frame, title, opts)
 	opts = opts or {}
 	HideRegions(frame)
@@ -118,6 +234,9 @@ function Theme.Skin(frame, title, opts)
 		end
 	end
 	Theme.Wood(frame)
+	if Theme.WoodFrame(frame) and frame.SetBackdropBorderColor then
+		frame:SetBackdropBorderColor(0, 0, 0, 0)
+	end
 	local close = frame.CloseButton or (frame.GetName and frame:GetName() and _G[frame:GetName() .. "CloseButton"])
 	if close and close.ClearAllPoints then
 		close:ClearAllPoints()

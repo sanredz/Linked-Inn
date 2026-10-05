@@ -38,7 +38,7 @@ local function Text(parent, template, justify)
 end
 
 local function Button(parent, label, width, onClick)
-	local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+	local button = LI.Theme.Button(CreateFrame("Button", nil, parent, "UIPanelButtonTemplate"))
 	button:SetSize(width or 120, 22)
 	button:SetText(label)
 	button:SetScript("OnClick", function(self, ...)
@@ -762,8 +762,8 @@ end
 
 function WorkUI.BuildHeader(main)
 	header = CreateFrame("Frame", nil, main)
-	header:SetPoint("TOPLEFT", 66, -28)
-	header:SetPoint("TOPRIGHT", -10, -28)
+	header:SetPoint("TOPLEFT", 18, -68)
+	header:SetPoint("TOPRIGHT", -14, -68)
 	header:SetHeight(68)
 
 	header.howLabel = Text(header, "GameFontNormal", "RIGHT")
@@ -1231,7 +1231,7 @@ end
 local function CreateDialog()
 	local main = LI.UI.Main()
 	dialog = CreateFrame("Frame", "LinkedInnRequest", main, "ButtonFrameTemplate")
-	dialog:SetSize(360, 580)
+	dialog:SetSize(360, 620)
 	dialog:SetPoint("TOPLEFT", main, "TOPRIGHT", 4, 0)
 	dialog:SetFrameStrata("HIGH")
 	if ButtonFrameTemplate_HidePortrait then
@@ -1246,13 +1246,14 @@ local function CreateDialog()
 	if dialog.Inset then
 		dialog.Inset:Hide()
 	end
+	LI.Theme.Skin(dialog, "New request", { titleSize = 18, card = false })
 
 	dialog.ask = Label(dialog, "What do you need made?")
-	dialog.ask:SetPoint("TOPLEFT", 20, -34)
+	dialog.ask:SetPoint("TOPLEFT", 20, -44)
 
 	dialog.search = CreateFrame("EditBox", nil, dialog, "SearchBoxTemplate")
 	dialog.search:SetSize(316, 22)
-	dialog.search:SetPoint("TOPLEFT", 24, -54)
+	dialog.search:SetPoint("TOPLEFT", 24, -64)
 	if dialog.search.Instructions then
 		dialog.search.Instructions:SetText("Type an item name")
 	end

@@ -23,6 +23,9 @@ function Premium.Has()
 end
 
 local function TitleText(main)
+	if main.liTitle then
+		return main.liTitle
+	end
 	local box = main.TitleContainer
 	return (box and box.TitleText) or main.TitleText
 end
@@ -61,15 +64,19 @@ end
 
 function Premium.Attach(main)
 	local hit = CreateFrame("Button", nil, main)
-	hit:SetSize(56, 56)
-	hit:SetPoint("TOPLEFT", main, "TOPLEFT", -4, 6)
+	hit:SetSize(62, 62)
+	if main.emblem then
+		hit:SetAllPoints(main.emblem)
+	else
+		hit:SetPoint("TOPLEFT", main, "TOPLEFT", -4, 6)
+	end
 	hit:SetFrameLevel(main:GetFrameLevel() + 10)
 	hit:RegisterForClicks("LeftButtonUp")
 	hit:SetScript("OnClick", Premium.Click)
 	main.premiumHit = hit
 
 	check = CreateFrame("Button", nil, main)
-	check:SetSize(14, 14)
+	check:SetSize(16, 16)
 	local title = TitleText(main)
 	if title then
 		check:SetPoint("LEFT", title, "RIGHT", 4, 0)

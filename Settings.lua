@@ -126,7 +126,7 @@ local function Dropdown(parent, width, choices, label, get, set)
 		end
 		return dropdown
 	end
-	local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+	local button = LI.Theme.Button(CreateFrame("Button", nil, parent, "UIPanelButtonTemplate"))
 	button:SetSize(width, 22)
 	button:SetScript("OnClick", function(self)
 		if MenuUtil and MenuUtil.CreateContextMenu then
@@ -313,7 +313,7 @@ end
 local function Create()
 	local main = LI.UI.Main()
 	frame = CreateFrame("Frame", "LinkedInnSettings", main, "ButtonFrameTemplate")
-	frame:SetSize(WIDTH, 580)
+	frame:SetSize(WIDTH, 620)
 	frame:SetPoint("TOPLEFT", main, "TOPRIGHT", 4, 0)
 	frame:SetFrameStrata("HIGH")
 	if ButtonFrameTemplate_HidePortrait then
@@ -325,10 +325,11 @@ local function Create()
 	if frame.SetTitle then
 		frame:SetTitle("Settings")
 	end
+	LI.Theme.Skin(frame, "Settings", { titleSize = 20 })
 	if frame.Inset then
 		frame.Inset:ClearAllPoints()
-		frame.Inset:SetPoint("TOPLEFT", 4, -26)
-		frame.Inset:SetPoint("BOTTOMRIGHT", -6, 26)
+		frame.Inset:SetPoint("TOPLEFT", 12, -42)
+		frame.Inset:SetPoint("BOTTOMRIGHT", -12, 32)
 	end
 	local holder = frame.Inset or frame
 	local ok, scroll = pcall(CreateFrame, "ScrollFrame", nil, holder, "ScrollFrameTemplate")
@@ -445,7 +446,7 @@ local function Create()
 	frame.houseKeep = Below(Body(page, HEAD_X, "Never touches rare recipes, favorites, guild, friends or Linked Inn users."), frame.houseDesc, HEAD_X, 4)
 	frame.houseLast = Below(Body(page, HEAD_X, ""), frame.houseKeep, HEAD_X, 4)
 	frame.count = Below(Text(page, "GameFontHighlight"), frame.houseLast, HEAD_X, 16)
-	frame.wipe = CreateFrame("Button", nil, page, "UIPanelButtonTemplate")
+	frame.wipe = LI.Theme.Button(CreateFrame("Button", nil, page, "UIPanelButtonTemplate"))
 	frame.wipe:SetSize(130, 22)
 	frame.wipe:SetText("Forget everyone")
 	Below(frame.wipe, frame.count, HEAD_X - 2, 8)

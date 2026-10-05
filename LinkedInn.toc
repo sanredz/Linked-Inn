@@ -13,6 +13,7 @@
 ## AddonCompartmentFuncOnLeave: LinkedInn_OnAddonCompartmentLeave
 
 Core.lua
+Theme.lua
 Data.lua
 Online.lua
 Capture.lua
@@ -23,7 +24,6 @@ Bridge.lua
 Health.lua
 Guide.lua
 Premium.lua
-Chrome.lua
 ArtPreview.lua
 Work.lua
 UI.lua

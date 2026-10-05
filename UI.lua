@@ -593,7 +593,11 @@ local function BuildRow(row)
 	row.headLine:SetHeight(1)
 	row.headLine:SetPoint("BOTTOMLEFT", ICON_X, 2)
 	row.headLine:SetPoint("BOTTOMRIGHT", -PILL_RIGHT, 2)
-	row.headLine:SetColorTexture(1, 0.82, 0, 0.35)
+	row.headLine:SetColorTexture(1, 0.82, 0, 0)
+	row.headBar = LI.Theme.HeaderBar(row)
+	row.headBar:SetPoint("LEFT", row, "LEFT", 0, 0)
+	row.headBar:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+	row.headBar:SetHeight(30)
 
 	row.star = CreateFrame("Button", nil, row)
 	row.star:SetSize(16, 16)
@@ -620,7 +624,7 @@ local function BuildRow(row)
 	end)
 
 	row.rowParts = { row.name, row.line, row.pill, row.star }
-	row.headParts = { row.toggle, row.headIcon, row.headName, row.headCount, row.headLine }
+	row.headParts = { row.toggle, row.headIcon, row.headName, row.headCount, row.headLine, row.headBar }
 
 	row:SetScript("OnEnter", function(self)
 		self.hover = true
@@ -1211,7 +1215,7 @@ end
 
 local function CreateMain()
 	main = CreateFrame("Frame", "LinkedInnFrame", UIParent, "ButtonFrameTemplate")
-	main:SetSize(560, 580)
+	main:SetSize(560, 620)
 	main:SetPoint("CENTER", 0, 20)
 	main:SetFrameStrata("HIGH")
 	main:SetToplevel(true)
@@ -1226,10 +1230,19 @@ local function CreateMain()
 		ButtonFrameTemplate_HideButtonBar(main)
 	end
 	tinsert(UISpecialFrames, "LinkedInnFrame")
+	LI.Theme.Skin(main)
+	main.emblem = LI.Theme.Emblem(main, 62)
+	main.emblem:SetPoint("TOPLEFT", main, "TOPLEFT", -10, 12)
+	main.liTitle = LI.Theme.Title(main, LI.TITLE, 30)
+	main.liTitle:SetPoint("TOP", main, "TOP", 0, -14)
+	main.subtitle = main:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	main.subtitle:SetPoint("TOP", main.liTitle, "BOTTOM", 0, -1)
+	main.subtitle:SetTextColor(LI.Theme.MUTED[1], LI.Theme.MUTED[2], LI.Theme.MUTED[3])
+	main.subtitle:SetText("Profession Finder")
 
 	local search = CreateFrame("EditBox", nil, main, "SearchBoxTemplate")
 	search:SetSize(190, 22)
-	search:SetPoint("TOPLEFT", 72, -32)
+	search:SetPoint("TOPLEFT", 22, -72)
 	if search.Instructions then
 		search.Instructions:SetText("Item, profession or name")
 		search.Instructions:SetWordWrap(false)
@@ -1269,7 +1282,7 @@ local function CreateMain()
 
 	main.gear = CreateFrame("Button", nil, main)
 	main.gear:SetSize(24, 24)
-	main.gear:SetPoint("TOPRIGHT", -12, -31)
+	main.gear:SetPoint("TOPRIGHT", -14, -71)
 	main.gear.icon = main.gear:CreateTexture(nil, "ARTWORK")
 	main.gear.icon:SetAllPoints()
 	if not pcall(main.gear.icon.SetAtlas, main.gear.icon, "questlog-icon-setting") then
@@ -1315,8 +1328,8 @@ local function CreateMain()
 
 
 	main.chipBar = CreateFrame("Frame", nil, main)
-	main.chipBar:SetPoint("TOPLEFT", 68, -60)
-	main.chipBar:SetPoint("TOPRIGHT", -10, -60)
+	main.chipBar:SetPoint("TOPLEFT", 16, -100)
+	main.chipBar:SetPoint("TOPRIGHT", -12, -100)
 	main.chipBar:SetHeight(36)
 	main.chips = {}
 	main.clearChips = CreateFrame("Button", nil, main.chipBar)
@@ -1377,8 +1390,8 @@ local function CreateMain()
 
 	if main.Inset then
 		main.Inset:ClearAllPoints()
-		main.Inset:SetPoint("TOPLEFT", 4, -100)
-		main.Inset:SetPoint("BOTTOMRIGHT", -6, 26)
+		main.Inset:SetPoint("TOPLEFT", 12, -140)
+		main.Inset:SetPoint("BOTTOMRIGHT", -12, 32)
 	end
 
 	main.findPage = CreateFrame("Frame", nil, main.Inset)
@@ -1414,10 +1427,10 @@ local function CreateMain()
 	main.workPage:Hide()
 
 	main.count = Text(main, "GameFontDisableSmall", "RIGHT")
-	main.count:SetPoint("RIGHT", main, "BOTTOMRIGHT", -12, 14)
+	main.count:SetPoint("RIGHT", main, "BOTTOMRIGHT", -16, 18)
 	main.compactBox = CreateFrame("CheckButton", nil, main, "UICheckButtonTemplate")
 	main.compactBox:SetSize(22, 22)
-	main.compactBox:SetPoint("LEFT", main, "BOTTOMLEFT", 8, 15)
+	main.compactBox:SetPoint("LEFT", main, "BOTTOMLEFT", 12, 18)
 	main.compactBox:SetScript("OnClick", function(self)
 		LI.settings.compact = self:GetChecked() and true or false
 		Sound(LI.settings.compact and "IG_MAINMENU_OPTION_CHECKBOX_ON" or "IG_MAINMENU_OPTION_CHECKBOX_OFF")
@@ -1427,11 +1440,10 @@ local function CreateMain()
 	main.compactLabel:SetPoint("LEFT", main.compactBox, "RIGHT", 0, -1)
 	main.compactLabel:SetText("Compact")
 	main.health = LI.Health.Create(main)
-	main.health:SetPoint("LEFT", main, "BOTTOMLEFT", 92, 15)
+	main.health:SetPoint("LEFT", main, "BOTTOMLEFT", 96, 18)
 	main.guideButton = LI.Guide.CreateButton(main)
 	main.guideButton:SetPoint("LEFT", main.health, "RIGHT", 4, 0)
 	LI.Premium.Attach(main)
-	LI.Chrome.Apply(main)
 
 	for i, name in ipairs(TABS) do
 		local tab = CreateFrame("Button", "LinkedInnFrameTab" .. i, main, "PanelTabButtonTemplate")

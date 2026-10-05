@@ -3152,5 +3152,34 @@ do
 	guide:Hide()
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(2)
+	LI.UI.Open(LI.UI.TAB.find)
+	local main = LinkedInnFrame
+	local hit = main.premiumHit
+	for _ = 1, 6 do
+		hit.__scripts.OnClick(hit)
+		Advance(1)
+	end
+	check(not LI.db.premium and not main.premiumCheck:IsShown(), "slow clicks on the mug do nothing")
+	local chat0 = #W.chat
+	for _ = 1, 7 do
+		hit.__scripts.OnClick(hit)
+		Advance(0.2)
+	end
+	check(LI.db.premium and main.premiumCheck:IsShown(), "seven quick clicks on the mug unlock Linked Inn Premium")
+	check(W.chat[chat0 + 1] and W.chat[chat0 + 1]:find("smugly", 1, true), "with an appropriately smug message", W.chat[chat0 + 1])
+	main.premiumCheck.__scripts.OnClick(main.premiumCheck)
+	check(#W.chat == chat0 + 2, "clicking the checkmark gets a quip")
+	local saved = Logout()
+	Boot(saved)
+	Advance(2)
+	LI.UI.Open(LI.UI.TAB.find)
+	check(LinkedInnFrame.premiumCheck:IsShown(), "Premium survives a reload")
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

@@ -1430,6 +1430,7 @@ local function CreateMain()
 	main.health:SetPoint("LEFT", main, "BOTTOMLEFT", 92, 15)
 	main.guideButton = LI.Guide.CreateButton(main)
 	main.guideButton:SetPoint("LEFT", main.health, "RIGHT", 4, 0)
+	LI.Premium.Attach(main)
 
 	for i, name in ipairs(TABS) do
 		local tab = CreateFrame("Button", "LinkedInnFrameTab" .. i, main, "PanelTabButtonTemplate")

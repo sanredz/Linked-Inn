@@ -22,6 +22,7 @@ Sync.lua
 Bridge.lua
 Health.lua
 Guide.lua
+Premium.lua
 Work.lua
 UI.lua
 Book.lua

@@ -10,8 +10,8 @@ Theme.BRASS_DIM = { 0.55, 0.42, 0.18 }
 Theme.CREAM = { 0.94, 0.88, 0.75 }
 Theme.MUTED = { 0.66, 0.6, 0.5 }
 Theme.WOOD = "Interface\\Collections\\CollectionsBackgroundTile"
-Theme.WOOD_TINT = { 0.78, 0.66, 0.52, 0.97 }
-Theme.CARD = { 0.07, 0.05, 0.035, 0.88 }
+Theme.WOOD_TINT = { 0.4, 0.31, 0.23, 0.98 }
+Theme.CARD_TINT = { 0.8, 0.68, 0.54, 0.96 }
 Theme.BUTTON = { 0.16, 0.11, 0.07, 0.92 }
 Theme.BUTTON_DOWN = { 0.1, 0.07, 0.045, 0.95 }
 Theme.HEADER_BAR = "Interface\\AchievementFrame\\UI-Achievement-RecentHeader"
@@ -74,16 +74,16 @@ function Theme.Card(frame, alpha)
 		return
 	end
 	frame:SetBackdrop({
-		bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+		bgFile = Theme.WOOD,
 		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
 		tile = true,
-		tileSize = 16,
+		tileSize = 200,
 		edgeSize = 14,
 		insets = { left = 3, right = 3, top = 3, bottom = 3 },
 	})
-	local c = Theme.CARD
+	local c = Theme.CARD_TINT
 	frame:SetBackdropColor(c[1], c[2], c[3], alpha or c[4])
-	frame:SetBackdropBorderColor(Theme.BRASS_DIM[1], Theme.BRASS_DIM[2], Theme.BRASS_DIM[3], 0.9)
+	frame:SetBackdropBorderColor(Theme.BRASS[1], Theme.BRASS[2], Theme.BRASS[3], 0.85)
 end
 
 function Theme.Title(parent, text, size)

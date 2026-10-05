@@ -2043,6 +2043,10 @@ do
 	Addon("P1|124", "Ping Gal-TestRealm", "WHISPER")
 	Advance(4)
 	check(SentOn("P2") == "PARTY,WHISPER@Ping Gal", "a ping is answered the way it came", SentOn("P2"))
+	local lines = #W.chat
+	Addon("P2|" .. math.floor(W.clock * 10), "Ping Guy-TestRealm", "CHANNEL")
+	check(#W.chat == lines, "someone else's pong isn't printed when you didn't ping", W.chat[#W.chat])
+	LI.Sync.Ping()
 	Addon("P2|" .. math.floor(W.clock * 10), "Ping Guy-TestRealm", "PARTY")
 	check(W.chat[#W.chat]:find("Pong from Ping Guy via PARTY", 1, true), "a pong is printed with its route", W.chat[#W.chat])
 	W.sent = {}
@@ -2458,6 +2462,46 @@ do
 	Advance(8)
 	check(#W.hyperlinks > hidden, "then reading carries on", #W.hyperlinks - hidden)
 	W.autoWorks = false
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	local opened = {}
+	C_TradeSkillUI.OpenTradeSkill = function(line)
+		opened[#opened + 1] = line
+		W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+		Fire("TRADE_SKILL_SHOW")
+		if W.UIHears() then ProfessionsFrame:Show() end
+		Fire("TRADE_SKILL_LIST_UPDATE")
+		return true
+	end
+	W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	Advance(1)
+	C_TradeSkillUI.CloseTradeSkill()
+	Advance(5)
+	W.autoWorks = true
+	W.replyDelay = 1
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	for _ = 1, 40 do
+		Advance(0.1)
+		if #W.hyperlinks > 0 and W.hyperlinks[#W.hyperlinks] == "trade:Player-1-AAA:3908:197" then break end
+	end
+	Advance(0.1)
+	ProfessionsFrame:Show()
+	Advance(0.2)
+	check(opened[1] == 171, "a window you open during a background read is loaded again with your profession", opened[1])
+	check(ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() == 1 and W.trade and W.trade.linked == false, "and shows your own recipes")
+	Advance(3)
+	check(ProfessionsFrame:IsShown() and W.trade and W.trade.linked == false, "even after the read's late answer", #opened)
+	ProfessionsFrame:Hide()
+	W.autoWorks = false
+	W.replyDelay = nil
+	C_TradeSkillUI.OpenTradeSkill = nil
 end
 
 do

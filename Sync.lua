@@ -925,6 +925,9 @@ function Sync.OnMessage(prefix, text, chatType, sender)
 	Dispatch(key, text, chatType)
 end
 
+local PING_LISTEN = 60
+local pingedAt = -PING_LISTEN
+
 Dispatch = function(key, text, chatType)
 	if not LI.Allowed(key) then
 		return
@@ -940,6 +943,9 @@ Dispatch = function(key, text, chatType)
 		end
 		return
 	elseif kind == "P2" then
+		if GetTime() - pingedAt > PING_LISTEN then
+			return
+		end
 		local sent = tonumber(parts[2] or "")
 		local took = sent and string.format(" (%.1fs)", math.max(0, GetTime() - sent / 10)) or ""
 		LI.Print(string.format("Pong from %s via %s%s", LI.ShortName(key), tostring(chatType), took))
@@ -1040,6 +1046,7 @@ local function Join()
 end
 
 function Sync.Ping(target)
+	pingedAt = GetTime()
 	local token = tostring(math.floor(GetTime() * 10))
 	if target and target ~= "" then
 		Enqueue("ping", "P1|" .. token, "WHISPER", LI.WhisperTarget(LI.FullName(target)))

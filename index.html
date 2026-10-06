@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forever Crafting Census</title>
+<link rel="icon" href="assets/favicon.png">
+<meta property="og:title" content="Forever Crafting Census">
+<meta property="og:description" content="What crafters on WoW Forever can actually make, collected by the Linked Inn addon.">
+<meta property="og:image" content="assets/logo.png">
+<style>
+@font-face {
+  font-family: "Cinzel";
+  src: url("assets/cinzel.woff2") format("woff2");
+  font-weight: 400 900;
+  font-display: swap;
+}
+:root {
+  color-scheme: dark;
+  --page: #170f0a;
+  --surface: #2a1d14;
+  --ink: #f3e6cc;
+  --ink-2: #cdb994;
+  --muted: #9b8667;
+  --gold: #f2c14e;
+  --brass: #a07a3e;
+  --border: rgba(214, 170, 92, 0.35);
+  --button: #3a2819;
+  --grain: rgba(255, 220, 160, 0.025);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --page: #efe3c8;
+  --surface: #f7eedb;
+  --ink: #2a1d14;
+  --ink-2: #5b4630;
+  --muted: #8a7558;
+  --gold: #8a5a10;
+  --brass: #a07a3e;
+  --border: rgba(138, 90, 16, 0.35);
+  --button: #f1e4c6;
+  --grain: rgba(90, 60, 20, 0.035);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background-color: var(--page);
+  background-image:
+    radial-gradient(ellipse at 50% -10%, rgba(242, 193, 78, 0.10), transparent 60%),
+    repeating-linear-gradient(90deg, var(--grain) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(0deg, transparent 0 46px, rgba(0, 0, 0, 0.10) 46px 48px);
+  min-height: 100vh;
+}
+header.page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 32px 16px 12px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+header.page img.logo { width: 96px; height: auto; filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45)); }
+header.page .titles { flex: 1 1 320px; min-width: 0; }
+header.page .brand { font-family: "Cinzel", serif; color: var(--gold); font-size: 15px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; }
+header.page h1 { font-family: "Cinzel", serif; margin: 2px 0 0; font-size: 34px; font-weight: 700; color: var(--ink); line-height: 1.15; }
+header.page p { margin: 6px 0 0; color: var(--ink-2); font-size: 15px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+a.cta, button {
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--button);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+a.cta.primary { background: linear-gradient(#f2c14e, #c98a26); color: #2a1d14; border-color: #f2c14e; font-weight: 600; }
+a.cta:hover, button:hover { border-color: var(--gold); }
+.intro { max-width: 1000px; margin: 0 auto; padding: 4px 16px 4px; color: var(--ink-2); font-size: 15px; line-height: 1.55; }
+main { max-width: 1000px; margin: 0 auto; padding: 12px 16px 48px; display: grid; gap: 22px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.card svg { display: block; width: 100%; height: auto; }
+.tools {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+}
+.dev-only { display: none; }
+body.dev .dev-only { display: inline-block; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tablewrap { padding: 4px 16px 16px; overflow-x: auto; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+th { color: var(--ink-2); font-weight: 600; }
+footer.page { max-width: 1000px; margin: 0 auto; padding: 0 16px 40px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+footer.page a { color: var(--ink-2); }
+#tip {
+  position: fixed;
+  pointer-events: none;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  display: none;
+  z-index: 10;
+  max-width: 280px;
+}
+#tip b { display: block; margin-bottom: 2px; }
+#tip span { color: var(--ink-2); }
+</style>
+</head>
+<body>
+<header class="page">
+  <img class="logo" src="assets/logo.png" alt="Linked Inn logo">
+  <div class="titles">
+    <p class="brand">Linked Inn</p>
+    <h1>Forever Crafting Census</h1>
+    <p id="sub"></p>
+  </div>
+  <div class="actions">
+    <a class="cta primary" href="https://www.curseforge.com/wow/addons/linked-inn" target="_blank" rel="noopener">Get Linked Inn</a>
+    <button id="theme">Parchment</button>
+    <button id="saveAll" class="dev-only">Save all as PNG</button>
+  </div>
+</header>
+<p class="intro">Linked Inn is a profession finder for WoW Forever. While you play it quietly reads the professions of crafters around you and shares lists between its users. These charts are what that adds up to: no surveys, no hand-picked numbers, just what crafters actually know.</p>
+<main id="cards"></main>
+<footer class="page">Crafting professions only (Cooking, First Aid and Fishing are left out). "New to Forever" means recipes that don't exist in original Classic. "Blue" means the item it makes is rare quality. Collected on ClassicBetaPvP. <a href="https://github.com/sanredz/Linked-Inn" target="_blank" rel="noopener">Linked Inn on GitHub</a></footer>
+<div id="tip"></div>
+<script src="data.js"></script>
+<script>
+(function () {
+  const D = window.LI_DATA;
+  const W = 960;
+  const FONT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
+  const DISPLAY = '"Cinzel", Georgia, serif';
+  const THEMES = {
+    dark: {
+      surface: '#2a1d14', surface2: '#21160f', ink: '#f3e6cc', ink2: '#cdb994', muted: '#9b8667', title: '#f2c14e',
+      brass: '#a07a3e', brassLight: '#e0b866',
+      grid: '#3a2a1d', base: '#5a4330', bar: '#e3a83c', rare: '#3b8fe8', track: '#33241a',
+      tiers: ['#7d5216', '#c98a26', '#f2c76e'],
+      tierInk: ['#f3e6cc', '#2a1d14', '#2a1d14'],
+      heat: ['#33241a', '#7d5216', '#a46d1c', '#c98a26', '#e3a83c', '#f2c76e'],
+      heatInk: ['#cdb994', '#f3e6cc', '#f3e6cc', '#2a1d14', '#2a1d14', '#2a1d14'],
+    },
+    light: {
+      surface: '#f7eedb', surface2: '#efe2c4', ink: '#2a1d14', ink2: '#5b4630', muted: '#8a7558', title: '#8a5a10',
+      brass: '#a07a3e', brassLight: '#c99a4a',
+      grid: '#e2d3b2', base: '#c8b48c', bar: '#a8681a', rare: '#1f6fc5', track: '#ece0c4',
+      tiers: ['#d29a3c', '#a8681a', '#6b430f'],
+      tierInk: ['#2a1d14', '#f7eedb', '#f7eedb'],
+      heat: ['#ece0c4', '#d29a3c', '#b77a1f', '#93601a', '#6b430f', '#4a2e0a'],
+      heatInk: ['#5b4630', '#2a1d14', '#f7eedb', '#f7eedb', '#f7eedb', '#f7eedb'],
+    },
+  };
+  const ASSETS = { logo: '', font: '' };
+  let theme = 'dark';
+  let T = THEMES.dark;
+
+  const fmt = (n) => n.toLocaleString('en-US');
+  const pct = (n, d) => d ? Math.round(100 * n / d) : 0;
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const dateOf = (t) => new Date(t * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const span = D.span ? (dateOf(D.span[0]) === dateOf(D.span[1]) ? dateOf(D.span[0]) : dateOf(D.span[0]) + ' – ' + dateOf(D.span[1])) : '';
+
+  function text(x, y, s, o = {}) {
+    const a = [`x="${x}"`, `y="${y}"`, `fill="${o.fill || T.ink}"`, `font-size="${o.size || 14}"`, `font-family='${o.display ? DISPLAY : FONT}'`];
+    if (o.weight) a.push(`font-weight="${o.weight}"`);
+    if (o.anchor) a.push(`text-anchor="${o.anchor}"`);
+    if (o.tabular) a.push(`style="font-variant-numeric:tabular-nums"`);
+    return `<text ${a.join(' ')}>${esc(s)}</text>`;
+  }
+
+  function rbar(x, y, w, h, fill, tip) {
+    w = Math.max(w, 0);
+    const r = Math.min(4, h / 2, w / 2);
+    const d = `M${x},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} H${x} Z`;
+    return `<path d="${d}" fill="${fill}"${tip ? ` data-tip="${esc(tip)}"` : ''}/>`;
+  }
+
+  function frame(title, subtitle, height, body) {
+    const foot = `${fmt(D.crafters)} crafters · ClassicBetaPvP · ${span}`;
+    const fontFace = ASSETS.font ? `<style>@font-face{font-family:"Cinzel";src:url(${ASSETS.font}) format("woff2");font-weight:400 900;}</style>` : '';
+    const logo = ASSETS.logo ? `<image href="${ASSETS.logo}" x="${W - 36 - 54}" y="22" width="54" height="${Math.round(54 * ASSETS.logoRatio)}"/>` : '';
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${height}" role="img" aria-label="${esc(title)}">
+      <defs>${fontFace}
+        <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${T.surface}"/><stop offset="1" stop-color="${T.surface2}"/></linearGradient>
+      </defs>
+      <rect width="${W}" height="${height}" fill="url(#wood)"/>
+      <rect x="6" y="6" width="${W - 12}" height="${height - 12}" rx="10" fill="none" stroke="${T.brass}" stroke-width="2"/>
+      <rect x="11" y="11" width="${W - 22}" height="${height - 22}" rx="7" fill="none" stroke="${T.brassLight}" stroke-opacity="0.35" stroke-width="1"/>
+      ${logo}
+      ${text(36, 58, title, { size: 26, weight: 700, fill: T.title, display: true })}
+      ${subtitle ? text(36, 86, subtitle, { size: 15, fill: T.ink2 }) : ''}
+      ${body}
+      <line x1="36" x2="${W - 36}" y1="${height - 46}" y2="${height - 46}" stroke="${T.brass}" stroke-opacity="0.45" stroke-width="1"/>
+      ${text(36, height - 22, foot, { size: 12, fill: T.muted })}
+      ${text(W - 36, height - 22, 'LINKED INN · PROFESSION FINDER', { size: 12, fill: T.title, anchor: 'end', display: true, weight: 700 })}
+    </svg>`;
+  }
+
+  function hbars(items, opts) {
+    const longest = Math.max(...items.map((d) => d.label.length));
+    const top = 112, row = 44, barH = 22, labelW = Math.max(170, Math.ceil(longest * 8.4) + 24), x0 = 36 + labelW, maxW = W - x0 - 120;
+    const max = Math.max(...items.map((d) => d.value), 1);
+    let body = '';
+    items.forEach((d, i) => {
+      const y = top + i * row;
+      body += text(36, y + barH / 2 + 5, d.label, { size: 15 });
+      body += rbar(x0, y, maxW * d.value / max, barH, d.color || T.bar, d.tip);
+      body += text(x0 + maxW * d.value / max + 10, y + barH / 2 + 5, d.valueLabel, { size: 14, fill: T.ink2, tabular: true });
+    });
+    body += `<line x1="${x0}" x2="${x0}" y1="${top - 8}" y2="${top + items.length * row - row + barH + 8}" stroke="${T.base}" stroke-width="1"/>`;
+    return { body, height: top + items.length * row + 50 };
+  }
+
+  const cards = [];
+
+  function card(id, build, table) {
+    cards.push({ id, build, table });
+  }
+
+  card('overview', () => {
+    const tiles = [
+      [fmt(D.crafters), 'crafters tracked'],
+      [fmt(D.uniqueRecipes), 'recipes catalogued'],
+      [fmt(D.forever.count), 'new to Forever'],
+      [fmt(D.blueCount), 'blue recipes'],
+      [fmt(D.atCap), `at max skill (${D.cap})`],
+    ];
+    const tw = (W - 72 - 4 * 16) / 5;
+    let body = '';
+    tiles.forEach((t, i) => {
+      const x = 36 + i * (tw + 16);
+      body += `<rect x="${x}" y="108" width="${tw}" height="110" rx="10" fill="${T.track}" stroke="${T.brass}" stroke-opacity="0.5"/>`;
+      body += text(x + 18, 160, t[0], { size: 36, weight: 600, fill: T.title });
+      body += text(x + 18, 192, t[1], { size: 14, fill: T.ink2 });
+    });
+    const line = `${pct(D.forever.count, D.uniqueRecipes)}% of every recipe seen so far didn't exist in original Classic.`;
+    body += text(36, 256, line, { size: 15, fill: T.ink2 });
+    return frame('What Forever crafters can actually make', 'Every profession read in the background by Linked Inn, no hand-picking', 310, body);
+  }, () => [['Measure', 'Value'], ['Crafters tracked', D.crafters], ['Recipes catalogued', D.uniqueRecipes], ['New to Forever', D.forever.count], ['Blue recipes', D.blueCount], ['At max skill', D.atCap]]);
+
+  card('popularity', () => {
+    const total = D.popularity.reduce((a, d) => a + d.n, 0);
+    const items = [...D.popularity].sort((a, b) => b.n - a.n).map((d) => ({
+      label: d.name, value: d.n, valueLabel: `${fmt(d.n)}  ·  ${pct(d.n, total)}%`,
+      tip: `${d.name}|${fmt(d.n)} crafters (${pct(d.n, total)}% of all crafting professions)`,
+    }));
+    const g = hbars(items);
+    return frame('Most popular crafting professions', 'Crafters per profession, secondary professions left out', g.height, g.body);
+  }, () => [['Profession', 'Crafters'], ...[...D.popularity].sort((a, b) => b.n - a.n).map((d) => [d.name, d.n])]);
+
+  card('skill', () => {
+    const items = [...D.skill].sort((a, b) => b.mean - a.mean).map((d) => ({
+      label: d.name, value: d.mean, valueLabel: `${d.mean}`,
+      tip: `${d.name}|average ${d.mean}, median ${d.median}, ${fmt(d.n)} crafters, ${d.atCap} at ${D.cap}`,
+    }));
+    const g = hbars(items);
+    return frame('Average skill by profession', `Across all ${fmt(D.professionEntries)} profession entries the average is ${D.meanSkill} out of ${D.cap}`, g.height, g.body);
+  }, () => [['Profession', 'Average', 'Median', 'Crafters'], ...D.skill.map((d) => [d.name, d.mean, d.median, d.n])]);
+
+  card('tiers', () => {
+    const names = ['Apprentice (1–74)', 'Journeyman (75–149)', `Expert (150–${D.cap})`];
+    const top = 140, row = 44, barH = 24, labelW = 170, x0 = 36 + labelW, bw = W - x0 - 36;
+    let body = '';
+    let lx = 36;
+    names.forEach((n, i) => {
+      body += `<rect x="${lx}" y="${100}" width="12" height="12" rx="3" fill="${T.tiers[i]}"/>`;
+      body += text(lx + 18, 111, n, { size: 13, fill: T.ink2 });
+      lx += 18 + n.length * 7.1 + 22;
+    });
+    const rows = [...D.tiers].sort((a, b) => b.parts[2].n / b.n - a.parts[2].n / a.n);
+    rows.forEach((d, i) => {
+      const y = top + i * row;
+      body += text(36, y + barH / 2 + 5, d.name, { size: 15 });
+      let x = x0;
+      d.parts.forEach((p, k) => {
+        const w = bw * p.n / d.n;
+        if (w <= 0) return;
+        const gap = k < d.parts.length - 1 ? 2 : 0;
+        body += `<rect x="${x}" y="${y}" width="${Math.max(w - gap, 0.5)}" height="${barH}" fill="${T.tiers[k]}" data-tip="${esc(d.name + '|' + names[k] + ': ' + p.n + ' (' + pct(p.n, d.n) + '%)')}"/>`;
+        const label = pct(p.n, d.n) + '%';
+        if (w > 44) body += text(x + w / 2, y + barH / 2 + 5, label, { size: 12, anchor: 'middle', fill: T.tierInk[k], tabular: true, weight: 600 });
+        x += w;
+      });
+    });
+    return frame('How far along is everyone?', 'Share of crafters in each skill bracket', top + rows.length * row + 50, body);
+  }, () => [['Profession', 'Apprentice', 'Journeyman', 'Expert'], ...D.tiers.map((d) => [d.name, ...d.parts.map((p) => p.n)])]);
+
+  card('histogram', () => {
+    const top = 110, h = 240, x0 = 70, bw = (W - x0 - 36) / D.histogram.length;
+    const max = Math.max(...D.histogram.map((d) => d.n), 1);
+    let body = '';
+    const raw = max / 4;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((m) => m >= raw);
+    const axisMax = Math.ceil(max / step) * step;
+    const ticks = Math.round(axisMax / step);
+    for (let i = 0; i <= ticks; i++) {
+      const v = step * i;
+      const y = top + h - h * i / ticks;
+      body += `<line x1="${x0}" x2="${W - 36}" y1="${y}" y2="${y}" stroke="${i === 0 ? T.base : T.grid}" stroke-width="1"/>`;
+      body += text(x0 - 10, y + 4, fmt(v), { size: 12, fill: T.muted, anchor: 'end', tabular: true });
+    }
+    D.histogram.forEach((d, i) => {
+      const bh = h * d.n / axisMax;
+      const x = x0 + i * bw + 3, y = top + h - bh, w = bw - 6;
+      const r = Math.min(4, w / 2, bh / 2);
+      body += `<path d="M${x},${top + h} V${y + r} Q${x},${y} ${x + r},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${top + h} Z" fill="${T.bar}" data-tip="${esc('Skill ' + d.lo + '–' + d.hi + '|' + fmt(d.n) + ' profession entries')}"/>`;
+      body += text(x + w / 2, top + h + 20, d.lo + '–' + d.hi, { size: 12, fill: T.muted, anchor: 'middle', tabular: true });
+    });
+    [75, 150].forEach((cap) => {
+      const x = x0 + (cap / (D.histogram.length * 25)) * (W - x0 - 36);
+      body += `<line x1="${x}" x2="${x}" y1="${top - 6}" y2="${top + h}" stroke="${T.ink2}" stroke-width="1" opacity="0.5"/>`;
+      body += text(x + 6, top + 6, 'trainer cap ' + cap, { size: 12, fill: T.ink2 });
+    });
+    return frame('Skill levels pile up at the trainer caps', 'Every crafting profession entry, in steps of 25 skill', top + h + 80, body);
+  }, () => [['Skill', 'Entries'], ...D.histogram.map((d) => [d.lo + '–' + d.hi, d.n])]);
+
+  function heatmap(rows, cols, title, subtitle, rowLabel) {
+    const top = 150, x0 = 200, cw = (W - x0 - 36) / cols.length, ch = 40;
+    let body = '';
+    cols.forEach((c, j) => body += text(x0 + j * cw + cw / 2, top - 14, c.name, { size: 13, fill: T.ink2, anchor: 'middle' }));
+    const steps = T.heat.length - 1;
+    const top1 = Math.max(...rows.map((r) => Math.max(...cols.map((c) => (r.cells[c.key] || 0) / (r.total || 1)))), 0.01);
+    rows.forEach((r, i) => {
+      const y = top + i * ch;
+      body += text(36, y + ch / 2 + 5, r.name, { size: 15 });
+      const maxShare = Math.max(...cols.map((c) => (r.cells[c.key] || 0) / (r.total || 1)));
+      cols.forEach((c, j) => {
+        const n = r.cells[c.key] || 0;
+        const share = r.total ? n / r.total : 0;
+        const k = share === 0 ? 0 : Math.min(steps, Math.max(1, Math.ceil(share / top1 * steps)));
+        const x = x0 + j * cw;
+        body += `<rect x="${x + 1}" y="${y + 1}" width="${cw - 2}" height="${ch - 2}" rx="4" fill="${T.heat[k]}" data-tip="${esc(r.name + ' · ' + c.name + '|' + n + ' of ' + r.total + ' (' + Math.round(share * 100) + '%)')}"/>`;
+        if (share === maxShare && n > 0) body += text(x + cw / 2, y + ch / 2 + 5, Math.round(share * 100) + '%', { size: 13, anchor: 'middle', fill: T.heatInk[k], weight: 600, tabular: true });
+      });
+    });
+    const ly = top + rows.length * ch + 26;
+    body += text(36, ly + 10, rowLabel, { size: 12, fill: T.muted });
+    T.heat.forEach((col, k) => body += `<rect x="${200 + k * 34}" y="${ly}" width="30" height="12" rx="3" fill="${col}"/>`);
+    body += text(200 + T.heat.length * 34 + 8, ly + 10, 'more', { size: 12, fill: T.muted });
+    return frame(title, subtitle, ly + 70, body);
+  }
+
+  const PROF_COLS = () => D.classHeat.map((r) => ({ key: r.key, name: r.name }));
+  const CLASS_COLS = () => D.classes.map((c) => ({ key: c.key, name: c.name }));
+
+  card('classes', () => heatmap(D.classHeat, CLASS_COLS(), 'Which classes pick which profession', 'Each row is one profession split by class; the biggest share is labelled', 'Share of each profession'),
+    () => [['Profession', ...D.classes.map((c) => c.name)], ...D.classHeat.map((r) => [r.name, ...D.classes.map((c) => r.cells[c.key] || 0)])]);
+
+  card('classProfs', () => heatmap(D.classProfs, PROF_COLS(), 'What each class crafts', "Share of each class's crafters who have each profession (some have two); the favourite is labelled", 'Share of each class'),
+    () => [['Class', ...D.classHeat.map((r) => r.name)], ...D.classProfs.map((r) => [r.name, ...D.classHeat.map((p) => r.cells[p.key] || 0)])]);
+
+  card('classSkill', () => {
+    const items = [...D.classSkill].sort((a, b) => b.mean - a.mean).map((d) => ({
+      label: d.name, value: d.mean, valueLabel: String(d.mean), tip: `${d.name}|average skill ${d.mean} across ${d.n} professions`,
+    }));
+    const g = hbars(items);
+    return frame('Average crafting skill by class', `Out of ${D.cap}, across every crafting profession they have`, g.height, g.body);
+  }, () => [['Class', 'Average skill', 'Professions'], ...D.classSkill.map((d) => [d.name, d.mean, d.n])]);
+
+  card('pairs', () => {
+    const items = D.pairs.slice(0, 6).map((d) => ({
+      label: `${d.a} + ${d.b}`, value: d.n, valueLabel: `${fmt(d.n)}  ·  ${pct(d.n, D.pairedCrafters)}%`,
+      tip: `${d.a} + ${d.b}|${d.n} of ${D.pairedCrafters} crafters with two professions`,
+    }));
+    const g = hbars(items.map((d) => d), {});
+    const fixed = g.body.replace(/x="36"/g, 'x="36"');
+    return frame('Favourite profession pairs', `Among the ${fmt(D.pairedCrafters)} crafters with two crafting professions`, g.height, fixed);
+  }, () => [['Pair', 'Crafters'], ...D.pairs.map((d) => [d.a + ' + ' + d.b, d.n])]);
+
+  card('blues', () => {
+    const items = D.quality.map((d) => ({ name: d.name, n: d.parts.Rare || 0, all: Object.values(d.parts).reduce((a, b) => a + b, 0) }))
+      .sort((a, b) => b.n - a.n)
+      .map((d) => ({ label: d.name, value: d.n, color: T.rare, valueLabel: `${d.n} of ${d.all}`, tip: `${d.name}|${d.n} blue recipes out of ${d.all} catalogued` }));
+    const g = hbars(items);
+    return frame('Where the blue recipes are', 'Recipes that make rare (blue) items, out of every recipe seen per profession', g.height, g.body);
+  }, () => [['Profession', 'Blue recipes', 'All catalogued'], ...D.quality.map((d) => [d.name, d.parts.Rare || 0, Object.values(d.parts).reduce((a, b) => a + b, 0)])]);
+
+  card('forever', () => {
+    const byProf = D.forever.byProf;
+    const items = Object.keys(byProf).sort((a, b) => byProf[b] - byProf[a]).map((k) => ({
+      label: k, value: byProf[k], valueLabel: String(byProf[k]), tip: `${k}|${byProf[k]} recipes not in original Classic`,
+    }));
+    const g = hbars(items);
+    const rare = D.forever.quality.Rare || 0;
+    return frame('Recipes that are new to Forever', `${fmt(D.forever.count)} so far, ${rare} of them make blue items`, g.height, g.body);
+  }, () => [['Profession', 'New recipes'], ...Object.entries(D.forever.byProf)]);
+
+  function listCard(title, subtitle, rows, valueOf) {
+    const top = 118, row = 40;
+    let body = '';
+    body += text(36, top - 14, 'Recipe', { size: 12, fill: T.muted });
+    body += text(470, top - 14, 'Profession', { size: 12, fill: T.muted });
+    body += text(660, top - 14, 'Item level', { size: 12, fill: T.muted });
+    body += text(W - 36, top - 14, valueOf.head, { size: 12, fill: T.muted, anchor: 'end' });
+    rows.forEach((r, i) => {
+      const y = top + i * row;
+      body += `<line x1="36" x2="${W - 36}" y1="${y - 2}" y2="${y - 2}" stroke="${T.grid}" stroke-width="1"/>`;
+      body += `<rect x="36" y="${y + 11}" width="10" height="10" rx="2" fill="${T.rare}"/>`;
+      body += text(56, y + 21, r.name, { size: 15 });
+      body += text(470, y + 21, r.prof, { size: 14, fill: T.ink2 });
+      body += text(660, y + 21, r.ilvl == null ? '–' : String(r.ilvl), { size: 14, fill: T.ink2, tabular: true });
+      body += text(W - 36, y + 21, valueOf.fn(r), { size: 14, fill: T.ink2, anchor: 'end', tabular: true });
+    });
+    return frame(title, subtitle, top + rows.length * row + 56, body);
+  }
+
+  card('rarest', () => listCard('The rarest blue recipes', 'Rare-quality recipes known by the fewest crafters (blue square = rare item)', D.rarestBlues,
+    { head: 'Crafters who know it', fn: (r) => String(r.n) }),
+    () => [['Recipe', 'Profession', 'Item level', 'Crafters'], ...D.rarestBlues.map((r) => [r.name, r.prof, r.ilvl, r.n])]);
+
+  card('foreverTop', () => listCard('The most common new-to-Forever blues', 'Share of each profession\'s crafters who know the recipe', D.forever.top.filter((r) => r.quality === 'Rare').sort((a, b) => b.share - a.share),
+    { head: 'Of that profession', fn: (r) => r.share + '%' }),
+    () => [['Recipe', 'Profession', 'Item level', 'Share'], ...D.forever.top.map((r) => [r.name, r.prof, r.ilvl, r.share + '%'])]);
+
+  const root = document.getElementById('cards');
+  const tip = document.getElementById('tip');
+
+  function render() {
+    T = THEMES[theme];
+    document.documentElement.dataset.theme = theme;
+    document.getElementById('theme').textContent = theme === 'dark' ? 'Parchment' : 'Dark wood';
+    document.getElementById('sub').textContent = `${fmt(D.crafters)} crafters · ${span} · rebuilt ${D.generated}`;
+    root.innerHTML = '';
+    cards.forEach((c) => {
+      const el = document.createElement('section');
+      el.className = 'card';
+      el.innerHTML = c.build() + `<div class="tablewrap" hidden></div><div class="tools"><button data-act="table">Table</button><button data-act="png" class="dev-only">Save PNG</button></div>`;
+      el.querySelector('[data-act="png"]').onclick = () => savePng(el.querySelector('svg'), c.id);
+      el.querySelector('[data-act="table"]').onclick = (e) => {
+        const wrap = el.querySelector('.tablewrap');
+        if (wrap.hidden) {
+          const rows = c.table();
+          wrap.innerHTML = '<table><thead><tr>' + rows[0].map((h) => `<th>${esc(h)}</th>`).join('') + '</tr></thead><tbody>' +
+            rows.slice(1).map((r) => '<tr>' + r.map((v) => `<td>${esc(v == null ? '–' : v)}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+        }
+        wrap.hidden = !wrap.hidden;
+        e.target.textContent = wrap.hidden ? 'Table' : 'Hide table';
+      };
+      root.appendChild(el);
+    });
+  }
+
+  root.addEventListener('mousemove', (e) => {
+    const t = e.target.closest('[data-tip]');
+    if (!t) { tip.style.display = 'none'; return; }
+    const [head, rest] = t.getAttribute('data-tip').split('|');
+    tip.innerHTML = `<b>${esc(head)}</b><span>${esc(rest || '')}</span>`;
+    tip.style.display = 'block';
+    const x = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 8);
+    tip.style.left = x + 'px';
+    tip.style.top = (e.clientY + 14) + 'px';
+  });
+  root.addEventListener('mouseleave', () => tip.style.display = 'none');
+
+  function savePng(svg, name) {
+    return new Promise((done) => {
+      const src = new XMLSerializer().serializeToString(svg);
+      const img = new Image();
+      const vb = svg.viewBox.baseVal;
+      img.onload = () => {
+        const scale = 2;
+        const c = document.createElement('canvas');
+        c.width = vb.width * scale;
+        c.height = vb.height * scale;
+        const g = c.getContext('2d');
+        g.drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob(async (blob) => {
+          const file = `forever-crafting-${name}-${theme}.png`;
+          if (location.protocol.startsWith('http')) {
+            try {
+              const res = await fetch('/save/' + file, { method: 'POST', body: blob });
+              if (res.ok) { flash(`Saved to out/${file}`); done(); return; }
+            } catch (e) {}
+          }
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = file;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+          done();
+        });
+      };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(src);
+    });
+  }
+
+  function flash(msg) {
+    document.getElementById('sub').textContent = msg;
+    clearTimeout(flash.t);
+    flash.t = setTimeout(() => document.getElementById('sub').textContent = `${fmt(D.crafters)} crafters · ${span} · rebuilt ${D.generated}`, 2500);
+  }
+
+  document.getElementById('theme').onclick = () => { theme = theme === 'dark' ? 'light' : 'dark'; render(); };
+  document.getElementById('saveAll').onclick = async () => {
+    const svgs = root.querySelectorAll('svg');
+    for (let i = 0; i < svgs.length; i++) await savePng(svgs[i], cards[i].id);
+  };
+
+  if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) || /[?&]dev\b/.test(location.search)) {
+    document.body.classList.add('dev');
+  }
+
+  async function dataUrl(url) {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(blob); });
+  }
+
+  async function boot() {
+    try {
+      ASSETS.logo = await dataUrl('assets/logo-small.png');
+      const img = new Image();
+      await new Promise((ok) => { img.onload = ok; img.onerror = ok; img.src = ASSETS.logo; });
+      ASSETS.logoRatio = img.naturalWidth ? img.naturalHeight / img.naturalWidth : 1;
+      ASSETS.font = await dataUrl('assets/cinzel.woff2');
+      await document.fonts.load('700 26px "Cinzel"');
+    } catch (e) {}
+    render();
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

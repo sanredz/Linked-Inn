@@ -342,6 +342,23 @@ end
 
 do
 	RetailSetup()
+	Boot()
+	Advance(5)
+	W.autoWorks = true
+	LI.tried["Cora-TestRealm"] = time()
+	W.dataChanging = true
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-CCC", 2259, 171, "Alchemy"), "Cora-TestRealm", "Player-1-CCC", "Trade - City")
+	Advance(3)
+	W.dataChanging = false
+	Advance(8)
+	W.autoWorks = false
+	local cora = LI.crafters["Cora-TestRealm"]
+	check(cora and cora.profs.alchemy and cora.profs.alchemy.recipes, "a profession that takes a few seconds to load is still read before the window closes")
+	check(not W.trade, "and the hidden window still closes afterwards")
+end
+
+do
+	RetailSetup()
 	W.playerGUID = "Player-1-ME"
 	Boot()
 	Advance(5)

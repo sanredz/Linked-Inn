@@ -1027,10 +1027,11 @@ local function Collect(profKey, done)
 	Step()
 end
 
-local function AfterCollect(fn, tries)
-	if collecting and (tries or 0) < 40 then
+local function AfterCollect(fn, job, tries)
+	local waiting = collecting or (LI.RETAIL and job and not job.readDone)
+	if waiting and (tries or 0) < 40 then
 		LI.After(0.1, function()
-			AfterCollect(fn, (tries or 0) + 1)
+			AfterCollect(fn, job, (tries or 0) + 1)
 		end)
 		return
 	end
@@ -1054,10 +1055,11 @@ function Reader.Read()
 	if not name or name == "" then
 		return
 	end
-	if api.IsTradeSkillGuild and LI.Safe(LI.Try(api.IsTradeSkillGuild)) then
-		return
-	end
-	if api.IsNPCCrafting and LI.Safe(LI.Try(api.IsNPCCrafting)) then
+	local job = pending
+	if (api.IsTradeSkillGuild and LI.Safe(LI.Try(api.IsTradeSkillGuild))) or (api.IsNPCCrafting and LI.Safe(LI.Try(api.IsNPCCrafting))) then
+		if job then
+			job.readDone = true
+		end
 		return
 	end
 	local linked, linkedName = false, nil
@@ -1067,6 +1069,9 @@ function Reader.Read()
 	end
 	local profKey = LI.ProfKeyForLine(LI.Safe(base.professionID)) or LI.ProfKey(name)
 	Collect(profKey, function(list)
+		if job then
+			job.readDone = true
+		end
 		Store(api, base, name, linked, linkedName, profKey, list)
 	end)
 end
@@ -1241,7 +1246,7 @@ local function Replied()
 				CloseHidden()
 				Finish(job, "ok")
 			end
-		end)
+		end, job)
 	end)
 end
 

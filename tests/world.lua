@@ -427,6 +427,7 @@ local function InstallStubs()
 			return W.trade.linked, W.trade.linkedName
 		end,
 		IsTradeSkillGuild = function() return false end,
+		IsDataSourceChanging = function() return W.dataChanging == true end,
 		IsNPCCrafting = function() return false end,
 		GetFilteredRecipeIDs = function()
 			local ids = {}

@@ -1334,8 +1334,8 @@ function Sync.Status()
 	local lines = {
 		string.format("Realm: %s (server %s)", MyRealm(), tostring(MySid())),
 		string.format("Channel: %s%s", joined and "joined" or "NOT joined", ChannelId() and (" (#" .. ChannelId() .. ")") or ""),
-		"Other realms: " .. (#bridges > 0 and table.concat(bridges, "; ") or "none linked yet"),
-		LI.Bridge and LI.Bridge.Status() or "Bridge: off",
+		LI.RETAIL and ("Realm group: " .. tostring(LI.realm)) or ("Other realms: " .. (#bridges > 0 and table.concat(bridges, "; ") or "none linked yet")),
+		(not LI.RETAIL and LI.Bridge) and LI.Bridge.Status() or "Bridge: off",
 		string.format("Your list: version %s, %d professions", tostring(OwnState().ver), OwnCount()),
 		"Sent: " .. Counts("tx") .. ((sync.failed or 0) > 0 and string.format("  |cffff6060failed %d (%s)|r", sync.failed, tostring(sync.lastError)) or ""),
 		"Received: " .. Counts("rx"),

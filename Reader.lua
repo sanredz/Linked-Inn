@@ -949,6 +949,8 @@ local function RecipeEntry(id, info, profKey)
 	}
 end
 
+local ScheduleRead
+
 local function CollectRecipes(profKey)
 	local list = {}
 	for _, id in ipairs(RecipeIDs()) do
@@ -974,10 +976,77 @@ local function LinkedOwner(linkedName)
 	return nil, nil
 end
 
+local SLICE = 250
+local collecting
+
+local function SessionKey(api)
+	local base = LI.Try(api.GetBaseProfessionInfo)
+	local linked, linkedName = false, nil
+	if api.IsTradeSkillLinked then
+		linked, linkedName = LI.Try(api.IsTradeSkillLinked)
+	end
+	return table.concat({ tostring(type(base) == "table" and LI.Safe(base.professionID)), tostring(LI.Safe(linked)), tostring(LI.Safe(linkedName)) }, "|")
+end
+
+local function Collect(profKey, done)
+	if not LI.RETAIL then
+		done(CollectRecipes(profKey))
+		return
+	end
+	local api = C_TradeSkillUI
+	local ids = RecipeIDs()
+	local session = SessionKey(api)
+	local list, i = {}, 1
+	local run = {}
+	collecting = run
+	local function Step()
+		if collecting ~= run then
+			return
+		end
+		if SessionKey(api) ~= session then
+			collecting = nil
+			ScheduleRead()
+			return
+		end
+		local last = math.min(#ids, i + SLICE - 1)
+		for j = i, last do
+			local id = ids[j]
+			local info = LI.Try(api.GetRecipeInfo, id)
+			if type(info) == "table" and LI.Safe(info.learned) and LI.Safe(info.name) then
+				list[#list + 1] = RecipeEntry(id, info, profKey)
+			end
+		end
+		i = last + 1
+		if i <= #ids then
+			LI.After(0, Step)
+		else
+			collecting = nil
+			done(list)
+		end
+	end
+	Step()
+end
+
+local function AfterCollect(fn, tries)
+	if collecting and (tries or 0) < 40 then
+		LI.After(0.1, function()
+			AfterCollect(fn, (tries or 0) + 1)
+		end)
+		return
+	end
+	fn()
+end
+
+local Store
+
 function Reader.Read()
 	readScheduled = false
 	local api = C_TradeSkillUI
-	if not LI.ready or not api then
+	if not LI.ready or not api or collecting then
+		return
+	end
+	if LI.RETAIL and api.IsDataSourceChanging and LI.Safe(LI.Try(api.IsDataSourceChanging)) then
+		ScheduleRead()
 		return
 	end
 	local base = LI.Try(api.GetBaseProfessionInfo)
@@ -997,7 +1066,12 @@ function Reader.Read()
 		linked = LI.Safe(linked)
 	end
 	local profKey = LI.ProfKeyForLine(LI.Safe(base.professionID)) or LI.ProfKey(name)
-	local list = CollectRecipes(profKey)
+	Collect(profKey, function(list)
+		Store(api, base, name, linked, linkedName, profKey, list)
+	end)
+end
+
+Store = function(api, base, name, linked, linkedName, profKey, list)
 	local icon = base.professionID and api.GetTradeSkillTexture and LI.Safe(LI.Try(api.GetTradeSkillTexture, base.professionID))
 	local info = {
 		key = profKey,
@@ -1101,7 +1175,7 @@ function Reader.Read()
 	LI.Fire("TestChanged")
 end
 
-local function ScheduleRead()
+ScheduleRead = function()
 	if readScheduled then
 		return
 	end
@@ -1162,10 +1236,12 @@ local function Replied()
 		LI.ProbeResult(job.key, true)
 	end
 	LI.After(SETTLE, function()
-		if pending == job then
-			CloseHidden()
-			Finish(job, "ok")
-		end
+		AfterCollect(function()
+			if pending == job then
+				CloseHidden()
+				Finish(job, "ok")
+			end
+		end)
 	end)
 end
 

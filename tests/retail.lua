@@ -273,6 +273,76 @@ end
 do
 	RetailSetup()
 	Boot()
+	Advance(5)
+	local big = {}
+	for i = 1, 3000 do
+		big[i] = { id = 400000 + i, name = "Recipe " .. i, item = 900000 + i, learned = i % 5 == 0 }
+	end
+	W.guids["Player-1-BIG"] = { class = "PALADIN", name = "Bigs", realm = "" }
+	W.linkData["trade:Player-1-BIG:2018:164"] = { linkedName = "Bigs", prof = { professionName = "Blacksmithing", professionID = 164, skillLevel = 0, maxSkillLevel = 0 }, recipes = big }
+	local frames, calls = 0, 0
+	local getInfo = C_TradeSkillUI.GetRecipeInfo
+	C_TradeSkillUI.GetRecipeInfo = function(id)
+		calls = calls + 1
+		return getInfo(id)
+	end
+	local maxPerStep = 0
+	local after = C_Timer.After
+	C_Timer.After = function(sec, fn)
+		after(sec, function()
+			local before = calls
+			fn()
+			maxPerStep = math.max(maxPerStep, calls - before)
+		end)
+	end
+	W.autoWorks = true
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-BIG", 2018, 164, "Blacksmithing"), "Bigs-TestRealm", "Player-1-BIG", "Trade - City")
+	Advance(6)
+	W.autoWorks = false
+	C_Timer.After = after
+	C_TradeSkillUI.GetRecipeInfo = getInfo
+	local bigs = LI.crafters["Bigs-TestRealm"]
+	check(bigs and bigs.profs.blacksmithing and bigs.profs.blacksmithing.count == 600, "a profession with thousands of recipes is read completely", bigs and bigs.profs.blacksmithing and bigs.profs.blacksmithing.count)
+	check(maxPerStep <= 260, "but a few hundred at a time, so the game never stutters", maxPerStep)
+	check(not W.trade, "and the hidden window closes once it's done")
+	W.linkData["trade:Player-1-SWP:2018:164"] = { linkedName = "Swapper", prof = { professionName = "Blacksmithing", professionID = 164, skillLevel = 0, maxSkillLevel = 0 }, recipes = big }
+	W.guids["Player-1-SWP"] = { class = "PALADIN", name = "Swapper", realm = "" }
+	local realAfter = C_Timer.After
+	C_Timer.After = function(sec, fn)
+		realAfter(sec > 0 and sec or 0.01, fn)
+	end
+	calls = 0
+	C_TradeSkillUI.GetRecipeInfo = function(id)
+		calls = calls + 1
+		return getInfo(id)
+	end
+	W.autoWorks = true
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-SWP", 2018, 164, "Blacksmithing"), "Swapper-TestRealm", "Player-1-SWP", "Trade - City")
+	for _ = 1, 30 do
+		Advance(0.05)
+		if W.trade and W.trade.linkedName == "Swapper" and calls > 0 then break end
+	end
+	local swapped = false
+	for _ = 1, 20 do
+		Advance(0.02)
+		if W.trade and W.trade.linkedName == "Swapper" and not swapped then
+			W.trade = { linked = true, linkedName = "Someone Else", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+			swapped = true
+		end
+	end
+	Advance(10)
+	W.autoWorks = false
+	C_Timer.After = realAfter
+	C_TradeSkillUI.GetRecipeInfo = getInfo
+	check(swapped, "the test really interrupts a read halfway")
+	local swp = LI.crafters["Swapper-TestRealm"]
+	local partial = swp and swp.profs.blacksmithing and swp.profs.blacksmithing.recipes and swp.profs.blacksmithing.count ~= 600
+	check(not (swp and swp.profs.alchemy) and not partial, "a read interrupted by another profession opening never saves a mixed or partial list", swp and swp.profs.blacksmithing and swp.profs.blacksmithing.count)
+end
+
+do
+	RetailSetup()
+	Boot()
 	Advance(1)
 	LI.UI.Open()
 	check(LinkedInnFrame.secondaryToggle.text.__text == "Cooking", "the secondary button simply says Cooking", LinkedInnFrame.secondaryToggle.text.__text)

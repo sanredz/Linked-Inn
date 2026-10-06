@@ -146,6 +146,7 @@ local function Build(parent)
 	panel:SetSize(WIDTH, 100)
 	panel:SetPoint("TOPLEFT", parent, "TOPRIGHT", 4, -64)
 	panel:SetFrameStrata(parent.GetFrameStrata and parent:GetFrameStrata() or "HIGH")
+	panel:SetClampedToScreen(true)
 	if LI.Theme and LI.Theme.Wood then
 		LI.Theme.Wood(panel)
 	end

@@ -77,7 +77,8 @@ One download works in both games and adjusts itself:
 - **Retail:** all eight crafting professions plus Cooking. A crafter's skill is
   shown for their newest expansion, like "87/100, The War Within", and their
   recipe book covers every expansion, so old recipes for transmog, pets or toys
-  are just as easy to find. Crafters from other realms you meet are read too.
+  are just as easy to find. Crafters from other realms you meet are read too,
+  and your characters on connected realms share one list.
   Big recipe books are read a little at a time and stored compactly, so the
   game stays smooth and the addon stays light even with thousands of crafters.
   Profession names work in every client language.

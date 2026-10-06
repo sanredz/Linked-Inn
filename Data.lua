@@ -966,6 +966,9 @@ function LI.Search(query, opts)
 	local caps = opts.maxOnly and LI.SkillCaps() or nil
 	local minSkill = tonumber(opts.minSkill) or 0
 	local function Maxed(profKey, p)
+		if caps and LI.RETAIL then
+			return (p.max or 0) > 0 and (p.rank or 0) >= p.max
+		end
 		if caps then
 			local cap = caps[profKey] or 0
 			return cap > 0 and (p.rank or 0) >= cap

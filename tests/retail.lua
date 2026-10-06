@@ -382,6 +382,15 @@ do
 	check(p.rank == 87 and p.max == 100 and p.tier == "Khaz Algar Tailoring", "with the newest expansion shown as their skill", tostring(p.rank) .. " " .. tostring(p.tier))
 	local book = LI.Book.Recipes("Tiers-TestRealm", "tailoring", "")
 	check(#book == 2 and book[1].catName == "Khaz Algar Tailoring: Cloth" and book[2].catName == "Classic Tailoring: Bags", "the recipe book is grouped by expansion, newest first", book[1] and book[1].catName)
+	local c = LI.Crafter("Old Hand-TestRealm", true)
+	c.profs.tailoring = { name = "Tailoring", rank = 300, max = 300, recipes = LI.PackRecipes("tailoring", { [600002] = true }), count = 1 }
+	local maxed = {}
+	for _, r in ipairs(LI.Search("", { profs = {}, maxOnly = true })) do maxed[#maxed + 1] = r.key end
+	table.sort(maxed)
+	check(table.concat(maxed, ",") == "Old Hand-TestRealm", "max skill means at the cap of their own expansion", table.concat(maxed, ","))
+	c.profs.tailoring.rank = 100
+	local none = LI.Search("", { profs = {}, maxOnly = true })
+	check(#none == 0, "and someone below their cap isn't counted", #none)
 	W.categories = nil
 end
 

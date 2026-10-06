@@ -534,6 +534,46 @@ end
 
 do
 	RetailSetup()
+	W.lineNames = { [171] = "Alchemy", [197] = "Tailoring", [333] = "Enchanting", [185] = "Cooking", [356] = "Fishing" }
+	W.profs = {
+		{ name = "Tailoring", rank = 95, max = 100, offset = 10, line = 197 },
+		{ name = "Enchanting", rank = 40, max = 100, offset = 20, line = 333 },
+		{ name = "Archaeology", rank = 5, max = 100, offset = 30, line = 794 },
+		{ name = "Fishing", rank = 20, max = 100, offset = 40, line = 356 },
+		{ name = "Cooking", rank = 70, max = 100, offset = 50, line = 185 },
+	}
+	W.spellbook = { [11] = 3908, [21] = 7411, [31] = 78670, [41] = 271616, [51] = 2550 }
+	Boot()
+	Advance(30)
+	local me = LI.crafters[LI.playerKey]
+	local keys = {}
+	for k in pairs(me and me.profs or {}) do keys[#keys + 1] = k end
+	table.sort(keys)
+	check(table.concat(keys, ",") == "cooking,enchanting,fishing,tailoring", "your own retail professions are found, archaeology left out", table.concat(keys, ","))
+	local hello
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^H1|") then hello = m.msg end
+	end
+	check(hello and hello:find("tailoring~", 1, true) and hello:find("enchanting~", 1, true) and not hello:find("archaeology", 1, true), "and announced to other Linked Inn users", hello)
+	W.autoWorks = true
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna-TestRealm", "Player-1-AAA", "Trade - City")
+	Advance(8)
+	W.autoWorks = false
+	LI.UI.Open()
+	Advance(0.5)
+	local results = LI.Search("mooncloth", { profs = {} })
+	check(#results == 1 and results[1].key == "Anna-TestRealm", "a retail player finds a crafter end to end")
+	LI.Book.Open("Anna-TestRealm", "tailoring", "")
+	Advance(0.5)
+	local rows = LI.Book.Recipes("Anna-TestRealm", "tailoring", "")
+	check(#rows == 2, "and can browse their recipe book", #rows)
+	check(#W.errors == 0, "without a single error", W.errors[1])
+	LinkedInnFrame:Hide()
+	W.profs, W.spellbook = nil, nil
+end
+
+do
+	RetailSetup()
 	Boot()
 	Advance(1)
 	LI.UI.Open()

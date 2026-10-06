@@ -122,6 +122,25 @@ footer.page a { color: var(--ink-2); }
 }
 #tip b { display: block; margin-bottom: 2px; }
 #tip span { color: var(--ink-2); }
+#tip.item {
+  background: rgba(10, 12, 28, 0.96);
+  border: 1px solid #8a8fa8;
+  border-radius: 6px;
+  color: #ffffff;
+  max-width: 340px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+#tip.item .name { font-size: 15px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
+#tip.item .name img { width: 36px; height: 36px; border-radius: 4px; border: 1px solid #555; }
+#tip.item .row { display: flex; justify-content: space-between; gap: 16px; }
+#tip.item .dim { color: #9d9d9d; }
+#tip.item .gold { color: #ffd100; }
+#tip.item .new { color: #f2c14e; font-weight: 600; }
+#tip.item .reagent { display: flex; gap: 8px; align-items: center; margin-top: 3px; }
+#tip.item .reagent img { width: 20px; height: 20px; border-radius: 3px; }
+#tip.item hr { border: 0; border-top: 1px solid rgba(255, 255, 255, 0.15); margin: 6px 0; }
 </style>
 </head>
 <body>
@@ -133,7 +152,7 @@ footer.page a { color: var(--ink-2); }
     <p id="sub"></p>
   </div>
   <div class="actions">
-    <a class="cta primary" href="https://www.curseforge.com/wow/addons/linked-inn" target="_blank" rel="noopener">Get Linked Inn</a>
+    <a class="cta primary" href="https://www.curseforge.com/wow/addons/linked-inn-profession-finder" target="_blank" rel="noopener">Get Linked Inn</a>
     <button id="theme">Parchment</button>
     <button id="saveAll" class="dev-only">Save all as PNG</button>
   </div>
@@ -169,7 +188,9 @@ footer.page a { color: var(--ink-2); }
       heatInk: ['#5b4630', '#2a1d14', '#f7eedb', '#f7eedb', '#f7eedb', '#f7eedb'],
     },
   };
-  const ASSETS = { logo: '', font: '' };
+  const ASSETS = { logo: '', font: '', icons: {} };
+  const ITEM_COLORS = ['#9d9d9d', '#ffffff', '#1eff00', '#3a95f5', '#b94cf7', '#ff8000'];
+  const ITEMS = {};
   let theme = 'dark';
   let T = THEMES.dark;
 
@@ -405,8 +426,9 @@ footer.page a { color: var(--ink-2); }
     return frame('Recipes that are new to Forever', `${fmt(D.forever.count)} so far, ${rare} of them make blue items`, g.height, g.body);
   }, () => [['Profession', 'New recipes'], ...Object.entries(D.forever.byProf)]);
 
-  function listCard(title, subtitle, rows, valueOf) {
-    const top = 118, row = 40;
+  function listCard(id, title, subtitle, rows, valueOf) {
+    ITEMS[id] = rows;
+    const top = 118, row = 44;
     let body = '';
     body += text(36, top - 14, 'Recipe', { size: 12, fill: T.muted });
     body += text(470, top - 14, 'Profession', { size: 12, fill: T.muted });
@@ -415,20 +437,27 @@ footer.page a { color: var(--ink-2); }
     rows.forEach((r, i) => {
       const y = top + i * row;
       body += `<line x1="36" x2="${W - 36}" y1="${y - 2}" y2="${y - 2}" stroke="${T.grid}" stroke-width="1"/>`;
-      body += `<rect x="36" y="${y + 11}" width="10" height="10" rx="2" fill="${T.rare}"/>`;
-      body += text(56, y + 21, r.name, { size: 15 });
-      body += text(470, y + 21, r.prof, { size: 14, fill: T.ink2 });
-      body += text(660, y + 21, r.ilvl == null ? '–' : String(r.ilvl), { size: 14, fill: T.ink2, tabular: true });
-      body += text(W - 36, y + 21, valueOf.fn(r), { size: 14, fill: T.ink2, anchor: 'end', tabular: true });
+      const icon = ASSETS.icons[r.icon];
+      if (icon) {
+        body += `<image href="${icon}" x="36" y="${y + 4}" width="32" height="32"/>`;
+        body += `<rect x="36.5" y="${y + 4.5}" width="31" height="31" rx="3" fill="none" stroke="${T.rare}" stroke-width="1.5"/>`;
+      } else {
+        body += `<rect x="36" y="${y + 15}" width="10" height="10" rx="2" fill="${T.rare}"/>`;
+      }
+      body += text(80, y + 25, r.name, { size: 15 });
+      body += text(470, y + 25, r.prof, { size: 14, fill: T.ink2 });
+      body += text(660, y + 25, r.ilvl == null ? '–' : String(r.ilvl), { size: 14, fill: T.ink2, tabular: true });
+      body += text(W - 36, y + 25, valueOf.fn(r), { size: 14, fill: T.ink2, anchor: 'end', tabular: true });
+      body += `<rect x="30" y="${y}" width="${W - 60}" height="${row - 2}" fill="transparent" data-item="${id}:${i}" style="cursor:help"/>`;
     });
     return frame(title, subtitle, top + rows.length * row + 56, body);
   }
 
-  card('rarest', () => listCard('The rarest blue recipes', 'Rare-quality recipes known by the fewest crafters (blue square = rare item)', D.rarestBlues,
+  card('rarest', () => listCard('rarest', 'The rarest blue recipes', 'Rare-quality recipes known by the fewest crafters · hover a recipe to see the item', D.rarestBlues,
     { head: 'Crafters who know it', fn: (r) => String(r.n) }),
     () => [['Recipe', 'Profession', 'Item level', 'Crafters'], ...D.rarestBlues.map((r) => [r.name, r.prof, r.ilvl, r.n])]);
 
-  card('foreverTop', () => listCard('The most common new-to-Forever blues', 'Share of each profession\'s crafters who know the recipe', D.forever.top.filter((r) => r.quality === 'Rare').sort((a, b) => b.share - a.share),
+  card('foreverTop', () => listCard('foreverTop', 'The most common new-to-Forever blues', 'Share of each profession\'s crafters who know the recipe · hover to see the item', D.forever.top.filter((r) => r.quality === 'Rare').sort((a, b) => b.share - a.share),
     { head: 'Of that profession', fn: (r) => r.share + '%' }),
     () => [['Recipe', 'Profession', 'Item level', 'Share'], ...D.forever.top.map((r) => [r.name, r.prof, r.ilvl, r.share + '%'])]);
 
@@ -460,7 +489,42 @@ footer.page a { color: var(--ink-2); }
     });
   }
 
+  function itemTip(r) {
+    const color = ITEM_COLORS[r.q] || '#ffffff';
+    const icon = ASSETS.icons[r.icon] ? `<img src="${ASSETS.icons[r.icon]}" alt="">` : '';
+    const lines = [`<div class="name">${icon}<span style="color:${color}">${esc(r.name)}</span></div>`];
+    if (r.slot || r.kind) lines.push(`<div class="row"><span style="color:#fff">${esc(r.slot || '')}</span><span style="color:#fff">${esc(r.kind || '')}</span></div>`);
+    if (r.ilvl) lines.push(`<div class="gold">Item Level ${r.ilvl}</div>`);
+    if (r.req) lines.push(`<div>Requires Level ${r.req}</div>`);
+    if (r.forever) lines.push(`<div class="new">New in Forever</div>`);
+    lines.push('<hr>');
+    lines.push(`<div class="dim">Made with ${esc(r.prof)}</div>`);
+    r.reagents.forEach((g) => {
+      const gi = ASSETS.icons[g.icon] ? `<img src="${ASSETS.icons[g.icon]}" alt="">` : '';
+      lines.push(`<div class="reagent">${gi}<span style="color:${ITEM_COLORS[g.quality] || '#fff'}">${esc(g.name)}</span><span class="dim">× ${g.count}</span></div>`);
+    });
+    lines.push('<hr>');
+    lines.push(`<div class="dim">Known by ${r.n} ${r.n === 1 ? 'crafter' : 'crafters'} (${r.share}% of ${esc(r.prof.toLowerCase())} crafters)</div>`);
+    return lines.join('');
+  }
+
   root.addEventListener('mousemove', (e) => {
+    const it = e.target.closest('[data-item]');
+    if (it) {
+      const [list, idx] = it.getAttribute('data-item').split(':');
+      const r = ITEMS[list] && ITEMS[list][+idx];
+      if (r) {
+        tip.className = 'item';
+        tip.innerHTML = itemTip(r);
+        tip.style.display = 'block';
+        const x = Math.min(e.clientX + 16, window.innerWidth - tip.offsetWidth - 8);
+        const y = Math.min(e.clientY + 16, window.innerHeight - tip.offsetHeight - 8);
+        tip.style.left = x + 'px';
+        tip.style.top = y + 'px';
+        return;
+      }
+    }
+    tip.className = '';
     const t = e.target.closest('[data-tip]');
     if (!t) { tip.style.display = 'none'; return; }
     const [head, rest] = t.getAttribute('data-tip').split('|');
@@ -533,6 +597,9 @@ footer.page a { color: var(--ink-2); }
       await new Promise((ok) => { img.onload = ok; img.onerror = ok; img.src = ASSETS.logo; });
       ASSETS.logoRatio = img.naturalWidth ? img.naturalHeight / img.naturalWidth : 1;
       ASSETS.font = await dataUrl('assets/cinzel.woff2');
+      await Promise.all((D.icons || []).map(async (id) => {
+        try { ASSETS.icons[id] = await dataUrl(`assets/icons/${id}.png`); } catch (e) {}
+      }));
       await document.fonts.load('700 26px "Cinzel"');
     } catch (e) {}
     render();

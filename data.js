@@ -1,5 +1,5 @@
 window.LI_DATA = {
- "generated": "2026-10-06 09:57",
+ "generated": "2026-10-06 10:16",
  "span": [
   1791235665,
   1791269402
@@ -676,7 +676,21 @@ window.LI_DATA = {
    "name": "Light Leather",
    "prof": "Leatherworking",
    "quality": "Common",
+   "q": 1,
    "ilvl": 10,
+   "req": 0,
+   "slot": null,
+   "kind": null,
+   "icon": 134252,
+   "reagents": [
+    {
+     "name": "Ruined Leather Scraps",
+     "count": 3,
+     "quality": 1,
+     "icon": 134360
+    }
+   ],
+   "forever": false,
    "n": 193,
    "share": 100.0
   },
@@ -685,7 +699,27 @@ window.LI_DATA = {
    "name": "Handstitched Leather Vest",
    "prof": "Leatherworking",
    "quality": "Uncommon",
+   "q": 2,
    "ilvl": 10,
+   "req": 3,
+   "slot": "Chest",
+   "kind": "Leather",
+   "icon": 132760,
+   "reagents": [
+    {
+     "name": "Light Leather",
+     "count": 3,
+     "quality": 1,
+     "icon": 134252
+    },
+    {
+     "name": "Coarse Thread",
+     "count": 1,
+     "quality": 1,
+     "icon": 132891
+    }
+   ],
+   "forever": false,
    "n": 193,
    "share": 100.0
   },
@@ -694,7 +728,27 @@ window.LI_DATA = {
    "name": "Handstitched Leather Cloak",
    "prof": "Leatherworking",
    "quality": "Common",
+   "q": 1,
    "ilvl": 9,
+   "req": 4,
+   "slot": "Back",
+   "kind": "Cloth",
+   "icon": 133150,
+   "reagents": [
+    {
+     "name": "Light Leather",
+     "count": 2,
+     "quality": 1,
+     "icon": 134252
+    },
+    {
+     "name": "Coarse Thread",
+     "count": 1,
+     "quality": 1,
+     "icon": 132891
+    }
+   ],
+   "forever": false,
    "n": 193,
    "share": 100.0
   },
@@ -703,7 +757,27 @@ window.LI_DATA = {
    "name": "Handstitched Leather Boots",
    "prof": "Leatherworking",
    "quality": "Common",
+   "q": 1,
    "ilvl": 8,
+   "req": 3,
+   "slot": "Feet",
+   "kind": "Leather",
+   "icon": 132538,
+   "reagents": [
+    {
+     "name": "Light Leather",
+     "count": 2,
+     "quality": 1,
+     "icon": 134252
+    },
+    {
+     "name": "Coarse Thread",
+     "count": 1,
+     "quality": 1,
+     "icon": 132891
+    }
+   ],
+   "forever": false,
    "n": 193,
    "share": 100.0
   },
@@ -712,7 +786,27 @@ window.LI_DATA = {
    "name": "Handstitched Leather Bracers",
    "prof": "Leatherworking",
    "quality": "Common",
+   "q": 1,
    "ilvl": 9,
+   "req": 4,
+   "slot": "Wrist",
+   "kind": "Leather",
+   "icon": 132607,
+   "reagents": [
+    {
+     "name": "Light Leather",
+     "count": 2,
+     "quality": 1,
+     "icon": 134252
+    },
+    {
+     "name": "Coarse Thread",
+     "count": 3,
+     "quality": 1,
+     "icon": 132891
+    }
+   ],
+   "forever": false,
    "n": 193,
    "share": 100.0
   },
@@ -721,7 +815,21 @@ window.LI_DATA = {
    "name": "Light Armor Kit",
    "prof": "Leatherworking",
    "quality": "Common",
+   "q": 1,
    "ilvl": 5,
+   "req": 1,
+   "slot": null,
+   "kind": null,
+   "icon": 133611,
+   "reagents": [
+    {
+     "name": "Light Leather",
+     "count": 1,
+     "quality": 1,
+     "icon": 134252
+    }
+   ],
+   "forever": false,
    "n": 193,
    "share": 100.0
   },
@@ -730,7 +838,21 @@ window.LI_DATA = {
    "name": "Camp Tent",
    "prof": "Leatherworking",
    "quality": "Common",
+   "q": 1,
    "ilvl": 4,
+   "req": 0,
+   "slot": null,
+   "kind": null,
+   "icon": 134250,
+   "reagents": [
+    {
+     "name": "Light Leather",
+     "count": 5,
+     "quality": 1,
+     "icon": 134252
+    }
+   ],
+   "forever": true,
    "n": 178,
    "share": 92.2
   },
@@ -739,7 +861,27 @@ window.LI_DATA = {
    "name": "Cured Light Hide",
    "prof": "Leatherworking",
    "quality": "Common",
+   "q": 1,
    "ilvl": 10,
+   "req": 0,
+   "slot": null,
+   "kind": null,
+   "icon": 134366,
+   "reagents": [
+    {
+     "name": "Light Hide",
+     "count": 1,
+     "quality": 1,
+     "icon": 134369
+    },
+    {
+     "name": "Salt",
+     "count": 1,
+     "quality": 1,
+     "icon": 133849
+    }
+   ],
+   "forever": false,
    "n": 171,
    "share": 88.6
   },
@@ -748,7 +890,27 @@ window.LI_DATA = {
    "name": "Embossed Leather Gloves",
    "prof": "Leatherworking",
    "quality": "Uncommon",
+   "q": 2,
    "ilvl": 13,
+   "req": 8,
+   "slot": "Hands",
+   "kind": "Leather",
+   "icon": 132939,
+   "reagents": [
+    {
+     "name": "Light Leather",
+     "count": 3,
+     "quality": 1,
+     "icon": 134252
+    },
+    {
+     "name": "Coarse Thread",
+     "count": 2,
+     "quality": 1,
+     "icon": 132891
+    }
+   ],
+   "forever": false,
    "n": 166,
    "share": 86.0
   },
@@ -757,7 +919,27 @@ window.LI_DATA = {
    "name": "Handstitched Leather Pants",
    "prof": "Leatherworking",
    "quality": "Uncommon",
+   "q": 2,
    "ilvl": 10,
+   "req": 5,
+   "slot": "Legs",
+   "kind": "Leather",
+   "icon": 134706,
+   "reagents": [
+    {
+     "name": "Light Leather",
+     "count": 4,
+     "quality": 1,
+     "icon": 134252
+    },
+    {
+     "name": "Coarse Thread",
+     "count": 1,
+     "quality": 1,
+     "icon": 132891
+    }
+   ],
+   "forever": false,
    "n": 154,
    "share": 79.8
   }
@@ -768,7 +950,51 @@ window.LI_DATA = {
    "name": "Dreamweave Circlet",
    "prof": "Tailoring",
    "quality": "Rare",
+   "q": 3,
    "ilvl": 50,
+   "req": 45,
+   "slot": "Head",
+   "kind": "Cloth",
+   "icon": 132767,
+   "reagents": [
+    {
+     "name": "Bolt of Mageweave",
+     "count": 8,
+     "quality": 1,
+     "icon": 132894
+    },
+    {
+     "name": "Wildvine",
+     "count": 4,
+     "quality": 1,
+     "icon": 134183
+    },
+    {
+     "name": "Heart of the Wild",
+     "count": 2,
+     "quality": 1,
+     "icon": 134188
+    },
+    {
+     "name": "Heavy Silken Thread",
+     "count": 3,
+     "quality": 1,
+     "icon": 132906
+    },
+    {
+     "name": "Truesilver Bar",
+     "count": 1,
+     "quality": 2,
+     "icon": 133222
+    },
+    {
+     "name": "Jade",
+     "count": 1,
+     "quality": 2,
+     "icon": 134134
+    }
+   ],
+   "forever": false,
    "n": 1,
    "share": 0.9
   },
@@ -777,7 +1003,51 @@ window.LI_DATA = {
    "name": "Skycaller's Mail Shoulder",
    "prof": "Leatherworking",
    "quality": "Rare",
+   "q": 3,
    "ilvl": 47,
+   "req": 42,
+   "slot": "Shoulder",
+   "kind": "Mail",
+   "icon": 135043,
+   "reagents": [
+    {
+     "name": "Thick Leather",
+     "count": 10,
+     "quality": 1,
+     "icon": 134257
+    },
+    {
+     "name": "Cured Heavy Hide",
+     "count": 3,
+     "quality": 1,
+     "icon": 134367
+    },
+    {
+     "name": "Pristine Hide",
+     "count": 4,
+     "quality": 2,
+     "icon": 3586020
+    },
+    {
+     "name": "Silken Thread",
+     "count": 2,
+     "quality": 1,
+     "icon": 132906
+    },
+    {
+     "name": "Elemental Water",
+     "count": 3,
+     "quality": 1,
+     "icon": 134714
+    },
+    {
+     "name": "Pristine Leather",
+     "count": 2,
+     "quality": 2,
+     "icon": 348551
+    }
+   ],
+   "forever": true,
    "n": 1,
    "share": 0.5
   },
@@ -786,7 +1056,39 @@ window.LI_DATA = {
    "name": "Icy Cloak",
    "prof": "Tailoring",
    "quality": "Rare",
+   "q": 3,
    "ilvl": 40,
+   "req": 35,
+   "slot": "Back",
+   "kind": "Cloth",
+   "icon": 133756,
+   "reagents": [
+    {
+     "name": "Bolt of Mageweave",
+     "count": 3,
+     "quality": 1,
+     "icon": 132894
+    },
+    {
+     "name": "Silken Thread",
+     "count": 2,
+     "quality": 1,
+     "icon": 132906
+    },
+    {
+     "name": "Frost Oil",
+     "count": 1,
+     "quality": 1,
+     "icon": 134800
+    },
+    {
+     "name": "Thick Spider's Silk",
+     "count": 2,
+     "quality": 1,
+     "icon": 136113
+    }
+   ],
+   "forever": false,
    "n": 1,
    "share": 0.9
   },
@@ -795,7 +1097,45 @@ window.LI_DATA = {
    "name": "Barbaric Bracers",
    "prof": "Leatherworking",
    "quality": "Rare",
+   "q": 3,
    "ilvl": 32,
+   "req": 27,
+   "slot": "Wrist",
+   "kind": "Leather",
+   "icon": 132614,
+   "reagents": [
+    {
+     "name": "Heavy Leather",
+     "count": 8,
+     "quality": 1,
+     "icon": 134256
+    },
+    {
+     "name": "Cured Heavy Hide",
+     "count": 2,
+     "quality": 1,
+     "icon": 134367
+    },
+    {
+     "name": "Small Lustrous Pearl",
+     "count": 4,
+     "quality": 2,
+     "icon": 134122
+    },
+    {
+     "name": "Raptor Hide",
+     "count": 1,
+     "quality": 1,
+     "icon": 134303
+    },
+    {
+     "name": "Large Fang",
+     "count": 4,
+     "quality": 1,
+     "icon": 133725
+    }
+   ],
+   "forever": false,
    "n": 1,
    "share": 0.5
   },
@@ -804,7 +1144,45 @@ window.LI_DATA = {
    "name": "Stormrider's Leather Kilt",
    "prof": "Leatherworking",
    "quality": "Rare",
+   "q": 3,
    "ilvl": 30,
+   "req": 25,
+   "slot": "Legs",
+   "kind": "Leather",
+   "icon": 323424,
+   "reagents": [
+    {
+     "name": "Medium Leather",
+     "count": 12,
+     "quality": 1,
+     "icon": 134254
+    },
+    {
+     "name": "Cured Medium Hide",
+     "count": 4,
+     "quality": 1,
+     "icon": 134354
+    },
+    {
+     "name": "Pristine Leather",
+     "count": 8,
+     "quality": 2,
+     "icon": 348551
+    },
+    {
+     "name": "Fine Thread",
+     "count": 3,
+     "quality": 1,
+     "icon": 132912
+    },
+    {
+     "name": "Cerulean Dye",
+     "count": 8,
+     "quality": 2,
+     "icon": 1021860
+    }
+   ],
+   "forever": true,
    "n": 1,
    "share": 0.5
   },
@@ -813,7 +1191,39 @@ window.LI_DATA = {
    "name": "Filigreed Shining Circlet",
    "prof": "Tailoring",
    "quality": "Rare",
+   "q": 3,
    "ilvl": 30,
+   "req": 25,
+   "slot": "Head",
+   "kind": "Cloth",
+   "icon": 132767,
+   "reagents": [
+    {
+     "name": "Bolt of Silk Cloth",
+     "count": 8,
+     "quality": 1,
+     "icon": 132907
+    },
+    {
+     "name": "Fine Thread",
+     "count": 4,
+     "quality": 1,
+     "icon": 132912
+    },
+    {
+     "name": "Cerulean Dye",
+     "count": 2,
+     "quality": 2,
+     "icon": 1021860
+    },
+    {
+     "name": "Pyrite",
+     "count": 6,
+     "quality": 2,
+     "icon": 961627
+    }
+   ],
+   "forever": true,
    "n": 1,
    "share": 0.9
   },
@@ -822,7 +1232,51 @@ window.LI_DATA = {
    "name": "Pearly Leggings",
    "prof": "Tailoring",
    "quality": "Rare",
+   "q": 3,
    "ilvl": 30,
+   "req": 25,
+   "slot": "Legs",
+   "kind": "Cloth",
+   "icon": 134590,
+   "reagents": [
+    {
+     "name": "Bolt of Silk Cloth",
+     "count": 14,
+     "quality": 1,
+     "icon": 132907
+    },
+    {
+     "name": "Fine Thread",
+     "count": 3,
+     "quality": 1,
+     "icon": 132912
+    },
+    {
+     "name": "Cerulean Dye",
+     "count": 8,
+     "quality": 2,
+     "icon": 1021860
+    },
+    {
+     "name": "Small Lustrous Pearl",
+     "count": 8,
+     "quality": 2,
+     "icon": 134122
+    },
+    {
+     "name": "Silver Bar",
+     "count": 2,
+     "quality": 2,
+     "icon": 133215
+    },
+    {
+     "name": "Greater Astral Essence",
+     "count": 3,
+     "quality": 2,
+     "icon": 132862
+    }
+   ],
+   "forever": true,
    "n": 1,
    "share": 0.9
   },
@@ -831,7 +1285,33 @@ window.LI_DATA = {
    "name": "Orb of Mystic Insight",
    "prof": "Enchanting",
    "quality": "Rare",
+   "q": 3,
    "ilvl": 30,
+   "req": 25,
+   "slot": "Held In Off-hand",
+   "kind": null,
+   "icon": 1769010,
+   "reagents": [
+    {
+     "name": "Small Glimmering Shard",
+     "count": 2,
+     "quality": 3,
+     "icon": 132877
+    },
+    {
+     "name": "Greater Astral Essence",
+     "count": 2,
+     "quality": 2,
+     "icon": 132862
+    },
+    {
+     "name": "Strange Dust",
+     "count": 5,
+     "quality": 1,
+     "icon": 132858
+    }
+   ],
+   "forever": true,
    "n": 1,
    "share": 0.9
   },
@@ -840,7 +1320,45 @@ window.LI_DATA = {
    "name": "Acolyte's Silvered Chain Leggings",
    "prof": "Blacksmithing",
    "quality": "Rare",
+   "q": 3,
    "ilvl": 30,
+   "req": 25,
+   "slot": "Legs",
+   "kind": "Mail",
+   "icon": 134662,
+   "reagents": [
+    {
+     "name": "Bronze Bar",
+     "count": 20,
+     "quality": 1,
+     "icon": 133227
+    },
+    {
+     "name": "Coarse Grinding Stone",
+     "count": 8,
+     "quality": 1,
+     "icon": 135244
+    },
+    {
+     "name": "Silver Bar",
+     "count": 6,
+     "quality": 2,
+     "icon": 133215
+    },
+    {
+     "name": "Pristine Leather",
+     "count": 6,
+     "quality": 2,
+     "icon": 348551
+    },
+    {
+     "name": "Strange Dust",
+     "count": 8,
+     "quality": 1,
+     "icon": 132858
+    }
+   ],
+   "forever": true,
    "n": 1,
    "share": 1.0
   },
@@ -849,7 +1367,51 @@ window.LI_DATA = {
    "name": "Pearly Gown",
    "prof": "Tailoring",
    "quality": "Rare",
+   "q": 3,
    "ilvl": 27,
+   "req": 22,
+   "slot": "Chest",
+   "kind": "Cloth",
+   "icon": 132692,
+   "reagents": [
+    {
+     "name": "Bolt of Silk Cloth",
+     "count": 12,
+     "quality": 1,
+     "icon": 132907
+    },
+    {
+     "name": "Silken Thread",
+     "count": 2,
+     "quality": 1,
+     "icon": 132906
+    },
+    {
+     "name": "Cerulean Dye",
+     "count": 6,
+     "quality": 2,
+     "icon": 1021860
+    },
+    {
+     "name": "Small Lustrous Pearl",
+     "count": 6,
+     "quality": 2,
+     "icon": 134122
+    },
+    {
+     "name": "Silver Bar",
+     "count": 2,
+     "quality": 2,
+     "icon": 133215
+    },
+    {
+     "name": "Greater Astral Essence",
+     "count": 2,
+     "quality": 2,
+     "icon": 132862
+    }
+   ],
+   "forever": true,
    "n": 1,
    "share": 0.9
   }
@@ -878,7 +1440,33 @@ window.LI_DATA = {
     "name": "Novice Arcanist's Sash",
     "prof": "Tailoring",
     "quality": "Rare",
+    "q": 3,
     "ilvl": 15,
+    "req": 10,
+    "slot": "Waist",
+    "kind": "Cloth",
+    "icon": 236919,
+    "reagents": [
+     {
+      "name": "Bolt of Linen Cloth",
+      "count": 8,
+      "quality": 1,
+      "icon": 132890
+     },
+     {
+      "name": "Fine Thread",
+      "count": 2,
+      "quality": 1,
+      "icon": 132912
+     },
+     {
+      "name": "Minor Mana Potion",
+      "count": 2,
+      "quality": 1,
+      "icon": 134850
+     }
+    ],
+    "forever": true,
     "n": 99,
     "share": 84.6
    },
@@ -887,7 +1475,39 @@ window.LI_DATA = {
     "name": "Gemmed Copper Boots",
     "prof": "Blacksmithing",
     "quality": "Rare",
+    "q": 3,
     "ilvl": 15,
+    "req": 10,
+    "slot": "Feet",
+    "kind": "Mail",
+    "icon": 132554,
+    "reagents": [
+     {
+      "name": "Copper Bar",
+      "count": 2,
+      "quality": 1,
+      "icon": 133216
+     },
+     {
+      "name": "Tigerseye",
+      "count": 2,
+      "quality": 2,
+      "icon": 134118
+     },
+     {
+      "name": "Malachite",
+      "count": 2,
+      "quality": 2,
+      "icon": 134106
+     },
+     {
+      "name": "Light Leather",
+      "count": 4,
+      "quality": 1,
+      "icon": 134252
+     }
+    ],
+    "forever": true,
     "n": 82,
     "share": 81.2
    },
@@ -896,7 +1516,33 @@ window.LI_DATA = {
     "name": "Dark Leather Boots",
     "prof": "Leatherworking",
     "quality": "Rare",
+    "q": 3,
     "ilvl": 15,
+    "req": 10,
+    "slot": "Feet",
+    "kind": "Leather",
+    "icon": 132539,
+    "reagents": [
+     {
+      "name": "Light Leather",
+      "count": 24,
+      "quality": 1,
+      "icon": 134252
+     },
+     {
+      "name": "Cured Light Hide",
+      "count": 2,
+      "quality": 1,
+      "icon": 134366
+     },
+     {
+      "name": "Gray Dye",
+      "count": 1,
+      "quality": 1,
+      "icon": 132797
+     }
+    ],
+    "forever": true,
     "n": 144,
     "share": 74.6
    },
@@ -905,7 +1551,33 @@ window.LI_DATA = {
     "name": "Novice Ardent's Sash",
     "prof": "Tailoring",
     "quality": "Rare",
+    "q": 3,
     "ilvl": 15,
+    "req": 10,
+    "slot": "Waist",
+    "kind": "Cloth",
+    "icon": 236918,
+    "reagents": [
+     {
+      "name": "Bolt of Linen Cloth",
+      "count": 12,
+      "quality": 1,
+      "icon": 132890
+     },
+     {
+      "name": "Fine Thread",
+      "count": 2,
+      "quality": 1,
+      "icon": 132912
+     },
+     {
+      "name": "Minor Healing Potion",
+      "count": 2,
+      "quality": 1,
+      "icon": 134829
+     }
+    ],
+    "forever": true,
     "n": 87,
     "share": 74.4
    },
@@ -914,7 +1586,33 @@ window.LI_DATA = {
     "name": "Strange Copper Boots",
     "prof": "Blacksmithing",
     "quality": "Rare",
+    "q": 3,
     "ilvl": 15,
+    "req": 10,
+    "slot": "Feet",
+    "kind": "Mail",
+    "icon": 132582,
+    "reagents": [
+     {
+      "name": "Copper Bar",
+      "count": 2,
+      "quality": 1,
+      "icon": 133216
+     },
+     {
+      "name": "Strange Dust",
+      "count": 4,
+      "quality": 1,
+      "icon": 132858
+     },
+     {
+      "name": "Light Leather",
+      "count": 2,
+      "quality": 1,
+      "icon": 134252
+     }
+    ],
+    "forever": true,
     "n": 71,
     "share": 70.3
    },
@@ -923,7 +1621,33 @@ window.LI_DATA = {
     "name": "Glowing Copper Boots",
     "prof": "Blacksmithing",
     "quality": "Rare",
+    "q": 3,
     "ilvl": 15,
+    "req": 10,
+    "slot": "Feet",
+    "kind": "Mail",
+    "icon": 132535,
+    "reagents": [
+     {
+      "name": "Copper Bar",
+      "count": 2,
+      "quality": 1,
+      "icon": 133216
+     },
+     {
+      "name": "Lesser Magic Essence",
+      "count": 4,
+      "quality": 2,
+      "icon": 132867
+     },
+     {
+      "name": "Light Leather",
+      "count": 2,
+      "quality": 1,
+      "icon": 134252
+     }
+    ],
+    "forever": true,
     "n": 67,
     "share": 66.3
    },
@@ -932,7 +1656,33 @@ window.LI_DATA = {
     "name": "Murloc Scale Shoes",
     "prof": "Leatherworking",
     "quality": "Rare",
+    "q": 3,
     "ilvl": 15,
+    "req": 10,
+    "slot": "Feet",
+    "kind": "Leather",
+    "icon": 132571,
+    "reagents": [
+     {
+      "name": "Light Leather",
+      "count": 12,
+      "quality": 1,
+      "icon": 134252
+     },
+     {
+      "name": "Cured Light Hide",
+      "count": 2,
+      "quality": 1,
+      "icon": 134366
+     },
+     {
+      "name": "Slimy Murloc Scale",
+      "count": 4,
+      "quality": 1,
+      "icon": 134304
+     }
+    ],
+    "forever": true,
     "n": 112,
     "share": 58.0
    },
@@ -941,7 +1691,33 @@ window.LI_DATA = {
     "name": "Black Whelp Slippers",
     "prof": "Leatherworking",
     "quality": "Rare",
+    "q": 3,
     "ilvl": 15,
+    "req": 10,
+    "slot": "Feet",
+    "kind": "Leather",
+    "icon": 321409,
+    "reagents": [
+     {
+      "name": "Light Leather",
+      "count": 12,
+      "quality": 1,
+      "icon": 134252
+     },
+     {
+      "name": "Cured Light Hide",
+      "count": 2,
+      "quality": 1,
+      "icon": 134366
+     },
+     {
+      "name": "Black Whelp Scale",
+      "count": 2,
+      "quality": 1,
+      "icon": 134310
+     }
+    ],
+    "forever": true,
     "n": 110,
     "share": 57.0
    },
@@ -950,7 +1726,33 @@ window.LI_DATA = {
     "name": "Moonglow Boots",
     "prof": "Leatherworking",
     "quality": "Rare",
+    "q": 3,
     "ilvl": 15,
+    "req": 10,
+    "slot": "Feet",
+    "kind": "Leather",
+    "icon": 132560,
+    "reagents": [
+     {
+      "name": "Light Leather",
+      "count": 12,
+      "quality": 1,
+      "icon": 134252
+     },
+     {
+      "name": "Cured Light Hide",
+      "count": 2,
+      "quality": 1,
+      "icon": 134366
+     },
+     {
+      "name": "Small Lustrous Pearl",
+      "count": 1,
+      "quality": 2,
+      "icon": 134122
+     }
+    ],
+    "forever": true,
     "n": 103,
     "share": 53.4
    },
@@ -959,7 +1761,45 @@ window.LI_DATA = {
     "name": "Brawler's Leather Hood",
     "prof": "Leatherworking",
     "quality": "Rare",
+    "q": 3,
     "ilvl": 25,
+    "req": 20,
+    "slot": "Head",
+    "kind": "Leather",
+    "icon": 133133,
+    "reagents": [
+     {
+      "name": "Medium Leather",
+      "count": 8,
+      "quality": 1,
+      "icon": 134254
+     },
+     {
+      "name": "Cured Medium Hide",
+      "count": 2,
+      "quality": 1,
+      "icon": 134354
+     },
+     {
+      "name": "Pristine Leather",
+      "count": 4,
+      "quality": 2,
+      "icon": 348551
+     },
+     {
+      "name": "Fine Thread",
+      "count": 2,
+      "quality": 1,
+      "icon": 132912
+     },
+     {
+      "name": "Shadowgem",
+      "count": 4,
+      "quality": 2,
+      "icon": 134074
+     }
+    ],
+    "forever": true,
     "n": 91,
     "share": 47.2
    }
@@ -1029,5 +1869,80 @@ window.LI_DATA = {
    "n": 1
   }
  ],
- "viaLinkedInn": 4
+ "viaLinkedInn": 4,
+ "icons": [
+  132535,
+  132538,
+  132539,
+  132554,
+  132560,
+  132571,
+  132582,
+  132607,
+  132614,
+  132692,
+  132760,
+  132767,
+  132797,
+  132858,
+  132862,
+  132867,
+  132877,
+  132890,
+  132891,
+  132894,
+  132906,
+  132907,
+  132912,
+  132939,
+  133133,
+  133150,
+  133215,
+  133216,
+  133222,
+  133227,
+  133611,
+  133725,
+  133756,
+  133849,
+  134074,
+  134106,
+  134118,
+  134122,
+  134134,
+  134183,
+  134188,
+  134250,
+  134252,
+  134254,
+  134256,
+  134257,
+  134303,
+  134304,
+  134310,
+  134354,
+  134360,
+  134366,
+  134367,
+  134369,
+  134590,
+  134662,
+  134706,
+  134714,
+  134800,
+  134829,
+  134850,
+  135043,
+  135244,
+  136113,
+  236918,
+  236919,
+  321409,
+  323424,
+  348551,
+  961627,
+  1021860,
+  1769010,
+  3586020
+ ]
 };

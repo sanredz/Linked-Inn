@@ -1,208 +1,208 @@
 window.LI_DATA = {
- "generated": "2026-10-06 11:30",
+ "generated": "2026-10-06 14:49",
  "span": [
   1791235665,
-  1791278560
+  1791290955
  ],
- "crafters": 1223,
- "professionEntries": 1432,
+ "crafters": 1887,
+ "professionEntries": 2230,
  "cap": 225,
  "popularity": [
   {
    "key": "alchemy",
    "name": "Alchemy",
-   "n": 114
+   "n": 175
   },
   {
    "key": "blacksmithing",
    "name": "Blacksmithing",
-   "n": 251
+   "n": 381
   },
   {
    "key": "enchanting",
    "name": "Enchanting",
-   "n": 222
+   "n": 363
   },
   {
    "key": "engineering",
    "name": "Engineering",
-   "n": 167
+   "n": 262
   },
   {
    "key": "leatherworking",
    "name": "Leatherworking",
-   "n": 437
+   "n": 665
   },
   {
    "key": "tailoring",
    "name": "Tailoring",
-   "n": 241
+   "n": 384
   }
  ],
  "skill": [
   {
    "key": "alchemy",
    "name": "Alchemy",
-   "mean": 121,
-   "median": 127.0,
-   "n": 114,
-   "atCap": 12
+   "mean": 117.6,
+   "median": 111,
+   "n": 175,
+   "atCap": 17
   },
   {
    "key": "blacksmithing",
    "name": "Blacksmithing",
-   "mean": 103.4,
+   "mean": 102.7,
    "median": 100,
-   "n": 251,
+   "n": 381,
    "atCap": 2
   },
   {
    "key": "enchanting",
    "name": "Enchanting",
-   "mean": 114.6,
-   "median": 117.0,
-   "n": 222,
-   "atCap": 30
+   "mean": 112.9,
+   "median": 114,
+   "n": 363,
+   "atCap": 47
   },
   {
    "key": "engineering",
    "name": "Engineering",
-   "mean": 138.2,
-   "median": 150,
-   "n": 167,
-   "atCap": 15
+   "mean": 133.4,
+   "median": 150.0,
+   "n": 262,
+   "atCap": 24
   },
   {
    "key": "leatherworking",
    "name": "Leatherworking",
-   "mean": 112.1,
-   "median": 114,
-   "n": 437,
-   "atCap": 2
+   "mean": 109.9,
+   "median": 111,
+   "n": 665,
+   "atCap": 3
   },
   {
    "key": "tailoring",
    "name": "Tailoring",
-   "mean": 111.8,
-   "median": 116,
-   "n": 241,
+   "mean": 107.3,
+   "median": 113.0,
+   "n": 384,
    "atCap": 2
   }
  ],
- "meanSkill": 114.7,
- "atCap": 63,
+ "meanSkill": 112.1,
+ "atCap": 95,
  "tiers": [
   {
    "key": "alchemy",
    "name": "Alchemy",
-   "n": 114,
+   "n": 175,
    "parts": [
     {
      "tier": "Apprentice",
-     "n": 34
+     "n": 50
     },
     {
      "tier": "Journeyman",
-     "n": 30
+     "n": 55
     },
     {
      "tier": "Expert",
-     "n": 50
+     "n": 70
     }
    ]
   },
   {
    "key": "blacksmithing",
    "name": "Blacksmithing",
-   "n": 251,
+   "n": 381,
    "parts": [
     {
      "tier": "Apprentice",
-     "n": 64
+     "n": 92
     },
     {
      "tier": "Journeyman",
-     "n": 131
+     "n": 209
     },
     {
      "tier": "Expert",
-     "n": 56
+     "n": 80
     }
    ]
   },
   {
    "key": "enchanting",
    "name": "Enchanting",
-   "n": 222,
+   "n": 363,
    "parts": [
     {
      "tier": "Apprentice",
-     "n": 82
+     "n": 137
     },
     {
      "tier": "Journeyman",
-     "n": 51
+     "n": 88
     },
     {
      "tier": "Expert",
-     "n": 89
+     "n": 137
     }
    ]
   },
   {
    "key": "engineering",
    "name": "Engineering",
-   "n": 167,
+   "n": 262,
    "parts": [
     {
      "tier": "Apprentice",
-     "n": 30
+     "n": 51
     },
     {
      "tier": "Journeyman",
-     "n": 43
+     "n": 79
     },
     {
      "tier": "Expert",
-     "n": 94
+     "n": 132
     }
    ]
   },
   {
    "key": "leatherworking",
    "name": "Leatherworking",
-   "n": 437,
+   "n": 665,
    "parts": [
     {
      "tier": "Apprentice",
-     "n": 93
+     "n": 153
     },
     {
      "tier": "Journeyman",
-     "n": 199
+     "n": 306
     },
     {
      "tier": "Expert",
-     "n": 145
+     "n": 206
     }
    ]
   },
   {
    "key": "tailoring",
    "name": "Tailoring",
-   "n": 241,
+   "n": 384,
    "parts": [
     {
      "tier": "Apprentice",
-     "n": 34
+     "n": 66
     },
     {
      "tier": "Journeyman",
-     "n": 162
+     "n": 253
     },
     {
      "tier": "Expert",
-     "n": 45
+     "n": 64
     }
    ]
   }
@@ -211,125 +211,125 @@ window.LI_DATA = {
   {
    "lo": 1,
    "hi": 25,
-   "n": 95
+   "n": 146
   },
   {
    "lo": 26,
    "hi": 50,
-   "n": 102
+   "n": 169
   },
   {
    "lo": 51,
    "hi": 75,
-   "n": 155
+   "n": 268
   },
   {
    "lo": 76,
    "hi": 100,
-   "n": 180
+   "n": 310
   },
   {
    "lo": 101,
    "hi": 125,
-   "n": 257
+   "n": 396
   },
   {
    "lo": 126,
    "hi": 150,
-   "n": 309
+   "n": 455
   },
   {
    "lo": 151,
    "hi": 175,
-   "n": 179
+   "n": 261
   },
   {
    "lo": 176,
    "hi": 200,
-   "n": 47
+   "n": 67
   },
   {
    "lo": 201,
    "hi": 225,
-   "n": 108
+   "n": 158
   }
  ],
  "classes": [
   {
    "key": "WARRIOR",
    "name": "Warrior",
-   "n": 95
+   "n": 151
   },
   {
    "key": "PALADIN",
    "name": "Paladin",
-   "n": 134
+   "n": 191
   },
   {
    "key": "HUNTER",
    "name": "Hunter",
-   "n": 178
+   "n": 250
   },
   {
    "key": "ROGUE",
    "name": "Rogue",
-   "n": 130
+   "n": 197
   },
   {
    "key": "PRIEST",
    "name": "Priest",
-   "n": 83
+   "n": 130
   },
   {
    "key": "SHAMAN",
    "name": "Shaman",
-   "n": 65
+   "n": 97
   },
   {
    "key": "MAGE",
    "name": "Mage",
-   "n": 103
+   "n": 152
   },
   {
    "key": "WARLOCK",
    "name": "Warlock",
-   "n": 83
+   "n": 113
   },
   {
    "key": "DRUID",
    "name": "Druid",
-   "n": 139
+   "n": 213
   }
  ],
  "classHeat": [
   {
    "key": "alchemy",
    "name": "Alchemy",
-   "total": 98,
+   "total": 146,
    "cells": {
-    "WARRIOR": 1,
-    "PALADIN": 5,
-    "HUNTER": 6,
-    "ROGUE": 17,
-    "PRIEST": 14,
-    "SHAMAN": 7,
-    "MAGE": 11,
-    "WARLOCK": 7,
-    "DRUID": 30
+    "WARRIOR": 2,
+    "PALADIN": 6,
+    "HUNTER": 9,
+    "ROGUE": 23,
+    "PRIEST": 19,
+    "SHAMAN": 11,
+    "MAGE": 17,
+    "WARLOCK": 11,
+    "DRUID": 48
    }
   },
   {
    "key": "blacksmithing",
    "name": "Blacksmithing",
-   "total": 206,
+   "total": 304,
    "cells": {
-    "WARRIOR": 82,
-    "PALADIN": 114,
+    "WARRIOR": 129,
+    "PALADIN": 162,
     "HUNTER": 1,
-    "ROGUE": 5,
+    "ROGUE": 6,
     "PRIEST": 0,
-    "SHAMAN": 4,
-    "MAGE": 0,
+    "SHAMAN": 5,
+    "MAGE": 1,
     "WARLOCK": 0,
     "DRUID": 0
    }
@@ -337,65 +337,65 @@ window.LI_DATA = {
   {
    "key": "enchanting",
    "name": "Enchanting",
-   "total": 198,
+   "total": 298,
    "cells": {
-    "WARRIOR": 7,
-    "PALADIN": 8,
-    "HUNTER": 9,
-    "ROGUE": 6,
-    "PRIEST": 47,
-    "SHAMAN": 6,
-    "MAGE": 57,
-    "WARLOCK": 44,
-    "DRUID": 14
+    "WARRIOR": 10,
+    "PALADIN": 11,
+    "HUNTER": 15,
+    "ROGUE": 9,
+    "PRIEST": 76,
+    "SHAMAN": 14,
+    "MAGE": 84,
+    "WARLOCK": 58,
+    "DRUID": 21
    }
   },
   {
    "key": "engineering",
    "name": "Engineering",
-   "total": 128,
+   "total": 197,
    "cells": {
-    "WARRIOR": 9,
-    "PALADIN": 11,
-    "HUNTER": 21,
-    "ROGUE": 42,
-    "PRIEST": 6,
-    "SHAMAN": 5,
-    "MAGE": 12,
-    "WARLOCK": 15,
-    "DRUID": 7
+    "WARRIOR": 15,
+    "PALADIN": 16,
+    "HUNTER": 28,
+    "ROGUE": 65,
+    "PRIEST": 14,
+    "SHAMAN": 10,
+    "MAGE": 18,
+    "WARLOCK": 19,
+    "DRUID": 12
    }
   },
   {
    "key": "leatherworking",
    "name": "Leatherworking",
-   "total": 356,
+   "total": 519,
    "cells": {
     "WARRIOR": 0,
     "PALADIN": 0,
-    "HUNTER": 148,
-    "ROGUE": 66,
+    "HUNTER": 207,
+    "ROGUE": 104,
     "PRIEST": 1,
-    "SHAMAN": 46,
-    "MAGE": 0,
+    "SHAMAN": 64,
+    "MAGE": 2,
     "WARLOCK": 1,
-    "DRUID": 94
+    "DRUID": 140
    }
   },
   {
    "key": "tailoring",
    "name": "Tailoring",
-   "total": 207,
+   "total": 309,
    "cells": {
     "WARRIOR": 0,
-    "PALADIN": 3,
+    "PALADIN": 4,
     "HUNTER": 1,
     "ROGUE": 0,
-    "PRIEST": 58,
-    "SHAMAN": 0,
-    "MAGE": 76,
-    "WARLOCK": 62,
-    "DRUID": 7
+    "PRIEST": 96,
+    "SHAMAN": 1,
+    "MAGE": 111,
+    "WARLOCK": 87,
+    "DRUID": 9
    }
   }
  ],
@@ -403,12 +403,12 @@ window.LI_DATA = {
   {
    "key": "WARRIOR",
    "name": "Warrior",
-   "total": 95,
+   "total": 151,
    "cells": {
-    "alchemy": 1,
-    "blacksmithing": 82,
-    "enchanting": 7,
-    "engineering": 9,
+    "alchemy": 2,
+    "blacksmithing": 129,
+    "enchanting": 10,
+    "engineering": 15,
     "leatherworking": 0,
     "tailoring": 0
    }
@@ -416,105 +416,105 @@ window.LI_DATA = {
   {
    "key": "PALADIN",
    "name": "Paladin",
-   "total": 134,
+   "total": 191,
    "cells": {
-    "alchemy": 5,
-    "blacksmithing": 114,
-    "enchanting": 8,
-    "engineering": 11,
+    "alchemy": 6,
+    "blacksmithing": 162,
+    "enchanting": 11,
+    "engineering": 16,
     "leatherworking": 0,
-    "tailoring": 3
+    "tailoring": 4
    }
   },
   {
    "key": "HUNTER",
    "name": "Hunter",
-   "total": 178,
+   "total": 250,
    "cells": {
-    "alchemy": 6,
+    "alchemy": 9,
     "blacksmithing": 1,
-    "enchanting": 9,
-    "engineering": 21,
-    "leatherworking": 148,
+    "enchanting": 15,
+    "engineering": 28,
+    "leatherworking": 207,
     "tailoring": 1
    }
   },
   {
    "key": "ROGUE",
    "name": "Rogue",
-   "total": 130,
+   "total": 197,
    "cells": {
-    "alchemy": 17,
-    "blacksmithing": 5,
-    "enchanting": 6,
-    "engineering": 42,
-    "leatherworking": 66,
+    "alchemy": 23,
+    "blacksmithing": 6,
+    "enchanting": 9,
+    "engineering": 65,
+    "leatherworking": 104,
     "tailoring": 0
    }
   },
   {
    "key": "PRIEST",
    "name": "Priest",
-   "total": 83,
+   "total": 130,
    "cells": {
-    "alchemy": 14,
+    "alchemy": 19,
     "blacksmithing": 0,
-    "enchanting": 47,
-    "engineering": 6,
+    "enchanting": 76,
+    "engineering": 14,
     "leatherworking": 1,
-    "tailoring": 58
+    "tailoring": 96
    }
   },
   {
    "key": "SHAMAN",
    "name": "Shaman",
-   "total": 65,
+   "total": 97,
    "cells": {
-    "alchemy": 7,
-    "blacksmithing": 4,
-    "enchanting": 6,
-    "engineering": 5,
-    "leatherworking": 46,
-    "tailoring": 0
+    "alchemy": 11,
+    "blacksmithing": 5,
+    "enchanting": 14,
+    "engineering": 10,
+    "leatherworking": 64,
+    "tailoring": 1
    }
   },
   {
    "key": "MAGE",
    "name": "Mage",
-   "total": 103,
+   "total": 152,
    "cells": {
-    "alchemy": 11,
-    "blacksmithing": 0,
-    "enchanting": 57,
-    "engineering": 12,
-    "leatherworking": 0,
-    "tailoring": 76
+    "alchemy": 17,
+    "blacksmithing": 1,
+    "enchanting": 84,
+    "engineering": 18,
+    "leatherworking": 2,
+    "tailoring": 111
    }
   },
   {
    "key": "WARLOCK",
    "name": "Warlock",
-   "total": 83,
+   "total": 113,
    "cells": {
-    "alchemy": 7,
+    "alchemy": 11,
     "blacksmithing": 0,
-    "enchanting": 44,
-    "engineering": 15,
+    "enchanting": 58,
+    "engineering": 19,
     "leatherworking": 1,
-    "tailoring": 62
+    "tailoring": 87
    }
   },
   {
    "key": "DRUID",
    "name": "Druid",
-   "total": 139,
+   "total": 213,
    "cells": {
-    "alchemy": 30,
+    "alchemy": 48,
     "blacksmithing": 0,
-    "enchanting": 14,
-    "engineering": 7,
-    "leatherworking": 94,
-    "tailoring": 7
+    "enchanting": 21,
+    "engineering": 12,
+    "leatherworking": 140,
+    "tailoring": 9
    }
   }
  ],
@@ -522,78 +522,83 @@ window.LI_DATA = {
   {
    "key": "WARRIOR",
    "name": "Warrior",
-   "mean": 113.7,
-   "n": 99
+   "mean": 107.6,
+   "n": 156
   },
   {
    "key": "PALADIN",
    "name": "Paladin",
-   "mean": 108.9,
-   "n": 141
+   "mean": 109.0,
+   "n": 199
   },
   {
    "key": "HUNTER",
    "name": "Hunter",
-   "mean": 116.2,
-   "n": 186
+   "mean": 117.6,
+   "n": 261
   },
   {
    "key": "ROGUE",
    "name": "Rogue",
-   "mean": 122.3,
-   "n": 136
+   "mean": 117.9,
+   "n": 207
   },
   {
    "key": "PRIEST",
    "name": "Priest",
-   "mean": 126.0,
-   "n": 126
+   "mean": 117.1,
+   "n": 206
   },
   {
    "key": "SHAMAN",
    "name": "Shaman",
-   "mean": 116.1,
-   "n": 68
+   "mean": 117.0,
+   "n": 105
   },
   {
    "key": "MAGE",
    "name": "Mage",
-   "mean": 119.1,
-   "n": 156
+   "mean": 116.4,
+   "n": 233
   },
   {
    "key": "WARLOCK",
    "name": "Warlock",
-   "mean": 112.0,
-   "n": 129
+   "mean": 109.9,
+   "n": 176
   },
   {
    "key": "DRUID",
    "name": "Druid",
-   "mean": 117.0,
-   "n": 152
+   "mean": 114.3,
+   "n": 230
   }
  ],
  "pairs": [
   {
    "a": "Enchanting",
    "b": "Tailoring",
-   "n": 153
+   "n": 250
   },
   {
    "a": "Enchanting",
    "b": "Leatherworking",
-   "n": 18
+   "n": 32
   },
   {
    "a": "Engineering",
    "b": "Tailoring",
-   "n": 13
+   "n": 22
   },
   {
    "a": "Blacksmithing",
    "b": "Engineering",
-   "n": 11
+   "n": 13
+  },
+  {
+   "a": "Alchemy",
+   "b": "Tailoring",
+   "n": 6
   },
   {
    "a": "Alchemy",
@@ -602,29 +607,24 @@ window.LI_DATA = {
   },
   {
    "a": "Alchemy",
-   "b": "Tailoring",
-   "n": 3
+   "b": "Engineering",
+   "n": 4
   },
   {
    "a": "Alchemy",
    "b": "Leatherworking",
    "n": 3
-  },
-  {
-   "a": "Engineering",
-   "b": "Leatherworking",
-   "n": 1
   }
  ],
- "pairedCrafters": 207,
- "uniqueRecipes": 796,
- "recipeKnowledge": 46848,
+ "pairedCrafters": 339,
+ "uniqueRecipes": 813,
+ "recipeKnowledge": 70787,
  "quality": [
   {
    "key": "alchemy",
    "name": "Alchemy",
    "parts": {
-    "Common": 64,
+    "Common": 66,
     "Uncommon": 5
    }
   },
@@ -644,7 +644,7 @@ window.LI_DATA = {
     "Common": 11,
     "Enchant": 79,
     "Uncommon": 4,
-    "Rare": 5
+    "Rare": 7
    }
   },
   {
@@ -652,7 +652,7 @@ window.LI_DATA = {
    "name": "Engineering",
    "parts": {
     "Common": 72,
-    "Uncommon": 27,
+    "Uncommon": 28,
     "Unknown": 1
    }
   },
@@ -660,8 +660,8 @@ window.LI_DATA = {
    "key": "leatherworking",
    "name": "Leatherworking",
    "parts": {
-    "Common": 22,
-    "Uncommon": 110,
+    "Common": 25,
+    "Uncommon": 116,
     "Rare": 52
    }
   },
@@ -671,7 +671,7 @@ window.LI_DATA = {
    "parts": {
     "Common": 49,
     "Uncommon": 93,
-    "Rare": 58
+    "Rare": 61
    }
   }
  ],
@@ -700,7 +700,135 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "n": 437,
+   "n": 665,
+   "share": 100.0
+  },
+  {
+   "id": 2149,
+   "name": "Handstitched Leather Boots",
+   "prof": "Leatherworking",
+   "quality": "Common",
+   "q": 1,
+   "ilvl": 8,
+   "req": 3,
+   "slot": "Feet",
+   "kind": "Leather",
+   "stats": [],
+   "equip": [],
+   "armor": 31,
+   "bind": null,
+   "icon": 132538,
+   "reagents": [
+    {
+     "name": "Light Leather",
+     "count": 2,
+     "quality": 1,
+     "icon": 134252
+    },
+    {
+     "name": "Coarse Thread",
+     "count": 1,
+     "quality": 1,
+     "icon": 132891
+    }
+   ],
+   "forever": false,
+   "n": 665,
+   "share": 100.0
+  },
+  {
+   "id": 9059,
+   "name": "Handstitched Leather Bracers",
+   "prof": "Leatherworking",
+   "quality": "Common",
+   "q": 1,
+   "ilvl": 9,
+   "req": 4,
+   "slot": "Wrist",
+   "kind": "Leather",
+   "stats": [],
+   "equip": [],
+   "armor": 21,
+   "bind": null,
+   "icon": 132607,
+   "reagents": [
+    {
+     "name": "Light Leather",
+     "count": 2,
+     "quality": 1,
+     "icon": 134252
+    },
+    {
+     "name": "Coarse Thread",
+     "count": 3,
+     "quality": 1,
+     "icon": 132891
+    }
+   ],
+   "forever": false,
+   "n": 665,
+   "share": 100.0
+  },
+  {
+   "id": 2152,
+   "name": "Light Armor Kit",
+   "prof": "Leatherworking",
+   "quality": "Common",
+   "q": 1,
+   "ilvl": 5,
+   "req": 1,
+   "slot": null,
+   "kind": null,
+   "stats": [],
+   "equip": [
+    "Use: Permanently increase the Stamina value by 1 and the Armor value by 8 of an item worn on the chest, legs, hands or feet."
+   ],
+   "armor": null,
+   "bind": null,
+   "icon": 133611,
+   "reagents": [
+    {
+     "name": "Light Leather",
+     "count": 1,
+     "quality": 1,
+     "icon": 134252
+    }
+   ],
+   "forever": false,
+   "n": 665,
+   "share": 100.0
+  },
+  {
+   "id": 9058,
+   "name": "Handstitched Leather Cloak",
+   "prof": "Leatherworking",
+   "quality": "Common",
+   "q": 1,
+   "ilvl": 9,
+   "req": 4,
+   "slot": "Back",
+   "kind": "Cloth",
+   "stats": [],
+   "equip": [],
+   "armor": 8,
+   "bind": null,
+   "icon": 133150,
+   "reagents": [
+    {
+     "name": "Light Leather",
+     "count": 2,
+     "quality": 1,
+     "icon": 134252
+    },
+    {
+     "name": "Coarse Thread",
+     "count": 1,
+     "quality": 1,
+     "icon": 132891
+    }
+   ],
+   "forever": false,
+   "n": 665,
    "share": 100.0
   },
   {
@@ -735,135 +863,7 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "n": 437,
-   "share": 100.0
-  },
-  {
-   "id": 9058,
-   "name": "Handstitched Leather Cloak",
-   "prof": "Leatherworking",
-   "quality": "Common",
-   "q": 1,
-   "ilvl": 9,
-   "req": 4,
-   "slot": "Back",
-   "kind": "Cloth",
-   "stats": [],
-   "equip": [],
-   "armor": 8,
-   "bind": null,
-   "icon": 133150,
-   "reagents": [
-    {
-     "name": "Light Leather",
-     "count": 2,
-     "quality": 1,
-     "icon": 134252
-    },
-    {
-     "name": "Coarse Thread",
-     "count": 1,
-     "quality": 1,
-     "icon": 132891
-    }
-   ],
-   "forever": false,
-   "n": 437,
-   "share": 100.0
-  },
-  {
-   "id": 2149,
-   "name": "Handstitched Leather Boots",
-   "prof": "Leatherworking",
-   "quality": "Common",
-   "q": 1,
-   "ilvl": 8,
-   "req": 3,
-   "slot": "Feet",
-   "kind": "Leather",
-   "stats": [],
-   "equip": [],
-   "armor": 31,
-   "bind": null,
-   "icon": 132538,
-   "reagents": [
-    {
-     "name": "Light Leather",
-     "count": 2,
-     "quality": 1,
-     "icon": 134252
-    },
-    {
-     "name": "Coarse Thread",
-     "count": 1,
-     "quality": 1,
-     "icon": 132891
-    }
-   ],
-   "forever": false,
-   "n": 437,
-   "share": 100.0
-  },
-  {
-   "id": 9059,
-   "name": "Handstitched Leather Bracers",
-   "prof": "Leatherworking",
-   "quality": "Common",
-   "q": 1,
-   "ilvl": 9,
-   "req": 4,
-   "slot": "Wrist",
-   "kind": "Leather",
-   "stats": [],
-   "equip": [],
-   "armor": 21,
-   "bind": null,
-   "icon": 132607,
-   "reagents": [
-    {
-     "name": "Light Leather",
-     "count": 2,
-     "quality": 1,
-     "icon": 134252
-    },
-    {
-     "name": "Coarse Thread",
-     "count": 3,
-     "quality": 1,
-     "icon": 132891
-    }
-   ],
-   "forever": false,
-   "n": 437,
-   "share": 100.0
-  },
-  {
-   "id": 2152,
-   "name": "Light Armor Kit",
-   "prof": "Leatherworking",
-   "quality": "Common",
-   "q": 1,
-   "ilvl": 5,
-   "req": 1,
-   "slot": null,
-   "kind": null,
-   "stats": [],
-   "equip": [
-    "Use: Permanently increase the Stamina value by 1 and the Armor value by 8 of an item worn on the chest, legs, hands or feet."
-   ],
-   "armor": null,
-   "bind": null,
-   "icon": 133611,
-   "reagents": [
-    {
-     "name": "Light Leather",
-     "count": 1,
-     "quality": 1,
-     "icon": 134252
-    }
-   ],
-   "forever": false,
-   "n": 437,
+   "n": 665,
    "share": 100.0
   },
   {
@@ -892,7 +892,7 @@ window.LI_DATA = {
     }
    ],
    "forever": true,
-   "n": 406,
+   "n": 618,
    "share": 92.9
   },
   {
@@ -925,8 +925,8 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "n": 391,
-   "share": 89.5
+   "n": 589,
+   "share": 88.6
   },
   {
    "id": 3756,
@@ -961,8 +961,8 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "n": 376,
-   "share": 86.0
+   "n": 565,
+   "share": 85.0
   },
   {
    "id": 2153,
@@ -996,8 +996,8 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "n": 357,
-   "share": 81.7
+   "n": 541,
+   "share": 81.4
   }
  ],
  "rarestBlues": [
@@ -1061,7 +1061,64 @@ window.LI_DATA = {
    ],
    "forever": false,
    "n": 1,
-   "share": 0.4
+   "share": 0.3
+  },
+  {
+   "id": 1249070,
+   "name": "Twisting Essence Jar",
+   "prof": "Enchanting",
+   "quality": "Rare",
+   "q": 3,
+   "ilvl": 50,
+   "req": 45,
+   "slot": "Held In Off-hand",
+   "kind": null,
+   "stats": [
+    "+8 Spirit",
+    "+8 Stamina"
+   ],
+   "equip": [
+    "Equip: Increases healing done by spells and effects by up to 19.",
+    "Equip: Increases damage done by magical spells and effects by up to 6."
+   ],
+   "armor": null,
+   "bind": "Binds when picked up",
+   "icon": 4638472,
+   "reagents": [
+    {
+     "name": "Truesilver Bar",
+     "count": 4,
+     "quality": 2,
+     "icon": 133222
+    },
+    {
+     "name": "Greater Nether Essence",
+     "count": 12,
+     "quality": 2,
+     "icon": 132870
+    },
+    {
+     "name": "Greater Mystic Essence",
+     "count": 12,
+     "quality": 2,
+     "icon": 132868
+    },
+    {
+     "name": "Cerulean Dye",
+     "count": 1,
+     "quality": 2,
+     "icon": 1021860
+    },
+    {
+     "name": "Magenta Dye",
+     "count": 2,
+     "quality": 2,
+     "icon": 237071
+    }
+   ],
+   "forever": true,
+   "n": 1,
+   "share": 0.3
   },
   {
    "id": 1255006,
@@ -1173,7 +1230,7 @@ window.LI_DATA = {
    ],
    "forever": false,
    "n": 1,
-   "share": 0.4
+   "share": 0.3
   },
   {
    "id": 3778,
@@ -1343,122 +1400,103 @@ window.LI_DATA = {
    ],
    "forever": true,
    "n": 1,
-   "share": 0.4
+   "share": 0.3
   },
   {
-   "id": 1257402,
-   "name": "Flame Circlet",
+   "id": 1257390,
+   "name": "Flame Sash",
    "prof": "Tailoring",
    "quality": "Rare",
    "q": 3,
-   "ilvl": 25,
-   "req": 20,
-   "slot": "Head",
+   "ilvl": 22,
+   "req": 17,
+   "slot": "Waist",
    "kind": "Cloth",
    "stats": [
-    "+10 Stamina"
+    "+4 Intellect",
+    "+5 Stamina"
    ],
    "equip": [],
-   "armor": 35,
+   "armor": 22,
    "bind": "Binds when picked up",
-   "icon": 132767,
+   "icon": 236921,
    "reagents": [
     {
      "name": "Bolt of Silk Cloth",
-     "count": 10,
+     "count": 8,
      "quality": 1,
      "icon": 132907
     },
     {
-     "name": "Silken Thread",
-     "count": 2,
+     "name": "Fine Thread",
+     "count": 4,
      "quality": 1,
-     "icon": 132906
+     "icon": 132912
     },
     {
      "name": "Cerulean Dye",
-     "count": 4,
+     "count": 3,
      "quality": 2,
      "icon": 1021860
     },
     {
      "name": "Fire Oil",
-     "count": 4,
+     "count": 3,
      "quality": 1,
      "icon": 134818
-    },
-    {
-     "name": "Silver Bar",
-     "count": 1,
-     "quality": 2,
-     "icon": 133215
-    },
-    {
-     "name": "Greater Astral Essence",
-     "count": 2,
-     "quality": 2,
-     "icon": 132862
     }
    ],
    "forever": true,
    "n": 1,
-   "share": 0.4
+   "share": 0.3
   },
   {
-   "id": 1255118,
-   "name": "Totemic Leather Boots",
-   "prof": "Leatherworking",
+   "id": 1257384,
+   "name": "Flame Gloves",
+   "prof": "Tailoring",
    "quality": "Rare",
    "q": 3,
-   "ilvl": 22,
-   "req": 17,
-   "slot": "Feet",
-   "kind": "Leather",
+   "ilvl": 20,
+   "req": 15,
+   "slot": "Hands",
+   "kind": "Cloth",
    "stats": [
-    "+4 Stamina",
-    "+5 Strength"
+    "+3 Intellect",
+    "+4 Stamina"
    ],
-   "equip": [
-    "Equip: Increases damage and healing done by magical spells and effects by up to 6."
-   ],
-   "armor": 61,
+   "equip": [],
+   "armor": 23,
    "bind": "Binds when picked up",
-   "icon": 132555,
+   "icon": 132953,
    "reagents": [
     {
-     "name": "Light Leather",
-     "count": 14,
+     "name": "Bolt of Woolen Cloth",
+     "count": 6,
      "quality": 1,
-     "icon": 134252
-    },
-    {
-     "name": "Cured Light Hide",
-     "count": 4,
-     "quality": 1,
-     "icon": 134366
-    },
-    {
-     "name": "Pristine Leather",
-     "count": 3,
-     "quality": 2,
-     "icon": 348551
+     "icon": 132913
     },
     {
      "name": "Fine Thread",
-     "count": 1,
+     "count": 4,
      "quality": 1,
      "icon": 132912
     },
     {
-     "name": "Sulfuric Acid",
+     "name": "Cerulean Dye",
      "count": 3,
      "quality": 2,
-     "icon": 136240
+     "icon": 1021860
+    },
+    {
+     "name": "Fire Oil",
+     "count": 2,
+     "quality": 1,
+     "icon": 134818
     }
    ],
    "forever": true,
    "n": 1,
-   "share": 0.2
+   "share": 0.3
   },
   {
    "id": 1252238,
@@ -1500,81 +1538,25 @@ window.LI_DATA = {
    ],
    "forever": true,
    "n": 1,
-   "share": 0.4
-  },
-  {
-   "id": 1255138,
-   "name": "Stormrider's Leather Belt",
-   "prof": "Leatherworking",
-   "quality": "Rare",
-   "q": 3,
-   "ilvl": 17,
-   "req": 12,
-   "slot": "Waist",
-   "kind": "Leather",
-   "stats": [
-    "+4 Intellect",
-    "+3 Stamina"
-   ],
-   "equip": [
-    "Equip: Increases damage and healing done by magical spells and effects by up to 4."
-   ],
-   "armor": 45,
-   "bind": "Binds when picked up",
-   "icon": 132505,
-   "reagents": [
-    {
-     "name": "Light Leather",
-     "count": 10,
-     "quality": 1,
-     "icon": 134252
-    },
-    {
-     "name": "Cured Light Hide",
-     "count": 2,
-     "quality": 1,
-     "icon": 134366
-    },
-    {
-     "name": "Pristine Leather",
-     "count": 2,
-     "quality": 2,
-     "icon": 348551
-    },
-    {
-     "name": "Coarse Thread",
-     "count": 1,
-     "quality": 1,
-     "icon": 132891
-    },
-    {
-     "name": "Cerulean Dye",
-     "count": 1,
-     "quality": 2,
-     "icon": 1021860
-    }
-   ],
-   "forever": true,
-   "n": 1,
-   "share": 0.2
+   "share": 0.3
   }
  ],
- "blueCount": 156,
- "blueHolders": 836,
+ "blueCount": 161,
+ "blueHolders": 1277,
  "forever": {
-  "count": 248,
+  "count": 254,
   "quality": {
-   "Common": 42,
+   "Common": 43,
    "Uncommon": 52,
-   "Rare": 144,
+   "Rare": 149,
    "Enchant": 10
   },
   "byProf": {
    "Engineering": 12,
-   "Tailoring": 63,
-   "Enchanting": 18,
+   "Tailoring": 66,
+   "Enchanting": 20,
    "Leatherworking": 83,
-   "Alchemy": 26,
+   "Alchemy": 27,
    "Blacksmithing": 46
   },
   "top": [
@@ -1619,8 +1601,8 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "n": 197,
-    "share": 81.7
+    "n": 305,
+    "share": 79.4
    },
    {
     "id": 1252229,
@@ -1667,8 +1649,8 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "n": 196,
-    "share": 78.1
+    "n": 295,
+    "share": 77.4
    },
    {
     "id": 1255145,
@@ -1709,8 +1691,8 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "n": 331,
-    "share": 75.7
+    "n": 500,
+    "share": 75.2
    },
    {
     "id": 1257369,
@@ -1754,8 +1736,8 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "n": 169,
-    "share": 70.1
+    "n": 268,
+    "share": 69.8
    },
    {
     "id": 1252230,
@@ -1797,94 +1779,8 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "n": 152,
-    "share": 60.6
-   },
-   {
-    "id": 1255144,
-    "name": "Murloc Scale Shoes",
-    "prof": "Leatherworking",
-    "quality": "Rare",
-    "q": 3,
-    "ilvl": 15,
-    "req": 10,
-    "slot": "Feet",
-    "kind": "Leather",
-    "stats": [
-     "+4 Stamina",
-     "+4 Strength"
-    ],
-    "equip": [],
-    "armor": 53,
-    "bind": "Binds when picked up",
-    "icon": 132571,
-    "reagents": [
-     {
-      "name": "Light Leather",
-      "count": 12,
-      "quality": 1,
-      "icon": 134252
-     },
-     {
-      "name": "Cured Light Hide",
-      "count": 2,
-      "quality": 1,
-      "icon": 134366
-     },
-     {
-      "name": "Slimy Murloc Scale",
-      "count": 4,
-      "quality": 1,
-      "icon": 134304
-     }
-    ],
-    "forever": true,
-    "n": 251,
-    "share": 57.4
-   },
-   {
-    "id": 1255146,
-    "name": "Black Whelp Slippers",
-    "prof": "Leatherworking",
-    "quality": "Rare",
-    "q": 3,
-    "ilvl": 15,
-    "req": 10,
-    "slot": "Feet",
-    "kind": "Leather",
-    "stats": [
-     "+4 Intellect"
-    ],
-    "equip": [
-     "Equip: Increases damage done by magical spells and effects by up to 3.",
-     "Equip: Increases healing done by spells and effects by up to 9."
-    ],
-    "armor": 53,
-    "bind": "Binds when picked up",
-    "icon": 321409,
-    "reagents": [
-     {
-      "name": "Light Leather",
-      "count": 12,
-      "quality": 1,
-      "icon": 134252
-     },
-     {
-      "name": "Cured Light Hide",
-      "count": 2,
-      "quality": 1,
-      "icon": 134366
-     },
-     {
-      "name": "Black Whelp Scale",
-      "count": 2,
-      "quality": 1,
-      "icon": 134310
-     }
-    ],
-    "forever": true,
-    "n": 244,
-    "share": 55.8
+    "n": 233,
+    "share": 61.2
    },
    {
     "id": 1252231,
@@ -1927,8 +1823,94 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "n": 137,
-    "share": 54.6
+    "n": 210,
+    "share": 55.1
+   },
+   {
+    "id": 1255144,
+    "name": "Murloc Scale Shoes",
+    "prof": "Leatherworking",
+    "quality": "Rare",
+    "q": 3,
+    "ilvl": 15,
+    "req": 10,
+    "slot": "Feet",
+    "kind": "Leather",
+    "stats": [
+     "+4 Stamina",
+     "+4 Strength"
+    ],
+    "equip": [],
+    "armor": 53,
+    "bind": "Binds when picked up",
+    "icon": 132571,
+    "reagents": [
+     {
+      "name": "Light Leather",
+      "count": 12,
+      "quality": 1,
+      "icon": 134252
+     },
+     {
+      "name": "Cured Light Hide",
+      "count": 2,
+      "quality": 1,
+      "icon": 134366
+     },
+     {
+      "name": "Slimy Murloc Scale",
+      "count": 4,
+      "quality": 1,
+      "icon": 134304
+     }
+    ],
+    "forever": true,
+    "n": 366,
+    "share": 55.0
+   },
+   {
+    "id": 1255146,
+    "name": "Black Whelp Slippers",
+    "prof": "Leatherworking",
+    "quality": "Rare",
+    "q": 3,
+    "ilvl": 15,
+    "req": 10,
+    "slot": "Feet",
+    "kind": "Leather",
+    "stats": [
+     "+4 Intellect"
+    ],
+    "equip": [
+     "Equip: Increases damage done by magical spells and effects by up to 3.",
+     "Equip: Increases healing done by spells and effects by up to 9."
+    ],
+    "armor": 53,
+    "bind": "Binds when picked up",
+    "icon": 321409,
+    "reagents": [
+     {
+      "name": "Light Leather",
+      "count": 12,
+      "quality": 1,
+      "icon": 134252
+     },
+     {
+      "name": "Cured Light Hide",
+      "count": 2,
+      "quality": 1,
+      "icon": 134366
+     },
+     {
+      "name": "Black Whelp Scale",
+      "count": 2,
+      "quality": 1,
+      "icon": 134310
+     }
+    ],
+    "forever": true,
+    "n": 359,
+    "share": 54.0
    },
    {
     "id": 1255143,
@@ -1970,8 +1952,8 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "n": 230,
-    "share": 52.6
+    "n": 336,
+    "share": 50.5
    },
    {
     "id": 1255109,
@@ -2024,8 +2006,8 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "n": 209,
-    "share": 47.8
+    "n": 291,
+    "share": 43.8
    }
   ]
  },
@@ -2033,49 +2015,47 @@ window.LI_DATA = {
   {
    "key": "alchemy",
    "name": "Alchemy",
-   "meanKnown": 18.2,
-   "catalogued": 69
+   "meanKnown": 17.6,
+   "catalogued": 71
   },
   {
    "key": "blacksmithing",
    "name": "Blacksmithing",
-   "meanKnown": 35.2,
+   "meanKnown": 35.1,
    "catalogued": 144
   },
   {
    "key": "enchanting",
    "name": "Enchanting",
-   "meanKnown": 26.2,
-   "catalogued": 99
+   "meanKnown": 25.7,
+   "catalogued": 101
   },
   {
    "key": "engineering",
    "name": "Engineering",
-   "meanKnown": 27.3,
-   "catalogued": 100
+   "meanKnown": 25.9,
+   "catalogued": 101
   },
   {
    "key": "leatherworking",
    "name": "Leatherworking",
-   "meanKnown": 36.4,
-   "catalogued": 184
+   "meanKnown": 35.4,
+   "catalogued": 193
   },
   {
    "key": "tailoring",
    "name": "Tailoring",
-   "meanKnown": 40.1,
-   "catalogued": 200
+   "meanKnown": 38.3,
+   "catalogued": 203
   }
  ],
  "viaLinkedInn": 7,
  "icons": [
   132490,
-  132505,
   132535,
   132538,
   132539,
   132554,
-  132555,
   132560,
   132571,
   132582,
@@ -2088,13 +2068,17 @@ window.LI_DATA = {
   132858,
   132862,
   132867,
+  132868,
+  132870,
   132890,
   132891,
   132894,
   132906,
   132907,
   132912,
+  132913,
   132939,
+  132953,
   133133,
   133150,
   133215,
@@ -2136,13 +2120,15 @@ window.LI_DATA = {
   135043,
   135243,
   136113,
-  136240,
   236918,
   236919,
+  236921,
+  237071,
   321409,
   348551,
   961627,
   1021860,
-  3586020
+  3586020,
+  4638472
  ]
 };

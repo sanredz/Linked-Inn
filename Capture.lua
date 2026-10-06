@@ -184,16 +184,21 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 				key = senderKey
 			end
 			local name = ProfessionName(text)
+			local profKey = LI.ProfKeyForLine(parsed.numbers[#parsed.numbers]) or LI.ProfKey(name)
+			if profKey and LI.PROFESSION_NAMES[profKey] and LI.ProfKey(name) ~= profKey then
+				name = LI.ProfessionDisplayName(profKey) or name
+			end
 			if key and not LI.Allowed(key) then
-				LI.NoteProfLink(LI.ProfKey(name), parsed.numbers)
-			elseif key and LI.IsLow(key, LI.ProfKey(name)) then
-				LI.NoteProfLink(LI.ProfKey(name), parsed.numbers)
+				LI.NoteProfLink(profKey, parsed.numbers)
+			elseif key and LI.IsLow(key, profKey) then
+				LI.NoteProfLink(profKey, parsed.numbers)
 			elseif key then
 				local spellID = parsed.numbers[1]
-				LI.NoteProfLink(LI.ProfKey(name), parsed.numbers)
+				LI.NoteProfLink(profKey, parsed.numbers)
 				local info = {
+					key = profKey,
 					name = name,
-					icon = SpellIcon(spellID) or LI.PROFESSION_ICONS[LI.ProfKey(name) or ""],
+					icon = SpellIcon(spellID) or LI.PROFESSION_ICONS[profKey or ""],
 					link = "trade:" .. payload,
 					text = "[" .. text .. "]",
 					guid = parsed.guid,
@@ -205,7 +210,7 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 					LI.Log(string.format("New: %s linked %s in %s", LI.ShortName(key), name, info.where))
 				end
 				if LI.Reader and key ~= LI.playerKey then
-					LI.Reader.Want(key, name, info.link)
+					LI.Reader.Want(key, LI.PROFESSION_NAMES[profKey or ""] or name, info.link)
 				end
 			else
 				LI.Log("Could not tell whose " .. tostring(text) .. " link that was")

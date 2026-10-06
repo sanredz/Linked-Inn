@@ -24,10 +24,44 @@ LI.PROFESSION_ORDER = {
 	"tailoring", "jewelcrafting", "inscription", "cooking", "first aid", "fishing",
 }
 
-LI.PRIMARY = { "alchemy", "blacksmithing", "enchanting", "engineering", "leatherworking", "tailoring" }
-LI.SECONDARY = { "cooking", "first aid", "fishing" }
-LI.SECONDARY_SET = { cooking = true, ["first aid"] = true, fishing = true }
+if LI.RETAIL then
+	LI.PRIMARY = { "alchemy", "blacksmithing", "enchanting", "engineering", "inscription", "jewelcrafting", "leatherworking", "tailoring" }
+	LI.SECONDARY = { "cooking" }
+	LI.SECONDARY_SET = { cooking = true }
+else
+	LI.PRIMARY = { "alchemy", "blacksmithing", "enchanting", "engineering", "leatherworking", "tailoring" }
+	LI.SECONDARY = { "cooking", "first aid", "fishing" }
+	LI.SECONDARY_SET = { cooking = true, ["first aid"] = true, fishing = true }
+end
 LI.GATHERING = { mining = true, herbalism = true, skinning = true }
+
+LI.LINE_KEYS = {
+	[171] = "alchemy", [164] = "blacksmithing", [333] = "enchanting", [202] = "engineering",
+	[773] = "inscription", [755] = "jewelcrafting", [165] = "leatherworking", [197] = "tailoring",
+	[185] = "cooking", [129] = "first aid", [356] = "fishing",
+	[186] = "mining", [182] = "herbalism", [393] = "skinning",
+}
+
+local CHILD_LINES = {
+	alchemy = { 2478, 2479, 2480, 2481, 2482, 2483, 2484, 2485, 2750, 2823, 2871, 2906 },
+	blacksmithing = { 2437, 2454, 2472, 2473, 2474, 2475, 2476, 2477, 2751, 2822, 2872, 2907 },
+	enchanting = { 2486, 2487, 2488, 2489, 2491, 2492, 2493, 2494, 2753, 2825, 2874, 2909 },
+	engineering = { 2499, 2500, 2501, 2502, 2503, 2504, 2505, 2506, 2755, 2827, 2875, 2910 },
+	inscription = { 2507, 2508, 2509, 2510, 2511, 2512, 2513, 2514, 2756, 2828, 2878, 2913 },
+	jewelcrafting = { 2517, 2518, 2519, 2520, 2521, 2522, 2523, 2524, 2757, 2829, 2879, 2914 },
+	leatherworking = { 2525, 2526, 2527, 2528, 2529, 2530, 2531, 2532, 2758, 2830, 2880, 2915 },
+	tailoring = { 2533, 2534, 2535, 2536, 2537, 2538, 2539, 2540, 2759, 2831, 2883, 2918 },
+	cooking = { 981, 982, 2541, 2542, 2543, 2544, 2545, 2546, 2547, 2548, 2752, 2824, 2873, 2908 },
+	fishing = { 2585, 2586, 2587, 2588, 2589, 2590, 2591, 2592, 2754, 2826, 2876, 2911 },
+	mining = { 2565, 2566, 2567, 2568, 2569, 2570, 2571, 2572, 2761, 2833, 2881, 2916 },
+	herbalism = { 2549, 2550, 2551, 2552, 2553, 2554, 2555, 2556, 2760, 2832, 2877, 2912 },
+	skinning = { 2557, 2558, 2559, 2560, 2561, 2562, 2563, 2564, 2762, 2834, 2882, 2917 },
+}
+for key, lines in pairs(CHILD_LINES) do
+	for _, line in ipairs(lines) do
+		LI.LINE_KEYS[line] = LI.LINE_KEYS[line] or key
+	end
+end
 
 LI.PROFESSION_NAMES = {
 	alchemy = "Alchemy",
@@ -36,9 +70,14 @@ LI.PROFESSION_NAMES = {
 	engineering = "Engineering",
 	leatherworking = "Leatherworking",
 	tailoring = "Tailoring",
+	jewelcrafting = "Jewelcrafting",
+	inscription = "Inscription",
 	cooking = "Cooking",
 	["first aid"] = "First Aid",
 	fishing = "Fishing",
+	mining = "Mining",
+	herbalism = "Herbalism",
+	skinning = "Skinning",
 }
 
 LI.KINDS = {
@@ -64,6 +103,11 @@ local PROF_LINKS = {
 	cooking = { 2550, 185 },
 	["first aid"] = { 3273, 129 },
 }
+if LI.RETAIL then
+	PROF_LINKS["first aid"] = nil
+	PROF_LINKS.inscription = { 45357, 773 }
+	PROF_LINKS.jewelcrafting = { 25229, 755 }
+end
 
 local DEFAULTS = {
 	autoRead = true,
@@ -97,6 +141,31 @@ local function NewTest()
 	}
 end
 
+local localKeys
+
+local function LocalKeys()
+	if localKeys then
+		return localKeys
+	end
+	local api = C_TradeSkillUI
+	if not api or not api.GetTradeSkillDisplayName then
+		return nil
+	end
+	local found = {}
+	local any = false
+	for line, key in pairs(LI.LINE_KEYS) do
+		local name = LI.Safe(LI.Try(api.GetTradeSkillDisplayName, line))
+		if type(name) == "string" and name ~= "" then
+			found[name:lower()] = key
+			any = true
+		end
+	end
+	if any then
+		localKeys = found
+	end
+	return found
+end
+
 function LI.ProfKey(name)
 	if type(name) ~= "string" then
 		return nil
@@ -105,6 +174,40 @@ function LI.ProfKey(name)
 	if key == "" then
 		return nil
 	end
+	local known = LocalKeys()
+	return known and known[key] or key
+end
+
+local BASE_LINES = {
+	alchemy = 171, blacksmithing = 164, enchanting = 333, engineering = 202, inscription = 773,
+	jewelcrafting = 755, leatherworking = 165, tailoring = 197, cooking = 185, ["first aid"] = 129,
+	fishing = 356, mining = 186, herbalism = 182, skinning = 393,
+}
+
+function LI.ProfessionDisplayName(profKey)
+	local api = C_TradeSkillUI
+	local line = BASE_LINES[profKey or ""]
+	local name = line and api and api.GetTradeSkillDisplayName and LI.Safe(LI.Try(api.GetTradeSkillDisplayName, line))
+	if type(name) == "string" and name ~= "" then
+		return name
+	end
+	return LI.PROFESSION_NAMES[profKey or ""]
+end
+
+function LI.ProfKeyForLine(line)
+	line = tonumber(line)
+	if not line then
+		return nil
+	end
+	local key = LI.LINE_KEYS[line]
+	if key ~= nil then
+		return key or nil
+	end
+	local api = C_TradeSkillUI
+	local info = api and api.GetProfessionInfoBySkillLineID and LI.Try(api.GetProfessionInfoBySkillLineID, line)
+	local parent = type(info) == "table" and LI.Safe(info.parentProfessionID)
+	key = type(parent) == "number" and LI.LINE_KEYS[parent] or nil
+	LI.LINE_KEYS[line] = key or false
 	return key
 end
 
@@ -450,7 +553,7 @@ function LI.NoteProfession(key, info)
 	if not LI.ready or not key or not info then
 		return false
 	end
-	local profKey = LI.ProfKey(info.name)
+	local profKey = info.key or LI.ProfKey(info.name)
 	if not profKey then
 		return false
 	end
@@ -482,7 +585,7 @@ function LI.SetRecipes(key, info, recipes, via)
 	if not LI.ready or not key or not info then
 		return 0
 	end
-	local profKey = LI.ProfKey(info.name)
+	local profKey = info.key or LI.ProfKey(info.name)
 	if not profKey then
 		return 0
 	end
@@ -496,6 +599,7 @@ function LI.SetRecipes(key, info, recipes, via)
 	p.icon = info.icon or p.icon
 	p.rank = info.rank or p.rank
 	p.max = info.max or p.max
+	p.tier = info.tier or p.tier
 	p.read = now
 	p.via = via
 	p.link = info.link or p.link

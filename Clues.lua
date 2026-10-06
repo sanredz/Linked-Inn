@@ -2,7 +2,33 @@ local ADDON, LI = ...
 
 local CAST_PROFS = {
 	[13262] = "enchanting",
+	[31252] = "jewelcrafting",
+	[51005] = "inscription",
 }
+
+local createsPattern
+
+local function CreatesPattern()
+	if createsPattern then
+		return createsPattern
+	end
+	local template = type(TRADESKILL_LOG_THIRDPERSON) == "string" and TRADESKILL_LOG_THIRDPERSON or "%s creates %s."
+	local escaped = template:gsub("%%%d*%$?s", "\001"):gsub("([%(%)%.%[%]%*%+%-%?%^%$%%])", "%%%1")
+	local pattern, n = escaped:gsub("\001", "(.-)")
+	if n ~= 2 then
+		pattern = "(.-)%s+creates%s+(.-)%.?"
+	end
+	createsPattern = "^" .. pattern:gsub("%%%.$", "%%.?") .. "$"
+	return createsPattern
+end
+
+local function CreatesParts(text)
+	local who, what = text:match(CreatesPattern())
+	if not who then
+		who, what = text:match("^(.-)%s+creates%s+(.-)%.?$")
+	end
+	return who, what
+end
 
 local spellCache = {}
 local sawCraft = {}
@@ -90,7 +116,7 @@ local function CraftedRecipe(text)
 	if itemID then
 		return LI.RecipeForItem(itemID), itemID
 	end
-	local name = text:match("^.-%s+creates%s+(.-)%.?$")
+	local _, name = CreatesParts(text)
 	if not name then
 		return nil
 	end
@@ -208,7 +234,7 @@ function LI.OnCrafted(text, sender, guid)
 		LI.Log(string.format("Crafting log sample: sender '%s', id '%s', text '%s'", tostring(sender), tostring(guid), text:gsub("|", "!"):sub(1, 90)))
 	end
 	if type(sender) ~= "string" or sender == "" then
-		sender = text:match("^(.-)%s+creates%s")
+		sender = CreatesParts(text)
 	end
 	local key = sender and sender ~= "" and LI.FullName(sender)
 	if not key or key == LI.playerKey or not LI.Allowed(key) then

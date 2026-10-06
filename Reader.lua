@@ -432,6 +432,9 @@ end
 
 local function Finish(job, outcome)
 	lastDone = Now()
+	if not job.own and (outcome == "ok" or outcome == "timeout") and type(job.link) == "string" then
+		LI.NoteServerRead(job.link:match("^trade:(Player%-[%w%-]+):"), outcome == "ok")
+	end
 	if silenced and outcome == "ok" then
 		quietWorks = quietWorks + 1
 	end
@@ -918,27 +921,40 @@ local function OutputItem(recipeID)
 	return nil, nil
 end
 
+local function KnownRecipe(id, profKey)
+	local meta = LI.db.recipes[id]
+	return type(meta) == "table" and meta.n ~= nil and meta.p == profKey and meta.r ~= nil and (meta.item ~= nil or meta.k == "enchant")
+end
+
+local function RecipeEntry(id, info, profKey)
+	local name = LI.Safe(info.name)
+	if KnownRecipe(id, profKey) then
+		return { id = id, name = name }
+	end
+	local item, outIcon = OutputItem(id)
+	local cat = LI.Safe(info.categoryID)
+	if type(cat) == "number" then
+		LI.NoteCategory(cat)
+	else
+		cat = nil
+	end
+	return {
+		id = id,
+		name = name,
+		icon = outIcon or LI.Safe(info.icon),
+		item = item,
+		kind = LI.KindOf(item, profKey),
+		cat = cat,
+		reagents = LI.Reagents(id),
+	}
+end
+
 local function CollectRecipes(profKey)
 	local list = {}
 	for _, id in ipairs(RecipeIDs()) do
 		local info = LI.Try(C_TradeSkillUI.GetRecipeInfo, id)
 		if type(info) == "table" and LI.Safe(info.learned) and LI.Safe(info.name) then
-			local item, outIcon = OutputItem(id)
-			local cat = LI.Safe(info.categoryID)
-			if type(cat) == "number" then
-				LI.NoteCategory(cat)
-			else
-				cat = nil
-			end
-			list[#list + 1] = {
-				id = id,
-				name = LI.Safe(info.name),
-				icon = outIcon or LI.Safe(info.icon),
-				item = item,
-				kind = LI.KindOf(item, profKey),
-				cat = cat,
-				reagents = LI.Reagents(id),
-			}
+			list[#list + 1] = RecipeEntry(id, info, profKey)
 		end
 	end
 	return list
@@ -980,15 +996,25 @@ function Reader.Read()
 		linked, linkedName = LI.Try(api.IsTradeSkillLinked)
 		linked = LI.Safe(linked)
 	end
-	local profKey = LI.ProfKey(name)
+	local profKey = LI.ProfKeyForLine(LI.Safe(base.professionID)) or LI.ProfKey(name)
 	local list = CollectRecipes(profKey)
 	local icon = base.professionID and api.GetTradeSkillTexture and LI.Safe(LI.Try(api.GetTradeSkillTexture, base.professionID))
 	local info = {
+		key = profKey,
 		name = name,
 		icon = icon or LI.PROFESSION_ICONS[profKey],
 		rank = LI.Safe(base.skillLevel),
 		max = LI.Safe(base.maxSkillLevel),
 	}
+	if LI.RETAIL and api.GetChildProfessionInfo then
+		local child = LI.Try(api.GetChildProfessionInfo)
+		local childMax = type(child) == "table" and LI.Safe(child.maxSkillLevel)
+		if type(childMax) == "number" and childMax > 0 then
+			info.rank = LI.Safe(child.skillLevel)
+			info.max = childMax
+			info.tier = LI.Safe(child.expansionName) or LI.Safe(child.professionName)
+		end
+	end
 	if linked then
 		if #list == 0 then
 			return

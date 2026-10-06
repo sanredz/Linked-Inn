@@ -423,6 +423,17 @@ local tokens, tokensAt = BYTES_BURST, 0
 local nextChannel = 0
 local blockedUntil = {}
 
+local PREFIX_BURST = 9
+local PREFIX_PER_SEC = 0.9
+local prefixTokens, prefixAt = PREFIX_BURST, 0
+
+local function Counted(q)
+	if not LI.RETAIL or q.chatType == "BNET" then
+		return false
+	end
+	return q.chatType ~= "WHISPER" or (IsInInstance and LI.Safe(LI.Try(IsInInstance)) == true)
+end
+
 local function Pump()
 	if #queue == 0 or not C_ChatInfo or not C_ChatInfo.SendAddonMessage or Paused() then
 		return
@@ -430,8 +441,10 @@ local function Pump()
 	local now = Now()
 	tokens = math.min(BYTES_BURST, tokens + math.max(0, now - tokensAt) * BYTES_PER_SEC)
 	tokensAt = now
+	prefixTokens = math.min(PREFIX_BURST, prefixTokens + math.max(0, now - prefixAt) * PREFIX_PER_SEC)
+	prefixAt = now
 	for i, q in ipairs(queue) do
-		local wait = (blockedUntil[q.chatType] or 0) > now or (q.chatType == "CHANNEL" and now < nextChannel)
+		local wait = (blockedUntil[q.chatType] or 0) > now or (q.chatType == "CHANNEL" and now < nextChannel) or (Counted(q) and prefixTokens < 1)
 		if not wait then
 			if tokens < #q.message then
 				return
@@ -439,6 +452,9 @@ local function Pump()
 			table.remove(queue, i)
 			local sent, why = Deliver(q)
 			if sent then
+				if Counted(q) then
+					prefixTokens = prefixTokens - 1
+				end
 				tokens = tokens - #q.message
 				if q.chatType == "CHANNEL" then
 					nextChannel = now + CHANNEL_GAP
@@ -1315,8 +1331,8 @@ local function ReadOwnBasics()
 			local name, icon, rank, maxRank, _, spellOffset, skillLine = LI.Try(GetProfessionInfo, index)
 			name, icon, rank, maxRank = LI.Safe(name), LI.Safe(icon), LI.Safe(rank), LI.Safe(maxRank)
 			spellOffset, skillLine = LI.Safe(spellOffset), LI.Safe(skillLine)
-			local key = LI.ProfKey(name)
-			if key and not LI.GATHERING[key] then
+			local key = LI.ProfKeyForLine(skillLine) or LI.ProfKey(name)
+			if key and not LI.GATHERING[key] and (not LI.RETAIL or LI.PROFESSION_NAMES[key]) then
 				local spellID
 				if type(spellOffset) == "number" and C_SpellBook and C_SpellBook.GetSpellBookItemInfo then
 					local bank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player or 0

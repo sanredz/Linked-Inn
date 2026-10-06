@@ -10,6 +10,16 @@ local function ReadVersion()
 	return (version:gsub("^v", ""))
 end
 LI.VERSION = ReadVersion()
+
+local function ReadInterface()
+	if not GetBuildInfo then
+		return 0
+	end
+	local ok, _, _, _, interface = pcall(GetBuildInfo)
+	return ok and tonumber(interface) or 0
+end
+LI.INTERFACE = ReadInterface()
+LI.RETAIL = LI.INTERFACE >= 100000
 LI.TITLE = "Linked Inn"
 LI.ICON = "Interface\\Icons\\INV_Drink_05"
 LI.WEBSITE = "github.com/sanredz/Linked-Inn"
@@ -192,7 +202,7 @@ function LI.UnitKey(unit)
 		if LI.Surnames() and not name:find(sep, 1, true) then
 			name = name .. sep .. second
 		else
-			name = name .. "-" .. second
+			name = name .. "-" .. second:gsub("[%s%-]", "")
 		end
 	end
 	return LI.FullName(name)
@@ -244,17 +254,73 @@ function LI.Whisper(key, text)
 end
 
 local myServer
+local SERVER_MISSES = 8
+local SERVER_RETRY = 86400
+
+local function MyServer()
+	if not myServer then
+		local mine = LI.Safe(LI.Try(UnitGUID, "player"))
+		myServer = type(mine) == "string" and mine:match("^Player%-(%d+)%-") or nil
+	end
+	return myServer
+end
+
+local function ServerRecord(server)
+	local db = LI.db
+	if not db or not server then
+		return nil
+	end
+	db.servers = type(db.servers) == "table" and db.servers or {}
+	local r = db.servers[server]
+	if type(r) ~= "table" then
+		r = { ok = 0, miss = 0 }
+		db.servers[server] = r
+	end
+	return r
+end
+
+function LI.NoteServerRead(guid, ok)
+	if not LI.RETAIL then
+		return
+	end
+	local server = type(guid) == "string" and guid:match("^Player%-(%d+)%-")
+	if not server or server == MyServer() then
+		return
+	end
+	local r = ServerRecord(server)
+	if not r then
+		return
+	end
+	if ok then
+		r.ok = r.ok + 1
+		r.miss = 0
+	else
+		r.miss = r.miss + 1
+		r.at = time()
+	end
+end
 
 function LI.OtherServer(guid)
 	local server = type(guid) == "string" and guid:match("^Player%-(%d+)%-")
 	if not server then
 		return false
 	end
-	if not myServer then
-		local mine = LI.Safe(LI.Try(UnitGUID, "player"))
-		myServer = type(mine) == "string" and mine:match("^Player%-(%d+)%-") or nil
+	local mine = MyServer()
+	if mine == nil or server == mine then
+		return false
 	end
-	return myServer ~= nil and server ~= myServer
+	if not LI.RETAIL then
+		return true
+	end
+	local r = LI.db and type(LI.db.servers) == "table" and LI.db.servers[server]
+	if type(r) ~= "table" or (r.ok or 0) > 0 or (r.miss or 0) < SERVER_MISSES then
+		return false
+	end
+	if time() - (r.at or 0) > SERVER_RETRY then
+		r.miss = 0
+		return false
+	end
+	return true
 end
 
 LI.COLOR = {

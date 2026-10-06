@@ -81,6 +81,9 @@ One download works in both games and adjusts itself:
   Big recipe books are read a little at a time and stored compactly, so the
   game stays smooth and the addon stays light even with thousands of crafters.
   Profession names work in every client language.
+  At the Crafting Orders, a small Linked Inn panel next to the order form shows
+  who on your list can make that recipe, online first. Pick a personal order
+  and click a name to send it to them.
 - **Forever:** the six crafting professions plus Cooking, First Aid and Fishing,
   with skill ranks from Apprentice to Artisan.
 

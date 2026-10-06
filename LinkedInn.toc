@@ -27,6 +27,7 @@ Premium.lua
 Work.lua
 UI.lua
 Book.lua
+Orders.lua
 Settings.lua
 WorkUI.lua
 Minimap.lua

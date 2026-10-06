@@ -488,6 +488,54 @@ do
 	RetailSetup()
 	Boot()
 	Advance(1)
+	local function Known(key, class, rank, recipe, seen)
+		local c = LI.Crafter(key, true)
+		c.class, c.seen = class, seen
+		c.profs.tailoring = { name = "Tailoring", rank = rank, max = 100, recipes = LI.PackRecipes("tailoring", { [recipe] = true }), count = 1 }
+	end
+	Known("Seam Stress-TestRealm", "MAGE", 90, 610001, time() - 3600)
+	Known("Silk Road-TestRealm", "PRIEST", 60, 610001, time() - 60)
+	Known("Wrong Thread-TestRealm", "ROGUE", 99, 610002, time())
+	LI.db.recipes[610001] = { n = "Weavercloth Robe", p = "tailoring" }
+	W.roster = W.roster or {}
+	local frame = NewMock("Frame", "ProfessionsCustomerOrdersFrame")
+	_G.ProfessionsCustomerOrdersFrame = frame
+	local form = NewMock("Frame")
+	frame.Form = form
+	form.OrderRecipientTarget = NewMock("EditBox")
+	form.OrderRecipientTarget:Hide()
+	function form:Init(order) self.order = order end
+	function form:SetOrderRecipient(i)
+		self.order.orderType = i
+		self.OrderRecipientTarget:SetShown(i == 2)
+	end
+	Fire("ADDON_LOADED", "Blizzard_ProfessionsCustomerOrders")
+	form:Init({ spellID = 610001, orderType = 0 })
+	local list = LI.Orders.Crafters(610001)
+	check(#list == 2 and list[1].key == "Seam Stress-TestRealm", "the order form lists who on your list knows the recipe, best first", #list)
+	form:Hide()
+	form:Init({ spellID = 610001, orderType = 0 })
+	form:Show()
+	local panel = LI.Orders.Panel()
+	check(panel and panel:IsShown() and panel.sub.__text:find("2 on your list", 1, true), "a Linked Inn panel appears next to the order form", panel and panel.sub.__text)
+	check(panel.hint.__text:find("personal", 1, true), "and explains to choose a personal order first", panel.hint.__text)
+	local hookedPanel = LI.Orders.Fill(list[1])
+	check(not hookedPanel and form.OrderRecipientTarget.__text == nil, "a public order doesn't get a name filled in")
+	form:SetOrderRecipient(2)
+	check(LI.Orders.Fill(list[1]) and form.OrderRecipientTarget.__text == "Seam Stress", "a personal order gets the crafter's name with one click", form.OrderRecipientTarget.__text)
+	check(form.order.orderType == 2, "and Linked Inn never changes the order itself")
+	check(panel.hint.__text:find("Click a name", 1, true), "once it's personal the hint says to click a name", panel.hint.__text)
+	form:Init({ spellID = 699999, orderType = 2 })
+	check(#LI.Orders.Crafters(699999) == 0 and not panel:IsShown(), "recipes nobody knows show no panel")
+	form:Init({ spellID = 610001, orderType = 0, orderID = 5 })
+	check(not panel:IsShown(), "and neither does an order that's already placed")
+	_G.ProfessionsCustomerOrdersFrame = nil
+end
+
+do
+	RetailSetup()
+	Boot()
+	Advance(1)
 	LI.UI.Open()
 	check(LinkedInnFrame.secondaryToggle.text.__text == "Cooking", "the secondary button simply says Cooking", LinkedInnFrame.secondaryToggle.text.__text)
 	LinkedInnFrame:Hide()

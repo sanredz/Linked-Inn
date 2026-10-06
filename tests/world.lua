@@ -265,9 +265,13 @@ local function InstallStubs()
 	_G.CreateDataProvider = function(list) return { list = list } end
 	_G.issecretvalue = function(v) return type(v) == "table" and v.__secret == true end
 	_G.InCombatLockdown = function() return W.combat == true end
-	_G.hooksecurefunc = function(name, fn)
-		local orig = _G[name]
-		_G[name] = function(...)
+	_G.hooksecurefunc = function(a, b, c)
+		local tbl, name, fn = _G, a, b
+		if type(a) == "table" then
+			tbl, name, fn = a, b, c
+		end
+		local orig = tbl[name]
+		tbl[name] = function(...)
 			local r = { orig(...) }
 			fn(...)
 			return table.unpack(r)

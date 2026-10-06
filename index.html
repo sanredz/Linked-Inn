@@ -262,7 +262,6 @@ footer.page a { color: var(--ink-2); }
     const tiles = [
       [fmt(D.crafters), 'crafters tracked'],
       [fmt(D.uniqueRecipes), 'recipes catalogued'],
-      ...(D.worldReliable ? [[fmt(D.worldCount), 'found in the world']] : []),
       [fmt(D.forever.count), 'new to Forever'],
       [fmt(D.blueCount), 'blue recipes'],
       [fmt(D.atCap), `at max skill`],
@@ -275,10 +274,10 @@ footer.page a { color: var(--ink-2); }
       body += text(x + 16, 160, t[0], { size: 34, weight: 600, fill: T.title });
       body += text(x + 16, 192, t[1], { size: 13, fill: T.ink2 });
     });
-    const line = `${pct(D.forever.count, D.uniqueRecipes)}% of every recipe seen so far didn't exist in original Classic` + (D.worldReliable ? `, and ${pct(D.worldNew, D.forever.count)}% of those new ones are found out in the world.` : '.');
+    const line = `${pct(D.forever.count, D.uniqueRecipes)}% of every recipe seen so far didn't exist in original Classic.`;
     body += text(36, 256, line, { size: 15, fill: T.ink2 });
     return frame('What Forever crafters can actually make', 'Every profession read in the background by Linked Inn, no hand-picking', 310, body);
-  }, () => [['Measure', 'Value'], ['Crafters tracked', D.crafters], ['Recipes catalogued', D.uniqueRecipes], ['New to Forever', D.forever.count], ['Found in the world', D.worldCount], ['Blue recipes', D.blueCount], ['At max skill', D.atCap]]);
+  }, () => [['Measure', 'Value'], ['Crafters tracked', D.crafters], ['Recipes catalogued', D.uniqueRecipes], ['New to Forever', D.forever.count], ['Blue recipes', D.blueCount], ['At max skill', D.atCap]]);
 
   card('popularity', () => {
     const total = D.popularity.reduce((a, d) => a + d.n, 0);
@@ -418,15 +417,6 @@ footer.page a { color: var(--ink-2); }
     return frame('Where the blue recipes are', 'Recipes that make rare (blue) items, out of every recipe seen per profession', g.height, g.body);
   }, () => [['Profession', 'Blue recipes', 'All catalogued'], ...D.quality.map((d) => [d.name, d.parts.Rare || 0, Object.values(d.parts).reduce((a, b) => a + b, 0)])]);
 
-  if (D.worldReliable) card('world', () => {
-    const items = [...D.world].sort((a, b) => b.world - a.world).map((d) => ({
-      label: d.name, value: d.world, valueLabel: `${d.world} of ${d.catalogued}`,
-      tip: `${d.name}|${d.world} of ${d.catalogued} recipes come from patterns, plans or formulas; ${d.worldNew} of them are new to Forever`,
-    }));
-    const g = hbars(items);
-    return frame('Recipes you have to find', `Taught by a pattern, plans or formula instead of a trainer · ${fmt(D.worldCount)} so far`, g.height, g.body);
-  }, () => [['Profession', 'Found in the world', 'New to Forever', 'All catalogued'], ...D.world.map((d) => [d.name, d.world, d.worldNew, d.catalogued])]);
-
   card('forever', () => {
     const byProf = D.forever.byProf;
     const items = Object.keys(byProf).sort((a, b) => byProf[b] - byProf[a]).map((k) => ({
@@ -464,11 +454,7 @@ footer.page a { color: var(--ink-2); }
     return frame(title, subtitle, top + rows.length * row + 56, body);
   }
 
-  if (D.worldReliable) card('worldTop', () => listCard('worldTop', 'The most collected world recipes', 'Found in the world, ranked by the share of that profession who know it · hover to see the item', D.worldTop,
-    { head: 'Of that profession', fn: (r) => r.share + '%' }),
-    () => [['Recipe', 'Profession', 'Item level', 'Share'], ...D.worldTop.map((r) => [r.name, r.prof, r.ilvl, r.share + '%'])]);
-
-  card('rarest', () => listCard('rarest', D.worldReliable ? 'The rarest blue finds' : 'The rarest blue recipes', (D.worldReliable ? 'Blue recipes found in the world, known by the fewest crafters' : 'Blue recipes known by the fewest crafters') + ' · hover a recipe to see the item', D.rarestBlues,
+  card('rarest', () => listCard('rarest', 'The rarest blue recipes', 'Blue recipes known by the fewest crafters · hover a recipe to see the item', D.rarestBlues,
     { head: 'Crafters who know it', fn: (r) => String(r.n) }),
     () => [['Recipe', 'Profession', 'Item level', 'Crafters'], ...D.rarestBlues.map((r) => [r.name, r.prof, r.ilvl, r.n])]);
 
@@ -518,7 +504,6 @@ footer.page a { color: var(--ink-2); }
     if (r.forever) lines.push(`<div class="new">New in Forever</div>`);
     lines.push('<hr>');
     lines.push(`<div class="dim">Made with ${esc(r.prof)}</div>`);
-    if (D.worldReliable) lines.push(r.teach ? `<div style="color:#f2c14e">Taught by ${esc(r.teach)}</div>` : `<div class="dim">Taught by a trainer</div>`);
     r.reagents.forEach((g) => {
       const gi = ASSETS.icons[g.icon] ? `<img src="${ASSETS.icons[g.icon]}" alt="">` : '';
       lines.push(`<div class="reagent">${gi}<span style="color:${ITEM_COLORS[g.quality] || '#fff'}">${esc(g.name)}</span><span class="dim">× ${g.count}</span></div>`);

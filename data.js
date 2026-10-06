@@ -1,5 +1,5 @@
 window.LI_DATA = {
- "generated": "2026-10-06 10:44",
+ "generated": "2026-10-06 10:45",
  "span": [
   1791235665,
   1791276119
@@ -700,8 +700,6 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "world": false,
-   "teach": null,
    "n": 359,
    "share": 100.0
   },
@@ -737,8 +735,6 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "world": false,
-   "teach": null,
    "n": 359,
    "share": 100.0
   },
@@ -772,8 +768,6 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "world": false,
-   "teach": null,
    "n": 359,
    "share": 100.0
   },
@@ -807,8 +801,6 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "world": false,
-   "teach": null,
    "n": 359,
    "share": 100.0
   },
@@ -842,8 +834,6 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "world": false,
-   "teach": null,
    "n": 359,
    "share": 100.0
   },
@@ -871,8 +861,6 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "world": false,
-   "teach": null,
    "n": 359,
    "share": 100.0
   },
@@ -900,8 +888,6 @@ window.LI_DATA = {
     }
    ],
    "forever": true,
-   "world": false,
-   "teach": null,
    "n": 332,
    "share": 92.5
   },
@@ -935,8 +921,6 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "world": false,
-   "teach": null,
    "n": 319,
    "share": 88.9
   },
@@ -973,8 +957,6 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "world": false,
-   "teach": null,
    "n": 307,
    "share": 85.5
   },
@@ -1010,488 +992,8 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "world": false,
-   "teach": null,
    "n": 290,
    "share": 80.8
-  }
- ],
- "world": [
-  {
-   "key": "alchemy",
-   "name": "Alchemy",
-   "catalogued": 69,
-   "world": 36,
-   "worldNew": 16
-  },
-  {
-   "key": "blacksmithing",
-   "name": "Blacksmithing",
-   "catalogued": 144,
-   "world": 72,
-   "worldNew": 44
-  },
-  {
-   "key": "enchanting",
-   "name": "Enchanting",
-   "catalogued": 99,
-   "world": 43,
-   "worldNew": 15
-  },
-  {
-   "key": "engineering",
-   "name": "Engineering",
-   "catalogued": 97,
-   "world": 32,
-   "worldNew": 8
-  },
-  {
-   "key": "leatherworking",
-   "name": "Leatherworking",
-   "catalogued": 184,
-   "world": 124,
-   "worldNew": 82
-  },
-  {
-   "key": "tailoring",
-   "name": "Tailoring",
-   "catalogued": 200,
-   "world": 118,
-   "worldNew": 62
-  }
- ],
- "worldReliable": false,
- "trainerRecipes": 0,
- "worldCount": 425,
- "worldNew": 227,
- "trainerCount": 368,
- "worldTop": [
-  {
-   "id": 1257368,
-   "name": "Novice Arcanist's Sash",
-   "prof": "Tailoring",
-   "quality": "Rare",
-   "q": 3,
-   "ilvl": 15,
-   "req": 10,
-   "slot": "Waist",
-   "kind": "Cloth",
-   "stats": [
-    "+3 Intellect",
-    "+3 Stamina"
-   ],
-   "equip": [
-    "Equip: Increases damage and healing done by magical spells and effects by up to 4."
-   ],
-   "armor": 17,
-   "bind": "Binds when picked up",
-   "icon": 236919,
-   "reagents": [
-    {
-     "name": "Bolt of Linen Cloth",
-     "count": 8,
-     "quality": 1,
-     "icon": 132890
-    },
-    {
-     "name": "Fine Thread",
-     "count": 2,
-     "quality": 1,
-     "icon": 132912
-    },
-    {
-     "name": "Minor Mana Potion",
-     "count": 2,
-     "quality": 1,
-     "icon": 134850
-    }
-   ],
-   "forever": true,
-   "world": true,
-   "teach": "Pattern: Novice Arcanist's Sash",
-   "n": 171,
-   "share": 83.4
-  },
-  {
-   "id": 1252229,
-   "name": "Gemmed Copper Boots",
-   "prof": "Blacksmithing",
-   "quality": "Rare",
-   "q": 3,
-   "ilvl": 15,
-   "req": 10,
-   "slot": "Feet",
-   "kind": "Mail",
-   "stats": [
-    "+4 Strength",
-    "+4 Stamina"
-   ],
-   "equip": [],
-   "armor": 109,
-   "bind": "Binds when picked up",
-   "icon": 132554,
-   "reagents": [
-    {
-     "name": "Copper Bar",
-     "count": 2,
-     "quality": 1,
-     "icon": 133216
-    },
-    {
-     "name": "Tigerseye",
-     "count": 2,
-     "quality": 2,
-     "icon": 134118
-    },
-    {
-     "name": "Malachite",
-     "count": 2,
-     "quality": 2,
-     "icon": 134106
-    },
-    {
-     "name": "Light Leather",
-     "count": 4,
-     "quality": 1,
-     "icon": 134252
-    }
-   ],
-   "forever": true,
-   "world": true,
-   "teach": "Plans: Gemmed Copper Boots",
-   "n": 159,
-   "share": 77.2
-  },
-  {
-   "id": 1255145,
-   "name": "Dark Leather Boots",
-   "prof": "Leatherworking",
-   "quality": "Rare",
-   "q": 3,
-   "ilvl": 15,
-   "req": 10,
-   "slot": "Feet",
-   "kind": "Leather",
-   "stats": [
-    "+4 Agility",
-    "+4 Stamina"
-   ],
-   "equip": [],
-   "armor": 53,
-   "bind": "Binds when picked up",
-   "icon": 132539,
-   "reagents": [
-    {
-     "name": "Light Leather",
-     "count": 24,
-     "quality": 1,
-     "icon": 134252
-    },
-    {
-     "name": "Cured Light Hide",
-     "count": 2,
-     "quality": 1,
-     "icon": 134366
-    },
-    {
-     "name": "Gray Dye",
-     "count": 1,
-     "quality": 1,
-     "icon": 132797
-    }
-   ],
-   "forever": true,
-   "world": true,
-   "teach": "Pattern: Dark Leather Boots",
-   "n": 274,
-   "share": 76.3
-  },
-  {
-   "id": 1257369,
-   "name": "Novice Ardent's Sash",
-   "prof": "Tailoring",
-   "quality": "Rare",
-   "q": 3,
-   "ilvl": 15,
-   "req": 10,
-   "slot": "Waist",
-   "kind": "Cloth",
-   "stats": [
-    "+3 Intellect",
-    "+3 Spirit"
-   ],
-   "equip": [
-    "Equip: Increases healing done by spells and effects by up to 6.",
-    "Equip: Increases damage done by magical spells and effects by up to 2."
-   ],
-   "armor": 17,
-   "bind": "Binds when picked up",
-   "icon": 236918,
-   "reagents": [
-    {
-     "name": "Bolt of Linen Cloth",
-     "count": 12,
-     "quality": 1,
-     "icon": 132890
-    },
-    {
-     "name": "Fine Thread",
-     "count": 2,
-     "quality": 1,
-     "icon": 132912
-    },
-    {
-     "name": "Minor Healing Potion",
-     "count": 2,
-     "quality": 1,
-     "icon": 134829
-    }
-   ],
-   "forever": true,
-   "world": true,
-   "teach": "Pattern: Novice Ardent's Sash",
-   "n": 147,
-   "share": 71.7
-  },
-  {
-   "id": 1252230,
-   "name": "Strange Copper Boots",
-   "prof": "Blacksmithing",
-   "quality": "Rare",
-   "q": 3,
-   "ilvl": 15,
-   "req": 10,
-   "slot": "Feet",
-   "kind": "Mail",
-   "stats": [
-    "+4 Stamina"
-   ],
-   "equip": [
-    "Equip: Increases damage and healing done by magical spells and effects by up to 5."
-   ],
-   "armor": 109,
-   "bind": "Binds when picked up",
-   "icon": 132582,
-   "reagents": [
-    {
-     "name": "Copper Bar",
-     "count": 2,
-     "quality": 1,
-     "icon": 133216
-    },
-    {
-     "name": "Strange Dust",
-     "count": 4,
-     "quality": 1,
-     "icon": 132858
-    },
-    {
-     "name": "Light Leather",
-     "count": 2,
-     "quality": 1,
-     "icon": 134252
-    }
-   ],
-   "forever": true,
-   "world": true,
-   "teach": "Plans: Strange Copper Boots",
-   "n": 130,
-   "share": 63.1
-  },
-  {
-   "id": 1257013,
-   "name": "Linen Reagent Bag",
-   "prof": "Tailoring",
-   "quality": "Common",
-   "q": 1,
-   "ilvl": 5,
-   "req": 0,
-   "slot": "Bag",
-   "kind": null,
-   "stats": [],
-   "equip": [],
-   "armor": null,
-   "bind": "Binds when equipped",
-   "icon": 348520,
-   "reagents": [
-    {
-     "name": "Bolt of Linen Cloth",
-     "count": 6,
-     "quality": 1,
-     "icon": 132890
-    },
-    {
-     "name": "Coarse Thread",
-     "count": 6,
-     "quality": 1,
-     "icon": 132891
-    }
-   ],
-   "forever": true,
-   "world": true,
-   "teach": "Pattern: Linen Reagent Bag",
-   "n": 128,
-   "share": 62.4
-  },
-  {
-   "id": 25124,
-   "name": "Minor Wizard Oil",
-   "prof": "Enchanting",
-   "quality": "Common",
-   "q": 1,
-   "ilvl": 15,
-   "req": 5,
-   "slot": null,
-   "kind": null,
-   "stats": [],
-   "equip": [],
-   "armor": null,
-   "bind": null,
-   "icon": 134711,
-   "reagents": [
-    {
-     "name": "Strange Dust",
-     "count": 1,
-     "quality": 1,
-     "icon": 132858
-    },
-    {
-     "name": "Maple Seed",
-     "count": 1,
-     "quality": 1,
-     "icon": 133944
-    },
-    {
-     "name": "Empty Vial",
-     "count": 1,
-     "quality": 1,
-     "icon": 134864
-    }
-   ],
-   "forever": false,
-   "world": true,
-   "teach": "Formula: Minor Wizard Oil",
-   "n": 118,
-   "share": 61.5
-  },
-  {
-   "id": 1252231,
-   "name": "Glowing Copper Boots",
-   "prof": "Blacksmithing",
-   "quality": "Rare",
-   "q": 3,
-   "ilvl": 15,
-   "req": 10,
-   "slot": "Feet",
-   "kind": "Mail",
-   "stats": [
-    "+4 Intellect"
-   ],
-   "equip": [
-    "Equip: Increases healing done by spells and effects by up to 9.",
-    "Equip: Increases damage done by magical spells and effects by up to 3."
-   ],
-   "armor": 109,
-   "bind": "Binds when picked up",
-   "icon": 132535,
-   "reagents": [
-    {
-     "name": "Copper Bar",
-     "count": 2,
-     "quality": 1,
-     "icon": 133216
-    },
-    {
-     "name": "Lesser Magic Essence",
-     "count": 4,
-     "quality": 2,
-     "icon": 132867
-    },
-    {
-     "name": "Light Leather",
-     "count": 2,
-     "quality": 1,
-     "icon": 134252
-    }
-   ],
-   "forever": true,
-   "world": true,
-   "teach": "Plans: Glowing Copper Boots",
-   "n": 119,
-   "share": 57.8
-  },
-  {
-   "id": 1255144,
-   "name": "Murloc Scale Shoes",
-   "prof": "Leatherworking",
-   "quality": "Rare",
-   "q": 3,
-   "ilvl": 15,
-   "req": 10,
-   "slot": "Feet",
-   "kind": "Leather",
-   "stats": [
-    "+4 Stamina",
-    "+4 Strength"
-   ],
-   "equip": [],
-   "armor": 53,
-   "bind": "Binds when picked up",
-   "icon": 132571,
-   "reagents": [
-    {
-     "name": "Light Leather",
-     "count": 12,
-     "quality": 1,
-     "icon": 134252
-    },
-    {
-     "name": "Cured Light Hide",
-     "count": 2,
-     "quality": 1,
-     "icon": 134366
-    },
-    {
-     "name": "Slimy Murloc Scale",
-     "count": 4,
-     "quality": 1,
-     "icon": 134304
-    }
-   ],
-   "forever": true,
-   "world": true,
-   "teach": "Pattern: Murloc Scale Shoes",
-   "n": 201,
-   "share": 56.0
-  },
-  {
-   "id": 7443,
-   "name": "Enchant Chest - Minor Intellect",
-   "prof": "Enchanting",
-   "quality": "Enchant",
-   "q": 1,
-   "ilvl": null,
-   "req": null,
-   "slot": null,
-   "kind": null,
-   "stats": [],
-   "equip": [],
-   "armor": null,
-   "bind": null,
-   "icon": 135913,
-   "reagents": [
-    {
-     "name": "Lesser Magic Essence",
-     "count": 1,
-     "quality": 2,
-     "icon": 132867
-    }
-   ],
-   "forever": false,
-   "world": true,
-   "teach": "Formula: Enchant Chest - Minor Intellect",
-   "n": 107,
-   "share": 55.7
   }
  ],
  "rarestBlues": [
@@ -1554,8 +1056,6 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "world": false,
-   "teach": null,
    "n": 1,
    "share": 0.5
   },
@@ -1619,8 +1119,6 @@ window.LI_DATA = {
     }
    ],
    "forever": true,
-   "world": true,
-   "teach": "Pattern: Skycaller's Mail Shoulder",
    "n": 1,
    "share": 0.3
   },
@@ -1670,8 +1168,6 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "world": true,
-   "teach": "Pattern: Icy Cloak",
    "n": 1,
    "share": 0.5
   },
@@ -1727,8 +1223,6 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "world": true,
-   "teach": "Pattern: Gem-studded Leather Belt",
    "n": 1,
    "share": 0.3
   },
@@ -1784,8 +1278,6 @@ window.LI_DATA = {
     }
    ],
    "forever": false,
-   "world": true,
-   "teach": "Pattern: Barbaric Bracers",
    "n": 1,
    "share": 0.3
   },
@@ -1845,8 +1337,6 @@ window.LI_DATA = {
     }
    ],
    "forever": true,
-   "world": true,
-   "teach": "Pattern: Shining Circlet",
    "n": 1,
    "share": 0.5
   },
@@ -1906,8 +1396,6 @@ window.LI_DATA = {
     }
    ],
    "forever": true,
-   "world": true,
-   "teach": "Pattern: Flame Circlet",
    "n": 1,
    "share": 0.5
   },
@@ -1964,8 +1452,6 @@ window.LI_DATA = {
     }
    ],
    "forever": true,
-   "world": true,
-   "teach": "Pattern: Totemic Leather Boots",
    "n": 1,
    "share": 0.3
   },
@@ -2008,8 +1494,6 @@ window.LI_DATA = {
     }
    ],
    "forever": true,
-   "world": true,
-   "teach": "Plans: Guard's Chain Shirt",
    "n": 1,
    "share": 0.5
   },
@@ -2066,8 +1550,6 @@ window.LI_DATA = {
     }
    ],
    "forever": true,
-   "world": true,
-   "teach": "Pattern: Stormrider's Leather Belt",
    "n": 1,
    "share": 0.3
   }
@@ -2132,8 +1614,6 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "world": true,
-    "teach": "Pattern: Novice Arcanist's Sash",
     "n": 171,
     "share": 83.4
    },
@@ -2182,8 +1662,6 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "world": true,
-    "teach": "Plans: Gemmed Copper Boots",
     "n": 159,
     "share": 77.2
    },
@@ -2226,8 +1704,6 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "world": true,
-    "teach": "Pattern: Dark Leather Boots",
     "n": 274,
     "share": 76.3
    },
@@ -2273,8 +1749,6 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "world": true,
-    "teach": "Pattern: Novice Ardent's Sash",
     "n": 147,
     "share": 71.7
    },
@@ -2318,8 +1792,6 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "world": true,
-    "teach": "Plans: Strange Copper Boots",
     "n": 130,
     "share": 63.1
    },
@@ -2364,8 +1836,6 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "world": true,
-    "teach": "Plans: Glowing Copper Boots",
     "n": 119,
     "share": 57.8
    },
@@ -2408,8 +1878,6 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "world": true,
-    "teach": "Pattern: Murloc Scale Shoes",
     "n": 201,
     "share": 56.0
    },
@@ -2454,8 +1922,6 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "world": true,
-    "teach": "Pattern: Black Whelp Slippers",
     "n": 199,
     "share": 55.4
    },
@@ -2499,8 +1965,6 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "world": true,
-    "teach": "Pattern: Moonglow Boots",
     "n": 188,
     "share": 52.4
    },
@@ -2555,8 +2019,6 @@ window.LI_DATA = {
      }
     ],
     "forever": true,
-    "world": true,
-    "teach": "Pattern: Brawler's Leather Hood",
     "n": 175,
     "share": 48.7
    }
@@ -2638,7 +2100,6 @@ window.LI_DATA = {
   133725,
   133756,
   133849,
-  133944,
   134074,
   134106,
   134117,
@@ -2662,22 +2123,18 @@ window.LI_DATA = {
   134367,
   134369,
   134706,
-  134711,
   134714,
   134800,
   134818,
   134829,
   134850,
-  134864,
   135043,
   135243,
-  135913,
   136113,
   136240,
   236918,
   236919,
   321409,
-  348520,
   348551,
   961627,
   1021860,

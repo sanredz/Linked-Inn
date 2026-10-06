@@ -61,9 +61,6 @@ local function Fill(entry)
 	if box.SetFocus then
 		box:SetFocus()
 	end
-	if box.HighlightText then
-		box:HighlightText()
-	end
 	if PlaySound and SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON then
 		LI.Try(PlaySound, SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
 	end

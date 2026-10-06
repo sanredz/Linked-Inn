@@ -2,7 +2,8 @@
 
 [![CI](https://github.com/sanredz/Linked-Inn/actions/workflows/ci.yml/badge.svg)](https://github.com/sanredz/Linked-Inn/actions/workflows/ci.yml)
 
-Find someone who can make what you need, for **World of Warcraft: Forever**.
+Find someone who can make what you need, in **World of Warcraft** (retail)
+and **World of Warcraft: Forever**.
 
 Linked Inn builds a list of every crafter around you and everything they can
 make, all on its own. Just play: it fills up as you go about the world, with
@@ -31,8 +32,8 @@ You don't have to do anything. Linked Inn fills the list in the background:
 - **Recipe links.** A single linked recipe or crafted item is enough to read
   that player's whole profession.
 - **Other Linked Inn users.** Players with the addon quietly share their own
-  professions with each other, including users on the other hidden realms of
-  your ruleset.
+  professions with each other. On Forever that includes users on the other
+  hidden realms of your ruleset.
 - **People around you.** Anyone you see crafting, your group, your guild
   and the players around you are checked quietly in the background, a few at
   a time. Links in chat, your group and your guild always come first.
@@ -50,9 +51,8 @@ professions are read when you log in, so you never have to open them first.
 
 - **Search** for an item, a profession or a name. Searching an item shows only
   the people who can make it.
-- **Filter** by profession (pick several), item type and skill level (any,
-  Journeyman, Expert, Artisan or max), and optionally the secondary
-  professions.
+- **Filter** by profession (pick several), item type and skill level, and
+  optionally the secondary professions.
 - **Favorites** stay at the top. Star anyone you use a lot.
 - **Last seen** shows when a crafter was last around. Click it to check if
   they're online right now.
@@ -69,6 +69,20 @@ professions are read when you log in, so you never have to open them first.
 <p align="center">
   <img src="media/crafters-search.png" alt="Searching for an item shows who can make it" width="62%">
 </p>
+
+## Retail and Forever
+
+One download works in both games and adjusts itself:
+
+- **Retail:** all eight crafting professions plus Cooking. A crafter's skill is
+  shown for their newest expansion, like "87/100, The War Within", and their
+  recipe book covers every expansion, so old recipes for transmog, pets or toys
+  are just as easy to find. Crafters from other realms you meet are read too.
+  Big recipe books are read a little at a time and stored compactly, so the
+  game stays smooth and the addon stays light even with thousands of crafters.
+  Profession names work in every client language.
+- **Forever:** the six crafting professions plus Cooking, First Aid and Fishing,
+  with skill ranks from Apprentice to Artisan.
 
 ## Work
 
@@ -137,8 +151,8 @@ Only with other Linked Inn users, and only inside the game:
 - Your professions, skill levels and known recipes.
 - Your Work requests and offers.
 
-Linked Inn users on your Battle.net friends list help pass these lists along,
-so users on the other half of your realm can show up too.
+On Forever, Linked Inn users on your Battle.net friends list help pass these
+lists along, so users on the other half of your realm can show up too.
 
 Nothing is sent outside the game, and there's no website or account.
 

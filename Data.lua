@@ -696,6 +696,7 @@ function LI.SetRecipes(key, info, recipes, via)
 	p.rank = info.rank or p.rank
 	p.max = info.max or p.max
 	p.tier = info.tier or p.tier
+	p.tiers = info.tiers or p.tiers
 	p.read = now
 	p.via = via
 	p.link = info.link or p.link

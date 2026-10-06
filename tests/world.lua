@@ -448,6 +448,7 @@ local function InstallStubs()
 		end,
 		GetTradeSkillTexture = function(id) return 9000 + id end,
 		GetCategoryInfo = function(id)
+			if W.categories then return W.categories[id] end
 			local cats = { [10] = { name = "Bags", uiOrder = 1 }, [11] = { name = "Armor", uiOrder = 2 } }
 			local c = cats[id]
 			return c and { categoryID = id, name = c.name, uiOrder = c.uiOrder } or nil

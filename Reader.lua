@@ -988,6 +988,31 @@ local function SessionKey(api)
 	return table.concat({ tostring(type(base) == "table" and LI.Safe(base.professionID)), tostring(LI.Safe(linked)), tostring(LI.Safe(linkedName)) }, "|")
 end
 
+local function TierOf(api, catID, cache)
+	if type(catID) ~= "number" or not api.GetCategoryInfo then
+		return nil
+	end
+	if cache[catID] ~= nil then
+		return cache[catID] or nil
+	end
+	local id, info, steps = catID, LI.Try(api.GetCategoryInfo, catID), 0
+	while type(info) == "table" and LI.Safe(info.skillLineCurrentLevel) == nil and LI.Safe(info.parentCategoryID) and steps < 8 do
+		id = LI.Safe(info.parentCategoryID)
+		info = LI.Try(api.GetCategoryInfo, id)
+		steps = steps + 1
+	end
+	local tier = false
+	if type(info) == "table" and LI.Safe(info.skillLineCurrentLevel) ~= nil and LI.Safe(info.name) then
+		tier = { id = id, n = LI.Safe(info.name), c = LI.Safe(info.skillLineCurrentLevel) or 0, m = LI.Safe(info.skillLineMaxLevel) or 0, o = LI.Safe(info.uiOrder) or 0 }
+		if type(LI.db.cats[catID]) == "table" then
+			LI.db.cats[catID].t = tier.n
+			LI.db.cats[catID].to = tier.o
+		end
+	end
+	cache[catID] = tier
+	return tier or nil
+end
+
 local function Collect(profKey, done)
 	if not LI.RETAIL then
 		done(CollectRecipes(profKey))
@@ -997,6 +1022,7 @@ local function Collect(profKey, done)
 	local ids = RecipeIDs()
 	local session = SessionKey(api)
 	local list, i = {}, 1
+	local cache, tiers = {}, {}
 	local run = {}
 	collecting = run
 	local function Step()
@@ -1014,6 +1040,14 @@ local function Collect(profKey, done)
 			local info = LI.Try(api.GetRecipeInfo, id)
 			if type(info) == "table" and LI.Safe(info.learned) and LI.Safe(info.name) then
 				list[#list + 1] = RecipeEntry(id, info, profKey)
+				local cat = LI.Safe(info.categoryID)
+				if type(cat) == "number" then
+					LI.NoteCategory(cat)
+					local tier = TierOf(api, cat, cache)
+					if tier then
+						tiers[tier.id] = tier
+					end
+				end
 			end
 		end
 		i = last + 1
@@ -1021,6 +1055,17 @@ local function Collect(profKey, done)
 			LI.After(0, Step)
 		else
 			collecting = nil
+			local sorted = {}
+			for _, tier in pairs(tiers) do
+				sorted[#sorted + 1] = { n = tier.n, c = tier.c, m = tier.m, o = tier.o }
+			end
+			table.sort(sorted, function(a, b)
+				if a.o ~= b.o then
+					return a.o < b.o
+				end
+				return a.n < b.n
+			end)
+			list.tiers = #sorted > 0 and sorted or nil
 			done(list)
 		end
 	end
@@ -1046,7 +1091,7 @@ function Reader.Read()
 	if not LI.ready or not api or collecting then
 		return
 	end
-	if LI.RETAIL and api.IsDataSourceChanging and LI.Safe(LI.Try(api.IsDataSourceChanging)) then
+	if LI.RETAIL and ((api.IsDataSourceChanging and LI.Safe(LI.Try(api.IsDataSourceChanging))) or (api.IsTradeSkillReady and LI.Safe(LI.Try(api.IsTradeSkillReady)) == false)) then
 		ScheduleRead()
 		return
 	end
@@ -1093,6 +1138,11 @@ Store = function(api, base, name, linked, linkedName, profKey, list)
 			info.max = childMax
 			info.tier = LI.Safe(child.expansionName) or LI.Safe(child.professionName)
 		end
+	end
+	info.tiers = list.tiers
+	local newest = list.tiers and list.tiers[1]
+	if newest and (not info.max or info.max == 0) then
+		info.rank, info.max, info.tier = newest.c, newest.m, newest.n
 	end
 	if linked then
 		if #list == 0 then

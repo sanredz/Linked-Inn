@@ -103,7 +103,10 @@ end
 local function Category(meta)
 	local cat = meta.c and LI.db.cats[meta.c]
 	if cat and cat.n then
-		return meta.c, cat.n, cat.o or 0
+		if cat.t and cat.t ~= cat.n then
+			return meta.c, cat.t .. ": " .. cat.n, (cat.to or 0) * 10000 + (cat.o or 0)
+		end
+		return meta.c, cat.n, (cat.to or 0) * 10000 + (cat.o or 0)
 	end
 	return 0, "Other", math.huge
 end

@@ -359,6 +359,34 @@ end
 
 do
 	RetailSetup()
+	Boot()
+	Advance(5)
+	W.categories = {
+		[1000] = { categoryID = 1000, name = "Khaz Algar Tailoring", uiOrder = 1, skillLineCurrentLevel = 87, skillLineMaxLevel = 100 },
+		[1001] = { categoryID = 1001, name = "Classic Tailoring", uiOrder = 9, skillLineCurrentLevel = 300, skillLineMaxLevel = 300 },
+		[101] = { categoryID = 101, name = "Cloth", uiOrder = 2, parentCategoryID = 1000 },
+		[102] = { categoryID = 102, name = "Bags", uiOrder = 1, parentCategoryID = 1001 },
+	}
+	W.guids["Player-1-TIR"] = { class = "MAGE", name = "Tiers", realm = "" }
+	W.linkData["trade:Player-1-TIR:3908:197"] = { linkedName = "Tiers", prof = { professionName = "Tailoring", professionID = 197, skillLevel = 0, maxSkillLevel = 0 }, recipes = {
+		{ id = 600001, name = "Weavercloth Bolt", item = 600101, cat = 101 },
+		{ id = 600002, name = "Mooncloth Bag", item = 600102, cat = 102 },
+		{ id = 600003, name = "Unknown Thing", item = 600103, cat = 101, learned = false },
+	} }
+	W.autoWorks = true
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-TIR", 3908, 197, "Tailoring"), "Tiers-TestRealm", "Player-1-TIR", "Trade - City")
+	Advance(8)
+	W.autoWorks = false
+	local p = LI.crafters["Tiers-TestRealm"].profs.tailoring
+	check(p.tiers and #p.tiers == 2 and p.tiers[1].n == "Khaz Algar Tailoring" and p.tiers[1].c == 87 and p.tiers[2].n == "Classic Tailoring" and p.tiers[2].c == 300, "skill is recorded for every expansion the crafter knows recipes in", p.tiers and #p.tiers)
+	check(p.rank == 87 and p.max == 100 and p.tier == "Khaz Algar Tailoring", "with the newest expansion shown as their skill", tostring(p.rank) .. " " .. tostring(p.tier))
+	local book = LI.Book.Recipes("Tiers-TestRealm", "tailoring", "")
+	check(#book == 2 and book[1].catName == "Khaz Algar Tailoring: Cloth" and book[2].catName == "Classic Tailoring: Bags", "the recipe book is grouped by expansion, newest first", book[1] and book[1].catName)
+	W.categories = nil
+end
+
+do
+	RetailSetup()
 	W.playerGUID = "Player-1-ME"
 	Boot()
 	Advance(5)

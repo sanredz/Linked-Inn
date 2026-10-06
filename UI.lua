@@ -365,6 +365,16 @@ local function ShowBookTooltip(book)
 	if p.tier then
 		GameTooltip:AddLine(p.tier, SOFT[1], SOFT[2], SOFT[3])
 	end
+	if type(p.tiers) == "table" and #p.tiers > 1 then
+		for i, tier in ipairs(p.tiers) do
+			if i > 6 then
+				break
+			end
+			if (tier.c or 0) > 0 then
+				GameTooltip:AddDoubleLine(tier.n, string.format("%d/%d", tier.c, tier.m or tier.c), 0.85, 0.85, 0.85, 1, 1, 1)
+			end
+		end
+	end
 	if p.recipes then
 		GameTooltip:AddLine(string.format("%d recipes known", p.count or 0), 1, 1, 1)
 	else

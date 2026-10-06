@@ -68,7 +68,7 @@ function Reader.Want(key, profName, link, extra)
 	if LI.OtherServer(guid) then
 		if not otherLogged[key] then
 			otherLogged[key] = true
-			LI.Log(string.format("%s is on the other realm; the game doesn't let us read their professions", LI.ShortName(key)))
+			LI.Log(string.format(LI.RETAIL and "%s's realm hasn't answered profession checks; skipping it for a day" or "%s is on the other realm; the game doesn't let us read their professions", LI.ShortName(key)))
 		end
 		return
 	end
@@ -1121,7 +1121,8 @@ function Reader.ProbeTimeout()
 end
 
 local function Plain(name)
-	return LI.ShortName(LI.FullName(name) or ""):lower()
+	local short = LI.ShortName(LI.FullName(name) or "")
+	return (short:match("^(.-)%-[^%-]+$") or short):lower()
 end
 
 function Reader.NameMatches(linkedName, key)

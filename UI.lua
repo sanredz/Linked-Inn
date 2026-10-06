@@ -312,6 +312,9 @@ local function ShowRowTooltip(row)
 		if p.rank and p.rank > 0 then
 			name = string.format("%s (%d/%d)", name, p.rank, p.max or p.rank)
 		end
+		if p.tier then
+			name = name .. "  |cff8c8c8c" .. p.tier .. "|r"
+		end
 		GameTooltip:AddDoubleLine(name, right, 1, 1, 1, SOFT[1], SOFT[2], SOFT[3])
 	end
 	GameTooltip:AddLine(" ")
@@ -359,6 +362,9 @@ local function ShowBookTooltip(book)
 		name = string.format("%s  %d/%d", name, p.rank, p.max or p.rank)
 	end
 	GameTooltip:SetText(name, 1, 0.82, 0)
+	if p.tier then
+		GameTooltip:AddLine(p.tier, SOFT[1], SOFT[2], SOFT[3])
+	end
 	if p.recipes then
 		GameTooltip:AddLine(string.format("%d recipes known", p.count or 0), 1, 1, 1)
 	else
@@ -841,7 +847,13 @@ local function AnySelected(chips)
 	return false
 end
 
-local SKILL_LEVELS = {
+local SKILL_LEVELS = LI.RETAIL and {
+	{ value = 0, name = "Any skill", short = "Any" },
+	{ value = 25, name = "25 or more", short = "25+" },
+	{ value = 50, name = "50 or more", short = "50+" },
+	{ value = 75, name = "75 or more", short = "75+" },
+	{ value = "max", name = "Max skill only", short = "Max" },
+} or {
 	{ value = 0, name = "Any skill", short = "Any" },
 	{ value = 75, name = "Journeyman+ (75)", short = "Journeyman+" },
 	{ value = 150, name = "Expert+ (150)", short = "Expert+" },
@@ -985,7 +997,7 @@ local function RefreshFind()
 	if LI.settings.guildOnly then
 		local far = LI.guildFarSide or 0
 		if far > 0 then
-			main.count:SetText(string.format("|cff40ff40Guild and friends|r  ·  %d shown  ·  %d on the other realm", #results, far))
+			main.count:SetText(string.format(LI.RETAIL and "|cff40ff40Guild and friends|r  ·  %d shown  ·  %d unreadable" or "|cff40ff40Guild and friends|r  ·  %d shown  ·  %d on the other realm", #results, far))
 		else
 			main.count:SetText(string.format("|cff40ff40Guild and friends|r  ·  %d shown  ·  %d crafters remembered", #results, total))
 		end
@@ -1335,7 +1347,7 @@ local function CreateMain()
 		GameTooltip:Hide()
 	end)
 
-	main.skillPill = Toggle(main, "Skill: Any", 118, { "Skill level", "Hide crafters below a skill level. Ranks follow the trainers: Journeyman 75, Expert 150, Artisan 225." }, function()
+	main.skillPill = Toggle(main, "Skill: Any", 118, { "Skill level", LI.RETAIL and "Hide crafters below a skill level in their newest expansion's profession." or "Hide crafters below a skill level. Ranks follow the trainers: Journeyman 75, Expert 150, Artisan 225." }, function()
 		return LI.settings.maxOnly == true or (tonumber(LI.settings.minSkill) or 0) > 0
 	end, function() end)
 	main.skillPill:SetScript("OnClick", function(self)
@@ -1377,7 +1389,7 @@ local function CreateMain()
 		self.text:SetTextColor(1, 0.82, 0)
 	end)
 	main.clearChips:Hide()
-	main.secondaryToggle = Toggle(main.chipBar, "Secondary", 84, { "Secondary professions", "Also show Cooking, First Aid and Fishing." }, function()
+	main.secondaryToggle = Toggle(main.chipBar, LI.RETAIL and "Cooking" or "Secondary", LI.RETAIL and 74 or 84, { "Secondary professions", LI.RETAIL and "Also show Cooking." or "Also show Cooking, First Aid and Fishing." }, function()
 		return LI.settings.secondary == true
 	end, function(on)
 		LI.settings.secondary = on

@@ -174,6 +174,12 @@ local function InstallStubs()
 	W.guild = W.guild or {}
 	W.Fire = Fire
 
+	_G.GetBuildInfo = function()
+		if W.retail then
+			return "12.1.0", "69933", "Sep 22 2026", 120100
+		end
+		return "1.60.1", "70235", "Oct 1 2026", 16001
+	end
 	_G.time = function() return BASE_TIME + math.floor(W.clock) end
 	_G.date = os.date
 	_G.GetTime = function() return W.clock end
@@ -405,6 +411,16 @@ local function InstallStubs()
 		GetBaseProfessionInfo = function()
 			if not W.trade then return nil end
 			return W.trade.prof
+		end,
+		GetChildProfessionInfo = function()
+			if not W.trade then return nil end
+			return W.trade.child
+		end,
+		GetTradeSkillDisplayName = function(line)
+			return W.lineNames and W.lineNames[line] or ""
+		end,
+		GetProfessionInfoBySkillLineID = function(line)
+			return W.lineInfo and W.lineInfo[line] or nil
 		end,
 		IsTradeSkillLinked = function()
 			if not W.trade then return false end

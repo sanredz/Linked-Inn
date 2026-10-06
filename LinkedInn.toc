@@ -1,4 +1,4 @@
-## Interface: 16001
+## Interface: 16001, 120100, 120105
 ## Title: Linked Inn: Profession Finder
 ## Notes: Builds a list of crafters from profession links in chat and from other Linked Inn users. Search for the item you need and whisper someone who can make it.
 ## Author: sanredz

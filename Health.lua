@@ -64,7 +64,7 @@ function Health.Compute()
 			Add("Reading", waiting > 0 and string.format("working, %d waiting", waiting) or "working", "ok", true)
 		end
 	end
-	if LI.Bridge and not LI.settings.guildOnly then
+	if LI.Bridge and not LI.RETAIL and not LI.settings.guildOnly then
 		local friends = #LI.Bridge.Friends()
 		Add("Battle.net friends", friends > 0 and Plural(friends, "friend in Forever", "friends in Forever") or "none in Forever right now", "ok", false)
 	end

@@ -185,7 +185,7 @@ function LI.HandleChat(event, msg, sender, channelBase, senderGUID)
 			end
 			local name = ProfessionName(text)
 			local profKey = LI.ProfKeyForLine(parsed.numbers[#parsed.numbers]) or LI.ProfKey(name)
-			if profKey and LI.PROFESSION_NAMES[profKey] and LI.ProfKey(name) ~= profKey then
+			if profKey and LI.PROFESSION_NAMES[profKey] then
 				name = LI.ProfessionDisplayName(profKey) or name
 			end
 			if key and not LI.Allowed(key) then

@@ -11,8 +11,8 @@ local TITLE_FONT = "Fonts\\MORPHEUS.TTF"
 local frame
 local INTERVALS = { 2, 5, 10, 15 }
 local FORGET = { 14, 30, 60, 90, 0 }
-local KEEP = { 0, 75, 150, 225 }
-local KEEP_NAMES = { [0] = "Any skill", [75] = "Journeyman 75", [150] = "Expert 150", [225] = "Artisan 225" }
+local KEEP = LI.RETAIL and { 0, 25, 50, 75 } or { 0, 75, 150, 225 }
+local KEEP_NAMES = LI.RETAIL and { [0] = "Any skill", [25] = "Skill 25", [50] = "Skill 50", [75] = "Skill 75" } or { [0] = "Any skill", [75] = "Journeyman 75", [150] = "Expert 150", [225] = "Artisan 225" }
 
 local function Sound(kit)
 	if PlaySound and SOUNDKIT and SOUNDKIT[kit] then
@@ -493,7 +493,7 @@ function Settings.Refresh()
 	frame.houseLast:SetText(LastRun())
 	local far = LI.guildFarSide or 0
 	if far > 0 then
-		frame.farSide:SetText(string.format("%d online %s on the other realm. The game can't read them there, but they show up if they use Linked Inn.", far, far == 1 and "guildmate is" or "guildmates are"))
+		frame.farSide:SetText(string.format(LI.RETAIL and "%d online %s on realms the game won't read from. They show up if they use Linked Inn." or "%d online %s on the other realm. The game can't read them there, but they show up if they use Linked Inn.", far, far == 1 and "guildmate is" or "guildmates are"))
 	else
 		frame.farSide:SetText("")
 	end

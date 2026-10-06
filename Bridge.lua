@@ -72,7 +72,7 @@ function Bridge.IsForever(projectID)
 end
 
 local function FromGame(game)
-	if type(game) ~= "table" then
+	if LI.RETAIL or type(game) ~= "table" then
 		return nil
 	end
 	local id = LI.Safe(game.gameAccountID)
@@ -315,6 +315,9 @@ local function Assemble(origin, card)
 end
 
 function Bridge.OnCard(from, text, transport)
+	if LI.RETAIL then
+		return
+	end
 	if not Active() or type(text) ~= "string" then
 		return
 	end
@@ -351,6 +354,9 @@ function Bridge.OnCard(from, text, transport)
 end
 
 function Bridge.OnBNet(prefix, text, senderID)
+	if LI.RETAIL then
+		return
+	end
 	if prefix ~= LI.Sync.PREFIX or type(text) ~= "string" or not Active() then
 		return
 	end

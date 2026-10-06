@@ -471,6 +471,23 @@ do
 	RetailSetup()
 	Boot()
 	Advance(1)
+	local set = {}
+	local id = 300000
+	for i = 1, 3500 do
+		id = id + (i % 7 == 0 and 900 or 3)
+		set[id] = true
+	end
+	local p = { rank = 100, max = 100, recipes = LI.PackRecipes("alchemy", set) }
+	local enc = LI.Sync.Encode({ alchemy = p })
+	local dec = LI.Sync.Decode(enc)
+	check(dec and #dec[1].ids == 3500, "a collector's 3500 recipes survive sharing", dec and #dec[1].ids)
+	check(math.ceil(#enc / 200) <= 80, "within the retail share limit", math.ceil(#enc / 200))
+end
+
+do
+	RetailSetup()
+	Boot()
+	Advance(1)
 	LI.UI.Open()
 	check(LinkedInnFrame.secondaryToggle.text.__text == "Cooking", "the secondary button simply says Cooking", LinkedInnFrame.secondaryToggle.text.__text)
 	LinkedInnFrame:Hide()

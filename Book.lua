@@ -177,7 +177,7 @@ end
 
 function Book.Ask(key, id)
 	local meta = LI.db.recipes[id]
-	LI.Whisper(key, "Hi! Could you make " .. ItemLink(meta, id) .. "?")
+	LI.Whisper(key, LI.RETAIL and ("Hi! Could you make " .. ItemLink(meta, id) .. "? I can send you a personal crafting order.") or ("Hi! Could you make " .. ItemLink(meta, id) .. "?"))
 end
 
 local function LinkInChat(id)

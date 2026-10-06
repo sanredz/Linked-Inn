@@ -737,7 +737,7 @@ local function RowLine(data)
 	end
 	local parts = {}
 	if p.rank and p.rank > 0 then
-		parts[#parts + 1] = string.format("Skill %d", p.rank)
+		parts[#parts + 1] = (LI.RETAIL and p.max and p.max > 0) and string.format("Skill %d/%d", p.rank, p.max) or string.format("Skill %d", p.rank)
 	end
 	if p.recipes then
 		parts[#parts + 1] = string.format("%d %s", p.count or 0, (p.count or 0) == 1 and "recipe" or "recipes")

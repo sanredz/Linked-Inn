@@ -575,8 +575,8 @@ footer.page a { color: var(--ink-2); }
     if (r.slot || r.kind) lines.push(`<div class="row"><span style="color:#fff">${esc(r.slot || '')}</span><span style="color:#fff">${esc(r.kind || '')}</span></div>`);
     if (r.armor) lines.push(`<div>${r.armor} Armor</div>`);
     (r.stats || []).forEach((t) => lines.push(`<div>${esc(t)}</div>`));
-    if (r.req) lines.push(`<div>Requires Level ${r.req}</div>`);
     (r.equip || []).forEach((t) => lines.push(`<div style="color:#1eff00">${esc(t)}</div>`));
+    if (r.req) lines.push(`<div>Requires Level ${r.req}</div>`);
     if (r.forever) lines.push(`<div class="new">New in Forever</div>`);
     lines.push('<hr>');
     lines.push(`<div class="dim">Made with ${esc(r.prof)}</div>`);

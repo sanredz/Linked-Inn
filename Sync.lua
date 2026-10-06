@@ -260,6 +260,9 @@ end
 
 function Sync.Links()
 	local out = {}
+	if LI.RETAIL then
+		return out
+	end
 	local mine = MyRealm()
 	for key, p in pairs(peers) do
 		if Live(p) and p.realm and p.realm ~= mine then
@@ -991,6 +994,9 @@ end
 local Dispatch
 
 local function OnRelay(relayer, text, chatType)
+	if LI.RETAIL then
+		return
+	end
 	local originName, inner = text:match("^B1|([^|]+)|(.+)$")
 	if not originName or not RELAY[inner:sub(1, 2)] then
 		return

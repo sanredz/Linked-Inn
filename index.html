@@ -153,13 +153,14 @@ footer.page a { color: var(--ink-2); }
   </div>
   <div class="actions">
     <a class="cta primary" href="https://www.curseforge.com/wow/addons/linked-inn-profession-finder" target="_blank" rel="noopener">Get Linked Inn</a>
+    <a class="cta" href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener">&#9749; Buy me a coffee</a>
     <button id="theme">Parchment</button>
     <button id="saveAll" class="dev-only">Save all as PNG</button>
   </div>
 </header>
 <p class="intro">Linked Inn is a profession finder for WoW Forever. While you play it quietly reads the professions of crafters around you and shares lists between its users. These charts are what that adds up to: no surveys, no hand-picked numbers, just what crafters actually know.</p>
 <main id="cards"></main>
-<footer class="page">Crafting professions only (Cooking, First Aid and Fishing are left out). "New to Forever" means recipes that don't exist in original Classic. "Blue" means the item it makes is rare quality. Collected on ClassicBetaPvP. <a href="https://github.com/sanredz/Linked-Inn" target="_blank" rel="noopener">Linked Inn on GitHub</a></footer>
+<footer class="page">Crafting professions only (Cooking, First Aid and Fishing are left out). "New to Forever" means recipes that don't exist in original Classic. "Blue" means the item it makes is rare quality. Collected on ClassicBetaPvP. <a href="https://github.com/sanredz/Linked-Inn" target="_blank" rel="noopener">Linked Inn on GitHub</a>. Linked Inn is free; if you like it, you can <a href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener">buy me a coffee</a>.</footer>
 <div id="tip"></div>
 <script src="data.js"></script>
 <script>
@@ -493,9 +494,13 @@ footer.page a { color: var(--ink-2); }
     const color = ITEM_COLORS[r.q] || '#ffffff';
     const icon = ASSETS.icons[r.icon] ? `<img src="${ASSETS.icons[r.icon]}" alt="">` : '';
     const lines = [`<div class="name">${icon}<span style="color:${color}">${esc(r.name)}</span></div>`];
-    if (r.slot || r.kind) lines.push(`<div class="row"><span style="color:#fff">${esc(r.slot || '')}</span><span style="color:#fff">${esc(r.kind || '')}</span></div>`);
     if (r.ilvl) lines.push(`<div class="gold">Item Level ${r.ilvl}</div>`);
+    if (r.bind) lines.push(`<div>${esc(r.bind)}</div>`);
+    if (r.slot || r.kind) lines.push(`<div class="row"><span style="color:#fff">${esc(r.slot || '')}</span><span style="color:#fff">${esc(r.kind || '')}</span></div>`);
+    if (r.armor) lines.push(`<div>${r.armor} Armor</div>`);
+    (r.stats || []).forEach((t) => lines.push(`<div>${esc(t)}</div>`));
     if (r.req) lines.push(`<div>Requires Level ${r.req}</div>`);
+    (r.equip || []).forEach((t) => lines.push(`<div style="color:#1eff00">${esc(t)}</div>`));
     if (r.forever) lines.push(`<div class="new">New in Forever</div>`);
     lines.push('<hr>');
     lines.push(`<div class="dim">Made with ${esc(r.prof)}</div>`);

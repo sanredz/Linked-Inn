@@ -1,5 +1,5 @@
 window.LI_DATA = {
- "generated": "2026-10-06 10:16",
+ "generated": "2026-10-06 10:23",
  "span": [
   1791235665,
   1791269402
@@ -681,6 +681,10 @@ window.LI_DATA = {
    "req": 0,
    "slot": null,
    "kind": null,
+   "stats": [],
+   "equip": [],
+   "armor": null,
+   "bind": null,
    "icon": 134252,
    "reagents": [
     {
@@ -704,6 +708,12 @@ window.LI_DATA = {
    "req": 3,
    "slot": "Chest",
    "kind": "Leather",
+   "stats": [
+    "+1 Agility"
+   ],
+   "equip": [],
+   "armor": 55,
+   "bind": "Binds when equipped",
    "icon": 132760,
    "reagents": [
     {
@@ -733,6 +743,10 @@ window.LI_DATA = {
    "req": 4,
    "slot": "Back",
    "kind": "Cloth",
+   "stats": [],
+   "equip": [],
+   "armor": 8,
+   "bind": null,
    "icon": 133150,
    "reagents": [
     {
@@ -762,6 +776,10 @@ window.LI_DATA = {
    "req": 3,
    "slot": "Feet",
    "kind": "Leather",
+   "stats": [],
+   "equip": [],
+   "armor": 31,
+   "bind": null,
    "icon": 132538,
    "reagents": [
     {
@@ -791,6 +809,10 @@ window.LI_DATA = {
    "req": 4,
    "slot": "Wrist",
    "kind": "Leather",
+   "stats": [],
+   "equip": [],
+   "armor": 21,
+   "bind": null,
    "icon": 132607,
    "reagents": [
     {
@@ -820,6 +842,10 @@ window.LI_DATA = {
    "req": 1,
    "slot": null,
    "kind": null,
+   "stats": [],
+   "equip": [],
+   "armor": null,
+   "bind": null,
    "icon": 133611,
    "reagents": [
     {
@@ -843,6 +869,10 @@ window.LI_DATA = {
    "req": 0,
    "slot": null,
    "kind": null,
+   "stats": [],
+   "equip": [],
+   "armor": null,
+   "bind": null,
    "icon": 134250,
    "reagents": [
     {
@@ -866,6 +896,10 @@ window.LI_DATA = {
    "req": 0,
    "slot": null,
    "kind": null,
+   "stats": [],
+   "equip": [],
+   "armor": null,
+   "bind": null,
    "icon": 134366,
    "reagents": [
     {
@@ -895,6 +929,13 @@ window.LI_DATA = {
    "req": 8,
    "slot": "Hands",
    "kind": "Leather",
+   "stats": [
+    "+1 Agility",
+    "+1 Stamina"
+   ],
+   "equip": [],
+   "armor": 41,
+   "bind": "Binds when equipped",
    "icon": 132939,
    "reagents": [
     {
@@ -924,6 +965,12 @@ window.LI_DATA = {
    "req": 5,
    "slot": "Legs",
    "kind": "Leather",
+   "stats": [
+    "+1 Agility"
+   ],
+   "equip": [],
+   "armor": 48,
+   "bind": "Binds when equipped",
    "icon": 134706,
    "reagents": [
     {
@@ -955,6 +1002,15 @@ window.LI_DATA = {
    "req": 45,
    "slot": "Head",
    "kind": "Cloth",
+   "stats": [
+    "+12 Spirit",
+    "+10 Intellect"
+   ],
+   "equip": [
+    "Equip: Increases damage and healing done by magical spells and effects by up to 21."
+   ],
+   "armor": 58,
+   "bind": "Binds when equipped",
    "icon": 132767,
    "reagents": [
     {
@@ -1008,6 +1064,16 @@ window.LI_DATA = {
    "req": 42,
    "slot": "Shoulder",
    "kind": "Mail",
+   "stats": [
+    "+9 Intellect",
+    "+6 Spirit",
+    "+7 Stamina"
+   ],
+   "equip": [
+    "Equip: Increases damage and healing done by magical spells and effects by up to 13."
+   ],
+   "armor": 213,
+   "bind": "Binds when picked up",
    "icon": 135043,
    "reagents": [
     {
@@ -1061,6 +1127,14 @@ window.LI_DATA = {
    "req": 35,
    "slot": "Back",
    "kind": "Cloth",
+   "stats": [
+    "+6 Spirit"
+   ],
+   "equip": [
+    "Equip: Increases damage and healing done by magical spells and effects by up to 7."
+   ],
+   "armor": 29,
+   "bind": "Binds when equipped",
    "icon": 133756,
    "reagents": [
     {
@@ -1102,6 +1176,14 @@ window.LI_DATA = {
    "req": 27,
    "slot": "Wrist",
    "kind": "Leather",
+   "stats": [
+    "+6 Stamina",
+    "+4 Strength",
+    "+4 Agility"
+   ],
+   "equip": [],
+   "armor": 47,
+   "bind": "Binds when equipped",
    "icon": 132614,
    "reagents": [
     {
@@ -1149,6 +1231,15 @@ window.LI_DATA = {
    "req": 25,
    "slot": "Legs",
    "kind": "Leather",
+   "stats": [
+    "+7 Intellect",
+    "+11 Spirit",
+    "+6 Stamina",
+    "+7 Strength"
+   ],
+   "equip": [],
+   "armor": 90,
+   "bind": "Binds when picked up",
    "icon": 323424,
    "reagents": [
     {
@@ -1196,6 +1287,12 @@ window.LI_DATA = {
    "req": 25,
    "slot": "Head",
    "kind": "Cloth",
+   "stats": [
+    "+12 Stamina"
+   ],
+   "equip": [],
+   "armor": 38,
+   "bind": "Binds when picked up",
    "icon": 132767,
    "reagents": [
     {
@@ -1237,6 +1334,14 @@ window.LI_DATA = {
    "req": 25,
    "slot": "Legs",
    "kind": "Cloth",
+   "stats": [
+    "+7 Intellect",
+    "+7 Stamina",
+    "+5 Spirit"
+   ],
+   "equip": [],
+   "armor": 41,
+   "bind": "Binds when picked up",
    "icon": 134590,
    "reagents": [
     {
@@ -1290,6 +1395,14 @@ window.LI_DATA = {
    "req": 25,
    "slot": "Held In Off-hand",
    "kind": null,
+   "stats": [
+    "+6 Intellect"
+   ],
+   "equip": [
+    "Equip: Increases damage and healing done by magical spells and effects by up to 7."
+   ],
+   "armor": null,
+   "bind": "Binds when picked up",
    "icon": 1769010,
    "reagents": [
     {
@@ -1325,6 +1438,16 @@ window.LI_DATA = {
    "req": 25,
    "slot": "Legs",
    "kind": "Mail",
+   "stats": [
+    "+8 Intellect",
+    "+7 Stamina"
+   ],
+   "equip": [
+    "Equip: Increases damage done by magical spells and effects by up to 8.",
+    "Equip: Increases healing done by spells and effects by up to 25."
+   ],
+   "armor": 191,
+   "bind": "Binds when picked up",
    "icon": 134662,
    "reagents": [
     {
@@ -1372,6 +1495,14 @@ window.LI_DATA = {
    "req": 22,
    "slot": "Chest",
    "kind": "Cloth",
+   "stats": [
+    "+7 Intellect",
+    "+6 Stamina",
+    "+4 Spirit"
+   ],
+   "equip": [],
+   "armor": 45,
+   "bind": "Binds when picked up",
    "icon": 132692,
    "reagents": [
     {
@@ -1445,6 +1576,15 @@ window.LI_DATA = {
     "req": 10,
     "slot": "Waist",
     "kind": "Cloth",
+    "stats": [
+     "+3 Intellect",
+     "+3 Stamina"
+    ],
+    "equip": [
+     "Equip: Increases damage and healing done by magical spells and effects by up to 4."
+    ],
+    "armor": 17,
+    "bind": "Binds when picked up",
     "icon": 236919,
     "reagents": [
      {
@@ -1480,6 +1620,13 @@ window.LI_DATA = {
     "req": 10,
     "slot": "Feet",
     "kind": "Mail",
+    "stats": [
+     "+4 Strength",
+     "+4 Stamina"
+    ],
+    "equip": [],
+    "armor": 109,
+    "bind": "Binds when picked up",
     "icon": 132554,
     "reagents": [
      {
@@ -1521,6 +1668,13 @@ window.LI_DATA = {
     "req": 10,
     "slot": "Feet",
     "kind": "Leather",
+    "stats": [
+     "+4 Agility",
+     "+4 Stamina"
+    ],
+    "equip": [],
+    "armor": 53,
+    "bind": "Binds when picked up",
     "icon": 132539,
     "reagents": [
      {
@@ -1556,6 +1710,16 @@ window.LI_DATA = {
     "req": 10,
     "slot": "Waist",
     "kind": "Cloth",
+    "stats": [
+     "+3 Intellect",
+     "+3 Spirit"
+    ],
+    "equip": [
+     "Equip: Increases healing done by spells and effects by up to 6.",
+     "Equip: Increases damage done by magical spells and effects by up to 2."
+    ],
+    "armor": 17,
+    "bind": "Binds when picked up",
     "icon": 236918,
     "reagents": [
      {
@@ -1591,6 +1755,14 @@ window.LI_DATA = {
     "req": 10,
     "slot": "Feet",
     "kind": "Mail",
+    "stats": [
+     "+4 Stamina"
+    ],
+    "equip": [
+     "Equip: Increases damage and healing done by magical spells and effects by up to 5."
+    ],
+    "armor": 109,
+    "bind": "Binds when picked up",
     "icon": 132582,
     "reagents": [
      {
@@ -1626,6 +1798,15 @@ window.LI_DATA = {
     "req": 10,
     "slot": "Feet",
     "kind": "Mail",
+    "stats": [
+     "+4 Intellect"
+    ],
+    "equip": [
+     "Equip: Increases healing done by spells and effects by up to 9.",
+     "Equip: Increases damage done by magical spells and effects by up to 3."
+    ],
+    "armor": 109,
+    "bind": "Binds when picked up",
     "icon": 132535,
     "reagents": [
      {
@@ -1661,6 +1842,13 @@ window.LI_DATA = {
     "req": 10,
     "slot": "Feet",
     "kind": "Leather",
+    "stats": [
+     "+4 Stamina",
+     "+4 Strength"
+    ],
+    "equip": [],
+    "armor": 53,
+    "bind": "Binds when picked up",
     "icon": 132571,
     "reagents": [
      {
@@ -1696,6 +1884,15 @@ window.LI_DATA = {
     "req": 10,
     "slot": "Feet",
     "kind": "Leather",
+    "stats": [
+     "+4 Intellect"
+    ],
+    "equip": [
+     "Equip: Increases damage done by magical spells and effects by up to 3.",
+     "Equip: Increases healing done by spells and effects by up to 9."
+    ],
+    "armor": 53,
+    "bind": "Binds when picked up",
     "icon": 321409,
     "reagents": [
      {
@@ -1731,6 +1928,14 @@ window.LI_DATA = {
     "req": 10,
     "slot": "Feet",
     "kind": "Leather",
+    "stats": [
+     "+4 Stamina"
+    ],
+    "equip": [
+     "Equip: Increases damage and healing done by magical spells and effects by up to 5."
+    ],
+    "armor": 53,
+    "bind": "Binds when picked up",
     "icon": 132560,
     "reagents": [
      {
@@ -1766,6 +1971,13 @@ window.LI_DATA = {
     "req": 20,
     "slot": "Head",
     "kind": "Leather",
+    "stats": [
+     "+10 Stamina",
+     "+8 Agility"
+    ],
+    "equip": [],
+    "armor": 76,
+    "bind": "Binds when picked up",
     "icon": 133133,
     "reagents": [
      {

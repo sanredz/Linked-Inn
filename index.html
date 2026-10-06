@@ -160,7 +160,7 @@ footer.page a { color: var(--ink-2); }
 </header>
 <p class="intro">Linked Inn is a profession finder for WoW Forever. While you play it quietly reads the professions of crafters around you and shares lists between its users. These charts are what that adds up to: no surveys, no hand-picked numbers, just what crafters actually know.</p>
 <main id="cards"></main>
-<footer class="page">Crafting professions only (Cooking, First Aid and Fishing are left out). "New to Forever" means recipes that don't exist in original Classic. "Blue" means the item it makes is rare quality. Collected on ClassicBetaPvP. <a href="https://github.com/sanredz/Linked-Inn" target="_blank" rel="noopener">Linked Inn on GitHub</a>. Linked Inn is free; if you like it, you can <a href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener">buy me a coffee</a>.</footer>
+<footer class="page">Crafting professions only (Cooking, First Aid and Fishing are left out). "New to Forever" means recipes that don't exist in original Classic. "Blue" means the item it makes is rare quality. Alliance only, PvP realm. <a href="https://github.com/sanredz/Linked-Inn" target="_blank" rel="noopener">Linked Inn on GitHub</a>. Linked Inn is free; if you like it, you can <a href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener">buy me a coffee</a>.</footer>
 <div id="tip"></div>
 <script src="data.js"></script>
 <script>
@@ -217,7 +217,7 @@ footer.page a { color: var(--ink-2); }
   }
 
   function frame(title, subtitle, height, body) {
-    const foot = `${fmt(D.crafters)} crafters · ClassicBetaPvP · ${span}`;
+    const foot = `${fmt(D.crafters)} crafters · Alliance · PvP realm · ${span}`;
     const fontFace = ASSETS.font ? `<style>@font-face{font-family:"Cinzel";src:url(${ASSETS.font}) format("woff2");font-weight:400 900;}</style>` : '';
     const logo = ASSETS.logo ? `<image href="${ASSETS.logo}" x="${W - 36 - 54}" y="22" width="54" height="${Math.round(54 * ASSETS.logoRatio)}"/>` : '';
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${height}" role="img" aria-label="${esc(title)}">
@@ -469,7 +469,7 @@ footer.page a { color: var(--ink-2); }
     T = THEMES[theme];
     document.documentElement.dataset.theme = theme;
     document.getElementById('theme').textContent = theme === 'dark' ? 'Parchment' : 'Dark wood';
-    document.getElementById('sub').textContent = `${fmt(D.crafters)} crafters · ${span} · rebuilt ${D.generated}`;
+    document.getElementById('sub').textContent = `${fmt(D.crafters)} Alliance crafters on a PvP realm · ${span}`;
     root.innerHTML = '';
     cards.forEach((c) => {
       const el = document.createElement('section');
@@ -576,7 +576,7 @@ footer.page a { color: var(--ink-2); }
   function flash(msg) {
     document.getElementById('sub').textContent = msg;
     clearTimeout(flash.t);
-    flash.t = setTimeout(() => document.getElementById('sub').textContent = `${fmt(D.crafters)} crafters · ${span} · rebuilt ${D.generated}`, 2500);
+    flash.t = setTimeout(() => document.getElementById('sub').textContent = `${fmt(D.crafters)} Alliance crafters on a PvP realm · ${span}`, 2500);
   }
 
   document.getElementById('theme').onclick = () => { theme = theme === 'dark' ? 'light' : 'dark'; render(); };

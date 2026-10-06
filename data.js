@@ -1,5 +1,5 @@
 window.LI_DATA = {
- "generated": "2026-10-06 10:23",
+ "generated": "2026-10-06 10:26",
  "span": [
   1791235665,
   1791269402
@@ -2053,32 +2053,6 @@ window.LI_DATA = {
    "name": "Tailoring",
    "meanKnown": 42.9,
    "catalogued": 193
-  }
- ],
- "where": [
-  {
-   "name": "Stormwind City",
-   "n": 479
-  },
-  {
-   "name": "Unknown",
-   "n": 37
-  },
-  {
-   "name": "Trade",
-   "n": 20
-  },
-  {
-   "name": "Linked Inn",
-   "n": 4
-  },
-  {
-   "name": "General",
-   "n": 1
-  },
-  {
-   "name": "Yell",
-   "n": 1
   }
  ],
  "viaLinkedInn": 4,

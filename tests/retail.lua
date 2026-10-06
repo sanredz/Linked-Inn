@@ -342,6 +342,50 @@ end
 
 do
 	RetailSetup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	local ids, names = {}, {}
+	for i = 1, 1500 do
+		ids[i] = { id = 500000 + i * 3 }
+		names[500000 + i * 3] = "Shared Recipe " .. i
+	end
+	W.spellNames = names
+	local p = { rank = 90, max = 100, recipes = {} }
+	for _, r in ipairs(ids) do p.recipes[r.id] = true end
+	local payload = LI.Sync.Encode({ tailoring = p })
+	local nameCalls, worst = 0, 0
+	local getName = C_Spell.GetSpellName
+	C_Spell.GetSpellName = function(id)
+		nameCalls = nameCalls + 1
+		return getName(id)
+	end
+	local after = C_Timer.After
+	C_Timer.After = function(sec, fn)
+		after(sec, function()
+			local before = nameCalls
+			fn()
+			worst = math.max(worst, nameCalls - before)
+		end)
+	end
+	local chunks = math.ceil(#payload / 200)
+	local B36 = LI.Sync.B36
+	for i = 1, chunks do
+		Fire("CHAT_MSG_ADDON", "LinkedInn", string.format("D1|abc|%s|%s|%s", B36(i), B36(chunks), payload:sub((i - 1) * 200 + 1, i * 200)), "WHISPER", "Sharer-TestRealm")
+	end
+	local sharer = LI.crafters["Sharer-TestRealm"]
+	check(sharer and sharer.profs.tailoring and sharer.profs.tailoring.count == 1500, "a shared list of 1500 recipes is saved at once", sharer and sharer.profs.tailoring and sharer.profs.tailoring.count)
+	check(nameCalls == 0, "without looking up a single recipe in the same frame", nameCalls)
+	Advance(5)
+	C_Timer.After = after
+	C_Spell.GetSpellName = getName
+	check(LI.db.recipes[500003] and LI.db.recipes[500003].n == "Shared Recipe 1" and LI.db.recipes[504500].n == "Shared Recipe 1500", "the recipe names fill in over the next moments")
+	check(worst <= 70, "a few dozen lookups at a time", worst)
+	check(#LI.Search("shared recipe 77", { profs = {} }) == 1, "and searching finds them")
+end
+
+do
+	RetailSetup()
 	Boot()
 	Advance(1)
 	LI.UI.Open()

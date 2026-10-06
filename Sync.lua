@@ -675,6 +675,47 @@ local function RecipeMeta(id, profKey)
 	return { id = id, name = name, icon = icon, item = item, kind = LI.KindOf(item, profKey) }
 end
 
+local META_SLICE = 60
+local metaQueue, metaRunning = {}, false
+
+local function FillLater(ids, profKey)
+	for _, id in ipairs(ids) do
+		local meta = LI.db.recipes[id]
+		if not (meta and meta.n) then
+			metaQueue[#metaQueue + 1] = { id = id, p = profKey }
+		end
+	end
+	if metaRunning or #metaQueue == 0 then
+		return
+	end
+	metaRunning = true
+	local function Step()
+		local n = 0
+		while #metaQueue > 0 and n < META_SLICE do
+			local q = table.remove(metaQueue)
+			local r = RecipeMeta(q.id, q.p)
+			if r.name or r.item then
+				local meta = LI.db.recipes[q.id] or {}
+				LI.db.recipes[q.id] = meta
+				meta.n = r.name or meta.n
+				meta.i = r.icon or meta.i
+				meta.item = r.item or meta.item
+				meta.p = meta.p or q.p
+				meta.k = r.kind or meta.k
+			end
+			n = n + 1
+		end
+		if #metaQueue > 0 then
+			LI.After(0, Step)
+		else
+			metaRunning = false
+			LI.Fire("CraftersChanged")
+		end
+	end
+	LI.After(0, Step)
+end
+Sync.FillLater = FillLater
+
 local function KnownProf(c, key)
 	return c and c.profs[key]
 end
@@ -811,9 +852,12 @@ local function Apply(key, ver, payload)
 		if prof.ids then
 			local list = {}
 			for _, id in ipairs(prof.ids) do
-				list[#list + 1] = RecipeMeta(id, prof.key)
+				list[#list + 1] = LI.RETAIL and { id = id } or RecipeMeta(id, prof.key)
 			end
 			LI.SetRecipes(key, info, list, "shared")
+			if LI.RETAIL then
+				FillLater(prof.ids, prof.key)
+			end
 		else
 			local p = c.profs[prof.key] or {}
 			c.profs[prof.key] = p

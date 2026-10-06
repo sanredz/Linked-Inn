@@ -2598,6 +2598,66 @@ do
 	Boot()
 	Advance(5)
 	ProfessionsFrame_LoadUI()
+	local stackNow = ""
+	debugstack = function() return stackNow end
+	ProfessionsFrame:RegisterEvent("TRADE_SKILL_SHOW")
+	ProfessionsFrame:SetScript("OnEvent", function(self)
+		stackNow = "[Blizzard_Game/Mainline/EventImplementation.lua]:476: in function 'HandleTradeSkillShow'"
+		self:Show()
+		stackNow = ""
+	end)
+	local drawn = {}
+	ProfessionsFrame:HookScript("OnShow", function(self)
+		LI.After(0, function()
+			if self:IsShown() then
+				drawn[#drawn + 1] = self:GetAlpha() > 0.05 and self:GetScale() > 0.05
+			end
+		end)
+	end)
+	W.autoWorks = true
+	W.replyDelay = 12
+	W.linkData["trade:Player-1-SLW:2259:171"] = { linkedName = "Slow Poke", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	LI.Reader.Want("Slow Poke-TestRealm", "Alchemy", "trade:Player-1-SLW:2259:171", { built = true })
+	for _ = 1, 150 do
+		Advance(0.1)
+	end
+	local seen = false
+	for _, d in ipairs(drawn) do
+		if d then seen = true end
+	end
+	check(#drawn > 0 and not seen, "a reply that comes after the window is unmuted again is hidden before it's ever drawn", #drawn)
+	check(not ProfessionsFrame:IsShown() and not W.trade, "and closed again")
+	check(ProfessionsFrame:GetAlpha() == 1 and ProfessionsFrame:GetScale() == 1, "with the window restored for next time")
+	W.autoWorks, W.replyDelay = false, nil
+	W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	Advance(0.1)
+	check(ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() == 1, "casting your own profession still shows it")
+	C_TradeSkillUI.CloseTradeSkill()
+	ProfessionsFrame:Hide()
+	W.trade = { linked = true, linkedName = "Brew Master", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	Advance(0.1)
+	check(ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() == 1, "so does your own profession shown under your name")
+	C_TradeSkillUI.CloseTradeSkill()
+	ProfessionsFrame:Hide()
+	Advance(10)
+	W.clickWorks = true
+	W.linkData["trade:Player-1-CLK:2259:171"] = { linkedName = "Click Me", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	SetItemRef("trade:Player-1-CLK:2259:171", "[Alchemy]", "LeftButton")
+	Advance(1)
+	check(ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() == 1, "a profession link you click still opens for you")
+	W.clickWorks = false
+	C_TradeSkillUI.CloseTradeSkill()
+	ProfessionsFrame:Hide()
+	debugstack = nil
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
 	W.autoWorks = true
 	W.replyDelay = 1
 	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }

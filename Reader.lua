@@ -240,6 +240,9 @@ local function LateReply()
 	return linked == true and not mine
 end
 
+local concealedHideAt = -60
+local ShowOwnFrame
+
 local function HookFrame()
 	local frame = ProfessionsFrame
 	if hooked or not frame or not frame.HookScript then
@@ -252,9 +255,22 @@ local function HookFrame()
 	frame:HookScript("OnHide", function()
 		if not concealed then
 			restUntil = Now() + REST
+		else
+			concealedHideAt = Now()
 		end
 		Reveal()
 	end)
+	if hooksecurefunc and type(ToggleProfessionsBook) == "function" then
+		hooksecurefunc("ToggleProfessionsBook", function()
+			if Now() - concealedHideAt < 0.2 and not FrameShown() then
+				LI.After(0, function()
+					if not FrameShown() then
+						ShowOwnFrame()
+					end
+				end)
+			end
+		end)
+	end
 	return true
 end
 
@@ -297,7 +313,7 @@ end
 
 local Kick
 
-local function ShowOwnFrame()
+ShowOwnFrame = function()
 	local frame = ProfessionsFrame
 	if not frame or FrameShown() then
 		return
@@ -558,7 +574,63 @@ local function ClearForUser()
 	restUntil = math.max(restUntil, Now() + REST)
 end
 
+local function ShownBy()
+	if not debugstack then
+		return nil
+	end
+	local stack = LI.Try(debugstack, 2, 60, 0)
+	if type(stack) ~= "string" then
+		return nil
+	end
+	if stack:find("ToggleProfessionsBook", 1, true) or stack:find("MicroButton", 1, true) then
+		return "user"
+	end
+	if stack:find("HandleTradeSkillShow", 1, true) or stack:find("ShowProfessionsFrame", 1, true) then
+		return "event"
+	end
+	return nil
+end
+
+local function Unasked()
+	if Now() - userClickAt <= USER_CLICK then
+		return false
+	end
+	local api = C_TradeSkillUI
+	if api and api.IsTradeSkillGuild and LI.Safe(LI.Try(api.IsTradeSkillGuild)) then
+		return false
+	end
+	if api and api.IsNPCCrafting and LI.Safe(LI.Try(api.IsNPCCrafting)) then
+		return false
+	end
+	local linked, mine = LinkState()
+	return linked == true and not mine
+end
+
+local function HideUnasked(frame)
+	Conceal(frame)
+	ours = true
+	lateAt = Now()
+	LI.After(4, function()
+		if concealed and not pending and FrameShown() then
+			CloseHidden()
+		end
+	end)
+	if pending then
+		return
+	end
+	LI.Log("A profession reply tried to open the window; hid it before it showed")
+	LI.After(SETTLE, function()
+		if ours and not pending then
+			CloseHidden()
+		end
+	end)
+end
+
 UserFrame = function(frame)
+	if ShownBy() == "event" and Unasked() then
+		HideUnasked(frame)
+		return
+	end
 	if Reader.SilentReads() then
 		if Now() - lateAt > 0.5 then
 			local linked, mine = LinkState()

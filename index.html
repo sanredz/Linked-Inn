@@ -303,12 +303,30 @@ footer.page a { color: var(--ink-2); }
   }, () => [['Profession', 'Crafters'], ...[...D.popularity].sort((a, b) => b.n - a.n).map((d) => [d.name, d.n])]);
 
   card('skill', () => {
-    const items = [...D.skill].sort((a, b) => b.mean - a.mean).map((d) => ({
-      label: d.name, value: d.mean, valueLabel: `${d.mean}`,
-      tip: `${d.name}|average ${d.mean}, median ${d.median}, ${fmt(d.n)} crafters, ${d.atCap} at ${D.cap}`,
-    }));
-    const g = hbars(items);
-    return frame('Average skill by profession', `Across all ${fmt(D.professionEntries)} profession entries the average is ${D.meanSkill} out of ${D.cap}`, g.height, g.body);
+    const rows = [...D.skill].sort((a, b) => b.median - a.median || b.mean - a.mean);
+    const top = 150, row = 46, barH = 22, labelW = 170, x0 = 36 + labelW, bw = W - x0 - 160;
+    const sx = (v) => x0 + bw * v / D.cap;
+    let body = '';
+    body += rbar(36, 106, 22, 12, T.bar);
+    body += text(64, 117, 'Average', { size: 13, fill: T.ink2 });
+    body += `<rect x="146" y="102" width="4" height="20" rx="1.5" fill="${T.ink}"/>`;
+    body += text(158, 117, 'Median', { size: 13, fill: T.ink2 });
+    const bottom = top + rows.length * row - row + barH;
+    [75, 150, D.cap].forEach((t) => {
+      body += `<line x1="${sx(t)}" x2="${sx(t)}" y1="${top - 10}" y2="${bottom + 8}" stroke="${T.grid}" stroke-width="1" stroke-dasharray="3 4"/>`;
+      body += text(sx(t), bottom + 26, String(t), { size: 12, fill: T.muted, anchor: 'middle', tabular: true });
+    });
+    rows.forEach((d, i) => {
+      const y = top + i * row;
+      const tip = `${d.name}|median ${d.median}, average ${d.mean} · ${fmt(d.n)} crafters, ${d.atCap} at ${D.cap}`;
+      body += text(36, y + barH / 2 + 5, d.name, { size: 15 });
+      body += `<rect x="${x0}" y="${y}" width="${bw}" height="${barH}" rx="4" fill="${T.track}" data-tip="${esc(tip)}"/>`;
+      body += rbar(x0, y, sx(d.mean) - x0, barH, T.bar, tip);
+      body += `<rect x="${sx(d.median) - 2}" y="${y - 5}" width="4" height="${barH + 10}" rx="1.5" fill="${T.ink}" stroke="${T.surface}" stroke-width="1.5" style="pointer-events:none"/>`;
+      body += text(W - 36, y + barH / 2 + 5, `${Math.round(d.median)} / ${Math.round(d.mean)}`, { size: 14, fill: T.ink2, anchor: 'end', tabular: true });
+    });
+    body += text(W - 36, top - 18, 'median / avg', { size: 12, fill: T.muted, anchor: 'end' });
+    return frame('Skill by profession', `Median and average skill out of ${D.cap}; lines mark Journeyman 75 and Expert 150`, bottom + 92, body);
   }, () => [['Profession', 'Average', 'Median', 'Crafters'], ...D.skill.map((d) => [d.name, d.mean, d.median, d.n])]);
 
   card('tiers', () => {

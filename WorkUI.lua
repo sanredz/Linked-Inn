@@ -453,7 +453,7 @@ local function ChipTooltip(chip)
 	local p = c and meta.p and c.profs[meta.p]
 	if p then
 		local skill = p.rank and string.format(" %d", p.rank) or ""
-		if p.recipes and p.recipes[req.recipe] then
+		if LI.KnowsRecipe(p, meta.p, req.recipe) then
 			GameTooltip:AddLine(string.format("%s%s, knows this recipe", p.name or meta.p, skill), 0.35, 0.95, 0.45)
 		else
 			GameTooltip:AddLine((p.name or meta.p) .. skill, 0.85, 0.85, 0.85)

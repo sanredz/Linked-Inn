@@ -119,7 +119,7 @@ function Sync.Encode(profs)
 	for _, key in ipairs(keys) do
 		local p = profs[key]
 		local ids = {}
-		for id in pairs(p.recipes or {}) do
+		for _, id in ipairs(LI.RecipeList(p, key)) do
 			ids[#ids + 1] = id
 		end
 		table.sort(ids)

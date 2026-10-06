@@ -203,6 +203,71 @@ do
 	Advance(0.1)
 	check(ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() == 1, "opening your own profession from the book still shows it")
 	debugstack = nil
+	ProfessionsFrame:Hide()
+	ProfessionsFrame = nil
+end
+
+do
+	RetailSetup()
+	Boot()
+	Advance(1)
+	math.randomseed(7)
+	local okAll = true
+	for round = 1, 40 do
+		local set, ids = {}, {}
+		for _ = 1, math.random(0, 400) do
+			local id = math.random(1, 1300000)
+			if not set[id] then
+				set[id] = true
+				ids[#ids + 1] = id
+			end
+		end
+		local packed = LI.PackRecipes("tailoring", set)
+		local p = { recipes = packed }
+		local back = LI.RecipeList(p, "tailoring")
+		local seen = {}
+		for _, id in ipairs(back) do seen[id] = true end
+		for _, id in ipairs(ids) do
+			if not seen[id] or not LI.KnowsRecipe(p, "tailoring", id) then okAll = false end
+		end
+		if #back ~= #ids then okAll = false end
+		if LI.KnowsRecipe(p, "tailoring", 1300001 + round) then okAll = false end
+	end
+	check(okAll, "recipes stored compactly come back exactly, and nothing else does")
+	local big = {}
+	for i = 1, 1000 do big[2000000 + i] = true end
+	local packedBig = LI.PackRecipes("alchemy", big)
+	check(#packedBig <= 170, "a thousand recipes take under two hundred characters", #packedBig)
+	local again = LI.PackRecipes("alchemy", big)
+	check(again == packedBig, "packing the same recipes twice gives the same string")
+end
+
+do
+	RetailSetup()
+	Boot()
+	Advance(5)
+	W.autoWorks = true
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna-TestRealm", "Player-1-AAA", "Trade - City")
+	Advance(6)
+	W.autoWorks = false
+	local p = LI.crafters["Anna-TestRealm"].profs.tailoring
+	check(type(p.recipes) == "string" and p.count == 2, "retail keeps recipes as a compact string", type(p.recipes))
+	check(LI.KnowsRecipe(p, "tailoring", 18560) and LI.KnowsRecipe(p, "tailoring", 3914) and not LI.KnowsRecipe(p, "tailoring", 3915), "and knows exactly the learned ones")
+	local results = LI.Search("mooncloth", { profs = {} })
+	check(#results == 1 and results[1].key == "Anna-TestRealm" and results[1].recipe == 18560, "searching an item finds the crafter", #results)
+	local none = LI.Search("brown linen shirt", { profs = {} })
+	check(#none == 0, "an unlearned recipe finds nobody", #none)
+	local book = LI.Book.Recipes("Anna-TestRealm", "tailoring", "")
+	check(#book == 2, "the recipe book lists the learned recipes", #book)
+	local enc = LI.Sync.Encode({ tailoring = p })
+	local dec = LI.Sync.Decode(enc)
+	check(dec and dec[1].ids and #dec[1].ids == 2, "sharing sends the same recipes", enc)
+	local saved = Logout()
+	check(not saved:find("%[18560%]=true"), "saved data holds the compact string, not a list of recipes")
+	Boot(saved)
+	Advance(1)
+	local p2 = LI.crafters["Anna-TestRealm"].profs.tailoring
+	check(LI.KnowsRecipe(p2, "tailoring", 18560) and #LI.Search("mooncloth", { profs = {} }) == 1, "and it all still works after a reload")
 end
 
 do

@@ -129,7 +129,7 @@ function Book.Recipes(key, profKey, query)
 		return list
 	end
 	local q = LI.Trim(query or ""):lower()
-	for id in pairs(p.recipes) do
+	for _, id in ipairs(LI.RecipeList(p, profKey)) do
 		local meta = Meta(id)
 		local name = meta.n or ("Recipe " .. id)
 		if Matches(meta, name, q) then

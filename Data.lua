@@ -340,9 +340,9 @@ function LI.Housekeep(modeKey, dry)
 	for key, c in pairs(LI.crafters) do
 		if type(c) == "table" and type(c.profs) == "table" then
 			for profKey, p in pairs(c.profs) do
-				if type(p) == "table" and type(p.recipes) == "table" then
+				if type(p) == "table" and (type(p.recipes) == "table" or type(p.recipes) == "string") then
 					pools[profKey] = pools[profKey] or {}
-					table.insert(pools[profKey], { key = key, c = c, p = p })
+					table.insert(pools[profKey], { key = key, c = c, p = p, ids = LI.RecipeList(p, profKey) })
 				end
 			end
 		end
@@ -352,7 +352,7 @@ function LI.Housekeep(modeKey, dry)
 		if #pool > mode.keep then
 			local holders = {}
 			for _, e in ipairs(pool) do
-				for id in pairs(e.p.recipes) do
+				for _, id in ipairs(e.ids) do
 					holders[id] = (holders[id] or 0) + 1
 				end
 			end
@@ -367,14 +367,14 @@ function LI.Housekeep(modeKey, dry)
 				local e = pool[i]
 				local old = mode.days == 0 or now - (e.c.seen or 0) > mode.days * 86400
 				local rare = false
-				for id in pairs(e.p.recipes) do
+				for _, id in ipairs(e.ids) do
 					if holders[id] - 1 < mode.rare then
 						rare = true
 						break
 					end
 				end
 				if old and not rare and not Protected(e.key) then
-					for id in pairs(e.p.recipes) do
+					for _, id in ipairs(e.ids) do
 						holders[id] = holders[id] - 1
 					end
 					removed = removed + 1
@@ -464,6 +464,7 @@ LI.On("ADDON_LOADED", function(name)
 	db.realms = type(db.realms) == "table" and db.realms or {}
 	db.recipes = type(db.recipes) == "table" and db.recipes or {}
 	db.cats = type(db.cats) == "table" and db.cats or {}
+	db.slots = type(db.slots) == "table" and db.slots or {}
 	db.profLinks = type(db.profLinks) == "table" and db.profLinks or {}
 	for profKey, nums in pairs(PROF_LINKS) do
 		if type(db.profLinks[profKey]) ~= "table" then
@@ -581,6 +582,101 @@ function LI.NoteProfession(key, info)
 	return isNew
 end
 
+local B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+local B64_VALUE = {}
+for i = 1, #B64 do
+	B64_VALUE[B64:byte(i)] = i - 1
+end
+local BIT = { 1, 2, 4, 8, 16, 32 }
+local slotIndex = {}
+
+local function Slots(profKey)
+	local all = LI.db.slots
+	local list = all[profKey]
+	if type(list) ~= "table" then
+		list = {}
+		all[profKey] = list
+		slotIndex[profKey] = nil
+	end
+	local index = slotIndex[profKey]
+	if not index then
+		index = {}
+		for slot, id in ipairs(list) do
+			index[id] = slot
+		end
+		slotIndex[profKey] = index
+	end
+	return list, index
+end
+
+function LI.PackRecipes(profKey, set)
+	local list, index = Slots(profKey)
+	local values, top = {}, 0
+	for id in pairs(set) do
+		local slot = index[id]
+		if not slot then
+			list[#list + 1] = id
+			slot = #list
+			index[id] = slot
+		end
+		local at = math.floor((slot - 1) / 6) + 1
+		for k = top + 1, at do
+			values[k] = 0
+		end
+		top = math.max(top, at)
+		values[at] = values[at] + BIT[(slot - 1) % 6 + 1]
+	end
+	local chars = {}
+	for k = 1, top do
+		chars[k] = B64:sub(values[k] + 1, values[k] + 1)
+	end
+	return table.concat(chars)
+end
+
+function LI.KnowsRecipe(p, profKey, id)
+	local r = p and p.recipes
+	if type(r) == "table" then
+		return r[id] == true
+	end
+	if type(r) ~= "string" or not id then
+		return false
+	end
+	local _, index = Slots(profKey)
+	local slot = index[id]
+	if not slot then
+		return false
+	end
+	local at = math.floor((slot - 1) / 6) + 1
+	local value = B64_VALUE[r:byte(at) or 0]
+	return value ~= nil and math.floor(value / BIT[(slot - 1) % 6 + 1]) % 2 == 1
+end
+
+function LI.RecipeList(p, profKey)
+	local r = p and p.recipes
+	local out = {}
+	if type(r) == "table" then
+		for id in pairs(r) do
+			out[#out + 1] = id
+		end
+	elseif type(r) == "string" then
+		local list = Slots(profKey)
+		for at = 1, #r do
+			local value = B64_VALUE[r:byte(at)] or 0
+			if value > 0 then
+				for b = 1, 6 do
+					if math.floor(value / BIT[b]) % 2 == 1 then
+						local id = list[(at - 1) * 6 + b]
+						if id then
+							out[#out + 1] = id
+						end
+					end
+				end
+			end
+		end
+	end
+	return out
+end
+
 function LI.SetRecipes(key, info, recipes, via)
 	if not LI.ready or not key or not info then
 		return 0
@@ -620,7 +716,7 @@ function LI.SetRecipes(key, info, recipes, via)
 			meta.r = r.reagents or meta.r
 		end
 	end
-	p.recipes = set
+	p.recipes = LI.RETAIL and LI.PackRecipes(profKey, set) or set
 	p.count = count
 	if LI.TooLow(key, p.rank) then
 		LI.Log(string.format("Skipped %s's %s (skill %d, below %d)", LI.ShortName(key), info.name, p.rank, LI.settings.keepSkill))
@@ -876,12 +972,17 @@ function LI.Search(query, opts)
 		return minSkill <= 0 or (p.rank or 0) >= minSkill
 	end
 	local recipeSearch = q ~= "" or kind ~= "all"
-	local hits, hitCount = {}, 0
+	local hits, hitCount, hitsByProf = {}, 0, {}
 	if recipeSearch then
 		for id, meta in pairs(LI.db.recipes) do
 			if KindMatch(meta, kind) and (q == "" or Find(meta.n, q)) then
 				hits[id] = meta
 				hitCount = hitCount + 1
+				if meta.p then
+					local list = hitsByProf[meta.p] or {}
+					hitsByProf[meta.p] = list
+					list[#list + 1] = id
+				end
 			end
 		end
 	end
@@ -894,12 +995,30 @@ function LI.Search(query, opts)
 				if p.recipes and Allowed(profKey) and Maxed(profKey, p) then
 					local g = { key = profKey, confidence = 0, makes = 0 }
 					if recipeSearch and hitCount > 0 then
-						for id in pairs(p.recipes) do
+						local function Consider(id)
 							local meta = hits[id]
 							if meta then
 								g.makes = g.makes + 1
 								if not g.recipeMeta or (meta.n or "") < (g.recipeMeta.n or "") then
 									g.recipe, g.recipeMeta = id, meta
+								end
+							end
+						end
+						if type(p.recipes) == "table" then
+							for id in pairs(p.recipes) do
+								Consider(id)
+							end
+						else
+							local mine = hitsByProf[profKey]
+							if mine and #mine < (p.count or 0) then
+								for _, id in ipairs(mine) do
+									if LI.KnowsRecipe(p, profKey, id) then
+										Consider(id)
+									end
+								end
+							elseif mine then
+								for _, id in ipairs(LI.RecipeList(p, profKey)) do
+									Consider(id)
 								end
 							end
 						end

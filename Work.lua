@@ -218,7 +218,7 @@ function Work.MyRecipes()
 	local mine = {}
 	local c = LI.crafters and LI.crafters[LI.playerKey]
 	for profKey, p in pairs(c and c.profs or {}) do
-		for id in pairs(p.recipes or {}) do
+		for _, id in ipairs(LI.RecipeList(p, profKey)) do
 			mine[id] = profKey
 		end
 	end
@@ -259,8 +259,8 @@ function Work.KnownCrafters(recipe)
 	local count, online = 0, 0
 	for key, c in pairs(LI.crafters or {}) do
 		if key ~= LI.playerKey then
-			for _, p in pairs(c.profs) do
-				if p.recipes and p.recipes[recipe] then
+			for profKey, p in pairs(c.profs) do
+				if LI.KnowsRecipe(p, profKey, recipe) then
 					count = count + 1
 					if LI.Status(key) == "online" then
 						online = online + 1

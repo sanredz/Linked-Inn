@@ -1373,7 +1373,8 @@ do
 	Fire("TRADE_SKILL_SHOW")
 	Advance(1)
 	check(LI.CheckOnline("Anna Smith-TestRealm") and LI.IsChecking("Anna Smith-TestRealm"), "a check can be queued while your own profession window is open")
-	Advance(7)
+	check(ProfessionsFrame:IsShown(), "your own profession opened during the quiet spell still shows its window")
+	Advance(21)
 	check(not LI.IsChecking("Anna Smith-TestRealm"), "a check never stays stuck on Checking")
 	C_TradeSkillUI.CloseTradeSkill()
 	Advance(3)
@@ -2405,7 +2406,7 @@ do
 	W.autoWorks = true
 	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = {} }
 	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
-	Advance(12)
+	Advance(25)
 	W.autoWorks = false
 	local listens = false
 	for _, f in ipairs({ GetFramesRegisteredForEvent("TRADE_SKILL_SHOW") }) do
@@ -2539,6 +2540,57 @@ do
 	Advance(10)
 	check(LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes, "a background read cancelled by your click is tried again later")
 	W.autoWorks = false
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	ProfessionsFrame:RegisterEvent("TRADE_SKILL_SHOW")
+	ProfessionsFrame:SetScript("OnEvent", function(self) self:Show() end)
+	W.autoWorks = true
+	W.replyDelay = 1
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	for _ = 1, 40 do
+		Advance(0.1)
+		if #W.hyperlinks > 0 then break end
+	end
+	Advance(0.2)
+	GetMouseFoci = function() return { UIParent } end
+	Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
+	GetMouseFoci = nil
+	local flashed = false
+	for _ = 1, 30 do
+		Advance(0.1)
+		if ProfessionsFrame:IsShown() then flashed = true end
+	end
+	local muted = false
+	for _, e in ipairs(LI.db.log) do
+		if e.m:find("while the window was muted", 1, true) then muted = true end
+	end
+	check(not flashed and muted, "a reply that arrives after you clicked away never flashes the window", tostring(muted))
+	check(not W.trade, "and it is closed unseen")
+	check(not W.UIHears(), "the window stays muted for a few seconds after a read")
+	ProfessionsFrame:Show()
+	check(W.UIHears(), "your hotkey or the micro button unmutes it at once")
+	ProfessionsFrame:Hide()
+	Advance(20)
+	W.autoWorks = false
+	W.replyDelay = nil
+	W.linkData["trade:Player-1-BBB:3908:197"] = { linkedName = "Bob Stone", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-BBB", 3908, 197, "Tailoring"), "Bob Stone-TestRealm", "Player-1-BBB", "Trade - City")
+	for _ = 1, 40 do
+		Advance(0.1)
+		if not W.UIHears() then break end
+	end
+	Advance(3)
+	check(not W.UIHears(), "a read that got no answer keeps the window muted for late replies")
+	SetItemRef("trade:Player-1-CCC:2259:171", "[Alchemy]", "LeftButton")
+	check(W.UIHears(), "clicking a profession link unmutes it at once")
+	Advance(20)
+	check(W.UIHears(), "and with nothing being read it stays unmuted")
 end
 
 do

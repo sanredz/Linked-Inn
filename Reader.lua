@@ -358,13 +358,18 @@ end
 
 local silenced
 local QUIET_EVENTS = { "TRADE_SKILL_SHOW" }
+local QUIET_HOLD = 8
+local holdUntil = 0
 local quietTries, quietWorks, quietOff = 0, 0, false
 
 local function Silence()
-	if silenced or quietOff or not GetFramesRegisteredForEvent then
+	if quietOff or not GetFramesRegisteredForEvent then
 		return
 	end
 	quietTries = quietTries + 1
+	if silenced then
+		return
+	end
 	silenced = {}
 	for _, event in ipairs(QUIET_EVENTS) do
 		local frames = { LI.Try(GetFramesRegisteredForEvent, event) }
@@ -389,6 +394,18 @@ local function Unsilence()
 end
 Reader.Unsilence = Unsilence
 
+local function Hold()
+	if not silenced then
+		return
+	end
+	holdUntil = Now() + QUIET_HOLD
+	LI.After(QUIET_HOLD + 0.1, function()
+		if not pending and Now() >= holdUntil then
+			Unsilence()
+		end
+	end)
+end
+
 function Reader.SilentReads()
 	return not quietOff and GetFramesRegisteredForEvent ~= nil
 end
@@ -402,10 +419,14 @@ local function Finish(job, outcome)
 	if silenced and outcome == "ok" then
 		quietWorks = quietWorks + 1
 	end
-	Unsilence()
 	if not quietOff and quietWorks == 0 and quietTries >= 8 then
 		quietOff = true
 		LI.Log("Quiet reading got no answers; reading with the hidden window instead")
+	end
+	if quietOff then
+		Unsilence()
+	else
+		Hold()
 	end
 	if job.probe then
 		pending = nil
@@ -487,7 +508,7 @@ local function Yield(why)
 	end
 	pending = nil
 	lastDone = Now()
-	Unsilence()
+	Hold()
 	local again = {}
 	for k, v in pairs(job) do
 		again[k] = v
@@ -509,6 +530,7 @@ local function UserOpened()
 	ownProf = type(base) == "table" and LI.Safe(base.professionID) or nil
 	ownAt = Now()
 	local missed = silenced ~= nil
+	Unsilence()
 	Yield()
 	Reveal()
 	if missed then
@@ -1054,8 +1076,17 @@ LI.On("TRADE_SKILL_SHOW", function()
 		UserOpened()
 	elseif Now() - userClickAt <= USER_CLICK then
 		ours = false
-	elseif pending or silenced then
+	elseif pending then
 		ours = true
+	elseif silenced then
+		ours = true
+		lateAt = Now()
+		LI.Log("A late reply arrived while the window was muted; read and closed it unseen")
+		LI.After(SETTLE, function()
+			if ours and not pending then
+				CloseHidden()
+			end
+		end)
 	elseif LateReply() then
 		ours = true
 		lateAt = Now()
@@ -1154,6 +1185,7 @@ LI.Listen("Ready", function()
 				return
 			end
 			userClickAt = Now()
+			Unsilence()
 			local parsed = LI.ParseTrade(link:sub(7))
 			local key = parsed and parsed.guid and LI.guids[parsed.guid]
 			clicked = key and { key = key, at = Now() } or nil

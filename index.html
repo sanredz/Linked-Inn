@@ -189,7 +189,20 @@ footer.page a { color: var(--ink-2); }
       heatInk: ['#5b4630', '#2a1d14', '#f7eedb', '#f7eedb', '#f7eedb', '#f7eedb'],
     },
   };
-  const ASSETS = { logo: '', font: '', icons: {} };
+  const ASSETS = { logo: '', font: '', icons: {}, classes: {}, profs: {} };
+  const PROF_COLORS = {
+    dark: { alchemy: '#3987e5', blacksmithing: '#d95926', enchanting: '#199e70', engineering: '#c98500', leatherworking: '#d55181', tailoring: '#9085e9' },
+    light: { alchemy: '#2a78d6', blacksmithing: '#eb6834', enchanting: '#1baf7a', engineering: '#c98500', leatherworking: '#e87ba4', tailoring: '#4a3aa7' },
+  };
+  const CLASS_COLORS = {
+    dark: { WARRIOR: '#c69b6d', PALADIN: '#f48cba', HUNTER: '#aad372', ROGUE: '#fff468', PRIEST: '#ffffff', SHAMAN: '#0070dd', MAGE: '#3fc7eb', WARLOCK: '#8788ee', DRUID: '#ff7c0a' },
+    light: { WARRIOR: '#b4895a', PALADIN: '#e77fae', HUNTER: '#8fbf55', ROGUE: '#e8d84a', PRIEST: '#d9d4c8', SHAMAN: '#0070dd', MAGE: '#2fb3d8', WARLOCK: '#7778e0', DRUID: '#f07208' },
+  };
+  function inkOn(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    return (0.299 * r + 0.587 * g + 0.114 * b) > 140 ? '#1a120c' : '#ffffff';
+  }
   const ITEM_COLORS = ['#9d9d9d', '#ffffff', '#1eff00', '#3a95f5', '#b94cf7', '#ff8000'];
   const ITEMS = {};
   let theme = 'dark';
@@ -385,10 +398,73 @@ footer.page a { color: var(--ink-2); }
   const PROF_COLS = () => D.classHeat.map((r) => ({ key: r.key, name: r.name }));
   const CLASS_COLS = () => D.classes.map((c) => ({ key: c.key, name: c.name }));
 
-  card('classes', () => heatmap(D.classHeat, CLASS_COLS(), 'Which classes pick which profession', 'Each row is one profession split by class; the biggest share is labelled', 'Share of each profession'),
+  function splitBars(cfg) {
+    const labelW = 170, x0 = 36 + labelW, bw = W - x0 - 36, barH = 36, gapY = 20;
+    let body = '';
+    const lw = (W - 72) / cfg.parts.length;
+    cfg.parts.forEach((p, j) => {
+      const lx = 36 + j * lw;
+      if (cfg.icon(p)) body += `<image href="${cfg.icon(p)}" x="${lx}" y="104" width="18" height="18"/>`;
+      body += `<rect x="${lx + 22}" y="108" width="10" height="10" rx="2" fill="${cfg.color(p)}"/>`;
+      body += text(lx + 37, 118, cfg.name(p), { size: 12, fill: T.ink2 });
+    });
+    const top = 148;
+    cfg.rows.forEach((r, i) => {
+      const y = top + i * (barH + gapY);
+      const total = cfg.parts.reduce((a, p) => a + (r.cells[p] || 0), 0);
+      body += text(36, y + barH / 2 + 5, r.name, { size: 15 });
+      body += text(36, y + barH / 2 + 22, cfg.sub(r, total), { size: 11, fill: T.muted });
+      let x = x0;
+      cfg.parts.forEach((p) => {
+        const n = r.cells[p] || 0;
+        if (!n || !total) return;
+        const w = bw * n / total;
+        const share = Math.round(100 * n / total);
+        const segW = Math.max(w - 2, 0.5);
+        const color = cfg.color(p);
+        body += `<rect x="${x}" y="${y}" width="${segW}" height="${barH}" fill="${color}"${theme === 'light' ? ' stroke="rgba(0,0,0,0.18)" stroke-width="1"' : ''} data-tip="${esc(cfg.tip(r, p, n, total, share))}"/>`;
+        const icon = cfg.icon(p);
+        if (icon && segW >= 30) {
+          const ix = segW >= 74 ? x + 6 : x + segW / 2 - 11;
+          body += `<image href="${icon}" x="${ix}" y="${y + 7}" width="22" height="22" style="pointer-events:none"/>`;
+        }
+        if (segW >= 74) body += `<text x="${x + 34}" y="${y + barH / 2 + 5}" fill="${inkOn(color)}" font-size="13" font-weight="600" font-family='${FONT}' style="pointer-events:none;font-variant-numeric:tabular-nums">${share}%</text>`;
+        x += w;
+      });
+    });
+    return frame(cfg.title, cfg.subtitle, top + cfg.rows.length * (barH + gapY) + 50, body);
+  }
+
+  card('classes', () => {
+    const names = Object.fromEntries(D.classes.map((c) => [c.key, c.name]));
+    return splitBars({
+      parts: D.classes.map((c) => c.key),
+      rows: [...D.classHeat].sort((a, b) => b.total - a.total),
+      name: (c) => names[c],
+      color: (c) => CLASS_COLORS[theme][c],
+      icon: (c) => ASSETS.classes[c],
+      sub: (r) => fmt(r.total) + ' crafters',
+      tip: (r, c, n, total, share) => `${r.name} · ${names[c]}|${n} of ${fmt(total)} ${r.name.toLowerCase()} crafters (${share}%)`,
+      title: 'Who makes up each profession',
+      subtitle: 'Every bar is all crafters of one profession, split by class',
+    });
+  },
     () => [['Profession', ...D.classes.map((c) => c.name)], ...D.classHeat.map((r) => [r.name, ...D.classes.map((c) => r.cells[c.key] || 0)])]);
 
-  card('classProfs', () => heatmap(D.classProfs, PROF_COLS(), 'What each class crafts', "Share of each class's crafters who have each profession (some have two); the favourite is labelled", 'Share of each class'),
+  card('classProfs', () => {
+    const names = Object.fromEntries(D.classHeat.map((p) => [p.key, p.name]));
+    return splitBars({
+      parts: D.classHeat.map((p) => p.key),
+      rows: [...D.classProfs].sort((a, b) => b.total - a.total),
+      name: (p) => names[p],
+      color: (p) => PROF_COLORS[theme][p],
+      icon: (p) => ASSETS.profs[p],
+      sub: (r) => fmt(r.total) + ' crafters',
+      tip: (r, p, n, total, share) => `${r.name} · ${names[p]}|${share}% of everything ${r.name.toLowerCase()}s craft · ${n} ${r.name.toLowerCase()}s have it`,
+      title: 'What each class crafts',
+      subtitle: 'Every bar is all the crafting professions one class has picked',
+    });
+  },
     () => [['Class', ...D.classHeat.map((r) => r.name)], ...D.classProfs.map((r) => [r.name, ...D.classHeat.map((p) => r.cells[p.key] || 0)])]);
 
   card('classSkill', () => {
@@ -602,6 +678,12 @@ footer.page a { color: var(--ink-2); }
       await new Promise((ok) => { img.onload = ok; img.onerror = ok; img.src = ASSETS.logo; });
       ASSETS.logoRatio = img.naturalWidth ? img.naturalHeight / img.naturalWidth : 1;
       ASSETS.font = await dataUrl('assets/cinzel.woff2');
+      await Promise.all(['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'].map(async (c) => {
+        try { ASSETS.classes[c] = await dataUrl(`assets/classes/${c}.png`); } catch (e) {}
+      }));
+      await Promise.all(['alchemy', 'blacksmithing', 'enchanting', 'engineering', 'leatherworking', 'tailoring'].map(async (p) => {
+        try { ASSETS.profs[p] = await dataUrl(`assets/profs/${p}.png`); } catch (e) {}
+      }));
       await Promise.all((D.icons || []).map(async (id) => {
         try { ASSETS.icons[id] = await dataUrl(`assets/icons/${id}.png`); } catch (e) {}
       }));

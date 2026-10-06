@@ -240,7 +240,8 @@ local function InstallStubs()
 	_G.UnitClass = function() return "Mage", "MAGE" end
 	_G.C_AddOns = { GetAddOnMetadata = function(addon, field) if addon == ADDON_NAME and field == "Version" then return TOC_VERSION end end }
 	_G.GetRealmName = function() return "Test Realm" end
-	_G.GetNormalizedRealmName = function() return "TestRealm" end
+	_G.GetNormalizedRealmName = function() return W.realm or "TestRealm" end
+	_G.GetAutoCompleteRealms = function() return W.connected or {} end
 	_G.MenuUtil = { CreateContextMenu = function(owner, gen)
 		local function NewMenu()
 			local m = { entries = {} }

@@ -489,11 +489,34 @@ LI.On("ADDON_LOADED", function(name)
 	LI.test = db.test
 end)
 
+function LI.StorageRealm()
+	local own = LI.RealmName()
+	if not LI.RETAIL or not GetAutoCompleteRealms then
+		return own
+	end
+	local list = LI.Try(GetAutoCompleteRealms)
+	if type(list) ~= "table" then
+		return own
+	end
+	local names = {}
+	for _, name in ipairs(list) do
+		name = LI.Safe(name)
+		if type(name) == "string" and name ~= "" then
+			names[#names + 1] = (name:gsub("[%s%-]", ""))
+		end
+	end
+	if #names == 0 then
+		return own
+	end
+	table.sort(names)
+	return names[1]
+end
+
 LI.On("PLAYER_LOGIN", function()
 	if not LI.db then
 		return
 	end
-	LI.realm = LI.RealmName()
+	LI.realm = LI.StorageRealm()
 	LI.playerKey = LI.PlayerKey()
 	local realms = LI.db.realms
 	realms[LI.realm] = type(realms[LI.realm]) == "table" and realms[LI.realm] or {}
@@ -503,6 +526,18 @@ LI.On("PLAYER_LOGIN", function()
 	realm.waiting = type(realm.waiting) == "table" and realm.waiting or {}
 	realm.tried = type(realm.tried) == "table" and realm.tried or {}
 	realm.low = type(realm.low) == "table" and realm.low or {}
+	local own = LI.RealmName()
+	local single = own ~= LI.realm and realms[own]
+	if type(single) == "table" then
+		for _, field in ipairs({ "crafters", "favorites", "waiting", "tried", "low" }) do
+			for k, v in pairs(type(single[field]) == "table" and single[field] or {}) do
+				if realm[field][k] == nil then
+					realm[field][k] = v
+				end
+			end
+		end
+		realms[own] = nil
+	end
 	LI.db.settings.profs = {}
 	LI.db.settings.liOnly = false
 	LI.crafters = realm.crafters

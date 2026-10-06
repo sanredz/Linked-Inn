@@ -440,6 +440,35 @@ end
 
 do
 	RetailSetup()
+	W.connected = { "Zuljin", "Area 52", "Dunemaul" }
+	W.realm = "Dunemaul"
+	Boot()
+	Advance(1)
+	local c = LI.Crafter("Shared Smith-Zuljin", true)
+	c.profs.blacksmithing = { name = "Blacksmithing", rank = 50, max = 100, recipes = LI.PackRecipes("blacksmithing", { [700001] = true }), count = 1 }
+	local saved = Logout()
+	W.realm = "Zuljin"
+	Boot(saved)
+	Advance(1)
+	check(LI.realm == "Area52" and LI.crafters["Shared Smith-Zuljin"], "alts on connected realms share one list")
+	W.connected = {}
+	local c2 = LI.Crafter("Lonely Smith-Zuljin", true)
+	saved = Logout()
+	Boot(saved)
+	Advance(1)
+	LI.Crafter("Early Bird-Zuljin", true).profs.alchemy = { name = "Alchemy", rank = 10 }
+	check(LI.realm == "Zuljin", "if the connected realm list isn't ready, the realm's own list is used")
+	saved = Logout()
+	W.connected = { "Zuljin", "Area 52", "Dunemaul" }
+	Boot(saved)
+	Advance(1)
+	check(LI.realm == "Area52" and LI.crafters["Early Bird-Zuljin"] and LI.crafters["Shared Smith-Zuljin"], "and it's merged into the shared list next time, losing nothing")
+	check(LI.db.realms.Zuljin == nil, "without leaving a stray copy behind")
+	W.connected, W.realm = nil, nil
+end
+
+do
+	RetailSetup()
 	Boot()
 	Advance(1)
 	LI.UI.Open()

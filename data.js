@@ -1,5 +1,5 @@
 window.LI_DATA = {
- "generated": "2026-10-06 10:42",
+ "generated": "2026-10-06 10:44",
  "span": [
   1791235665,
   1791276119
@@ -1060,6 +1060,8 @@ window.LI_DATA = {
    "worldNew": 62
   }
  ],
+ "worldReliable": false,
+ "trainerRecipes": 0,
  "worldCount": 425,
  "worldNew": 227,
  "trainerCount": 368,
@@ -1493,6 +1495,70 @@ window.LI_DATA = {
   }
  ],
  "rarestBlues": [
+  {
+   "id": 12092,
+   "name": "Dreamweave Circlet",
+   "prof": "Tailoring",
+   "quality": "Rare",
+   "q": 3,
+   "ilvl": 50,
+   "req": 45,
+   "slot": "Head",
+   "kind": "Cloth",
+   "stats": [
+    "+12 Spirit",
+    "+10 Intellect"
+   ],
+   "equip": [
+    "Equip: Increases damage and healing done by magical spells and effects by up to 21."
+   ],
+   "armor": 58,
+   "bind": "Binds when equipped",
+   "icon": 132767,
+   "reagents": [
+    {
+     "name": "Bolt of Mageweave",
+     "count": 8,
+     "quality": 1,
+     "icon": 132894
+    },
+    {
+     "name": "Wildvine",
+     "count": 4,
+     "quality": 1,
+     "icon": 134183
+    },
+    {
+     "name": "Heart of the Wild",
+     "count": 2,
+     "quality": 1,
+     "icon": 134188
+    },
+    {
+     "name": "Heavy Silken Thread",
+     "count": 3,
+     "quality": 1,
+     "icon": 132906
+    },
+    {
+     "name": "Truesilver Bar",
+     "count": 1,
+     "quality": 2,
+     "icon": 133222
+    },
+    {
+     "name": "Jade",
+     "count": 1,
+     "quality": 2,
+     "icon": 134134
+    }
+   ],
+   "forever": false,
+   "world": false,
+   "teach": null,
+   "n": 1,
+   "share": 0.5
+  },
   {
    "id": 1255006,
    "name": "Skycaller's Mail Shoulder",
@@ -2004,55 +2070,6 @@ window.LI_DATA = {
    "teach": "Pattern: Stormrider's Leather Belt",
    "n": 1,
    "share": 0.3
-  },
-  {
-   "id": 1257418,
-   "name": "Filigreed Shining Circlet",
-   "prof": "Tailoring",
-   "quality": "Rare",
-   "q": 3,
-   "ilvl": 30,
-   "req": 25,
-   "slot": "Head",
-   "kind": "Cloth",
-   "stats": [
-    "+12 Stamina"
-   ],
-   "equip": [],
-   "armor": 38,
-   "bind": "Binds when picked up",
-   "icon": 132767,
-   "reagents": [
-    {
-     "name": "Bolt of Silk Cloth",
-     "count": 8,
-     "quality": 1,
-     "icon": 132907
-    },
-    {
-     "name": "Fine Thread",
-     "count": 4,
-     "quality": 1,
-     "icon": 132912
-    },
-    {
-     "name": "Cerulean Dye",
-     "count": 2,
-     "quality": 2,
-     "icon": 1021860
-    },
-    {
-     "name": "Pyrite",
-     "count": 6,
-     "quality": 2,
-     "icon": 961627
-    }
-   ],
-   "forever": true,
-   "world": true,
-   "teach": "Pattern: Filigreed Shining Circlet",
-   "n": 2,
-   "share": 1.0
   }
  ],
  "blueCount": 156,
@@ -2615,6 +2632,7 @@ window.LI_DATA = {
   133150,
   133215,
   133216,
+  133222,
   133227,
   133611,
   133725,
@@ -2628,6 +2646,8 @@ window.LI_DATA = {
   134121,
   134122,
   134134,
+  134183,
+  134188,
   134250,
   134252,
   134254,

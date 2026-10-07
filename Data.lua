@@ -1011,7 +1011,7 @@ function LI.Search(query, opts)
 		return minSkill <= 0 or (p.rank or 0) >= minSkill
 	end
 	local recipeSearch = q ~= "" or kind ~= "all"
-	local hits, hitCount, hitsByProf = {}, 0, {}
+	local hits, hitCount, hitsByProf, orphans = {}, 0, {}, false
 	if recipeSearch then
 		for id, meta in pairs(LI.db.recipes) do
 			if KindMatch(meta, kind) and (q == "" or Find(meta.n, q)) then
@@ -1021,6 +1021,8 @@ function LI.Search(query, opts)
 					local list = hitsByProf[meta.p] or {}
 					hitsByProf[meta.p] = list
 					list[#list + 1] = id
+				else
+					orphans = true
 				end
 			end
 		end
@@ -1044,8 +1046,17 @@ function LI.Search(query, opts)
 							end
 						end
 						if type(p.recipes) == "table" then
-							for id in pairs(p.recipes) do
-								Consider(id)
+							local mine = hitsByProf[profKey]
+							if not orphans and mine and #mine < (p.count or 0) then
+								for _, id in ipairs(mine) do
+									if p.recipes[id] then
+										Consider(id)
+									end
+								end
+							elseif mine or orphans then
+								for id in pairs(p.recipes) do
+									Consider(id)
+								end
 							end
 						else
 							local mine = hitsByProf[profKey]

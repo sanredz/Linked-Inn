@@ -2985,5 +2985,53 @@ do
 	check(report:find("No Profs (nothing shared)", 1, true) and report:find("Cook Only (Cooking only", 1, true), "/li status says what each Linked Inn user heard has shared", report)
 end
 
+do
+	Setup()
+	Boot()
+	Advance(1)
+	math.randomseed(11)
+	local words = { "Iron", "Silk", "Fire", "Frost", "Moon", "Dark", "Bright", "Heavy" }
+	local profs = { "tailoring", "blacksmithing", "alchemy" }
+	for id = 800001, 800300 do
+		LI.db.recipes[id] = { n = words[math.random(#words)] .. " " .. words[math.random(#words)] .. " " .. id, p = profs[math.random(#profs)], k = "other" }
+	end
+	LI.db.recipes[800999] = { n = "Iron Orphan", k = "other" }
+	for i = 1, 60 do
+		local c = LI.Crafter("Rand" .. i .. "-TestRealm", true)
+		c.seen = time()
+		for _, pk in ipairs(profs) do
+			if math.random() < 0.5 then
+				local set, n = {}, 0
+				for id = 800001, 800300 do
+					if LI.db.recipes[id].p == pk and math.random() < 0.3 then set[id] = true n = n + 1 end
+				end
+				if i == 7 and pk == "tailoring" then set[800999] = true n = n + 1 end
+				c.profs[pk] = { name = pk, rank = math.random(1, 300), recipes = set, count = n }
+			end
+		end
+	end
+	local ok, checked = true, 0
+	for _, q in ipairs({ "iron", "moon fire", "dark", "800150", "orphan", "zzz" }) do
+		local expect = {}
+		for key, c in pairs(LI.crafters) do
+			if key:find("^Rand") then
+				for _, p in pairs(c.profs) do
+					for id in pairs(p.recipes or {}) do
+						if LI.db.recipes[id] and LI.db.recipes[id].n:lower():find(q, 1, true) then expect[key] = true end
+					end
+				end
+			end
+		end
+		local got = {}
+		for _, r in ipairs(LI.Search(q, { profs = {} })) do got[r.key] = true end
+		for k in pairs(expect) do
+			checked = checked + 1
+			if not got[k] then ok = false end
+		end
+		for k in pairs(got) do if k:find("^Rand") and not expect[k] then ok = false end end
+	end
+	check(ok and checked > 50, "the faster recipe search finds exactly the same crafters as checking every recipe", checked)
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

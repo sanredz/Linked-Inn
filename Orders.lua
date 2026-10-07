@@ -236,13 +236,11 @@ local function Hook()
 	return true
 end
 
-if LI.RETAIL then
-	LI.On("ADDON_LOADED", function(name)
-		if name == "Blizzard_ProfessionsCustomerOrders" then
-			Hook()
-		end
-	end)
-	LI.Listen("Ready", function()
+LI.On("ADDON_LOADED", function(name)
+	if name == "Blizzard_ProfessionsCustomerOrders" then
 		Hook()
-	end)
-end
+	end
+end)
+LI.Listen("Ready", function()
+	Hook()
+end)

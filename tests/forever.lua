@@ -187,8 +187,8 @@ check(main.count.__text:find("3 crafters remembered", 1, true), "the footer does
 check(rows[2].headName:IsShown() == false and rows[2].name:IsShown(), "crafter rows hide the header parts")
 check(rows[1].name:IsShown() == false, "header rows hide the crafter parts")
 local bobRow = rows[4]
-check(bobRow.line.__text:find("^Skill 260  ·  1 recipe"), "a row describes that profession", bobRow.line.__text)
-check(rows[5].line.__text == "Skill 260  ·  2 recipes", "skill and recipe count are shown", rows[5].line.__text)
+check(bobRow.line.__text:find("^Skill 260/300  ·  1 recipe"), "a row describes that profession", bobRow.line.__text)
+check(rows[5].line.__text == "Skill 260/300  ·  2 recipes", "skill and recipe count are shown", rows[5].line.__text)
 bobRow.__scripts.OnClick(bobRow, "LeftButton")
 check(W.tells[1] == "Bob Stone", "clicking a row whispers the crafter by name without the realm", W.tells[1])
 W.typing = false
@@ -468,7 +468,7 @@ Advance(1)
 check(LI.settings.compact and extent(1, { entry = {} }) == 24 and extent(1, { header = true }) == 34, "compact rows are about half the height, headers stay")
 local compactRow = main.list.__rows[2]
 check(compactRow.compact and compactRow.pill.__w == 44 and compactRow.books[1].__w == 18, "compact shrinks the pill and profession buttons")
-check(compactRow.line.__text == "Skill 150  ·  1 recipe" and compactRow.name:IsShown(), "skill and recipes sit next to the name", compactRow.line.__text)
+check(compactRow.line.__text == "Skill 150/225  ·  1 recipe" and compactRow.name:IsShown(), "skill and recipes sit next to the name", compactRow.line.__text)
 check(not compactRow.books[1].rank:IsShown(), "compact hides the skill number on the buttons, it's in the text")
 main.compactBox:SetChecked(false)
 main.compactBox.__scripts.OnClick(main.compactBox)
@@ -3092,6 +3092,33 @@ do
 		if W.sent[i].chatType == "WHISPER" then whispered = whispered + 1 end
 	end
 	check(whispered == 5, "whispers aren't held back", whispered)
+end
+
+do
+	Setup()
+	Boot()
+	Advance(1)
+	local c = LI.Crafter("Needle Point-TestRealm", true)
+	c.seen = time()
+	c.profs.tailoring = { name = "Tailoring", rank = 200, max = 225, recipes = { [18560] = true }, count = 1 }
+	local frame = NewMock("Frame", "ProfessionsCustomerOrdersFrame")
+	_G.ProfessionsCustomerOrdersFrame = frame
+	local form = NewMock("Frame")
+	frame.Form = form
+	form.OrderRecipientTarget = NewMock("EditBox")
+	function form:Init(order) self.order = order end
+	function form:SetOrderRecipient(i)
+		self.order.orderType = i
+		self.OrderRecipientTarget:SetShown(i == 2)
+	end
+	Fire("ADDON_LOADED", "Blizzard_ProfessionsCustomerOrders")
+	form:Show()
+	form:Init({ spellID = 18560, orderType = 2 })
+	form:SetOrderRecipient(2)
+	local panel = LI.Orders.Panel()
+	check(panel and panel:IsShown(), "if Forever has crafting orders, the Linked Inn panel works there too")
+	check(LI.Orders.Fill(LI.Orders.Crafters(18560)[1]) and form.OrderRecipientTarget.__text == "Needle Point", "and fills in a crafter for a personal order", form.OrderRecipientTarget.__text)
+	_G.ProfessionsCustomerOrdersFrame = nil
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

@@ -724,5 +724,32 @@ do
 end
 W.noScan = nil
 
+do
+	RetailSetup()
+	W.noScan = true
+	local made = {}
+	local ldb = { NewDataObject = function(self, name, obj) made[name] = obj return obj end }
+	_G.LibStub = function(name, silent)
+		if name == "LibDataBroker-1.1" then return ldb end
+		if not silent then error("no " .. name) end
+	end
+	Boot()
+	Advance(2)
+	local o = made["Linked Inn"]
+	W.resting, W.shift = true, true
+	o.OnClick(nil, "LeftButton")
+	W.shift = false
+	check(LI.Scan.Active(), "in retail, shift-clicking the broker starts a scan")
+	Advance(2)
+	check(o.text:find("Scanning", 1, true), "and the bar shows it is scanning", o.text)
+	local lines = {}
+	o.OnTooltipShow({ AddLine = function(_, t) lines[#lines + 1] = t end })
+	check(table.concat(lines, "|"):find("Shift-click to stop scanning", 1, true), "and the tooltip says how to stop it")
+	LI.Scan.Stop()
+	W.resting = nil
+	_G.LibStub = nil
+end
+W.noScan = nil
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

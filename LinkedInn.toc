@@ -21,6 +21,7 @@ Reader.lua
 Clues.lua
 Scan.lua
 ScanUI.lua
+Broker.lua
 Sync.lua
 Bridge.lua
 Health.lua

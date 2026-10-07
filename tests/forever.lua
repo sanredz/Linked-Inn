@@ -3181,5 +3181,39 @@ do
 	check(line and line:find("100 ms", 1, true), "and shows it in the status", line)
 end
 
+do
+	Setup()
+	local made = {}
+	local ldb = { NewDataObject = function(self, name, obj) made[name] = obj return obj end }
+	_G.LibStub = function(name, silent)
+		if name == "LibDataBroker-1.1" then return ldb end
+		if not silent then error("no " .. name) end
+	end
+	Boot()
+	Advance(2)
+	local o = made["Linked Inn"]
+	check(o and o.type == "data source" and o.label == "Linked Inn" and o.icon == LI.ICON, "Linked Inn shows up in Titan Panel and other broker bars")
+	check(o and o.text:find("crafter", 1, true), "showing how many crafters are on your list", o and o.text)
+	o.OnClick(nil, "LeftButton")
+	check(LinkedInnFrame and LinkedInnFrame:IsShown(), "clicking it opens Linked Inn")
+	o.OnClick(nil, "LeftButton")
+	check(not LinkedInnFrame:IsShown(), "and clicking again closes it")
+	o.OnClick(nil, "RightButton")
+	check(LinkedInnSettings and LinkedInnSettings:IsShown(), "right-clicking opens the settings")
+	LinkedInnSettings:Hide()
+	local lines = {}
+	o.OnTooltipShow({ AddLine = function(_, t) lines[#lines + 1] = t end })
+	check(lines[1] == "Linked Inn" and table.concat(lines, "|"):find("Right-click", 1, true) and not table.concat(lines, "|"):find("scan", 1, true), "its tooltip explains the clicks", table.concat(lines, " / "))
+	_G.LibStub = nil
+end
+
+do
+	Setup()
+	_G.LibStub = nil
+	Boot()
+	Advance(2)
+	check(#W.errors == 0, "without a broker bar nothing changes")
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

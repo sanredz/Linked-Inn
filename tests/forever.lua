@@ -1424,7 +1424,8 @@ brew = LI.crafters["Brew Master-TestRealm"]
 local tail = brew.profs.tailoring
 check(tail.recipes and tail.recipes[18560] and tail.recipes[3914] and tail.via == "shared" and tail.count == 2, "the shared list arrives even with chunks out of order")
 check(tail.link ~= nil, "the shared profession can be opened")
-check(LI.db.recipes[18560].n == "Mooncloth Bag" and LI.db.recipes[18560].k == "bag", "unknown recipes get their names and types locally", LI.db.recipes[18560].n)
+Advance(0.1)
+check(LI.db.recipes[18560].n == "Mooncloth Bag" and LI.db.recipes[18560].k == "bag", "unknown recipes get their names and types locally, a moment later", LI.db.recipes[18560].n)
 local found = LI.Search("mooncloth")
 check(#found == 1 and found[1].key == "Brew Master-TestRealm" and found[1].makes == 1, "shared recipes are searchable")
 check(LI.test.sync.lists == 1, "the test counts lists received")

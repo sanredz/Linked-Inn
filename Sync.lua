@@ -855,12 +855,10 @@ local function Apply(key, ver, payload)
 		if prof.ids then
 			local list = {}
 			for _, id in ipairs(prof.ids) do
-				list[#list + 1] = LI.RETAIL and { id = id } or RecipeMeta(id, prof.key)
+				list[#list + 1] = { id = id }
 			end
 			LI.SetRecipes(key, info, list, "shared")
-			if LI.RETAIL then
-				FillLater(prof.ids, prof.key)
-			end
+			FillLater(prof.ids, prof.key)
 		else
 			local p = c.profs[prof.key] or {}
 			c.profs[prof.key] = p

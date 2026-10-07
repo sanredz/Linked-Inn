@@ -116,6 +116,22 @@ main { padding-top: 16px; padding-bottom: 48px; display: grid; grid-template-col
   main { grid-template-columns: 1fr; }
   .card, .card.half { grid-column: span 1; }
 }
+@media (max-width: 700px) {
+  header.page { padding-top: 18px; gap: 12px; }
+  header.page img.logo { width: 64px; }
+  header.page h1 { font-size: 26px; }
+  .intro { font-size: 14px; }
+  .bar { position: static; }
+  .filters { gap: 8px; padding-top: 8px; }
+  .filters .group { flex-wrap: nowrap; overflow-x: auto; width: 100%; scrollbar-width: none; padding-bottom: 2px; }
+  .filters .group::-webkit-scrollbar { display: none; }
+  .filters .label { font-size: 10px; min-width: 70px; flex: none; }
+  .chip { flex: none; padding: 4px 10px; font-size: 12px; }
+  .chip .n { min-width: 0; font-size: 11px; }
+  .status { font-size: 12px; gap: 4px 10px; }
+  main { gap: 16px; padding-top: 12px; }
+  .tools { padding: 6px 10px; }
+}
 .card svg { display: block; width: 100%; height: auto; }
 .tools { display: flex; gap: 8px; justify-content: flex-end; padding: 8px 12px; border-top: 1px solid var(--border); margin-top: auto; }
 .dev-only { display: none; }
@@ -194,7 +210,7 @@ footer.page a { color: var(--ink-2); }
   const M = window.LI_MULTI;
   const FONT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
   const DISPLAY = '"Cinzel", Georgia, serif';
-  const FULL_W = 1200, HALF_W = 590;
+  const FULL_W = 1200, HALF_W = 590, NARROW_W = 480, NARROW_AT = 700;
   const SMALL = 500;
   const THEMES = {
     dark: {
@@ -234,7 +250,7 @@ footer.page a { color: var(--ink-2); }
 
   let theme = 'dark';
   let T = THEMES.dark;
-  let W = FULL_W, HALF = false, FORCE_H = 0;
+  let W = FULL_W, HALF = false, FORCE_H = 0, NARROW = false;
   let sel = { rs: 'All', fac: 'Both', cmp: 'rs' };
   let D = null;
 
@@ -301,11 +317,34 @@ footer.page a { color: var(--ink-2); }
     return { step, top: Math.ceil(max / step) * step || step };
   }
 
+  function wrapLines(str, size, maxW, charW) {
+    const per = Math.max(8, Math.floor(maxW / (size * charW)));
+    const out = [];
+    let line = '';
+    String(str).split(' ').forEach((word) => {
+      if (line && (line + ' ' + word).length > per) {
+        out.push(line);
+        line = word;
+      } else {
+        line = line ? line + ' ' + word : word;
+      }
+    });
+    if (line) out.push(line);
+    return out;
+  }
+
   function frame(title, subtitle, height, body) {
-    height = Math.max(height, FORCE_H);
-    const foot = HALF ? `${fmt(D.crafters)} crafters · ${who()}` : `${fmt(D.crafters)} crafters · ${who()} · ${spanOf(D)}`;
+    const foot = NARROW ? `${fmt(D.crafters)} crafters` : HALF ? `${fmt(D.crafters)} crafters · ${who()}` : `${fmt(D.crafters)} crafters · ${who()} · ${spanOf(D)}`;
     const fontFace = ASSETS.font ? `<style>@font-face{font-family:"Cinzel";src:url(${ASSETS.font}) format("woff2");font-weight:400 900;}</style>` : '';
     const ls = HALF ? 40 : 54;
+    const titleSize = NARROW ? 20 : HALF ? 22 : 26;
+    const titleLines = wrapLines(title, titleSize, W - 72 - ls - 12, 0.74);
+    const subLines = subtitle ? wrapLines(subtitle, 14, W - 72, 0.53) : [];
+    const extra = (titleLines.length - 1) * (titleSize + 6) + Math.max(0, subLines.length - 1) * 18;
+    height = Math.max(height + extra, FORCE_H);
+    const heads = titleLines.map((l, i) => text(36, 58 + i * (titleSize + 6), l, { size: titleSize, weight: 700, fill: T.title, display: true })).join('');
+    const subY = 84 + (titleLines.length - 1) * (titleSize + 6);
+    const subs = subLines.map((l, i) => text(36, subY + i * 18, l, { size: 14, fill: T.ink2 })).join('');
     const logo = ASSETS.logo ? `<image href="${ASSETS.logo}" x="${W - 32 - ls}" y="22" width="${ls}" height="${Math.round(ls * ASSETS.logoRatio)}"/>` : '';
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${height}" role="img" aria-label="${esc(title)}">
       <defs>${fontFace}
@@ -315,9 +354,9 @@ footer.page a { color: var(--ink-2); }
       <rect x="6" y="6" width="${W - 12}" height="${height - 12}" rx="10" fill="none" stroke="${T.brass}" stroke-width="2"/>
       <rect x="11" y="11" width="${W - 22}" height="${height - 22}" rx="7" fill="none" stroke="${T.brassLight}" stroke-opacity="0.35" stroke-width="1"/>
       ${logo}
-      ${text(36, 58, title, { size: HALF ? 22 : 26, weight: 700, fill: T.title, display: true })}
-      ${subtitle ? text(36, 84, subtitle, { size: 14, fill: T.ink2 }) : ''}
-      ${body}
+      ${heads}
+      ${subs}
+      <g transform="translate(0,${extra})">${body}</g>
       <line x1="36" x2="${W - 36}" y1="${height - 46}" y2="${height - 46}" stroke="${T.brass}" stroke-opacity="0.45" stroke-width="1"/>
       ${text(36, height - 22, foot, { size: 12, fill: T.muted })}
       ${text(W - 36, height - 22, HALF ? 'LINKED INN' : 'LINKED INN · PROFESSION FINDER', { size: 12, fill: T.title, anchor: 'end', display: true, weight: 700 })}
@@ -357,10 +396,12 @@ footer.page a { color: var(--ink-2); }
     const gs = cfg.groups;
     const leg = groupLegend(gs, 112);
     let body = leg.body;
-    const top = leg.bottom + 46, rowH = 36;
-    const labelW = cfg.labelW || (HALF ? 150 : 190), colW = 52;
+    const wanted = cfg.labelW || (HALF ? 150 : 190);
+    const above = NARROW && wanted > 160;
+    const top = leg.bottom + 46, rowH = above ? 52 : 36;
+    const labelW = above ? 0 : wanted, colW = 52;
     const cols = gs.length <= 3 ? gs.length : 0;
-    const x0 = 36 + labelW, x1 = W - 36 - (cols ? cols * colW + 18 : 0);
+    const x0 = 36 + labelW + (above ? 8 : 0), x1 = W - 36 - (cols ? cols * colW + 18 : 0);
     const t = cfg.max ? { top: cfg.max, step: cfg.step } : ticks(Math.max(1, ...cfg.rows.map((r) => maxOf(r.vals))));
     const sx = (v) => x0 + (x1 - x0) * Math.min(v, t.top) / t.top;
     const bottom = top + cfg.rows.length * rowH;
@@ -375,8 +416,8 @@ footer.page a { color: var(--ink-2); }
       gs.forEach((g, k) => body += text(x1 + 18 + k * colW + colW - 4, top - 14, g.label, { size: 12, fill: T.ink2, anchor: 'end', weight: 600 }));
     }
     cfg.rows.forEach((r, i) => {
-      const y = top + i * rowH + rowH / 2;
-      body += text(36, y + 5, r.name, { size: 15 });
+      const y = top + i * rowH + (above ? 35 : rowH / 2);
+      body += text(36, above ? top + i * rowH + 19 : y + 5, r.name, { size: 15 });
       const vs = r.vals.filter((v) => v != null);
       if (vs.length > 1) body += `<line x1="${sx(Math.min(...vs))}" x2="${sx(Math.max(...vs))}" y1="${y}" y2="${y}" stroke="${T.base}" stroke-width="4" stroke-linecap="round" style="pointer-events:none"/>`;
       r.vals.forEach((v, k) => {
@@ -384,7 +425,7 @@ footer.page a { color: var(--ink-2); }
         if (cols) body += text(x1 + 18 + k * colW + colW - 4, y + 5, v == null ? '–' : cfg.fmt(v), { size: 14, fill: T.ink2, anchor: 'end', tabular: true });
       });
       const tip = r.name + '|' + gs.map((g, k) => `${g.key}\t${r.tips[k]}`).join('\n');
-      body += `<rect x="30" y="${y - rowH / 2}" width="${W - 60}" height="${rowH}" fill="transparent" data-tip="${esc(tip)}"/>`;
+      body += `<rect x="30" y="${top + i * rowH}" width="${W - 60}" height="${rowH}" fill="transparent" data-tip="${esc(tip)}"/>`;
     });
     return frame(cfg.title, cfg.subtitle, bottom + 84, body);
   }
@@ -437,14 +478,20 @@ footer.page a { color: var(--ink-2); }
       body += leg.body;
       ly = leg.bottom;
     }
-    const nameW = 170, tagW = gs.length ? 76 : 0, x0 = 36 + nameW + tagW, bw = W - x0 - 36;
+    const nameW = NARROW ? 0 : 170, tagW = gs.length ? 76 : 0, x0 = 36 + nameW + tagW, bw = W - x0 - 36;
     const barH = gs.length ? 22 : 34, inner = 5, blockGap = gs.length ? 22 : 18;
     let y = ly + 30;
     cfg.blocks.forEach((b) => {
       const rows = gs.length ? gs.map((g) => ({ g, cells: b.cells(g.data) })) : [{ g: null, cells: b.cells(D) }];
       const blockH = rows.length * (barH + inner) - inner;
-      body += text(36, y + (gs.length ? 16 : blockH / 2 + 1), b.name, { size: 15 });
-      if (!gs.length) body += text(36, y + blockH / 2 + 17, b.sub(D, rows[0].cells), { size: 11, fill: T.muted });
+      if (NARROW) {
+        body += text(36, y + 13, b.name, { size: 15 });
+        if (!gs.length) body += text(36 + b.name.length * 8.2 + 12, y + 13, b.sub(D, rows[0].cells), { size: 11, fill: T.muted });
+        y += 22;
+      } else {
+        body += text(36, y + (gs.length ? 16 : blockH / 2 + 1), b.name, { size: 15 });
+        if (!gs.length) body += text(36, y + blockH / 2 + 17, b.sub(D, rows[0].cells), { size: 11, fill: T.muted });
+      }
       rows.forEach((row, k) => {
         const yy = y + k * (barH + inner);
         if (row.g) {
@@ -512,24 +559,29 @@ footer.page a { color: var(--ink-2); }
       [D.blueCount, 'blue recipes', (d) => d.blueCount],
       [D.atCap, 'professions at max skill', (d) => d.atCap],
     ];
-    const tw = (W - 72 - (tiles.length - 1) * 14) / tiles.length;
+    const perRow = NARROW ? 2 : tiles.length;
+    const tw = (W - 72 - (perRow - 1) * 14) / perRow;
     const th = 104 + (gs.length ? 16 + gs.length * 22 : 0);
+    const rowsOfTiles = Math.ceil(tiles.length / perRow);
     let body = '';
     tiles.forEach((t, i) => {
-      const x = 36 + i * (tw + 14);
-      body += `<rect x="${x}" y="104" width="${tw}" height="${th}" rx="10" fill="${T.track}" stroke="${T.brass}" stroke-opacity="0.5"/>`;
-      body += text(x + 18, 154, fmt(t[0]), { size: 34, weight: 600, fill: T.title, tabular: true });
-      body += text(x + 18, 184, t[1], { size: 13, fill: T.ink2 });
-      if (gs.length) body += `<line x1="${x + 16}" x2="${x + tw - 16}" y1="202" y2="202" stroke="${T.brass}" stroke-opacity="0.35"/>`;
+      const x = 36 + (i % perRow) * (tw + 14);
+      const oy = Math.floor(i / perRow) * (th + 14);
+      body += `<rect x="${x}" y="${104 + oy}" width="${tw}" height="${th}" rx="10" fill="${T.track}" stroke="${T.brass}" stroke-opacity="0.5"/>`;
+      body += text(x + 18, 154 + oy, fmt(t[0]), { size: 34, weight: 600, fill: T.title, tabular: true });
+      body += text(x + 18, 184 + oy, t[1], { size: 13, fill: T.ink2 });
+      if (gs.length) body += `<line x1="${x + 16}" x2="${x + tw - 16}" y1="${202 + oy}" y2="${202 + oy}" stroke="${T.brass}" stroke-opacity="0.35"/>`;
       gs.forEach((g, k) => {
-        const y = 226 + k * 22;
+        const y = 226 + oy + k * 22;
         body += marker(x + 24, y - 4, g, 6);
         body += text(x + 38, y + 1, g.label, { size: 13, fill: T.ink2 });
         body += text(x + tw - 18, y + 1, fmt(t[2](g.data)), { size: 13, fill: T.ink, anchor: 'end', tabular: true });
       });
     });
-    body += text(36, 104 + th + 36, `${pct(D.forever.count, D.uniqueRecipes)}% of every recipe seen so far didn't exist in original Classic.`, { size: 15, fill: T.ink2 });
-    return frame('What Forever crafters can actually make', 'Every profession read in the background by Linked Inn, no hand-picking', 104 + th + 90, body);
+    const blockH = rowsOfTiles * th + (rowsOfTiles - 1) * 14;
+    const note = wrapLines(`${pct(D.forever.count, D.uniqueRecipes)}% of every recipe seen so far didn't exist in original Classic.`, 15, W - 72, 0.52);
+    note.forEach((l, i) => body += text(36, 104 + blockH + 36 + i * 20, l, { size: 15, fill: T.ink2 }));
+    return frame('What Forever crafters can actually make', 'Every profession read in the background by Linked Inn, no hand-picking', 104 + blockH + 70 + note.length * 20, body);
   }, () => {
     const gs = groups();
     const rows = [['Crafters tracked', (d) => d.crafters], ['Recipes catalogued', (d) => d.uniqueRecipes], ['New to Forever', (d) => d.forever.count], ['Blue recipes', (d) => d.blueCount], ['At max skill', (d) => d.atCap]];
@@ -578,13 +630,16 @@ footer.page a { color: var(--ink-2); }
       body += `<circle cx="50" cy="${y - 5}" r="14" fill="${T.track}" stroke="${T.brass}"/>`;
       body += text(50, y, String(i + 1), { size: 13, anchor: 'middle', fill: T.title, weight: 700, display: true });
       const styled = html.replace(/<b>/g, `<b style="color:${T.ink};font-weight:650">`);
-      body += `<foreignObject x="76" y="${y - 20}" width="${W - 112}" height="32"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;color:${T.ink2};line-height:30px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${styled}</div></foreignObject>`;
-      y += 48;
+      const plain = html.replace(/<[^>]+>/g, '');
+      const lines = wrapLines(plain, 16, W - 112, 0.5).length;
+      body += `<foreignObject x="76" y="${y - 20}" width="${W - 112}" height="${lines * 24 + 8}"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;color:${T.ink2};line-height:24px;padding-top:3px">${styled}</div></foreignObject>`;
+      y += lines * 24 + 24;
     });
     const thin = gs.filter(small);
     if (thin.length) {
-      body += text(36, y + 4, `${thin.map((g) => g.label).join(' and ')} ${thin.length > 1 ? 'are' : 'is'} still a small sample (${thin.map((g) => fmt(g.data.crafters)).join(', ')} crafters), so ${thin.length > 1 ? 'their' : 'its'} numbers will move as more are collected.`, { size: 13, fill: T.muted });
-      y += 22;
+      const note = wrapLines(`${thin.map((g) => g.label).join(' and ')} ${thin.length > 1 ? 'are' : 'is'} still a small sample (${thin.map((g) => fmt(g.data.crafters)).join(', ')} crafters), so ${thin.length > 1 ? 'their' : 'its'} numbers will move as more are collected.`, 13, W - 72, 0.5);
+      note.forEach((l, i) => body += text(36, y + 4 + i * 18, l, { size: 13, fill: T.muted }));
+      y += 4 + note.length * 18;
     }
     const names = gs.map((g) => g.label);
     return frame('What stands out', `The biggest differences between ${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`, y + 64, body);
@@ -827,6 +882,7 @@ footer.page a { color: var(--ink-2); }
 
   function listCard(id, title, subtitle, rows, valueOf) {
     ITEMS[id] = rows;
+    if (NARROW) return listCardNarrow(id, title, subtitle, rows, valueOf);
     const top = 118, row = 44;
     let body = '';
     body += text(36, top - 14, 'Recipe', { size: 12, fill: T.muted });
@@ -886,7 +942,7 @@ footer.page a { color: var(--ink-2); }
         if (v.n > 0 || v.base < MIN_PROF) return;
         let best = null;
         r.vals.forEach((o, j) => {
-          if (j === k || o.n < 2 || !o.base) return;
+          if (j === k || o.n < 2 || o.base < MIN_PROF) return;
           const expected = o.n / o.base * v.base;
           if (!best || expected > best.expected) best = { expected, from: j };
         });
@@ -927,6 +983,24 @@ footer.page a { color: var(--ink-2); }
     const title = 'Known on one side, missing on the other';
     const subtitle = 'Among expert crafters (skill 150+): nobody on one side knows it, though at the other side\'s rate several should';
     if (!list.length) return frame(title, subtitle, 220, text(36, 140, 'Every recipe seen on one side turns up on the other too.', { size: 15, fill: T.ink2 }));
+    if (NARROW) {
+      const top = 120, row = 74;
+      let body = '';
+      list.forEach((r, i) => {
+        const y = top + i * row;
+        const has = gs[r.from], lacks = gs[r.missing];
+        const hv = r.vals[r.from], lv = r.vals[r.missing];
+        body += `<line x1="36" x2="${W - 36}" y1="${y - 2}" y2="${y - 2}" stroke="${T.grid}" stroke-width="1"/>`;
+        body += `<rect x="36" y="${y + 10}" width="12" height="12" rx="2" fill="${qColor(r.q)}"/>`;
+        body += text(56, y + 21, r.name, { size: 15 });
+        body += marker(42, y + 40, has, 6);
+        body += text(56, y + 45, `${has.label}: ${fmt(hv.n)} of ${fmt(hv.base)} know it (${hv.share.toFixed(0)}%)`, { size: 13, fill: T.ink2, tabular: true });
+        body += marker(42, y + 59, lacks, 6);
+        body += text(56, y + 64, `${lacks.label}: none of ${fmt(lv.base)}, about ${Math.round(r.expected)} expected`, { size: 13, fill: T.ink, tabular: true });
+        body += `<rect x="30" y="${y}" width="${W - 60}" height="${row - 2}" fill="transparent" data-tip="${esc(r.name + '|' + qName(r.q) + ' ' + (names[r.prof] || '').toLowerCase() + ' recipe')}"/>`;
+      });
+      return frame(title, subtitle, top + list.length * row + 50, body);
+    }
     const top = 132, row = 40;
     let body = '';
     body += text(36, top - 14, 'Recipe', { size: 12, fill: T.muted });
@@ -953,7 +1027,29 @@ footer.page a { color: var(--ink-2); }
     return [['Recipe', 'Profession', 'Known on', 'Missing on', 'Expected there'], ...recipeMissing(gs).map((r) => [r.name, r.prof, `${gs[r.from].label} ${r.vals[r.from].n}/${r.vals[r.from].base}`, `${gs[r.missing].label} 0/${r.vals[r.missing].base}`, Math.round(r.expected)])];
   }, () => groups().length >= 2);
 
-  card('rarest', 'full', () => listCard('rarest', 'The rarest blue recipes', 'Blue recipes known by the fewest crafters · hover a recipe to see the item', D.rarestBlues,
+  function listCardNarrow(id, title, subtitle, rows, valueOf) {
+    const top = 118, row = 52;
+    let body = '';
+    body += text(W - 36, top - 14, valueOf.head, { size: 12, fill: T.muted, anchor: 'end' });
+    rows.forEach((r, i) => {
+      const y = top + i * row;
+      body += `<line x1="36" x2="${W - 36}" y1="${y - 2}" y2="${y - 2}" stroke="${T.grid}" stroke-width="1"/>`;
+      const icon = ASSETS.icons[r.icon];
+      if (icon) {
+        body += `<image href="${icon}" x="36" y="${y + 8}" width="32" height="32"/>`;
+        body += `<rect x="36.5" y="${y + 8.5}" width="31" height="31" rx="3" fill="none" stroke="${r.q >= 3 ? T.rare : T.base}" stroke-width="1.5"/>`;
+      } else {
+        body += `<rect x="36" y="${y + 19}" width="10" height="10" rx="2" fill="${T.rare}"/>`;
+      }
+      body += text(80, y + 22, r.name, { size: 15 });
+      body += text(80, y + 40, r.prof + (r.ilvl == null ? '' : ' · item level ' + r.ilvl), { size: 12, fill: T.muted });
+      body += text(W - 36, y + 30, valueOf.fn(r), { size: 15, fill: T.ink2, anchor: 'end', tabular: true });
+      body += `<rect x="30" y="${y}" width="${W - 60}" height="${row - 2}" fill="transparent" data-item="${id}:${i}" style="cursor:help"/>`;
+    });
+    return frame(title, subtitle, top + Math.max(rows.length, 10) * row + 56, body);
+  }
+
+  card('rarest', 'full', () => listCard('rarest', 'The rarest blue recipes', 'Blue recipes known by the fewest crafters · tap or hover a recipe to see the item', D.rarestBlues,
     { head: 'Crafters who know it', fn: (r) => String(r.n) }),
     () => [['Recipe', 'Profession', 'Item level', 'Crafters'], ...D.rarestBlues.map((r) => [r.name, r.prof, r.ilvl, r.n])]);
 
@@ -1022,8 +1118,8 @@ footer.page a { color: var(--ink-2); }
   }
 
   function buildCard(c, force) {
-    HALF = c.size === 'half';
-    W = HALF ? HALF_W : FULL_W;
+    HALF = NARROW || c.size === 'half';
+    W = NARROW ? NARROW_W : HALF ? HALF_W : FULL_W;
     FORCE_H = force || 0;
     try {
       return c.build();
@@ -1038,11 +1134,12 @@ footer.page a { color: var(--ink-2); }
     document.getElementById('theme').textContent = theme === 'dark' ? 'Parchment' : 'Dark wood';
     filters();
     status();
+    NARROW = (root.clientWidth || window.innerWidth) < NARROW_AT;
     const y = window.scrollY;
     const visible = cards.filter((c) => c.when());
     const svgs = visible.map((c) => buildCard(c));
     for (let i = 0; i < visible.length; i++) {
-      if (visible[i].size === 'half' && visible[i + 1] && visible[i + 1].size === 'half') {
+      if (!NARROW && visible[i].size === 'half' && visible[i + 1] && visible[i + 1].size === 'half') {
         const h = Math.max(svgHeight(svgs[i]), svgHeight(svgs[i + 1]));
         svgs[i] = buildCard(visible[i], h);
         svgs[i + 1] = buildCard(visible[i + 1], h);
@@ -1166,6 +1263,14 @@ footer.page a { color: var(--ink-2); }
     clearTimeout(flash.t);
     flash.t = setTimeout(() => sub.textContent = 'What crafters can make, by realm type and faction', 2500);
   }
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (D && ((root.clientWidth || window.innerWidth) < NARROW_AT) !== NARROW) render();
+    }, 200);
+  });
 
   document.getElementById('theme').onclick = () => { theme = theme === 'dark' ? 'light' : 'dark'; render(); };
   document.getElementById('saveAll').onclick = async () => {

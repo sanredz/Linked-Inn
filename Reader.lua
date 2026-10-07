@@ -761,12 +761,16 @@ function Reader.Probe(key, link)
 	if pending and pending.probe and pending.key == key then
 		return true
 	end
-	for _, job in ipairs(probes) do
-		if job.key == key then
+	local slot = #probes + 1
+	for i, job in ipairs(probes) do
+		if job.key == key and not job.scan then
 			return true
 		end
+		if job.scan and slot > i then
+			slot = i
+		end
 	end
-	probes[#probes + 1] = { key = key, link = link, probe = true }
+	table.insert(probes, slot, { key = key, link = link, probe = true })
 	Kick()
 	return true
 end

@@ -3121,5 +3121,29 @@ do
 	_G.ProfessionsCustomerOrdersFrame = nil
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.defaultLinks = true
+	Boot()
+	Advance(5)
+	W.autoWorks = true
+	local link = "trade:Player-1-QCK:2259:171"
+	W.linkData = W.linkData or {}
+	W.linkData[link] = { linkedName = "Quick Click", prof = ALCHEMY, recipes = {} }
+	local c = LI.Crafter("Quick Click-TestRealm", true)
+	c.seen = time() - 7200
+	c.profs.alchemy = { name = "Alchemy", rank = 100, link = link, read = time() - 7200, recipes = { [2330] = true }, count = 1 }
+	LI.Reader.Scan({ { key = "Far Away-TestRealm", guid = "Player-1-FARA", profs = { "alchemy", "blacksmithing", "enchanting", "engineering", "leatherworking", "tailoring", "cooking", "firstaid" } } }, true)
+	Advance(0.5)
+	check(LI.Reader.Scanning(), "a background check of someone's professions is running")
+	LI.CheckOnline("Quick Click-TestRealm")
+	Advance(4)
+	check(not LI.IsChecking("Quick Click-TestRealm") and LI.Status("Quick Click-TestRealm") == "online", "clicking to check someone goes ahead of the background checks", tostring(LI.IsChecking("Quick Click-TestRealm")))
+	Advance(30)
+	check(not LI.Reader.Scanning(), "and the background check still finishes afterwards")
+	W.autoWorks, W.defaultLinks = false, nil
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

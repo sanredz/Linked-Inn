@@ -3010,6 +3010,9 @@ do
 			end
 		end
 	end
+	local orphanHolder = LI.Crafter("RandHolder-TestRealm", true)
+	orphanHolder.seen = time()
+	orphanHolder.profs.tailoring = { name = "tailoring", rank = 10, recipes = { [800999] = true, [800001] = true, [800002] = true }, count = 3 }
 	local ok, checked = true, 0
 	for _, q in ipairs({ "iron", "moon fire", "dark", "800150", "orphan", "zzz" }) do
 		local expect = {}

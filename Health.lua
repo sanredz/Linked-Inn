@@ -58,6 +58,8 @@ function Health.Compute()
 		local waiting = Reader.QueueSize()
 		if not LI.settings.autoRead then
 			Add("Reading", "off in settings", "ok", false)
+		elseif LI.Scan and LI.Scan.Needed() and not LI.Scan.Active() then
+			Add("Reading", "press Scan in a city to read the crafters around you", "ok", false)
 		elseif Reader.IsBroken() then
 			Add("Reading", "paused a minute after several failed reads", "warn", true)
 		else

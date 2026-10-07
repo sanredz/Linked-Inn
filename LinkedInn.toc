@@ -19,6 +19,7 @@ Online.lua
 Capture.lua
 Reader.lua
 Clues.lua
+Scan.lua
 Sync.lua
 Bridge.lua
 Health.lua

@@ -3145,5 +3145,41 @@ do
 	W.autoWorks, W.defaultLinks = false, nil
 end
 
+do
+	Setup()
+	Boot()
+	Advance(5)
+	W.autoWorks = true
+	LI.tried["Cora Vale-TestRealm"] = time()
+	local slowDone = false
+	local function Frames(seconds)
+		local t = 0
+		while t < seconds do
+			local dt = 0.016
+			if W.trade and not slowDone then
+				dt = 0.116
+				slowDone = true
+			end
+			for f in pairs(W.updaters) do
+				local fn = f.__scripts.OnUpdate
+				if fn then fn(f, dt) end
+			end
+			Advance(dt)
+			t = t + dt
+		end
+	end
+	Frames(1)
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-CCC", 2259, 171, "Alchemy"), "Cora Vale-TestRealm", "Player-1-CCC", "Trade - City")
+	Frames(6)
+	W.autoWorks = false
+	local n, avg = LI.Reader.Freeze()
+	check(slowDone and n == 1 and avg > 90 and avg < 110, "Linked Inn measures how long the game freezes when a profession loads", string.format("%d %.1f", n, avg))
+	local line
+	for _, l in ipairs(LI.Sync.Status()) do
+		if l:find("Profession loads", 1, true) then line = l end
+	end
+	check(line and line:find("100 ms", 1, true), "and shows it in the status", line)
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

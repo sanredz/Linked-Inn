@@ -274,6 +274,57 @@ local function HookFrame()
 	return true
 end
 
+local meter = { base = nil, open = false, untilAt = nil, worst = 0, n = 0, sum = 0, top = 0, last = 0 }
+local METER_TAIL = 0.6
+
+local function MeterTick(_, elapsed)
+	if type(elapsed) ~= "number" then
+		return
+	end
+	if meter.open then
+		meter.worst = math.max(meter.worst, elapsed)
+		if meter.untilAt and Now() >= meter.untilAt then
+			meter.open = false
+			if meter.count then
+				local freeze = math.max(0, (meter.worst - (meter.base or 0)) * 1000)
+				meter.n = meter.n + 1
+				meter.sum = meter.sum + freeze
+				meter.top = math.max(meter.top, freeze)
+				meter.last = freeze
+				if meter.n == 5 or meter.n % 25 == 0 then
+					LI.Log(string.format("Profession loads freeze the game about %d ms on average, worst %d ms (%d loads)", math.floor(meter.sum / meter.n + 0.5), math.floor(meter.top + 0.5), meter.n))
+				end
+			end
+		end
+	elseif elapsed < 0.25 then
+		meter.base = meter.base and (meter.base * 0.95 + elapsed * 0.05) or elapsed
+	end
+end
+
+local function MeterStart()
+	if not meter.frame and CreateFrame then
+		meter.frame = CreateFrame("Frame")
+		meter.frame:SetScript("OnUpdate", MeterTick)
+	end
+end
+LI.Listen("Ready", MeterStart)
+
+local function MeterOpen()
+	MeterStart()
+	meter.open, meter.untilAt, meter.worst, meter.count = true, nil, 0, false
+end
+
+local function MeterClose(counts)
+	if meter.open then
+		meter.count = counts
+		meter.untilAt = Now() + METER_TAIL
+	end
+end
+
+function Reader.Freeze()
+	return meter.n, meter.n > 0 and meter.sum / meter.n or 0, meter.top
+end
+
 local function EnsureFrame()
 	if not ProfessionsFrame then
 		if ProfessionsFrame_LoadUI then
@@ -432,6 +483,7 @@ end
 
 local function Finish(job, outcome)
 	lastDone = Now()
+	MeterClose(outcome == "ok" and not job.own)
 	if not job.own and (outcome == "ok" or outcome == "timeout") and type(job.link) == "string" then
 		LI.NoteServerRead(job.link:match("^trade:(Player%-[%w%-]+):"), outcome == "ok")
 	end
@@ -666,7 +718,7 @@ local function Pump()
 		Kick()
 		return
 	end
-	if not LI.ready or not LI.settings.autoRead or pending or tradeOpen or FrameVisible() or Reader.IsBroken() or Now() < restUntil then
+	if not LI.ready or not LI.AutoReading() or pending or tradeOpen or FrameVisible() or Reader.IsBroken() or Now() < restUntil then
 		return
 	end
 	if #queue == 0 or Now() < nextAt then
@@ -689,6 +741,7 @@ end
 
 Start = function(job)
 	EnsureFrame()
+	MeterOpen()
 	pending = job
 	job.started = Now()
 	local t = Tip()

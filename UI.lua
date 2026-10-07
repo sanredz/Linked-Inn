@@ -1216,6 +1216,12 @@ function UI.Refresh()
 	main.compactBox:SetShown(findShown)
 	main.compactLabel:SetShown(findShown)
 	main.count:SetShown(findShown)
+	if main.scanButton then
+		main.scanButton:SetShown(findShown)
+		local found = LI.Scan.Active() and LI.Scan.Found() or 0
+		main.scanButton.text:SetText(LI.Scan.Active() and (found > 0 and string.format("Scanning · %d", found) or "Scanning...") or "Scan")
+		main.scanButton:Update()
+	end
 	if findShown then
 		RefreshFind()
 	elseif workShown then
@@ -1498,6 +1504,18 @@ local function CreateMain()
 	main.health:SetPoint("LEFT", main, "BOTTOMLEFT", 98, 20)
 	main.guideButton = LI.Guide.CreateButton(main)
 	main.guideButton:SetPoint("LEFT", main.health, "RIGHT", 4, 0)
+	if LI.Scan.Needed() then
+		main.scanButton = Toggle(main, "Scan", 112, { "Scan for crafters", "Checks everyone around you and every profession linked in chat, with friendly nameplates on so nobody is missed. The game hitches a little while it runs, so use it in a city and switch it off when you're done. It stops by itself when you leave the city or enter combat." }, function()
+			return LI.Scan.Active()
+		end, function(on)
+			if on then
+				LI.Scan.Start()
+			else
+				LI.Scan.Stop()
+			end
+		end)
+		main.scanButton:SetPoint("LEFT", main.guideButton, "RIGHT", 12, 0)
+	end
 	LI.Premium.Attach(main)
 
 	for i, name in ipairs(TABS) do
@@ -1585,6 +1603,8 @@ SlashCmdList.LINKEDINN = function(msg)
 		LI.Sync.Status()
 	elseif cmd == "guide" then
 		LI.Guide.Show(1)
+	elseif cmd == "scan" and LI.Scan.Needed() then
+		LI.Scan.Toggle()
 	else
 		UI.Toggle()
 	end

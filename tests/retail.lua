@@ -16,6 +16,20 @@ local function Addon(text, sender, chatType)
 	Fire("CHAT_MSG_ADDON", "LinkedInn", text, chatType or "CHANNEL", sender)
 end
 
+local PlainBoot = Boot
+Boot = function(...)
+	PlainBoot(...)
+	if not W.noScan then
+		if LI.ready then
+			LI.Scan.Start()
+		else
+			LI.Listen("Ready", function()
+				LI.Scan.Start()
+			end)
+		end
+	end
+end
+
 RetailSetup()
 W.defaultLinks = true
 Boot()
@@ -619,6 +633,60 @@ do
 	check(worst <= 3.5, "without spending more than a few milliseconds in any one frame", worst)
 	check(not W.trade, "and the hidden window still closes afterwards")
 end
+
+do
+	RetailSetup()
+	W.noScan = true
+	W.cvars = W.cvars or {}
+	W.cvars.nameplateShowFriendlyPlayers = "0"
+	Boot()
+	Advance(5)
+	W.autoWorks = true
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-CCC", 2259, 171, "Alchemy"), "Cora-TestRealm", "Player-1-CCC", "Trade - City")
+	Advance(10)
+	local cora = LI.crafters["Cora-TestRealm"]
+	check(not (cora and cora.profs.alchemy and cora.profs.alchemy.recipes), "in retail nothing is read in the background until you scan, so the game never hitches on its own")
+	local level, rows = LI.Health.Compute()
+	local hint = false
+	for _, r in ipairs(rows) do
+		if tostring(r.text or r[2] or ""):find("Scan", 1, true) then hint = true end
+	end
+	check(hint, "the status says to press Scan")
+	W.resting = true
+	check(LI.Scan.Start() and LI.Scan.Active(), "pressing Scan starts scanning")
+	check(W.cvars.nameplateShowFriendlyPlayers == "1", "and turns friendly nameplates on so everyone around gets checked")
+	Advance(10)
+	cora = LI.crafters["Cora-TestRealm"]
+	check(cora and cora.profs.alchemy and cora.profs.alchemy.recipes, "while scanning, links from chat are read")
+	check(LI.Scan.Found() >= 1, "and the button counts who was read", LI.Scan.Found())
+	W.resting = false
+	Advance(5)
+	check(not LI.Scan.Active() and W.cvars.nameplateShowFriendlyPlayers == "0", "leaving the city stops the scan and puts nameplates back as they were", W.cvars.nameplateShowFriendlyPlayers)
+	W.resting = true
+	LI.Scan.Start()
+	Fire("PLAYER_REGEN_DISABLED")
+	check(not LI.Scan.Active() and W.cvars.nameplateShowFriendlyPlayers == "0", "entering combat stops it too")
+	W.cvars.nameplateShowFriendlyPlayers = "1"
+	LI.Scan.Start()
+	LI.Scan.Stop()
+	check(W.cvars.nameplateShowFriendlyPlayers == "1", "someone who already had nameplates on keeps them on")
+	W.cvars.nameplateShowFriendlyPlayers = "0"
+	LI.Scan.Start()
+	check(LI.settings.scanPlates == "0", "the original nameplate setting is remembered while scanning")
+	W.autoWorks, W.resting = false, nil
+end
+
+do
+	RetailSetup()
+	W.noScan = true
+	W.cvars = W.cvars or {}
+	W.cvars.nameplateShowFriendlyPlayers = "1"
+	Boot([[{ settings = { scanPlates = "0" } }]])
+	Advance(5)
+	check(W.cvars.nameplateShowFriendlyPlayers == "0" and LI.settings.scanPlates == nil, "a reload or crash in the middle of a scan still puts nameplates back", W.cvars.nameplateShowFriendlyPlayers)
+	check(not LI.Scan.Active(), "and a scan never carries over a reload")
+end
+W.noScan = nil
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

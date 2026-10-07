@@ -355,21 +355,23 @@ local function Create()
 	scroll:SetScrollChild(page)
 	frame.page = page
 
-	local city = Section(page, nil, "City scans")
-	frame.city, frame.cityLast = Option(page, city, "Scan players in cities",
-		"Every few minutes in a city or inn, friendly nameplates flash on briefly so people around you get checked.\n|cffe8b04aNot needed if friendly nameplates are on (Shift+V).|r",
-		function() return LI.settings.cityScan == true end,
-		function(on) LI.settings.cityScan = on end)
-	frame.everyLabel = Below(Text(page, "GameFontHighlightSmall"), frame.cityLast, BODY_X, 14)
-	frame.everyLabel:SetText("Scan every")
-	frame.every = Dropdown(page, 120, INTERVALS, Minutes, function()
-		return tonumber(LI.settings.cityEvery) or 5
-	end, function(v)
-		LI.settings.cityEvery = v
-	end)
-	frame.every:SetPoint("LEFT", frame.everyLabel, "LEFT", 76, 0)
+	local city = not LI.RETAIL and Section(page, nil, "City scans")
+	if city then
+		frame.city, frame.cityLast = Option(page, city, "Scan players in cities",
+			"Every few minutes in a city or inn, friendly nameplates flash on briefly so people around you get checked.\n|cffe8b04aNot needed if friendly nameplates are on (Shift+V).|r",
+			function() return LI.settings.cityScan == true end,
+			function(on) LI.settings.cityScan = on end)
+		frame.everyLabel = Below(Text(page, "GameFontHighlightSmall"), frame.cityLast, BODY_X, 14)
+		frame.everyLabel:SetText("Scan every")
+		frame.every = Dropdown(page, 120, INTERVALS, Minutes, function()
+			return tonumber(LI.settings.cityEvery) or 5
+		end, function(v)
+			LI.settings.cityEvery = v
+		end)
+		frame.every:SetPoint("LEFT", frame.everyLabel, "LEFT", 76, 0)
+	end
 
-	local reading = Section(page, frame.everyLabel, "Reading", 28)
+	local reading = Section(page, frame.everyLabel, "Reading", frame.everyLabel and 28 or nil)
 	frame.read, frame.readLast = Option(page, reading, "Read profession links from chat",
 		"Saves someone's recipes when they link a profession.",
 		function() return LI.settings.autoRead ~= false end,
@@ -483,10 +485,14 @@ function Settings.Refresh()
 	if not frame then
 		return
 	end
-	for _, box in ipairs({ frame.city, frame.read, frame.hide, frame.guild, frame.minimap }) do
-		box:SetChecked(box.get() and true or false)
+	for _, box in pairs({ frame.city or false, frame.read, frame.hide, frame.guild, frame.minimap }) do
+		if box then
+			box:SetChecked(box.get() and true or false)
+		end
 	end
-	frame.every:Update()
+	if frame.every then
+		frame.every:Update()
+	end
 	frame.forget:Update()
 	frame.keep:Update()
 	PaintHouse()
@@ -498,8 +504,10 @@ function Settings.Refresh()
 		frame.farSide:SetText("")
 	end
 	local on = LI.settings.cityScan == true
-	frame.everyLabel:SetTextColor(on and 1 or 0.5, on and 1 or 0.5, on and 1 or 0.5)
-	if frame.every.SetEnabled then
+	if frame.everyLabel then
+		frame.everyLabel:SetTextColor(on and 1 or 0.5, on and 1 or 0.5, on and 1 or 0.5)
+	end
+	if frame.every and frame.every.SetEnabled then
 		frame.every:SetEnabled(on)
 	end
 	local listed, waiting = Remembered()

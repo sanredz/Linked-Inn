@@ -1338,6 +1338,10 @@ function Sync.Status()
 		"Sent: " .. Counts("tx") .. ((sync.failed or 0) > 0 and string.format("  |cffff6060failed %d (%s)|r", sync.failed, tostring(sync.lastError)) or ""),
 		"Received: " .. Counts("rx"),
 		"Users heard: " .. (#heard > 0 and table.concat(heard, ", ") or "none yet"),
+		LI.Reader.Freeze and (function()
+			local n, avg, top = LI.Reader.Freeze()
+			return n > 0 and string.format("Profession loads: the game freezes about %d ms each, worst %d ms (%d measured)", math.floor(avg + 0.5), math.floor(top + 0.5), n) or "Profession loads: none measured yet"
+		end)() or nil,
 		LI.Reader.QuietState and (function()
 			local off, tries, works = LI.Reader.QuietState()
 			return string.format("Quiet reading: %s (%d of %d reads answered)", off and "|cffff6060off, using the hidden window|r" or "on", works, tries)

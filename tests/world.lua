@@ -41,7 +41,13 @@ Mock.__index = function(t, k)
 end
 Mock.__call = function() return nil end
 
-function methods:SetScript(k, fn) self.__scripts[k] = fn end
+function methods:SetScript(k, fn)
+	self.__scripts[k] = fn
+	if k == "OnUpdate" then
+		W.updaters = W.updaters or {}
+		W.updaters[self] = fn and true or nil
+	end
+end
 function methods:GetScript(k) return self.__scripts[k] end
 function methods:RegisterEvent(ev)
 	W.events[ev] = W.events[ev] or {}
@@ -167,6 +173,7 @@ local BASE_TIME = 1790700000
 
 local function InstallStubs()
 	W.events, W.timers, W.errors, W.chat = {}, {}, {}, {}
+	W.updaters = {}
 	W.hyperlinks, W.tells, W.closed = {}, {}, 0
 	W.guids = W.guids or {}
 	W.linkData = W.linkData or {}
@@ -220,6 +227,7 @@ local function InstallStubs()
 	W.cvars = W.cvars or {}
 	_G.C_CVar = {
 		GetCVarBool = function(name) return W.cvars[name] == "1" end,
+		GetCVar = function(name) return W.cvars[name] end,
 		SetCVar = function(name, value) W.cvars[name] = value table.insert(W.cvarLog, name .. "=" .. value) end,
 	}
 	W.cvarLog = {}

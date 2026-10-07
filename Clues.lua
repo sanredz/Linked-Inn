@@ -404,7 +404,7 @@ local function NextCandidate()
 end
 
 function LI.DiscoverStep()
-	if not LI.ready or not LI.settings.autoRead or #candidates == 0 then
+	if not LI.ready or not LI.AutoReading() or #candidates == 0 then
 		return false
 	end
 	if InCombatLockdown and InCombatLockdown() then
@@ -487,6 +487,8 @@ local function ReadPlates()
 	return seen
 end
 
+LI.ReadPlates = ReadPlates
+
 function LI.InCity()
 	if not LI.Safe(LI.Try(IsResting)) then
 		return false
@@ -497,7 +499,7 @@ end
 
 function LI.CityScanDue()
 	local s = LI.settings
-	if not LI.ready or not s.cityScan or s.guildOnly or not LI.InCity() then
+	if LI.RETAIL or not LI.ready or not s.cityScan or s.guildOnly or not LI.InCity() then
 		return false
 	end
 	if InCombatLockdown and InCombatLockdown() then

@@ -431,7 +431,7 @@ local PREFIX_PER_SEC = 0.9
 local prefixTokens, prefixAt = PREFIX_BURST, 0
 
 local function Counted(q)
-	if not LI.RETAIL or q.chatType == "BNET" then
+	if q.chatType == "BNET" then
 		return false
 	end
 	return q.chatType ~= "WHISPER" or (IsInInstance and LI.Safe(LI.Try(IsInInstance)) == true)

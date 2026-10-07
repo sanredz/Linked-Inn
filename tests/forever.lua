@@ -3054,5 +3054,45 @@ do
 	check(not W.trade, "and the hidden window still closes afterwards")
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	Advance(5)
+	local sent0 = #W.sent
+	for i = 1, 30 do
+		LI.Sync.Send("X1|" .. i, "GUILD")
+	end
+	local start = W.clock
+	for _ = 1, 400 do
+		Advance(0.1)
+	end
+	local worst, sentAll = 0, 0
+	for i = sent0 + 1, #W.sent do
+		local a = W.sent[i]
+		if a.msg:find("^X1|") then
+			sentAll = sentAll + 1
+			local inWindow = 0
+			for j = i, #W.sent do
+				local b = W.sent[j]
+				if b.msg:find("^X1|") and b.at - a.at <= 5 then inWindow = inWindow + 1 end
+			end
+			worst = math.max(worst, inWindow)
+		end
+	end
+	check(sentAll == 30, "every queued guild message is sent", sentAll)
+	check(worst <= 15, "within the game's addon message allowance, so nothing gets throttled", worst)
+	local w0 = #W.sent
+	for i = 1, 5 do
+		LI.Sync.Send("X1|w" .. i, "WHISPER", "Someone")
+	end
+	Advance(2)
+	local whispered = 0
+	for i = w0 + 1, #W.sent do
+		if W.sent[i].chatType == "WHISPER" then whispered = whispered + 1 end
+	end
+	check(whispered == 5, "whispers aren't held back", whispered)
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

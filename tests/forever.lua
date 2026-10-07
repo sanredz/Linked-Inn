@@ -3036,5 +3036,22 @@ do
 	check(ok and checked > 50, "the faster recipe search finds exactly the same crafters as checking every recipe", checked)
 end
 
+do
+	Setup()
+	Boot()
+	Advance(5)
+	W.autoWorks = true
+	LI.tried["Cora Vale-TestRealm"] = time()
+	W.dataChanging = true
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-CCC", 2259, 171, "Alchemy"), "Cora Vale-TestRealm", "Player-1-CCC", "Trade - City")
+	Advance(3)
+	W.dataChanging = false
+	Advance(8)
+	W.autoWorks = false
+	local cora = LI.crafters["Cora Vale-TestRealm"]
+	check(cora and cora.profs.alchemy and cora.profs.alchemy.recipes, "a profession that takes a few seconds to load is still read before the hidden window closes")
+	check(not W.trade, "and the hidden window still closes afterwards")
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

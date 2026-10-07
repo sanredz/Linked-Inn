@@ -1073,7 +1073,7 @@ local function Collect(profKey, done)
 end
 
 local function AfterCollect(fn, job, tries)
-	local waiting = collecting or (LI.RETAIL and job and not job.readDone)
+	local waiting = collecting or (job and not job.readDone)
 	if waiting and (tries or 0) < 40 then
 		LI.After(0.1, function()
 			AfterCollect(fn, job, (tries or 0) + 1)
@@ -1091,7 +1091,7 @@ function Reader.Read()
 	if not LI.ready or not api or collecting then
 		return
 	end
-	if LI.RETAIL and ((api.IsDataSourceChanging and LI.Safe(LI.Try(api.IsDataSourceChanging))) or (api.IsTradeSkillReady and LI.Safe(LI.Try(api.IsTradeSkillReady)) == false)) then
+	if ((api.IsDataSourceChanging and LI.Safe(LI.Try(api.IsDataSourceChanging))) or (api.IsTradeSkillReady and LI.Safe(LI.Try(api.IsTradeSkillReady)) == false)) then
 		ScheduleRead()
 		return
 	end

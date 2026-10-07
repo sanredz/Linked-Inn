@@ -435,6 +435,7 @@ local function InstallStubs()
 		IsDataSourceChanging = function() return W.dataChanging == true end,
 		IsNPCCrafting = function() return false end,
 		GetFilteredRecipeIDs = function()
+			if W.dataChanging then return {} end
 			local ids = {}
 			for _, r in ipairs(W.trade and W.trade.recipes or {}) do ids[#ids + 1] = r.id end
 			return ids

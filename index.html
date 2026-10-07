@@ -1025,7 +1025,7 @@ footer.page a { color: var(--ink-2); }
   }, () => {
     const gs = groups();
     return [['Recipe', 'Profession', 'Known on', 'Missing on', 'Expected there'], ...recipeMissing(gs).map((r) => [r.name, r.prof, `${gs[r.from].label} ${r.vals[r.from].n}/${r.vals[r.from].base}`, `${gs[r.missing].label} 0/${r.vals[r.missing].base}`, Math.round(r.expected)])];
-  }, () => groups().length >= 2);
+  }, () => groups().length >= 2 && recipeMissing(groups()).length > 0);
 
   function listCardNarrow(id, title, subtitle, rows, valueOf) {
     const top = 118, row = 52;

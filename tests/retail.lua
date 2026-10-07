@@ -581,5 +581,44 @@ do
 	LinkedInnFrame:Hide()
 end
 
+do
+	RetailSetup()
+	Boot()
+	Advance(5)
+	local big = {}
+	for i = 1, 3000 do
+		big[i] = { id = 410000 + i, name = "Slow Recipe " .. i, item = 910000 + i, learned = i % 4 == 0 }
+	end
+	W.guids["Player-1-SLW"] = { class = "WARRIOR", name = "Slowpoke", realm = "" }
+	W.linkData["trade:Player-1-SLW:2018:164"] = { linkedName = "Slowpoke", prof = { professionName = "Blacksmithing", professionID = 164, skillLevel = 0, maxSkillLevel = 0 }, recipes = big }
+	local clock = 0
+	_G.debugprofilestop = function() return clock end
+	local getInfo = C_TradeSkillUI.GetRecipeInfo
+	C_TradeSkillUI.GetRecipeInfo = function(id)
+		clock = clock + 0.2
+		return getInfo(id)
+	end
+	local worst = 0
+	local after = C_Timer.After
+	C_Timer.After = function(sec, fn)
+		after(sec, function()
+			local before = clock
+			fn()
+			worst = math.max(worst, clock - before)
+		end)
+	end
+	W.autoWorks = true
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-SLW", 2018, 164, "Blacksmithing"), "Slowpoke-TestRealm", "Player-1-SLW", "Trade - City")
+	Advance(20)
+	W.autoWorks = false
+	C_Timer.After = after
+	C_TradeSkillUI.GetRecipeInfo = getInfo
+	_G.debugprofilestop = nil
+	local c = LI.crafters["Slowpoke-TestRealm"]
+	check(c and c.profs.blacksmithing and c.profs.blacksmithing.count == 750, "when looking up recipes is slow, a huge book is still read completely", c and c.profs.blacksmithing and c.profs.blacksmithing.count)
+	check(worst <= 3.5, "without spending more than a few milliseconds in any one frame", worst)
+	check(not W.trade, "and the hidden window still closes afterwards")
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

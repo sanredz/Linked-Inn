@@ -981,6 +981,7 @@ local function LinkedOwner(linkedName)
 end
 
 local SLICE = 250
+local BUDGET_MS = 3
 local collecting
 
 local function SessionKey(api)
@@ -1039,7 +1040,12 @@ local function Collect(profKey, done)
 			return
 		end
 		local last = math.min(#ids, i + SLICE - 1)
+		local started = debugprofilestop and debugprofilestop()
 		for j = i, last do
+			if started and j > i and debugprofilestop() - started > BUDGET_MS then
+				last = j - 1
+				break
+			end
 			local id = ids[j]
 			local info = LI.Try(api.GetRecipeInfo, id)
 			if type(info) == "table" and LI.Safe(info.learned) and LI.Safe(info.name) then
@@ -1078,7 +1084,7 @@ end
 
 local function AfterCollect(fn, job, tries)
 	local waiting = collecting or (job and not job.readDone)
-	if waiting and (tries or 0) < 40 then
+	if waiting and ((tries or 0) < 40 or (collecting and (tries or 0) < 300)) then
 		LI.After(0.1, function()
 			AfterCollect(fn, job, (tries or 0) + 1)
 		end)

@@ -20,6 +20,7 @@ local function ReadInterface()
 end
 LI.INTERFACE = ReadInterface()
 LI.RETAIL = LI.INTERFACE >= 100000
+LI.STRIP = LI.RETAIL and 40 or 0
 LI.TITLE = "Linked Inn"
 LI.ICON = "Interface\\Icons\\INV_Drink_05"
 LI.WEBSITE = "github.com/sanredz/Linked-Inn"

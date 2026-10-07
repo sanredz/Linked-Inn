@@ -372,10 +372,17 @@ local function Create()
 	end
 
 	local reading = Section(page, frame.everyLabel, "Reading", frame.everyLabel and 28 or nil)
-	frame.read, frame.readLast = Option(page, reading, "Read profession links from chat",
-		"Saves someone's recipes when they link a profession.",
-		function() return LI.settings.autoRead ~= false end,
-		function(on) LI.settings.autoRead = on end)
+	if LI.RETAIL then
+		frame.read, frame.readLast = Option(page, reading, "Read profession links in cities",
+			"When someone links a profession in chat while you're in a city or inn, their recipes are saved. The game hitches for a moment each time. Everything else waits for Scan.",
+			function() return LI.settings.cityChat ~= false end,
+			function(on) LI.settings.cityChat = on end)
+	else
+		frame.read, frame.readLast = Option(page, reading, "Read profession links from chat",
+			"Saves someone's recipes when they link a profession.",
+			function() return LI.settings.autoRead ~= false end,
+			function(on) LI.settings.autoRead = on end)
+	end
 	frame.hide, frame.hideLast = Option(page, frame.readLast, "Hide profession links in chat",
 		"Trade, general, say and yell. Still read and saved.",
 		function() return LI.settings.hideLinks == true end,

@@ -1216,12 +1216,6 @@ function UI.Refresh()
 	main.compactBox:SetShown(findShown)
 	main.compactLabel:SetShown(findShown)
 	main.count:SetShown(findShown)
-	if main.scanButton then
-		main.scanButton:SetShown(findShown)
-		local found = LI.Scan.Active() and LI.Scan.Found() or 0
-		main.scanButton.text:SetText(LI.Scan.Active() and (found > 0 and string.format("Scanning · %d", found) or "Scanning...") or "Scan")
-		main.scanButton:Update()
-	end
 	if findShown then
 		RefreshFind()
 	elseif workShown then
@@ -1269,7 +1263,7 @@ end
 
 local function CreateMain()
 	main = CreateFrame("Frame", "LinkedInnFrame", UIParent, "ButtonFrameTemplate")
-	main:SetSize(560, 620)
+	main:SetSize(560, 620 + LI.STRIP)
 	main:SetPoint("CENTER", 0, 20)
 	main:SetFrameStrata("HIGH")
 	main:SetToplevel(true)
@@ -1298,7 +1292,7 @@ local function CreateMain()
 
 	local search = CreateFrame("EditBox", nil, main, "SearchBoxTemplate")
 	search:SetSize(190, 22)
-	search:SetPoint("TOPLEFT", 22, -72)
+	search:SetPoint("TOPLEFT", 22, -72 - LI.STRIP)
 	if search.Instructions then
 		search.Instructions:SetText("Item, profession or name")
 		search.Instructions:SetWordWrap(false)
@@ -1338,7 +1332,7 @@ local function CreateMain()
 
 	main.gear = CreateFrame("Button", nil, main)
 	main.gear:SetSize(24, 24)
-	main.gear:SetPoint("TOPRIGHT", -14, -71)
+	main.gear:SetPoint("TOPRIGHT", -14, -71 - LI.STRIP)
 	main.gear.icon = main.gear:CreateTexture(nil, "ARTWORK")
 	main.gear.icon:SetAllPoints()
 	if not pcall(main.gear.icon.SetAtlas, main.gear.icon, "questlog-icon-setting") then
@@ -1384,8 +1378,8 @@ local function CreateMain()
 
 
 	main.chipBar = CreateFrame("Frame", nil, main)
-	main.chipBar:SetPoint("TOPLEFT", 16, -100)
-	main.chipBar:SetPoint("TOPRIGHT", -12, -100)
+	main.chipBar:SetPoint("TOPLEFT", 16, -100 - LI.STRIP)
+	main.chipBar:SetPoint("TOPRIGHT", -12, -100 - LI.STRIP)
 	main.chipBar:SetHeight(36)
 	main.chips = {}
 	main.clearChips = CreateFrame("Button", nil, main.chipBar)
@@ -1446,7 +1440,7 @@ local function CreateMain()
 
 	if main.Inset then
 		main.Inset:ClearAllPoints()
-		main.Inset:SetPoint("TOPLEFT", 12, -140)
+		main.Inset:SetPoint("TOPLEFT", 12, -140 - LI.STRIP)
 		main.Inset:SetPoint("BOTTOMRIGHT", -12, 32)
 		main.listArt = main.Inset:CreateTexture(nil, "BACKGROUND", nil, 2)
 		main.listArt:SetPoint("TOPLEFT", 4, -4)
@@ -1504,18 +1498,7 @@ local function CreateMain()
 	main.health:SetPoint("LEFT", main, "BOTTOMLEFT", 98, 20)
 	main.guideButton = LI.Guide.CreateButton(main)
 	main.guideButton:SetPoint("LEFT", main.health, "RIGHT", 4, 0)
-	if LI.Scan.Needed() then
-		main.scanButton = Toggle(main, "Scan", 112, { "Scan for crafters", "Checks everyone around you and every profession linked in chat, with friendly nameplates on so nobody is missed. The game hitches a little while it runs, so use it in a city and switch it off when you're done. It stops by itself when you leave the city or enter combat." }, function()
-			return LI.Scan.Active()
-		end, function(on)
-			if on then
-				LI.Scan.Start()
-			else
-				LI.Scan.Stop()
-			end
-		end)
-		main.scanButton:SetPoint("LEFT", main.guideButton, "RIGHT", 12, 0)
-	end
+	LI.ScanUI.Attach(main)
 	LI.Premium.Attach(main)
 
 	for i, name in ipairs(TABS) do

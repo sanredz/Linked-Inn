@@ -146,6 +146,15 @@ local function ScanLeft()
 	EndScan(true)
 end
 
+local function ChatJobWaiting()
+	for _, q in ipairs(queue) do
+		if not q.built then
+			return true
+		end
+	end
+	return false
+end
+
 local function NextJob()
 	for i = #queue, 1, -1 do
 		if not queue[i].built then
@@ -718,7 +727,7 @@ local function Pump()
 		Kick()
 		return
 	end
-	if not LI.ready or not LI.AutoReading() or pending or tradeOpen or FrameVisible() or Reader.IsBroken() or Now() < restUntil then
+	if not LI.ready or not (LI.AutoReading() or (LI.CityChatReading and LI.CityChatReading() and ChatJobWaiting())) or pending or tradeOpen or FrameVisible() or Reader.IsBroken() or Now() < restUntil then
 		return
 	end
 	if #queue == 0 or Now() < nextAt then

@@ -59,7 +59,7 @@ function Health.Compute()
 		if not LI.settings.autoRead then
 			Add("Reading", "off in settings", "ok", false)
 		elseif LI.Scan and LI.Scan.Needed() and not LI.Scan.Active() then
-			Add("Reading", "press Scan in a city to read the crafters around you", "ok", false)
+			Add("Reading", LI.settings.cityChat ~= false and "chat links in cities; press Scan to check everyone around you" or "press Scan to check everyone around you", "ok", false)
 		elseif Reader.IsBroken() then
 			Add("Reading", "paused a minute after several failed reads", "warn", true)
 		else

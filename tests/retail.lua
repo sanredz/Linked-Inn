@@ -688,5 +688,41 @@ do
 end
 W.noScan = nil
 
+do
+	RetailSetup()
+	W.noScan = true
+	Boot()
+	Advance(5)
+	W.autoWorks = true
+	W.resting = true
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-CCC", 2259, 171, "Alchemy"), "Cora-TestRealm", "Player-1-CCC", "Trade - City")
+	Advance(10)
+	local cora = LI.crafters["Cora-TestRealm"]
+	check(cora and cora.profs.alchemy and cora.profs.alchemy.recipes, "in a city, a profession linked in chat is still read without scanning")
+	LI.settings.cityChat = false
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna-TestRealm", "Player-1-AAA", "Trade - City")
+	Advance(10)
+	local anna = LI.crafters["Anna-TestRealm"]
+	check(not (anna and anna.profs.tailoring and anna.profs.tailoring.recipes), "and that can be switched off")
+	LI.settings.cityChat = nil
+	W.autoWorks = false
+	LI.UI.Open()
+	Advance(1)
+	local strip = LI.ScanUI.Strip()
+	check(strip and strip:IsShown() and strip.button.on == false and strip.head.__text == "Crafter scan is off", "the window shows the scan switch, off", strip and strip.head.__text)
+	strip.button.__scripts.OnClick(strip.button)
+	Advance(1)
+	check(LI.Scan.Active() and strip.button.on == true and strip.head.__text == "Scanning for crafters", "flipping the switch starts scanning and says so", strip.head.__text)
+	LinkedInnFrame:Hide()
+	LI.ScanUI.Refresh()
+	check(_G.LinkedInnScanBadge and LinkedInnScanBadge:IsShown(), "with the window closed, a badge shows the scan is still running")
+	Advance(3)
+	check(LinkedInnScanBadge.text.__text:find("found", 1, true), "and keeps counting", LinkedInnScanBadge.text.__text)
+	LI.Scan.Stop()
+	check(not LinkedInnScanBadge:IsShown(), "and goes away when the scan stops")
+	W.resting = nil
+end
+W.noScan = nil
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

@@ -29,6 +29,14 @@ function LI.AutoReading()
 	return not LI.RETAIL or active
 end
 
+function LI.CityChatReading()
+	return LI.RETAIL == true and not active and LI.settings ~= nil and LI.settings.autoRead == true and LI.settings.cityChat ~= false and LI.InCity ~= nil and LI.InCity()
+end
+
+function Scan.StopsInCity()
+	return startedInCity
+end
+
 function Scan.Needed()
 	return LI.RETAIL == true
 end

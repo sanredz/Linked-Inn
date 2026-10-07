@@ -80,11 +80,12 @@ One download works in both games and adjusts itself:
   are just as easy to find. Crafters from other realms you meet are read too,
   and your characters on connected realms share one list.
   Loading someone's profession makes the retail game hitch for a moment, so
-  Linked Inn doesn't read in the background there. Press **Scan** at the bottom
-  of the window when you're in a city: it reads profession links in chat and
-  everyone around you, then stops by itself when you leave or enter combat.
-  Lists shared by other Linked Inn users and links you click still come in
-  any time.
+  Linked Inn doesn't check people in the background there. Flip the **Scan**
+  switch at the top of the window when you're in a busy city: it checks
+  everyone around you, shows how many crafters it has found, and switches
+  itself off when you leave the city or enter combat. Professions linked in
+  chat are still read while you're in a city or inn, and lists shared by other
+  Linked Inn users come in any time.
   Big recipe books are read a little at a time and stored compactly, so the
   game stays smooth and the addon stays light even with thousands of crafters.
   Profession names work in every client language.

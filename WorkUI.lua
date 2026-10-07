@@ -762,8 +762,8 @@ end
 
 function WorkUI.BuildHeader(main)
 	header = CreateFrame("Frame", nil, main)
-	header:SetPoint("TOPLEFT", 18, -68)
-	header:SetPoint("TOPRIGHT", -14, -68)
+	header:SetPoint("TOPLEFT", 18, -68 - LI.STRIP)
+	header:SetPoint("TOPRIGHT", -14, -68 - LI.STRIP)
 	header:SetHeight(68)
 
 	header.howLabel = Text(header, "GameFontNormal", "RIGHT")

@@ -3215,5 +3215,45 @@ do
 	check(#W.errors == 0, "without a broker bar nothing changes")
 end
 
+do
+	Setup()
+	Boot()
+	Advance(5)
+	local big = {}
+	for i = 1, 400 do
+		big[i] = { id = 420000 + i, name = "Slow Brew " .. i, item = 920000 + i, learned = i % 2 == 0 }
+	end
+	W.guids["Player-1-SLF"] = { class = "MAGE", name = "Slow", surname = "Pour", realm = "" }
+	W.linkData = W.linkData or {}
+	W.linkData["trade:Player-1-SLF:2259:171"] = { linkedName = "Slow Pour", prof = ALCHEMY, recipes = big }
+	local clock = 0
+	_G.debugprofilestop = function() return clock end
+	local getInfo = C_TradeSkillUI.GetRecipeInfo
+	C_TradeSkillUI.GetRecipeInfo = function(id)
+		clock = clock + 0.2
+		return getInfo(id)
+	end
+	local worst = 0
+	local after = C_Timer.After
+	C_Timer.After = function(sec, fn)
+		after(sec, function()
+			local before = clock
+			fn()
+			worst = math.max(worst, clock - before)
+		end)
+	end
+	W.autoWorks = true
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-SLF", 2259, 171, "Alchemy"), "Slow Pour-TestRealm", "Player-1-SLF", "Trade - City")
+	Advance(20)
+	W.autoWorks = false
+	C_Timer.After = after
+	C_TradeSkillUI.GetRecipeInfo = getInfo
+	_G.debugprofilestop = nil
+	local c = LI.crafters["Slow Pour-TestRealm"]
+	check(c and c.profs.alchemy and c.profs.alchemy.count == 200, "when looking up recipes is slow, a whole book is still read", c and c.profs.alchemy and c.profs.alchemy.count)
+	check(worst <= 3.5, "spread over frames so the game never stutters on it", worst)
+	check(not W.trade, "and the hidden window still closes afterwards")
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

@@ -1017,17 +1017,6 @@ end
 
 local ScheduleRead
 
-local function CollectRecipes(profKey)
-	local list = {}
-	for _, id in ipairs(RecipeIDs()) do
-		local info = LI.Try(C_TradeSkillUI.GetRecipeInfo, id)
-		if type(info) == "table" and LI.Safe(info.learned) and LI.Safe(info.name) then
-			list[#list + 1] = RecipeEntry(id, info, profKey)
-		end
-	end
-	return list
-end
-
 local function LinkedOwner(linkedName)
 	if pending then
 		return pending.key, "auto"
@@ -1081,10 +1070,6 @@ local function TierOf(api, catID, cache)
 end
 
 local function Collect(profKey, done)
-	if not LI.RETAIL then
-		done(CollectRecipes(profKey))
-		return
-	end
 	local api = C_TradeSkillUI
 	local ids = RecipeIDs()
 	local session = SessionKey(api)
@@ -1112,7 +1097,7 @@ local function Collect(profKey, done)
 			local info = LI.Try(api.GetRecipeInfo, id)
 			if type(info) == "table" and LI.Safe(info.learned) and LI.Safe(info.name) then
 				list[#list + 1] = RecipeEntry(id, info, profKey)
-				local cat = LI.Safe(info.categoryID)
+				local cat = LI.RETAIL and LI.Safe(info.categoryID)
 				if type(cat) == "number" then
 					LI.NoteCategory(cat)
 					local tier = TierOf(api, cat, cache)

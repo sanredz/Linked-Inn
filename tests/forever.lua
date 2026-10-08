@@ -3255,5 +3255,75 @@ do
 	check(not W.trade, "and the hidden window still closes afterwards")
 end
 
+do
+	Setup()
+	Boot()
+	Advance(5)
+	W.autoWorks = true
+	LI.settings.readNearby = false
+	LI.db.profLinks.enchanting = { spell = 7411, line = 333 }
+	local ENCH = { professionName = "Enchanting", professionID = 333, skillLevel = 40, maxSkillLevel = 75 }
+	W.linkData["trade:Player-1-IIX:7411:333"] = { linkedName = "Near By", prof = ENCH, recipes = { { id = 7418, name = "Enchant Bracer - Minor Health" } } }
+	W.units = { nameplate4 = { name = "Near", surname = "By", guid = "Player-1-IIX" } }
+	Fire("UNIT_SPELLCAST_SUCCEEDED", "nameplate4", "cast-1", 13262)
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-CCC", 2259, 171, "Alchemy"), "Cora Vale-TestRealm", "Player-1-CCC", "Trade - City")
+	Advance(15)
+	local cora = LI.crafters["Cora Vale-TestRealm"]
+	check(cora and cora.profs.alchemy and cora.profs.alchemy.recipes, "with only chat links on, a profession linked in chat is read")
+	check(not (LI.crafters["Near By-TestRealm"] and LI.crafters["Near By-TestRealm"].profs.enchanting), "but people around you aren't checked")
+	LI.settings.readNearby = true
+	Advance(15)
+	check(LI.crafters["Near By-TestRealm"] and LI.crafters["Near By-TestRealm"].profs.enchanting, "and they are once it's switched back on")
+	W.autoWorks = false
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	W.autoWorks = true
+	LI.settings.readChat = false
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Advance(15)
+	local anna = LI.crafters["Anna Smith-TestRealm"]
+	check(not (anna and anna.profs.tailoring and anna.profs.tailoring.recipes), "with chat links off, a profession linked in chat isn't read")
+	W.guids["Player-1-RCP"] = { class = "MAGE", name = "Recipe", surname = "Poster", realm = "" }
+	W.linkData["trade:Player-1-RCP:3908:197"] = { linkedName = "Recipe Poster", prof = TAILORING, recipes = TAILOR_RECIPES }
+	LI.db.profLinks.tailoring = { spell = 3908, line = 197 }
+	local profOf = C_TradeSkillUI.GetProfessionInfoByRecipeID
+	C_TradeSkillUI.GetProfessionInfoByRecipeID = function(id) if id == 18560 then return { professionName = "Tailoring" } end end
+	local triesBefore = LI.test.built.tries
+	LI.settings.readNearby = false
+	Say("CHAT_MSG_CHANNEL", "LF work |cffffffff|Henchant:18560|h[Tailoring: Mooncloth]|h|r", "Recipe Poster-TestRealm", "Player-1-RCP", "Trade - City")
+	Advance(1)
+	LI.settings.readNearby = true
+	Advance(15)
+	local poster = LI.crafters["Recipe Poster-TestRealm"]
+	check(LI.Reader.QueueSize() > 0 and not (poster and poster.profs.tailoring and poster.profs.tailoring.recipes), "and neither is a recipe someone links, even with checking people around you on", LI.Reader.QueueSize())
+	C_TradeSkillUI.GetProfessionInfoByRecipeID = profOf
+	LI.settings.readChat = true
+	Advance(15)
+	anna = LI.crafters["Anna Smith-TestRealm"]
+	check(anna and anna.profs.tailoring and anna.profs.tailoring.recipes, "switching it back on reads what was waiting")
+	W.autoWorks = false
+end
+
+do
+	Setup()
+	Boot([[{ settings = { autoRead = false } }]])
+	Advance(2)
+	check(LI.settings.readChat == false and LI.settings.readNearby == false and LI.settings.autoRead == true, "someone who had reading off keeps both kinds of reading off")
+	LI.UI.Open(LI.UI.TAB.find)
+	LinkedInnFrame.gear.__scripts.OnClick(LinkedInnFrame.gear)
+	local panel = LinkedInnSettings
+	check(panel.read:GetChecked() == false and panel.nearby:GetChecked() == false, "and the settings show both off")
+	check(panel.city:IsEnabled() == false, "flashing nameplates can't be ticked while checking people around you is off")
+	panel.nearby:SetChecked(true)
+	panel.nearby.__scripts.OnClick(panel.nearby)
+	Advance(1)
+	check(LI.settings.readNearby == true and panel.city:IsEnabled() ~= false, "turning it on makes the nameplate option available")
+	panel:Hide()
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

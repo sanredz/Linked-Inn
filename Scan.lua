@@ -22,15 +22,23 @@ local function SetCVarValue(value)
 	end
 end
 
-function LI.AutoReading()
-	if not LI.settings or not LI.settings.autoRead then
+function LI.ReadsChat()
+	local s = LI.settings
+	if not s or not s.autoRead or s.readChat == false then
 		return false
 	end
-	return not LI.RETAIL or active
+	return not LI.RETAIL or active or (LI.InCity ~= nil and LI.InCity())
 end
 
-function LI.CityChatReading()
-	return LI.RETAIL == true and not active and LI.settings ~= nil and LI.settings.autoRead == true and LI.settings.cityChat ~= false and LI.InCity ~= nil and LI.InCity()
+function LI.ReadsNearby()
+	local s = LI.settings
+	if not s or not s.autoRead then
+		return false
+	end
+	if LI.RETAIL then
+		return active
+	end
+	return s.readNearby ~= false
 end
 
 function Scan.StopsInCity()

@@ -699,12 +699,12 @@ do
 	Advance(10)
 	local cora = LI.crafters["Cora-TestRealm"]
 	check(cora and cora.profs.alchemy and cora.profs.alchemy.recipes, "in a city, a profession linked in chat is still read without scanning")
-	LI.settings.cityChat = false
+	LI.settings.readChat = false
 	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna-TestRealm", "Player-1-AAA", "Trade - City")
 	Advance(10)
 	local anna = LI.crafters["Anna-TestRealm"]
 	check(not (anna and anna.profs.tailoring and anna.profs.tailoring.recipes), "and that can be switched off")
-	LI.settings.cityChat = nil
+	LI.settings.readChat = true
 	W.autoWorks = false
 	LI.UI.Open()
 	Advance(1)

@@ -93,6 +93,9 @@ function Reader.Want(key, profName, link, extra)
 			elseif not q.built then
 				q.link = link
 			end
+			if extra and extra.chat then
+				q.chat = true
+			end
 			q.at = Now()
 			table.remove(queue, i)
 			table.insert(queue, q)
@@ -146,9 +149,16 @@ local function ScanLeft()
 	EndScan(true)
 end
 
-local function ChatJobWaiting()
+local function Allowed(q)
+	if not q.built or q.chat then
+		return LI.ReadsChat()
+	end
+	return LI.ReadsNearby()
+end
+
+local function JobWaiting()
 	for _, q in ipairs(queue) do
-		if not q.built then
+		if Allowed(q) then
 			return true
 		end
 	end
@@ -157,11 +167,16 @@ end
 
 local function NextJob()
 	for i = #queue, 1, -1 do
-		if not queue[i].built then
+		if not queue[i].built and Allowed(queue[i]) then
 			return table.remove(queue, i)
 		end
 	end
-	return table.remove(queue)
+	for i = #queue, 1, -1 do
+		if Allowed(queue[i]) then
+			return table.remove(queue, i)
+		end
+	end
+	return nil
 end
 
 function Reader.QueueSize()
@@ -727,7 +742,7 @@ local function Pump()
 		Kick()
 		return
 	end
-	if not LI.ready or not (LI.AutoReading() or (LI.CityChatReading and LI.CityChatReading() and ChatJobWaiting())) or pending or tradeOpen or FrameVisible() or Reader.IsBroken() or Now() < restUntil then
+	if not LI.ready or not LI.settings.autoRead or not JobWaiting() or pending or tradeOpen or FrameVisible() or Reader.IsBroken() or Now() < restUntil then
 		return
 	end
 	if #queue == 0 or Now() < nextAt then

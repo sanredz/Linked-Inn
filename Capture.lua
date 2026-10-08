@@ -139,6 +139,7 @@ function LI.TryBuilt(msg, senderKey, senderGUID, event, channelBase)
 			local _, classFile = KeyFromGUID(senderGUID)
 			LI.Reader.Want(senderKey, LI.PROFESSION_NAMES[profKey] or profKey, link, {
 				built = true,
+				chat = true,
 				class = classFile,
 				where = Where(event, channelBase),
 			})

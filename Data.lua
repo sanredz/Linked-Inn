@@ -111,6 +111,8 @@ end
 
 local DEFAULTS = {
 	autoRead = true,
+	readChat = true,
+	readNearby = true,
 	secondary = false,
 	maxOnly = false,
 	minSkill = 0,
@@ -472,6 +474,11 @@ LI.On("ADDON_LOADED", function(name)
 		end
 	end
 	db.settings = type(db.settings) == "table" and db.settings or {}
+	if db.settings.autoRead == false and db.settings.readChat == nil and db.settings.readNearby == nil then
+		db.settings.readChat = false
+		db.settings.readNearby = false
+		db.settings.autoRead = true
+	end
 	for k, v in pairs(DEFAULTS) do
 		if db.settings[k] == nil then
 			db.settings[k] = LI.Copy(v)

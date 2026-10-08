@@ -85,10 +85,11 @@ local function Section(parent, anchor, title, gap)
 	return line
 end
 
-local function Option(parent, anchor, label, desc, get, set)
+local function Option(parent, anchor, label, desc, get, set, indent)
+	indent = indent or 0
 	local box = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
 	box:SetSize(26, 26)
-	Below(box, anchor, BOX_X, 8)
+	Below(box, anchor, BOX_X + indent, 8)
 	box.label = Text(parent, "GameFontHighlight")
 	box.label:SetPoint("LEFT", box, "RIGHT", 2, 0)
 	box.label:SetText(label)
@@ -101,7 +102,7 @@ local function Option(parent, anchor, label, desc, get, set)
 	box.get = get
 	local last = box
 	if desc then
-		box.desc = Below(Body(parent, BODY_X, desc), box, BODY_X, 0)
+		box.desc = Below(Body(parent, BODY_X + indent, desc), box, BODY_X + indent, 0)
 		last = box.desc
 	end
 	return box, last
@@ -355,33 +356,34 @@ local function Create()
 	scroll:SetScrollChild(page)
 	frame.page = page
 
-	local city = not LI.RETAIL and Section(page, nil, "City scans")
-	if city then
-		frame.city, frame.cityLast = Option(page, city, "Scan players in cities",
-			"Every few minutes in a city or inn, friendly nameplates flash on briefly so people around you get checked.\n|cffe8b04aNot needed if friendly nameplates are on (Shift+V).|r",
+	local reading = Section(page, nil, "Reading")
+	if LI.RETAIL then
+		frame.read, frame.readLast = Option(page, reading, "Read professions linked in chat, in cities and inns",
+			"When someone links a profession or a recipe while you're in a city or inn, their recipes are saved. The game hitches for a moment each time. Checking the people around you is the Scan switch at the top of the window.",
+			function() return LI.settings.readChat ~= false end,
+			function(on) LI.settings.readChat = on end)
+	else
+		frame.read, frame.readLast = Option(page, reading, "Read professions linked in chat",
+			"When someone links a profession or a recipe in chat, their recipes are saved.",
+			function() return LI.settings.readChat ~= false end,
+			function(on) LI.settings.readChat = on end)
+		frame.nearby, frame.nearbyLast = Option(page, frame.readLast, "Check people around you",
+			"People you walk past, see crafting, or group with, and your guild, are checked quietly, a few at a time.",
+			function() return LI.settings.readNearby ~= false end,
+			function(on) LI.settings.readNearby = on end)
+		frame.city, frame.cityLast = Option(page, frame.nearbyLast, "Flash nameplates in cities",
+			"In a city or inn, friendly nameplates flash on for half a second so everyone around you is seen. Not needed if you play with friendly nameplates on (Shift+V).",
 			function() return LI.settings.cityScan == true end,
-			function(on) LI.settings.cityScan = on end)
-		frame.everyLabel = Below(Text(page, "GameFontHighlightSmall"), frame.cityLast, BODY_X, 14)
-		frame.everyLabel:SetText("Scan every")
+			function(on) LI.settings.cityScan = on end, 24)
+		frame.everyLabel = Below(Text(page, "GameFontHighlightSmall"), frame.cityLast, BODY_X + 24, 10)
+		frame.everyLabel:SetText("Every")
 		frame.every = Dropdown(page, 120, INTERVALS, Minutes, function()
 			return tonumber(LI.settings.cityEvery) or 5
 		end, function(v)
 			LI.settings.cityEvery = v
 		end)
-		frame.every:SetPoint("LEFT", frame.everyLabel, "LEFT", 76, 0)
-	end
-
-	local reading = Section(page, frame.everyLabel, "Reading", frame.everyLabel and 28 or nil)
-	if LI.RETAIL then
-		frame.read, frame.readLast = Option(page, reading, "Read profession links in cities",
-			"When someone links a profession in chat while you're in a city or inn, their recipes are saved. The game hitches for a moment each time. Everything else waits for Scan.",
-			function() return LI.settings.cityChat ~= false end,
-			function(on) LI.settings.cityChat = on end)
-	else
-		frame.read, frame.readLast = Option(page, reading, "Read profession links from chat",
-			"Saves someone's recipes when they link a profession.",
-			function() return LI.settings.autoRead ~= false end,
-			function(on) LI.settings.autoRead = on end)
+		frame.every:SetPoint("LEFT", frame.everyLabel, "LEFT", 44, 0)
+		frame.readLast = frame.everyLabel
 	end
 	frame.hide, frame.hideLast = Option(page, frame.readLast, "Hide profession links in chat",
 		"Trade, general, say and yell. Still read and saved.",
@@ -492,10 +494,16 @@ function Settings.Refresh()
 	if not frame then
 		return
 	end
-	for _, box in pairs({ frame.city or false, frame.read, frame.hide, frame.guild, frame.minimap }) do
+	for _, box in pairs({ frame.city or false, frame.nearby or false, frame.read, frame.hide, frame.guild, frame.minimap }) do
 		if box then
 			box:SetChecked(box.get() and true or false)
 		end
+	end
+	local nearby = LI.settings.readNearby ~= false
+	if frame.city then
+		frame.city:SetEnabled(nearby)
+		local tone = nearby and 1 or 0.5
+		frame.city.label:SetTextColor(tone, tone, tone)
 	end
 	if frame.every then
 		frame.every:Update()
@@ -510,7 +518,7 @@ function Settings.Refresh()
 	else
 		frame.farSide:SetText("")
 	end
-	local on = LI.settings.cityScan == true
+	local on = LI.settings.cityScan == true and nearby
 	if frame.everyLabel then
 		frame.everyLabel:SetTextColor(on and 1 or 0.5, on and 1 or 0.5, on and 1 or 0.5)
 	end

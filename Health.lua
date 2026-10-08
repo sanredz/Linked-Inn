@@ -56,10 +56,14 @@ function Health.Compute()
 	end
 	if Reader then
 		local waiting = Reader.QueueSize()
-		if not LI.settings.autoRead then
+		if not LI.settings.autoRead or (LI.settings.readChat == false and (LI.RETAIL or LI.settings.readNearby == false)) and not (LI.Scan and LI.Scan.Active()) then
 			Add("Reading", "off in settings", "ok", false)
 		elseif LI.Scan and LI.Scan.Needed() and not LI.Scan.Active() then
-			Add("Reading", LI.settings.cityChat ~= false and "chat links in cities; press Scan to check everyone around you" or "press Scan to check everyone around you", "ok", false)
+			Add("Reading", LI.settings.readChat ~= false and "chat links in cities; switch on Scan to check everyone around you" or "switch on Scan to check everyone around you", "ok", false)
+		elseif not LI.RETAIL and LI.settings.readNearby == false then
+			Add("Reading", "chat links only; checking people around you is off", "ok", false)
+		elseif not LI.RETAIL and LI.settings.readChat == false then
+			Add("Reading", "people around you only; chat links are off", "ok", false)
 		elseif Reader.IsBroken() then
 			Add("Reading", "paused a minute after several failed reads", "warn", true)
 		else

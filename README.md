@@ -41,9 +41,10 @@ You don't have to do anything. Linked Inn fills the list in the background:
 Crafters show up as soon as their recipes have been read. Your own
 professions are read when you log in, so you never have to open them first.
 
-> **City scans:** in a city or inn, friendly nameplates flash on for half a
-> second every few minutes, so everyone around you gets checked. You can turn
-> this off or change how often in the settings (the gear at the top right).
+> **Settings:** under Reading (the gear at the top right) you choose what gets
+> read: professions linked in chat, the people around you, or both. In a city
+> or inn, friendly nameplates flash on for half a second every few minutes so
+> everyone around you gets checked; you can turn that off or change how often.
 > Playing with friendly nameplates on (Shift+V) checks everyone you walk past
 > all the time.
 

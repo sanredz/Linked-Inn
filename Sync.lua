@@ -799,6 +799,7 @@ local function OnHello(key, parts, chatType)
 		c.class = class
 	end
 	local count, missing = 0, nil
+	local listed, parsed = {}, 0
 	for _, section in ipairs(Split(list, ";")) do
 		count = count + 1
 		if count > MAX_PROFS then
@@ -806,6 +807,8 @@ local function OnHello(key, parts, chatType)
 		end
 		local f = Split(section, "~")
 		if #f == 4 and f[1] ~= "" and not f[1]:find("[^%a ]") and not LI.GATHERING[f[1]] then
+			listed[f[1]] = true
+			parsed = parsed + 1
 			local p = c.profs[f[1]] or {}
 			c.profs[f[1]] = p
 			p.name = p.name or ProfName(f[1])
@@ -815,6 +818,14 @@ local function OnHello(key, parts, chatType)
 			if (FromB36(f[4]) or 0) > 0 and not p.recipes then
 				missing = missing or {}
 				missing[f[1]] = true
+			end
+		end
+	end
+	if parsed > 0 and count <= MAX_PROFS then
+		for profKey in pairs(c.profs) do
+			if not listed[profKey] and not LI.GATHERING[profKey] then
+				c.profs[profKey] = nil
+				LI.Log(string.format("%s no longer has %s", LI.ShortName(key), profKey))
 			end
 		end
 	end
@@ -1377,6 +1388,7 @@ local function ReadOwnBasics()
 	end
 	local indices = { LI.Try(GetProfessions) }
 	local c = LI.Crafter(LI.playerKey, true)
+	local have, any = {}, false
 	for i = 1, 6 do
 		local index = LI.Safe(indices[i])
 		if type(index) == "number" then
@@ -1384,6 +1396,10 @@ local function ReadOwnBasics()
 			name, icon, rank, maxRank = LI.Safe(name), LI.Safe(icon), LI.Safe(rank), LI.Safe(maxRank)
 			spellOffset, skillLine = LI.Safe(spellOffset), LI.Safe(skillLine)
 			local key = LI.ProfKeyForLine(skillLine) or LI.ProfKey(name)
+			if key then
+				any = true
+				have[key] = true
+			end
 			if key and not LI.GATHERING[key] and (not LI.RETAIL or LI.PROFESSION_NAMES[key]) then
 				local spellID
 				if type(spellOffset) == "number" and C_SpellBook and C_SpellBook.GetSpellBookItemInfo then
@@ -1402,6 +1418,13 @@ local function ReadOwnBasics()
 				p.icon = icon or p.icon
 				p.rank = rank or p.rank
 				p.max = maxRank or p.max
+			end
+		end
+	end
+	if any then
+		for key in pairs(c.profs) do
+			if not have[key] and not LI.GATHERING[key] then
+				c.profs[key] = nil
 			end
 		end
 	end

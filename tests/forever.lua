@@ -3325,5 +3325,103 @@ do
 	panel:Hide()
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	W.defaultLinks = true
+	Boot()
+	Advance(5)
+	W.autoWorks = true
+	local function Known(key, guid, profs, age, li)
+		local c = LI.Crafter(key, true)
+		c.seen = time() - 60
+		c.li = li
+		for _, prof in ipairs(profs) do
+			c.profs[prof] = { name = prof, rank = 100, max = 150, read = time() - age, recipes = { [1] = true }, count = 1 }
+		end
+		LI.NoteGuid(key, guid)
+		return c
+	end
+	local function Answers(guid, name, prof, data)
+		W.linkData[LI.BuildLink(guid, prof)] = { linkedName = name, prof = data, recipes = { { id = 2330, name = "Minor Healing Potion", item = 118, learned = true } } }
+	end
+	local function Probed(guid)
+		local n = 0
+		for _, l in ipairs(W.hyperlinks) do
+			if l:find(guid, 1, true) then n = n + 1 end
+		end
+		return n
+	end
+	local DAY = 86400
+
+	local old = Known("Old Read-TestRealm", "Player-1-OLD", { "alchemy", "tailoring" }, 15 * DAY)
+	Answers("Player-1-OLD", "Old Read", "alchemy", ALCHEMY)
+	Answers("Player-1-OLD", "Old Read", "tailoring", TAILORING)
+	local fresh = Known("Fresh Read-TestRealm", "Player-1-FRS", { "alchemy", "tailoring" }, 3 * DAY)
+	LI.Discover("Old Read-TestRealm", "Player-1-OLD", LI.PRIO.seen)
+	LI.Discover("Fresh Read-TestRealm", "Player-1-FRS", LI.PRIO.seen)
+	Advance(40)
+	check(time() - old.profs.alchemy.read < 60 and time() - old.profs.tailoring.read < 60, "a crafter last read over two weeks ago is refreshed when you see them")
+	check(Probed("Player-1-FRS") == 0, "one read a few days ago is left alone")
+	local before = Probed("Player-1-OLD")
+	old.profs.alchemy.read = time() - 15 * DAY
+	LI.Discover("Old Read-TestRealm", "Player-1-OLD", LI.PRIO.seen)
+	Advance(40)
+	check(Probed("Player-1-OLD") == before, "and nobody is checked again within two weeks", Probed("Player-1-OLD") - before)
+
+	local quit = Known("Quit Tailor-TestRealm", "Player-1-QTT", { "alchemy", "tailoring" }, 20 * DAY)
+	Answers("Player-1-QTT", "Quit Tailor", "alchemy", ALCHEMY)
+	LI.Discover("Quit Tailor-TestRealm", "Player-1-QTT", LI.PRIO.seen)
+	Advance(40)
+	check(quit.profs.alchemy and not quit.profs.tailoring, "a profession they dropped is taken off when the other one still answers")
+
+	local away = Known("Gone Away-TestRealm", "Player-1-GAW", { "alchemy", "tailoring" }, 20 * DAY)
+	LI.Discover("Gone Away-TestRealm", "Player-1-GAW", LI.PRIO.seen)
+	Advance(40)
+	check(away.profs.alchemy and away.profs.tailoring, "someone who doesn't answer at all keeps everything (they may just be offline)")
+
+	local user = Known("Inn User-TestRealm", "Player-1-INU", { "alchemy", "tailoring" }, 20 * DAY, true)
+	LI.Discover("Inn User-TestRealm", "Player-1-INU", LI.PRIO.seen)
+	Advance(40)
+	check(Probed("Player-1-INU") == 0, "Linked Inn users aren't refreshed by checks, their own lists keep them current")
+
+	local swap = Known("Swap Per-TestRealm", "Player-1-SWP", { "alchemy", "tailoring" }, 1 * DAY)
+	Answers("Player-1-SWP", "Swap Per", "alchemy", ALCHEMY)
+	W.guids["Player-1-SWP"] = { class = "MAGE", name = "Swap", surname = "Per", realm = "" }
+	LI.db.profLinks.enchanting = { spell = 7411, line = 333 }
+	W.linkData["trade:Player-1-SWP:7411:333"] = { linkedName = "Swap Per", prof = { professionName = "Enchanting", professionID = 333, skillLevel = 20, maxSkillLevel = 75 }, recipes = { { id = 7418, name = "Enchant Bracer - Minor Health", learned = true } } }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-SWP", 7411, 333, "Enchanting"), "Swap Per-TestRealm", "Player-1-SWP", "Trade - City")
+	Advance(40)
+	check(swap.profs.enchanting and swap.profs.alchemy and not swap.profs.tailoring, "reading a third profession checks the other two right away and drops the one that's gone")
+	W.autoWorks, W.defaultLinks = false, nil
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	Addon("H1|aaaa|MAGE|alchemy~1z~2z~5;tailoring~1z~2z~5", "List Keeper-TestRealm")
+	Advance(2)
+	local c = LI.crafters["List Keeper-TestRealm"]
+	check(c and c.profs.alchemy and c.profs.tailoring, "a Linked Inn user's professions come from their hello")
+	Addon("H1|aaab|MAGE|alchemy~1z~2z~5", "List Keeper-TestRealm")
+	Advance(2)
+	check(c.profs.alchemy and not c.profs.tailoring, "and one they drop disappears from your list too")
+end
+
+do
+	Setup()
+	W.profs = { { name = "Alchemy", rank = 150, max = 225, offset = 10, line = 171 }, { name = "Tailoring", rank = 100, max = 150, offset = 30, line = 197 } }
+	Boot()
+	Advance(5)
+	local me = LI.crafters[LI.playerKey]
+	check(me and me.profs.alchemy and me.profs.tailoring, "your own professions are listed")
+	W.profs = { { name = "Alchemy", rank = 150, max = 225, offset = 10, line = 171 } }
+	Fire("SKILL_LINES_CHANGED")
+	Advance(2)
+	check(me.profs.alchemy and not me.profs.tailoring, "unlearning one takes it off your own list, so others stop seeing it")
+	W.profs = nil
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

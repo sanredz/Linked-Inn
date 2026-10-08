@@ -148,9 +148,10 @@ local HOUSEKEEP_EVERY = 3600
 local TRY_AGAIN = 7 * 86400
 local CLOSE_AGAIN = 12 * 3600
 local DISCOVER_EVERY = 2
+local REFRESH = 14 * 86400
 local CANDIDATES_MAX = 300
 
-LI.PRIO = { chat = 1, seen = 2, guild = 3, group = 4 }
+LI.PRIO = { refresh = 0.5, chat = 1, seen = 2, guild = 3, group = 4 }
 
 local candidates = {}
 
@@ -323,6 +324,26 @@ local function KnownPrimaries(c)
 	return n
 end
 
+local function Known(c)
+	local profs = {}
+	for _, profKey in ipairs(LI.PRIMARY) do
+		local p = c and c.profs[profKey]
+		if LI.db.profLinks[profKey] and p and p.recipes then
+			profs[#profs + 1] = profKey
+		end
+	end
+	return profs
+end
+
+local function Stale(c)
+	for _, profKey in ipairs(Known(c)) do
+		if time() - (c.profs[profKey].read or 0) > REFRESH then
+			return true
+		end
+	end
+	return false
+end
+
 local function Unknown(c)
 	local profs = {}
 	for _, profKey in ipairs(LI.PRIMARY) do
@@ -348,13 +369,21 @@ function LI.Discover(key, guid, prio, classFile, where)
 	if LI.OtherServer(guid) then
 		return false, "other realm"
 	end
+	local refresh = false
 	if KnownPrimaries(LI.crafters[key]) >= 2 then
-		return false, "known"
+		if LI.crafters[key].li or not Stale(LI.crafters[key]) then
+			return false, "known"
+		end
+		refresh = true
 	end
 	prio = prio or LI.PRIO.chat
 	local tried = LI.tried[key]
-	if tried and time() - tried < (prio >= LI.PRIO.guild and CLOSE_AGAIN or TRY_AGAIN) then
+	local wait = refresh and REFRESH or (prio >= LI.PRIO.guild and CLOSE_AGAIN or TRY_AGAIN)
+	if tried and time() - tried < wait then
 		return false, "checked"
+	end
+	if refresh then
+		prio = LI.PRIO.refresh
 	end
 	for _, cand in ipairs(candidates) do
 		if cand.key == key then
@@ -378,6 +407,41 @@ function LI.Discover(key, guid, prio, classFile, where)
 	end
 	return true
 end
+
+function LI.VerifyProfs(key, newProf)
+	local c = LI.crafters[key]
+	if not LI.ready or not c or key == LI.playerKey or not LI.ReadsNearby() then
+		return false
+	end
+	local guid = LI.GuidOf(key)
+	if not IsPlayerGuid(guid) or LI.OtherServer(guid) then
+		return false
+	end
+	local others = {}
+	for _, profKey in ipairs(Known(c)) do
+		if profKey ~= newProf then
+			others[#others + 1] = profKey
+		end
+	end
+	if #others < 2 then
+		return false
+	end
+	for i = #candidates, 1, -1 do
+		if candidates[i].key == key then
+			table.remove(candidates, i)
+		end
+	end
+	candidates[#candidates + 1] = { key = key, guid = guid, prio = LI.PRIO.group, profs = others, check = true, fixed = true, at = GetTime() }
+	LI.Log(string.format("%s shows three crafting professions; checking which one they dropped", LI.ShortName(key)))
+	return true
+end
+
+LI.Listen("ProfessionRead", function(key, profKey)
+	local c = LI.crafters[key]
+	if c and KnownPrimaries(c) > 2 then
+		LI.VerifyProfs(key, profKey)
+	end
+end)
 
 function LI.DiscoverUrgent()
 	for _, cand in ipairs(candidates) do
@@ -425,7 +489,21 @@ function LI.DiscoverStep()
 		local cand = NextCandidate()
 		if LI.Allowed(cand.key) then
 			LI.tried[cand.key] = time()
-			cand.profs = Unknown(LI.crafters[cand.key])
+			local c = LI.crafters[cand.key]
+			if not cand.fixed then
+				cand.profs = Unknown(c)
+				cand.check = nil
+				if Stale(c) then
+					local unknown = cand.profs
+					cand.profs = Known(c)
+					if #cand.profs < 2 then
+						for _, profKey in ipairs(unknown) do
+							cand.profs[#cand.profs + 1] = profKey
+						end
+					end
+					cand.check = true
+				end
+			end
 			if #cand.profs > 0 and reader.Scan({ cand }, true) then
 				Crafts().checked = Crafts().checked + 1
 				return true

@@ -766,6 +766,9 @@ function LI.SetRecipes(key, info, recipes, via)
 		DropLow(key, c)
 	end
 	LI.Fire("CraftersChanged")
+	if key ~= LI.playerKey and via ~= "shared" and c.profs[profKey] then
+		LI.Fire("ProfessionRead", key, profKey)
+	end
 	return count
 end
 

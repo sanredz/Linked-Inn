@@ -401,12 +401,22 @@ ShowOwnFrame = function()
 	end
 end
 
-local function ScanStep(job, ok)
+local function ScanStep(job, ok, outcome)
 	local run = scanRun
 	if not run then
 		return
 	end
 	run.done = run.done + 1
+	if job.check and job.prof then
+		run.checks = run.checks or {}
+		local r = run.checks[job.key] or { yes = {}, no = {} }
+		run.checks[job.key] = r
+		if ok then
+			r.yes[job.prof] = true
+		elseif outcome == "timeout" then
+			r.no[job.prof] = true
+		end
+	end
 	if ok then
 		run.found[job.key] = (run.found[job.key] or 0) + 1
 		if run.found[job.key] >= 2 then
@@ -432,6 +442,22 @@ EndScan = function(force)
 	end
 	if run.done >= run.total then
 		scanRun = nil
+		local dropped = false
+		for key, r in pairs(run.checks or {}) do
+			local c = LI.crafters and LI.crafters[key]
+			if c and next(r.yes) then
+				for prof in pairs(r.no) do
+					if c.profs[prof] then
+						c.profs[prof] = nil
+						dropped = true
+						LI.Log(string.format("%s no longer has %s; took it off the list", LI.ShortName(key), prof))
+					end
+				end
+			end
+		end
+		if dropped then
+			LI.Fire("CraftersChanged")
+		end
 		local crafters = 0
 		for _ in pairs(run.found) do
 			crafters = crafters + 1
@@ -527,7 +553,7 @@ local function Finish(job, outcome)
 		pending = nil
 		nextAt = math.max(nextAt, Now() + (job.scan and GAP or 2))
 		if job.scan then
-			ScanStep(job, outcome == "ok" and job.found == true)
+			ScanStep(job, outcome == "ok" and job.found == true, outcome)
 		elseif LI.ProbeResult and not job.notified then
 			LI.ProbeResult(job.key, outcome == "ok")
 		end
@@ -888,7 +914,7 @@ function Reader.Scan(candidates, quiet)
 		for _, profKey in ipairs(LI.Allowed(cand.key) and cand.profs or {}) do
 			local link = LI.BuildLink(cand.guid, profKey)
 			if link then
-				probes[#probes + 1] = { key = cand.key, link = link, prof = profKey, probe = true, scan = true, class = cand.class, where = cand.where }
+				probes[#probes + 1] = { key = cand.key, link = link, prof = profKey, probe = true, scan = true, check = cand.check, class = cand.class, where = cand.where }
 				run.total = run.total + 1
 			end
 		end

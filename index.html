@@ -142,6 +142,57 @@ th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--bord
 th { color: var(--ink-2); font-weight: 600; }
 footer.page { padding-bottom: 40px; color: var(--muted); font-size: 13px; line-height: 1.6; }
 footer.page a { color: var(--ink-2); }
+.regulars-btn { display: inline-flex; align-items: center; gap: 6px; }
+.regulars-btn .count { background: var(--gold); color: #2a1d14; border-radius: 999px; font-size: 11px; font-weight: 700; padding: 0 6px; line-height: 16px; }
+.board-veil { position: fixed; inset: 0; z-index: 30; background: rgba(10, 6, 3, 0.62); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.board-veil[hidden] { display: none; }
+.board {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: min(80vh, 720px);
+  overflow: auto;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 220, 160, 0.03) 0 2px, transparent 2px 11px),
+    linear-gradient(#3a2819, #241811);
+  border: 2px solid var(--brass);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 0 0 4px rgba(224, 184, 102, 0.12);
+  padding: 26px 26px 22px;
+  color: #f3e6cc;
+  animation: board-in 0.35s ease-out;
+}
+@keyframes board-in { from { transform: translateY(14px) scale(0.97); opacity: 0; } to { transform: none; opacity: 1; } }
+.board h2 { font-family: "Cinzel", serif; color: #f2c14e; margin: 0; font-size: 26px; text-align: center; letter-spacing: 0.02em; }
+.board .lede { text-align: center; color: #cdb994; margin: 6px 0 18px; font-size: 14px; line-height: 1.5; }
+.board .close { position: absolute; top: 10px; right: 12px; background: transparent; border: 0; color: #cdb994; font-size: 22px; padding: 2px 8px; }
+.board .close:hover { color: #fff; }
+.plaques { display: grid; gap: 10px; }
+.plaque {
+  position: relative;
+  background: linear-gradient(#5a3d24, #43301d);
+  border: 1px solid #a07a3e;
+  border-radius: 8px;
+  padding: 10px 14px 10px 44px;
+  box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.18), 0 3px 8px rgba(0, 0, 0, 0.35);
+}
+.plaque::before, .plaque::after { content: ""; position: absolute; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #f2d58a, #8a6420); }
+.plaque::before { left: 10px; }
+.plaque::after { right: 10px; }
+.plaque .mug { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); font-size: 15px; }
+.plaque .name { font-family: "Cinzel", serif; font-weight: 700; font-size: 17px; color: #fbe7b0; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); }
+.plaque .meta { font-size: 12.5px; color: #d8c49c; margin-top: 2px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.plaque .fac { border-radius: 999px; padding: 0 8px; font-size: 11px; font-weight: 700; line-height: 17px; }
+.plaque .fac.Alliance { background: #2a78d6; color: #fff; }
+.plaque .fac.Horde { background: #b33a1e; color: #fff; }
+.plaque .side { display: inline-flex; align-items: center; gap: 5px; margin-right: 6px; }
+.plaque .note { font-style: italic; color: #e8d6b0; font-size: 13px; margin-top: 4px; }
+.board .empty { text-align: center; color: #cdb994; padding: 18px 8px; font-size: 14px; line-height: 1.6; border: 1px dashed #a07a3e; border-radius: 10px; }
+.board .keeper { text-align: center; color: #9b8667; font-size: 12.5px; margin-top: 16px; }
+.coin { position: fixed; top: -24px; z-index: 31; width: 14px; height: 14px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 35% 35%, #fff2b8, #f2c14e 45%, #a8681a); box-shadow: 0 0 6px rgba(242, 193, 78, 0.6);
+  animation: coin-fall linear forwards; }
+@keyframes coin-fall { to { transform: translateY(110vh) rotate(720deg); opacity: 0.85; } }
+@media (prefers-reduced-motion: reduce) { .board { animation: none; } .coin { display: none; } }
 #tip {
   position: fixed;
   pointer-events: none;
@@ -193,6 +244,7 @@ footer.page a { color: var(--ink-2); }
     <a class="cta primary" href="https://www.curseforge.com/wow/addons/linked-inn-profession-finder" target="_blank" rel="noopener">Get Linked Inn</a>
     <a class="cta" href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener">&#9749; Buy me a coffee</a>
     <button id="theme">Parchment</button>
+    <button id="regulars" class="regulars-btn" title="The people who help collect the census">&#127867; The Regulars <span class="count" id="regularsCount" hidden></span></button>
     <button id="saveAll" class="dev-only">Save all as PNG</button>
   </div>
 </header>
@@ -204,6 +256,15 @@ footer.page a { color: var(--ink-2); }
 <main class="wrap" id="cards"></main>
 <footer class="page wrap">Crafting professions only (Cooking, First Aid and Fishing are left out). "New to Forever" means recipes that don't exist in original Classic. "Blue" means the item it makes is rare quality. When comparing, numbers are shares of each group, so a realm type with fewer crafters still compares fairly; hollow markers mean a group is still a small sample. <a href="https://github.com/sanredz/Linked-Inn" target="_blank" rel="noopener">Linked Inn on GitHub</a>. Linked Inn is free; if you like it, you can <a href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener">buy me a coffee</a>.</footer>
 <div id="tip"></div>
+<div class="board-veil" id="boardVeil" hidden>
+  <div class="board" role="dialog" aria-modal="true" aria-labelledby="boardTitle">
+    <button class="close" id="boardClose" aria-label="Close">&times;</button>
+    <h2 id="boardTitle">The Regulars' Board</h2>
+    <p class="lede">Every crafter on this site was spotted by someone out in the world.<br>These fine folks pull up a chair and collect them for the census.</p>
+    <div class="plaques" id="plaques"></div>
+    <p class="keeper">Kept by the innkeeper, sanredz. Drinks are on the house.</p>
+  </div>
+</div>
 <script src="data-multi.js"></script>
 <script>
 (function () {
@@ -1310,6 +1371,45 @@ footer.page a { color: var(--ink-2); }
     const blob = await res.blob();
     return await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(blob); });
   }
+
+  const CREDITS = M.credits || [];
+  const veil = document.getElementById('boardVeil');
+  const countEl = document.getElementById('regularsCount');
+  if (CREDITS.length) { countEl.textContent = CREDITS.length; countEl.hidden = false; }
+
+  function coins() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    for (let i = 0; i < 28; i++) {
+      const c = document.createElement('div');
+      c.className = 'coin';
+      c.style.left = (Math.random() * 100) + 'vw';
+      c.style.animationDuration = (1.4 + Math.random() * 1.4) + 's';
+      c.style.animationDelay = (Math.random() * 0.5) + 's';
+      const size = 10 + Math.random() * 8;
+      c.style.width = c.style.height = size + 'px';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 3600);
+    }
+  }
+
+  function openBoard() {
+    const box = document.getElementById('plaques');
+    if (!CREDITS.length) {
+      box.innerHTML = '<div class="empty">No regulars carved here yet.<br>Collect crafters for the census and your name goes on the board.</div>';
+    } else {
+      box.innerHTML = CREDITS.map((c) => `<div class="plaque"><span class="mug">&#127866;</span><div class="name">${esc(c.name)}</div>` +
+        `<div class="meta">${(c.sides || []).map((s) => `<span class="side">${s.realm ? esc(s.realm) : ''}${s.faction ? ` <span class="fac ${esc(s.faction)}">${esc(s.faction)}</span>` : ''}</span>`).join('')}</div>` +
+        `${c.note ? `<div class="note">${esc(c.note)}</div>` : ''}</div>`).join('');
+    }
+    veil.hidden = false;
+    coins();
+    document.getElementById('boardClose').focus();
+  }
+  function closeBoard() { veil.hidden = true; }
+  document.getElementById('regulars').onclick = openBoard;
+  document.getElementById('boardClose').onclick = closeBoard;
+  veil.addEventListener('click', (e) => { if (e.target === veil) closeBoard(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !veil.hidden) closeBoard(); });
 
   async function boot() {
     if (!canCompare(sel.cmp)) sel.cmp = 'none';

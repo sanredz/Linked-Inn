@@ -3535,6 +3535,17 @@ do
 	W.popup = nil
 	SlashCmdList.LINKEDINN("census")
 	check(W.popup == "LINKEDINN_CENSUS", "/li census opens it too")
+	W.popup = nil
+	panel.censusSite.__scripts.OnClick(panel.censusSite)
+	check(W.popup == "LINKEDINN_CENSUS_SITE", "a second button gives the census site link")
+	local siteBox = CreateFrame("EditBox")
+	local sitePopup = CreateFrame("Frame")
+	sitePopup.editBox = siteBox
+	StaticPopupDialogs.LINKEDINN_CENSUS_SITE.OnShow(sitePopup)
+	check(siteBox:GetText() == "https://sanredz.github.io/Linked-Inn/", "with the site filled in, ready to copy", siteBox:GetText())
+	siteBox:SetText("oops")
+	StaticPopupDialogs.LINKEDINN_CENSUS_SITE.EditBoxOnTextChanged(siteBox)
+	check(siteBox:GetText() == "https://sanredz.github.io/Linked-Inn/", "and the site link can't be typed over either")
 	panel:Hide()
 end
 

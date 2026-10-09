@@ -257,23 +257,23 @@ local function PopupBox(popup)
 	return popup.editBox or popup.EditBox or (popup.GetEditBox and popup:GetEditBox())
 end
 
-if StaticPopupDialogs then
-	StaticPopupDialogs["LINKEDINN_CENSUS"] = {
-		text = "Help the Forever Crafting Census\n\nLog out first so the game saves your list, then upload this file:\nWTF\\Account\\<your account>\\SavedVariables\\LinkedInn.lua\n\nPress Ctrl+C to copy the upload link:",
+local function LinkPopup(name, text, url)
+	StaticPopupDialogs[name] = {
+		text = text,
 		button1 = DONE or "Done",
 		hasEditBox = true,
 		editBoxWidth = 280,
 		OnShow = function(self)
 			local box = PopupBox(self)
 			if box then
-				box:SetText(LI.CENSUS_UPLOAD)
+				box:SetText(url)
 				box:HighlightText()
 				box:SetFocus()
 			end
 		end,
 		EditBoxOnTextChanged = function(self)
-			if self:GetText() ~= LI.CENSUS_UPLOAD then
-				self:SetText(LI.CENSUS_UPLOAD)
+			if self:GetText() ~= url then
+				self:SetText(url)
 				self:HighlightText()
 			end
 		end,
@@ -290,9 +290,20 @@ if StaticPopupDialogs then
 	}
 end
 
+if StaticPopupDialogs then
+	LinkPopup("LINKEDINN_CENSUS", "Help the Forever Crafting Census\n\nLog out first so the game saves your list, then upload this file:\nWTF\\Account\\<your account>\\SavedVariables\\LinkedInn.lua\n\nPress Ctrl+C to copy the upload link:", LI.CENSUS_UPLOAD)
+	LinkPopup("LINKEDINN_CENSUS_SITE", "The Forever Crafting Census\n\nPress Ctrl+C to copy the link, then open it in your browser:", LI.CENSUS_SITE)
+end
+
 function LI.ShowCensusHelp()
 	if StaticPopup_Show then
 		StaticPopup_Show("LINKEDINN_CENSUS")
+	end
+end
+
+function LI.ShowCensusSite()
+	if StaticPopup_Show then
+		StaticPopup_Show("LINKEDINN_CENSUS_SITE")
 	end
 end
 
@@ -526,7 +537,7 @@ local function Create()
 
 	if not LI.RETAIL then
 		local census = Section(page, frame.minimap, "Help the census", 22)
-		frame.censusText = Below(Body(page, HEAD_X, "The Forever Crafting Census shows what crafters across the realms can make. You can add your list to it now and then. Nothing is ever sent on its own; you choose when."), census, HEAD_X, 10)
+		frame.censusText = Below(Body(page, HEAD_X, "The Forever Crafting Census shows what crafters across the realms can make. Have a look at the site, and add your list to it now and then. Nothing is ever sent on its own; you choose when."), census, HEAD_X, 10)
 		frame.censusSteps = Below(Body(page, HEAD_X, "1. Log out, so the game saves your list.\n2. Find World of Warcraft\\_classic_beta_\\WTF\\Account\\<your account>\\SavedVariables\\LinkedInn.lua\n3. Drop it on the upload page. Add a name if you'd like to be credited on the site."), frame.censusText, HEAD_X, 6)
 		frame.censusSteps:SetTextColor(0.9, 0.88, 0.82)
 		frame.census = LI.Theme.Button(CreateFrame("Button", nil, page, "UIPanelButtonTemplate"))
@@ -536,6 +547,14 @@ local function Create()
 		frame.census:SetScript("OnClick", function()
 			Sound("IG_MAINMENU_OPTION")
 			LI.ShowCensusHelp()
+		end)
+		frame.censusSite = LI.Theme.Button(CreateFrame("Button", nil, page, "UIPanelButtonTemplate"))
+		frame.censusSite:SetSize(170, 22)
+		frame.censusSite:SetText("Get the site link")
+		frame.censusSite:SetPoint("LEFT", frame.census, "RIGHT", 8, 0)
+		frame.censusSite:SetScript("OnClick", function()
+			Sound("IG_MAINMENU_OPTION")
+			LI.ShowCensusSite()
 		end)
 		frame.last = frame.census
 	end

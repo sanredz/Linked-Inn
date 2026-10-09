@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.5.0] - 2026-10-09
+
+- Linked Inn now works in retail World of Warcraft too. One download covers
+  both games and sets itself up for whichever you play.
+- On retail: all eight crafting professions plus Cooking, each crafter's skill
+  for every expansion they've learned, and recipe books grouped by expansion,
+  so old recipes for transmog, pets and toys are easy to find. Characters on
+  connected realms share one list, and profession names work in every game
+  language.
+- On retail, loading someone's profession makes the game hitch for a moment,
+  so Linked Inn doesn't check people in the background there. Flip the new
+  Scan switch at the top of the window in a busy city: it checks everyone
+  around you, shows how many crafters it has found, and switches itself off
+  when you leave the city or enter combat. Professions linked in chat are
+  still read in cities and inns.
+- At the Crafting Orders, a Linked Inn panel shows who on your list can make
+  the recipe, online first. Pick a personal order and click a name to send it
+  to them.
+- One list per faction: your Alliance and Horde characters each see their own
+  side's crafters. The other side's list is kept safe until you log in over
+  there again.
+- Linked Inn shows up in Titan Panel and other broker bars: your crafter
+  count, click to open, right-click for settings.
+- Crafters who drop a profession are noticed and taken off it, and crafters
+  you already know are refreshed now and then (at most every two weeks), so
+  skill and recipes stay current.
+- Clearer reading settings: professions linked in chat and checking the
+  people around you are now separate options.
+- Checking whether someone is online answers right away, even while Linked Inn
+  is busy in the background.
+- Smoother reading: big recipe books are read a little at a time, and the
+  profession window no longer flashes when a crafter's answer arrives late.
+- Rows show skill out of the cap, like "Skill 150/225".
+- Faster searching, and lists shared by other Linked Inn users arrive more
+  reliably.
+
 ## [1.4.0] - 2026-10-05
 
 - A new look: wood and brass windows, a gold title, and profession artwork

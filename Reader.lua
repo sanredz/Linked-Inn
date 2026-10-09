@@ -10,9 +10,10 @@ local SETTLE = 1
 local FAIR_TURN = 3
 local readsSinceScan = 0
 local PROBE_MIN = 0.3
-local PROBE_MAX = 1.5
-local PROBE_DEFAULT = 1.0
+local PROBE_MAX = LI.RETAIL and 3.5 or 1.5
+local PROBE_DEFAULT = LI.RETAIL and 2.0 or 1.0
 local latencies = {}
+local lateWatch
 local GIVE_UP = 5
 local PAUSE = 60
 local pausedUntil = 0
@@ -447,7 +448,7 @@ EndScan = function(force)
 			local c = LI.crafters and LI.crafters[key]
 			if c and next(r.yes) then
 				for prof in pairs(r.no) do
-					if c.profs[prof] then
+					if c.profs[prof] and (c.profs[prof].read or 0) < (run.startedAt or 0) then
 						c.profs[prof] = nil
 						dropped = true
 						LI.Log(string.format("%s no longer has %s; took it off the list", LI.ShortName(key), prof))
@@ -806,6 +807,9 @@ Start = function(job)
 	end
 	LI.After(job.probe and Reader.ProbeTimeout() or TIMEOUT, function()
 		if pending == job and not job.replied then
+			if job.probe and job.prof then
+				lateWatch = { key = job.key, prof = job.prof, started = job.started }
+			end
 			if not job.probe then
 				LI.Log("No reply for " .. LI.ShortName(job.key) .. "'s " .. tostring(job.prof) .. ", probably offline")
 			end
@@ -909,7 +913,7 @@ function Reader.Scan(candidates, quiet)
 		return false
 	end
 	readsSinceScan = 0
-	local run = { total = 0, done = 0, found = {}, players = #candidates, quiet = quiet, started = Now(), who = candidates[1].key }
+	local run = { total = 0, done = 0, found = {}, players = #candidates, quiet = quiet, started = Now(), startedAt = time(), who = candidates[1].key }
 	for _, cand in ipairs(candidates) do
 		for _, profKey in ipairs(LI.Allowed(cand.key) and cand.profs or {}) do
 			local link = LI.BuildLink(cand.guid, profKey)
@@ -1379,6 +1383,22 @@ local function Replied()
 			return
 		end
 	end
+	if job.prof and api and api.GetBaseProfessionInfo then
+		local base = LI.Try(api.GetBaseProfessionInfo)
+		local shown = type(base) == "table" and (LI.ProfKeyForLine(LI.Safe(base.professionID)) or LI.ProfKey(LI.Safe(base.professionName)))
+		if shown and shown ~= job.prof then
+			local watch = lateWatch
+			if watch and watch.prof == shown and Reader.NameMatches(LI.Safe(select(2, LI.Try(api.IsTradeSkillLinked))), watch.key) then
+				lateWatch = nil
+				table.insert(latencies, Now() - (watch.started or Now()))
+				while #latencies > 10 do
+					table.remove(latencies, 1)
+				end
+				LI.Log(string.format("A slow reply took %.1fs; waiting longer from now on", Now() - (watch.started or Now())))
+			end
+			return
+		end
+	end
 	job.replied = Now()
 	table.insert(latencies, job.replied - (job.started or job.replied))
 	while #latencies > 10 do
@@ -1409,6 +1429,14 @@ LI.On("TRADE_SKILL_SHOW", function()
 	elseif silenced then
 		ours = true
 		lateAt = Now()
+		local watch = lateWatch
+		if watch then
+			lateWatch = nil
+			table.insert(latencies, Now() - (watch.started or Now()))
+			while #latencies > 10 do
+				table.remove(latencies, 1)
+			end
+		end
 		LI.Log("A late reply arrived while the window was muted; read and closed it unseen")
 		LI.After(SETTLE, function()
 			if ours and not pending then

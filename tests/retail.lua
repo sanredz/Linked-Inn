@@ -751,5 +751,35 @@ do
 end
 W.noScan = nil
 
+do
+	RetailSetup()
+	W.defaultLinks = true
+	Boot()
+	Advance(5)
+	W.autoWorks = true
+	W.replyDelay = 2.5
+	local guid = "Player-1-SLR"
+	W.guids[guid] = { class = "MAGE", name = "Slow Reply", realm = "" }
+	local function Prof(name, id)
+		return { professionName = name, professionID = id, skillLevel = 80, maxSkillLevel = 100 }
+	end
+	W.linkData[LI.BuildLink(guid, "alchemy")] = { linkedName = "Slow Reply", prof = Prof("Alchemy", 171), recipes = { { id = 2330, name = "Minor Healing Potion", item = 118, learned = true } } }
+	W.linkData[LI.BuildLink(guid, "tailoring")] = { linkedName = "Slow Reply", prof = Prof("Tailoring", 197), recipes = { { id = 3908, name = "Bolt of Linen Cloth", item = 2996, learned = true } } }
+	LI.Reader.Scan({ { key = "Slow Reply-TestRealm", guid = guid, profs = { "alchemy", "blacksmithing", "enchanting", "engineering", "inscription", "jewelcrafting", "leatherworking", "tailoring" } } }, true)
+	Advance(60)
+	local c = LI.crafters["Slow Reply-TestRealm"]
+	check(c and c.profs.alchemy and c.profs.tailoring, "in retail, professions whose replies take a couple of seconds are still found")
+	W.replyDelay = 3
+	local guid2 = "Player-1-SLS"
+	W.guids[guid2] = { class = "MAGE", name = "Slower Still", realm = "" }
+	W.linkData[LI.BuildLink(guid2, "enchanting")] = { linkedName = "Slower Still", prof = Prof("Enchanting", 333), recipes = { { id = 7418, name = "Enchant Bracer - Minor Health", learned = true } } }
+	W.linkData[LI.BuildLink(guid2, "tailoring")] = { linkedName = "Slower Still", prof = Prof("Tailoring", 197), recipes = { { id = 3908, name = "Bolt of Linen Cloth", item = 2996, learned = true } } }
+	local d = LI.Crafter("Slower Still-TestRealm", true)
+	LI.Reader.Scan({ { key = "Slower Still-TestRealm", guid = guid2, profs = { "enchanting", "tailoring", "alchemy" }, check = true } }, true)
+	Advance(60)
+	check(d.profs.enchanting and d.profs.tailoring, "even slower replies get read, and a reply landing late is never taken as a dropped profession")
+	W.autoWorks, W.replyDelay, W.defaultLinks = false, nil, nil
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

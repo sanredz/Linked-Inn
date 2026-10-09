@@ -44,6 +44,7 @@ local BAR_SPACE = 22
 local SCROLL_STEP = 40
 local PAGE_PAD = 16
 local PAGE_WIDTH = WIDTH - 10 - BAR_SPACE
+local CENSUS_W = math.floor((PAGE_WIDTH - (HEAD_X - 2) - RIGHT_PAD - 8) / 2)
 
 local function Below(region, anchor, x, gap)
 	region:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", x - (anchor.colX or 0), -(gap or 0))
@@ -541,16 +542,16 @@ local function Create()
 		frame.censusSteps = Below(Body(page, HEAD_X, "1. Log out, so the game saves your list.\n2. Find World of Warcraft\\_classic_beta_\\WTF\\Account\\<your account>\\SavedVariables\\LinkedInn.lua\n3. Drop it on the upload page. Add a name if you'd like to be credited on the site."), frame.censusText, HEAD_X, 6)
 		frame.censusSteps:SetTextColor(0.9, 0.88, 0.82)
 		frame.census = LI.Theme.Button(CreateFrame("Button", nil, page, "UIPanelButtonTemplate"))
-		frame.census:SetSize(170, 22)
-		frame.census:SetText("Get the upload link")
+		frame.census:SetSize(CENSUS_W, 22)
+		frame.census:SetText("Upload link")
 		Below(frame.census, frame.censusSteps, HEAD_X - 2, 10)
 		frame.census:SetScript("OnClick", function()
 			Sound("IG_MAINMENU_OPTION")
 			LI.ShowCensusHelp()
 		end)
 		frame.censusSite = LI.Theme.Button(CreateFrame("Button", nil, page, "UIPanelButtonTemplate"))
-		frame.censusSite:SetSize(170, 22)
-		frame.censusSite:SetText("Get the site link")
+		frame.censusSite:SetSize(CENSUS_W, 22)
+		frame.censusSite:SetText("Census site")
 		frame.censusSite:SetPoint("LEFT", frame.census, "RIGHT", 8, 0)
 		frame.censusSite:SetScript("OnClick", function()
 			Sound("IG_MAINMENU_OPTION")

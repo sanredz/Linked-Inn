@@ -1586,6 +1586,8 @@ SlashCmdList.LINKEDINN = function(msg)
 		LI.Sync.Status()
 	elseif cmd == "guide" then
 		LI.Guide.Show(1)
+	elseif cmd == "census" and not LI.RETAIL then
+		LI.ShowCensusHelp()
 	elseif cmd == "scan" and LI.Scan.Needed() then
 		LI.Scan.Toggle()
 	else

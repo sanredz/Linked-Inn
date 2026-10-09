@@ -159,6 +159,10 @@ Open it with `/li`, the minimap button, or the addon menu. The light in the
 bottom bar shows whether everything is working; hover it for details. The `?`
 button (or `/li guide`) shows a short guide.
 
+Want to help the [Forever Crafting Census](https://sanredz.github.io/Linked-Inn/)?
+The gear's settings (or `/li census`) show how to send in your list; nothing
+is ever sent on its own.
+
 Linked Inn also shows up in Titan Panel and other broker bars, with the number
 of crafters on your list. Click it to open Linked Inn, right-click for
 settings. Using a bar? Hide the minimap button in the settings.

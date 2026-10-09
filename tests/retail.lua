@@ -805,5 +805,15 @@ do
 end
 W.noScan = nil
 
+do
+	RetailSetup()
+	Boot()
+	Advance(2)
+	LI.UI.Open(LI.UI.TAB.find)
+	LinkedInnFrame.gear.__scripts.OnClick(LinkedInnFrame.gear)
+	check(not LinkedInnSettings.census, "retail has no census section, the census is Forever only")
+	LinkedInnSettings:Hide()
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

@@ -2170,7 +2170,7 @@ do
 	local panel = LinkedInnSettings
 	check(panel and panel:IsShown() and panel.city:GetChecked() == true and panel.read:GetChecked() == true and panel.minimap:GetChecked() == true, "the gear opens settings showing the current choices")
 	check(panel.count.__text:find("3 crafters remembered", 1, true), "settings show how many crafters are remembered", panel.count.__text)
-	check(panel.scroll and panel.page:GetParent() == panel.scroll and panel.last == panel.minimap, "the settings page scrolls, so more options fit later")
+	check(panel.scroll and panel.page:GetParent() == panel.scroll and panel.last == panel.census, "the settings page scrolls, so more options fit later")
 	check(panel.hide and panel.hide:GetChecked() == false, "the hide links option starts off")
 	panel.city:SetChecked(false)
 	panel.city.__scripts.OnClick(panel.city)
@@ -3510,6 +3510,32 @@ do
 	realm = LinkedInnDB.realms[LI.realm]
 	check(realm.other.Horde.crafters["New Horde-TestRealm"] and realm.other.Horde.crafters["Org Rim-TestRealm"], "with the Horde side kept safe")
 	W.faction = nil
+end
+
+do
+	Setup()
+	Boot()
+	Advance(2)
+	LI.UI.Open(LI.UI.TAB.find)
+	LinkedInnFrame.gear.__scripts.OnClick(LinkedInnFrame.gear)
+	local panel = LinkedInnSettings
+	check(panel.census and panel.censusSteps.__text:find("SavedVariables\\LinkedInn.lua", 1, true), "settings explain how to help the census and which file to send")
+	W.popup = nil
+	panel.census.__scripts.OnClick(panel.census)
+	check(W.popup == "LINKEDINN_CENSUS", "the button opens the upload link to copy")
+	local dialog = StaticPopupDialogs.LINKEDINN_CENSUS
+	local box = CreateFrame("EditBox")
+	local popup = CreateFrame("Frame")
+	popup.editBox = box
+	dialog.OnShow(popup)
+	check(box:GetText() == "https://tally.so/r/RGXxWp", "with the link filled in, ready to copy", box:GetText())
+	box:SetText("oops")
+	dialog.EditBoxOnTextChanged(box)
+	check(box:GetText() == "https://tally.so/r/RGXxWp", "and typing over it can't break the link")
+	W.popup = nil
+	SlashCmdList.LINKEDINN("census")
+	check(W.popup == "LINKEDINN_CENSUS", "/li census opens it too")
+	panel:Hide()
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

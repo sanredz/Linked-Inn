@@ -250,6 +250,52 @@ if StaticPopupDialogs then
 	}
 end
 
+LI.CENSUS_UPLOAD = "https://tally.so/r/RGXxWp"
+LI.CENSUS_SITE = "https://sanredz.github.io/Linked-Inn/"
+
+local function PopupBox(popup)
+	return popup.editBox or popup.EditBox or (popup.GetEditBox and popup:GetEditBox())
+end
+
+if StaticPopupDialogs then
+	StaticPopupDialogs["LINKEDINN_CENSUS"] = {
+		text = "Help the Forever Crafting Census\n\nLog out first so the game saves your list, then upload this file:\nWTF\\Account\\<your account>\\SavedVariables\\LinkedInn.lua\n\nPress Ctrl+C to copy the upload link:",
+		button1 = DONE or "Done",
+		hasEditBox = true,
+		editBoxWidth = 280,
+		OnShow = function(self)
+			local box = PopupBox(self)
+			if box then
+				box:SetText(LI.CENSUS_UPLOAD)
+				box:HighlightText()
+				box:SetFocus()
+			end
+		end,
+		EditBoxOnTextChanged = function(self)
+			if self:GetText() ~= LI.CENSUS_UPLOAD then
+				self:SetText(LI.CENSUS_UPLOAD)
+				self:HighlightText()
+			end
+		end,
+		EditBoxOnEnterPressed = function(self)
+			self:GetParent():Hide()
+		end,
+		EditBoxOnEscapePressed = function(self)
+			self:GetParent():Hide()
+		end,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3,
+	}
+end
+
+function LI.ShowCensusHelp()
+	if StaticPopup_Show then
+		StaticPopup_Show("LINKEDINN_CENSUS")
+	end
+end
+
 local function Fit()
 	if not frame or not frame.last then
 		return
@@ -477,6 +523,22 @@ local function Create()
 		function() return LI.settings.showMinimap ~= false end,
 		function(on) LI.settings.showMinimap = on end)
 	frame.last = frame.minimap
+
+	if not LI.RETAIL then
+		local census = Section(page, frame.minimap, "Help the census", 22)
+		frame.censusText = Below(Body(page, HEAD_X, "The Forever Crafting Census shows what crafters across the realms can make. You can add your list to it now and then. Nothing is ever sent on its own; you choose when."), census, HEAD_X, 10)
+		frame.censusSteps = Below(Body(page, HEAD_X, "1. Log out, so the game saves your list.\n2. Find World of Warcraft\\_classic_beta_\\WTF\\Account\\<your account>\\SavedVariables\\LinkedInn.lua\n3. Drop it on the upload page. Add a name if you'd like to be credited on the site."), frame.censusText, HEAD_X, 6)
+		frame.censusSteps:SetTextColor(0.9, 0.88, 0.82)
+		frame.census = LI.Theme.Button(CreateFrame("Button", nil, page, "UIPanelButtonTemplate"))
+		frame.census:SetSize(170, 22)
+		frame.census:SetText("Get the upload link")
+		Below(frame.census, frame.censusSteps, HEAD_X - 2, 10)
+		frame.census:SetScript("OnClick", function()
+			Sound("IG_MAINMENU_OPTION")
+			LI.ShowCensusHelp()
+		end)
+		frame.last = frame.census
+	end
 
 	frame.version = Text(frame, "GameFontDisableSmall", "CENTER")
 	frame.version:SetPoint("BOTTOM", 0, 15)

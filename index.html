@@ -425,7 +425,8 @@ footer.page a { color: var(--ink-2); }
         if (cols) body += text(x1 + 18 + k * colW + colW - 4, y + 5, v == null ? '–' : cfg.fmt(v), { size: 14, fill: T.ink2, anchor: 'end', tabular: true });
       });
       const tip = r.name + '|' + gs.map((g, k) => `${g.key}\t${r.tips[k]}`).join('\n');
-      body += `<rect x="30" y="${top + i * rowH}" width="${W - 60}" height="${rowH}" fill="transparent" data-tip="${esc(tip)}"/>`;
+      const hit = cfg.items ? `data-item="${cfg.items}:${i}" style="cursor:help"` : `data-tip="${esc(tip)}"`;
+      body += `<rect x="30" y="${top + i * rowH}" width="${W - 60}" height="${rowH}" fill="transparent" ${hit}/>`;
     });
     return frame(cfg.title, cfg.subtitle, bottom + 84, body);
   }
@@ -935,6 +936,16 @@ footer.page a { color: var(--ink-2); }
       .sort((a, b) => b.d - a.d)
       .slice(0, 12);
   }
+  function compareTip(r, gs, names) {
+    const base = M.tips[r.rid] || { name: r.name, prof: names[r.prof] || r.prof, q: r.q, reagents: [], stats: [], equip: [] };
+    return Object.assign({}, base, {
+      compare: gs.map((g, k) => {
+        const v = r.vals[k];
+        return { color: g.color, text: `${g.label}: ${fmt(v.n)} of ${fmt(v.base)} expert crafters know it (${v.share.toFixed(0)}%)` };
+      }),
+    });
+  }
+
   function recipeMissing(gs) {
     const out = [];
     recipeStats(gs).forEach((r) => {
@@ -964,7 +975,8 @@ footer.page a { color: var(--ink-2); }
       vals: r.vals.map((v) => v.share),
       tips: r.vals.map((v, k) => `${v.share.toFixed(1)}% · ${fmt(v.n)} of ${fmt(v.base)} expert ${names[r.prof] ? names[r.prof].toLowerCase() : ''} crafters`),
     }));
-    const svg = dotPlot({ groups: gs, rows, labelW: 330, title: 'Recipes that differ', subtitle: 'Share of expert crafters (skill 150+) who know each recipe, biggest gaps first', fmt: (v) => Math.round(v) + '%', tick: (v) => v + '%' });
+    ITEMS.recipeGaps = list.map((r) => compareTip(r, gs, names));
+    const svg = dotPlot({ groups: gs, rows, items: 'recipeGaps', labelW: 330, title: 'Recipes that differ', subtitle: 'Share of expert crafters (skill 150+) who know each recipe, biggest gaps first', fmt: (v) => Math.round(v) + '%', tick: (v) => v + '%' });
     return svg.replace(/(<text x="36" y="(\d+(?:\.\d+)?)" fill="[^"]*" font-size="15"[^>]*>)([^<]*)(<\/text>)/g, (m, open, y, label, close) => {
       const r = list.find((x) => esc(x.name) === label);
       if (!r) return m;
@@ -983,6 +995,7 @@ footer.page a { color: var(--ink-2); }
     const title = 'Known on one side, missing on the other';
     const subtitle = 'Among expert crafters (skill 150+): nobody on one side knows it, though at the other side\'s rate several should';
     if (!list.length) return frame(title, subtitle, 220, text(36, 140, 'Every recipe seen on one side turns up on the other too.', { size: 15, fill: T.ink2 }));
+    ITEMS.recipeMissing = list.map((r) => compareTip(r, gs, names));
     if (NARROW) {
       const top = 120, row = 74;
       let body = '';
@@ -997,7 +1010,7 @@ footer.page a { color: var(--ink-2); }
         body += text(56, y + 45, `${has.label}: ${fmt(hv.n)} of ${fmt(hv.base)} know it (${hv.share.toFixed(0)}%)`, { size: 13, fill: T.ink2, tabular: true });
         body += marker(42, y + 59, lacks, 6);
         body += text(56, y + 64, `${lacks.label}: none of ${fmt(lv.base)}, about ${Math.round(r.expected)} expected`, { size: 13, fill: T.ink, tabular: true });
-        body += `<rect x="30" y="${y}" width="${W - 60}" height="${row - 2}" fill="transparent" data-tip="${esc(r.name + '|' + qName(r.q) + ' ' + (names[r.prof] || '').toLowerCase() + ' recipe')}"/>`;
+        body += `<rect x="30" y="${y}" width="${W - 60}" height="${row - 2}" fill="transparent" data-item="recipeMissing:${i}" style="cursor:help"/>`;
       });
       return frame(title, subtitle, top + list.length * row + 50, body);
     }
@@ -1017,9 +1030,10 @@ footer.page a { color: var(--ink-2); }
       body += text(520, y + 23, names[r.prof] || r.prof, { size: 14, fill: T.ink2 });
       body += marker(706, y + 18, has, 6);
       body += text(718, y + 23, `${has.label}: ${fmt(hv.n)} of ${fmt(hv.base)} (${hv.share.toFixed(0)}%)`, { size: 14, fill: T.ink2, tabular: true });
-      body += marker(W - 36 - 190, y + 18, lacks, 6);
-      body += text(W - 36, y + 23, `${lacks.label}: 0 of ${fmt(lv.base)}, ~${Math.round(r.expected)} expected`, { size: 14, fill: T.ink, anchor: 'end', tabular: true });
-      body += `<rect x="30" y="${y}" width="${W - 60}" height="${row - 2}" fill="transparent" data-tip="${esc(r.name + '|' + qName(r.q) + ' ' + (names[r.prof] || '').toLowerCase() + ' recipe. ' + has.label + ': ' + hv.n + ' of ' + hv.base + ' expert crafters know it. ' + lacks.label + ': none of ' + lv.base + ', though about ' + Math.round(r.expected) + ' would be expected at the same rate.')}"/>`;
+      const missText = `${lacks.label}: 0 of ${fmt(lv.base)}, ~${Math.round(r.expected)} expected`;
+      body += marker(W - 36 - missText.length * 6.3 - 14, y + 18, lacks, 6);
+      body += text(W - 36, y + 23, missText, { size: 14, fill: T.ink, anchor: 'end', tabular: true });
+      body += `<rect x="30" y="${y}" width="${W - 60}" height="${row - 2}" fill="transparent" data-item="recipeMissing:${i}" style="cursor:help"/>`;
     });
     return frame(title, subtitle, top + Math.max(list.length, 4) * row + 56, body);
   }, () => {
@@ -1167,9 +1181,12 @@ footer.page a { color: var(--ink-2); }
     window.scrollTo(0, y);
   }
 
+  const TIP_ICONS = new Set(M.tipIcons || []);
+  const iconSrc = (id) => ASSETS.icons[id] || (TIP_ICONS.has(id) ? `assets/icons/${id}.png` : '');
+
   function itemTip(r) {
     const color = ITEM_COLORS[r.q] || '#ffffff';
-    const icon = ASSETS.icons[r.icon] ? `<img src="${ASSETS.icons[r.icon]}" alt="">` : '';
+    const icon = iconSrc(r.icon) ? `<img src="${iconSrc(r.icon)}" alt="">` : '';
     const lines = [`<div class="name">${icon}<span style="color:${color}">${esc(r.name)}</span></div>`];
     if (r.ilvl) lines.push(`<div class="gold">Item Level ${r.ilvl}</div>`);
     if (r.bind) lines.push(`<div>${esc(r.bind)}</div>`);
@@ -1182,11 +1199,15 @@ footer.page a { color: var(--ink-2); }
     lines.push('<hr>');
     lines.push(`<div class="dim">Made with ${esc(r.prof)}</div>`);
     r.reagents.forEach((g) => {
-      const gi = ASSETS.icons[g.icon] ? `<img src="${ASSETS.icons[g.icon]}" alt="">` : '';
+      const gi = iconSrc(g.icon) ? `<img src="${iconSrc(g.icon)}" alt="">` : '';
       lines.push(`<div class="reagent">${gi}<span style="color:${ITEM_COLORS[g.quality] || '#fff'}">${esc(g.name)}</span><span class="dim">× ${g.count}</span></div>`);
     });
     lines.push('<hr>');
-    lines.push(`<div class="dim">Known by ${r.n} ${r.n === 1 ? 'crafter' : 'crafters'} (${r.share}% of ${esc(r.prof.toLowerCase())} crafters)</div>`);
+    if (r.compare) {
+      r.compare.forEach((c) => lines.push(`<div class="dim"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:${c.color}"></span>${esc(c.text)}</div>`));
+    } else {
+      lines.push(`<div class="dim">Known by ${r.n} ${r.n === 1 ? 'crafter' : 'crafters'} (${r.share}% of ${esc(r.prof.toLowerCase())} crafters)</div>`);
+    }
     return lines.join('');
   }
 

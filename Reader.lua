@@ -1436,12 +1436,35 @@ LI.On("TRADE_SKILL_SHOW", function()
 	Replied()
 	ScheduleRead()
 end)
+local function InWorld(frame)
+	for _ = 1, 6 do
+		if not frame then
+			return false
+		end
+		if frame == WorldFrame then
+			return true
+		end
+		if frame.IsForbidden and LI.Safe(LI.Try(frame.IsForbidden, frame)) then
+			return true
+		end
+		if frame.namePlateUnitToken then
+			return true
+		end
+		local name = frame.GetName and LI.Safe(LI.Try(frame.GetName, frame))
+		if type(name) == "string" and name:find("^NamePlate") then
+			return true
+		end
+		frame = frame.GetParent and LI.Try(frame.GetParent, frame)
+	end
+	return false
+end
+
 local function OnInterface()
 	local focus, known = MouseFocus()
 	if not known then
 		return true
 	end
-	return focus ~= nil and focus ~= WorldFrame
+	return focus ~= nil and not InWorld(focus)
 end
 
 LI.On("GLOBAL_MOUSE_DOWN", function()

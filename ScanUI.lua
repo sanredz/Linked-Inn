@@ -140,7 +140,7 @@ local function PaintStrip()
 	else
 		strip.head:SetText("Crafter scan is off")
 		strip.head:SetTextColor(LI.Theme.GOLD[1], LI.Theme.GOLD[2], LI.Theme.GOLD[3])
-		strip.sub:SetText(LI.InCity() and "Switch it on to check everyone around you. The game hitches a little while it's on." or "Switch it on in a busy city to gather crafters. The game hitches a little while it's on.")
+		strip.sub:SetText(LI.InCity() and "Checks everyone around you. Small hitches while it's on." or "Best in a busy city. Small hitches while it's on.")
 	end
 	strip.button:Set(on)
 end
@@ -180,6 +180,10 @@ function ScanUI.Attach(main)
 	strip.sub = strip:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	strip.sub:SetPoint("TOPLEFT", strip.head, "BOTTOMLEFT", 0, -2)
 	strip.sub:SetJustifyH("LEFT")
+	strip.sub:SetWordWrap(false)
+	if strip.sub.SetMaxLines then
+		strip.sub:SetMaxLines(1)
+	end
 	strip.sub:SetTextColor(SOFT[1], SOFT[2], SOFT[3])
 	strip.button = Switch(strip)
 	strip.button:SetPoint("RIGHT", -8, 0)

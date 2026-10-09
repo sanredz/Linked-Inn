@@ -92,6 +92,8 @@ function methods:CreateTexture() return NewMock("Texture") end
 function methods:CreateFontString() return NewMock("FontString") end
 function methods:CreateMaskTexture() return NewMock("MaskTexture") end
 function methods:GetParent() return self.__parent end
+function methods:GetName() return self.__name end
+function methods:IsForbidden() return false end
 function methods:SetTexture(t) self.__texture = t end
 function methods:SetDataProvider(dp)
 	local view = self.__view

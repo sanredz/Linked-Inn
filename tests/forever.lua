@@ -1930,6 +1930,15 @@ do
 	GetMouseFoci = function() return { WorldFrame } end
 	Fire("GLOBAL_MOUSE_DOWN", "RightButton")
 	check(W.closed == closed and W.trade and W.trade.linked, "turning the camera doesn't interrupt a read")
+	local plate = CreateFrame("Frame", "NamePlate7")
+	local bar = CreateFrame("Frame", nil, plate)
+	GetMouseFoci = function() return { bar } end
+	Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
+	local locked = CreateFrame("Frame")
+	locked.IsForbidden = function() return true end
+	GetMouseFoci = function() return { locked } end
+	Fire("GLOBAL_MOUSE_DOWN", "RightButton")
+	check(W.closed == closed and W.trade and W.trade.linked, "clicking on someone's nameplate in a crowd doesn't interrupt a read either")
 	GetMouseFoci = function() return { UIParent } end
 	Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
 	GetMouseFoci = nil

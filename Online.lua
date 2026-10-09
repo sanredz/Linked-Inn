@@ -242,6 +242,9 @@ local function Sighted(unit)
 	if not key or key == LI.playerKey or not LI.crafters[key] then
 		return
 	end
+	if LI.Safe(LI.Try(UnitIsFriend, "player", unit)) == false then
+		return
+	end
 	if LI.MarkSeen(key, type(zone) == "string" and zone ~= "" and zone or nil) then
 		LI.Fire("StatusChanged")
 	end

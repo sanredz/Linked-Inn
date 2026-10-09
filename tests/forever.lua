@@ -3423,5 +3423,26 @@ do
 	W.profs = nil
 end
 
+do
+	Setup()
+	Boot()
+	Advance(5)
+	local c = LI.Crafter("Other Side-TestRealm", true)
+	c.seen = time() - 3 * 86400
+	c.profs.alchemy = { name = "Alchemy", rank = 100, recipes = { [2330] = true }, count = 1 }
+	local friend = LI.Crafter("Same Side-TestRealm", true)
+	friend.seen = time() - 3 * 86400
+	friend.profs.alchemy = { name = "Alchemy", rank = 100, recipes = { [2330] = true }, count = 1 }
+	W.units = {
+		nameplate1 = { name = "Other", surname = "Side", guid = "Player-1-OTS", enemy = true },
+		nameplate2 = { name = "Same", surname = "Side", guid = "Player-1-SMS" },
+	}
+	LI.Sighted("nameplate1")
+	LI.Sighted("nameplate2")
+	check(time() - c.seen > 86400, "a player of the other faction walking past doesn't count as seen on your side")
+	check(time() - friend.seen < 60, "but one of your own faction does")
+	W.units = nil
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

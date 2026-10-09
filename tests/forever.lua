@@ -3444,5 +3444,64 @@ do
 	W.units = nil
 end
 
+do
+	Setup()
+	W.faction = nil
+	Boot()
+	Advance(2)
+	local function Add(key, where, guid, age)
+		local c = LI.Crafter(key, true)
+		c.where = where
+		c.guid = guid
+		c.seen = time() - (age or 0)
+		c.fac = nil
+		c.profs.alchemy = { name = "Alchemy", rank = 100, recipes = { [2330] = true }, count = 1 }
+	end
+	Add("Storm Wind-TestRealm", "Stormwind City")
+	Add("Org Rim-TestRealm", "Orgrimmar", nil, 90 * 86400)
+	W.guids["Player-1-ORC"] = { class = "WARRIOR", name = "Orc", surname = "Smith", realm = "", race = "Orc" }
+	Add("Orc Smith-TestRealm", "Trade", "Player-1-ORC")
+	Add("No Clue-TestRealm", "Trade")
+	LI.favorites["Org Rim-TestRealm"] = true
+	local saved = SaveVars()
+
+	W.faction = "Alliance"
+	Boot(saved)
+	Advance(2)
+	local function Listed(key)
+		for _, g in ipairs(LI.Search("", { profs = {} })) do
+			for _, r in ipairs(g.rows or {}) do
+				if r.key == key then return true end
+			end
+		end
+		return LI.crafters[key] ~= nil
+	end
+	check(Listed("Storm Wind-TestRealm") and not Listed("Org Rim-TestRealm") and not Listed("Orc Smith-TestRealm"), "on an Alliance character only Alliance crafters are listed")
+	check(Listed("No Clue-TestRealm") and LI.crafters["No Clue-TestRealm"].fac == "Alliance", "someone with no clue counts as the faction you log in with first")
+	local realm = LinkedInnDB.realms[LI.realm]
+	check(realm.other.Horde.crafters["Org Rim-TestRealm"] and realm.other.Horde.crafters["Orc Smith-TestRealm"], "Horde crafters are put aside, recognised by their capital or their race")
+	check(realm.other.Horde.favorites["Org Rim-TestRealm"] and not LI.favorites["Org Rim-TestRealm"], "with their favorites")
+	LI.PruneNow()
+	check(realm.other.Horde.crafters["Org Rim-TestRealm"], "and they're never forgotten while you play the other side, however long")
+	saved = Logout()
+
+	W.faction = "Horde"
+	Boot(saved)
+	Advance(2)
+	check(Listed("Org Rim-TestRealm") and Listed("Orc Smith-TestRealm") and not Listed("Storm Wind-TestRealm") and not Listed("No Clue-TestRealm"), "logging in on Horde shows the Horde list instead")
+	check(LI.favorites["Org Rim-TestRealm"], "favorites come back with them")
+	LI.Crafter("New Horde-TestRealm", true).profs.tailoring = { name = "Tailoring", rank = 50, recipes = { [3908] = true }, count = 1 }
+	check(LI.crafters["New Horde-TestRealm"].fac == "Horde", "new crafters belong to the faction that found them")
+	saved = Logout()
+
+	W.faction = "Alliance"
+	Boot(saved)
+	Advance(2)
+	check(Listed("Storm Wind-TestRealm") and Listed("No Clue-TestRealm") and not Listed("New Horde-TestRealm") and not Listed("Org Rim-TestRealm"), "and back on Alliance everything is where you left it")
+	realm = LinkedInnDB.realms[LI.realm]
+	check(realm.other.Horde.crafters["New Horde-TestRealm"] and realm.other.Horde.crafters["Org Rim-TestRealm"], "with the Horde side kept safe")
+	W.faction = nil
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

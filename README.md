@@ -66,6 +66,9 @@ professions are read when you log in, so you never have to open them first.
   come straight from their own game. The mug next to Secondary shows only them.
 - **Guild** and **Friend** tags show who's in your guild or on your friends
   list.
+- **One list per faction.** Your Alliance and Horde characters each see their
+  own side's crafters. The other side's list is kept safe, untouched, until you
+  log in over there again.
 
 <p align="center">
   <img src="media/crafters-search.png" alt="Searching for an item shows who can make it" width="62%">

@@ -519,6 +519,72 @@ function LI.StorageRealm()
 	return names[1]
 end
 
+local CAPITALS = {
+	["Stormwind City"] = "Alliance", ["Ironforge"] = "Alliance", ["Darnassus"] = "Alliance", ["The Exodar"] = "Alliance",
+	["Orgrimmar"] = "Horde", ["Thunder Bluff"] = "Horde", ["Undercity"] = "Horde", ["Silvermoon City"] = "Horde",
+}
+local RACES = {
+	Human = "Alliance", Dwarf = "Alliance", NightElf = "Alliance", Gnome = "Alliance", Draenei = "Alliance", Worgen = "Alliance",
+	KulTiran = "Alliance", DarkIronDwarf = "Alliance", VoidElf = "Alliance", LightforgedDraenei = "Alliance", Mechagnome = "Alliance",
+	Orc = "Horde", Scourge = "Horde", Undead = "Horde", Tauren = "Horde", Troll = "Horde", BloodElf = "Horde", Goblin = "Horde",
+	Nightborne = "Horde", HighmountainTauren = "Horde", MagharOrc = "Horde", ZandalariTroll = "Horde", Vulpera = "Horde",
+}
+
+local function GuessFaction(c)
+	if CAPITALS[c.where or ""] then
+		return CAPITALS[c.where]
+	end
+	if type(c.guid) == "string" and GetPlayerInfoByGUID then
+		local race = LI.Safe(select(4, LI.Try(GetPlayerInfoByGUID, c.guid)))
+		if RACES[race or ""] then
+			return RACES[race]
+		end
+	end
+	return nil
+end
+
+local function SplitFactions(realm)
+	local fac = LI.faction
+	realm.other = type(realm.other) == "table" and realm.other or {}
+	local moved, back = 0, 0
+	for key, c in pairs(realm.crafters) do
+		if type(c) == "table" then
+			if key == LI.playerKey then
+				c.fac = fac
+			elseif c.fac ~= "Alliance" and c.fac ~= "Horde" then
+				c.fac = GuessFaction(c) or fac
+			end
+			if c.fac ~= fac then
+				local side = realm.other[c.fac] or { crafters = {}, favorites = {} }
+				realm.other[c.fac] = side
+				side.crafters[key] = c
+				realm.crafters[key] = nil
+				if realm.favorites[key] then
+					side.favorites[key] = realm.favorites[key]
+					realm.favorites[key] = nil
+				end
+				moved = moved + 1
+			end
+		end
+	end
+	local side = realm.other[fac]
+	if type(side) == "table" then
+		for key, c in pairs(type(side.crafters) == "table" and side.crafters or {}) do
+			if realm.crafters[key] == nil then
+				realm.crafters[key] = c
+				back = back + 1
+			end
+		end
+		for key, on in pairs(type(side.favorites) == "table" and side.favorites or {}) do
+			if realm.crafters[key] and realm.favorites[key] == nil then
+				realm.favorites[key] = on
+			end
+		end
+		realm.other[fac] = nil
+	end
+	return moved, back
+end
+
 LI.On("PLAYER_LOGIN", function()
 	if not LI.db then
 		return
@@ -544,6 +610,12 @@ LI.On("PLAYER_LOGIN", function()
 			end
 		end
 		realms[own] = nil
+	end
+	local faction = LI.Safe(LI.Try(UnitFactionGroup, "player"))
+	LI.faction = (faction == "Alliance" or faction == "Horde") and faction or nil
+	local away, back = 0, 0
+	if LI.faction then
+		away, back = SplitFactions(realm)
 	end
 	LI.db.settings.profs = {}
 	LI.db.settings.liOnly = false
@@ -577,6 +649,9 @@ LI.On("PLAYER_LOGIN", function()
 	end
 	LI.ready = true
 	LI.readyAt = GetTime and GetTime() or 0
+	if away > 0 or back > 0 then
+		LI.Log(string.format("Showing %s crafters: put %d of the other faction aside, brought back %d", LI.faction, away, back))
+	end
 	LI.Fire("Ready")
 end)
 
@@ -586,7 +661,7 @@ function LI.Crafter(key, create)
 	end
 	local c = LI.crafters[key]
 	if not c and create then
-		c = { profs = {}, seen = time() }
+		c = { profs = {}, seen = time(), fac = LI.faction }
 		LI.crafters[key] = c
 	end
 	return c

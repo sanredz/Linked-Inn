@@ -301,7 +301,7 @@ local function InstallStubs()
 	_G.GetPlayerInfoByGUID = function(guid)
 		local g = W.guids[guid]
 		if not g then return nil end
-		return g.class, g.class, "Human", "Human", 2, g.name, g.realm
+		return g.class, g.class, g.race or "Human", g.race or "Human", 2, g.name, g.realm
 	end
 	_G.C_Spell = {
 		GetSpellTexture = function(id) return 100000 + id end,

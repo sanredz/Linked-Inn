@@ -19,7 +19,25 @@ function globalWrites(node, found) {
   }
 }
 
-for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.lua'))) {
+const SKIP = new Set(['tests', 'node_modules', 'docs', 'scripts', 'media', 'art']);
+function luaFiles(base, rel = '') {
+  const out = [];
+  for (const entry of fs.readdirSync(path.join(base, rel), { withFileTypes: true })) {
+    const p = rel ? rel + '/' + entry.name : entry.name;
+    if (entry.isDirectory()) {
+      if (!SKIP.has(entry.name) && !entry.name.startsWith('.')) out.push(...luaFiles(base, p));
+    } else if (entry.name.endsWith('.lua')) {
+      out.push(p);
+    }
+  }
+  return out;
+}
+const files = luaFiles(dir);
+if (files.length === 0) {
+  console.log('FAIL no addon files found');
+  process.exit(1);
+}
+for (const f of files) {
   try {
     const ast = lp.parse(fs.readFileSync(path.join(dir, f), 'utf8'), { luaVersion: '5.1', scope: true });
     const found = [];

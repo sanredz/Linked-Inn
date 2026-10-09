@@ -12,25 +12,25 @@
 ## AddonCompartmentFuncOnEnter: LinkedInn_OnAddonCompartmentEnter
 ## AddonCompartmentFuncOnLeave: LinkedInn_OnAddonCompartmentLeave
 
-Core.lua
-Theme.lua
-Data.lua
-Online.lua
-Capture.lua
-Reader.lua
-Clues.lua
-Scan.lua
-ScanUI.lua
-Broker.lua
-Sync.lua
-Bridge.lua
-Health.lua
-Guide.lua
-Premium.lua
-Work.lua
-UI.lua
-Book.lua
-Orders.lua
-Settings.lua
-WorkUI.lua
-Minimap.lua
+Core\Core.lua
+Core\Theme.lua
+Core\Data.lua
+Reading\Online.lua
+Reading\Capture.lua
+Reading\Reader.lua
+Reading\Clues.lua
+Reading\Scan.lua
+UI\ScanUI.lua
+UI\Broker.lua
+Sharing\Sync.lua
+Sharing\Bridge.lua
+UI\Health.lua
+UI\Guide.lua
+UI\Premium.lua
+Work\Work.lua
+UI\UI.lua
+UI\Book.lua
+UI\Orders.lua
+UI\Settings.lua
+Work\WorkUI.lua
+UI\Minimap.lua

@@ -5,7 +5,7 @@ for line in (TOC_SOURCE .. "\n"):gmatch("(.-)\r?\n") do
 	if line:match("^## Version:") then
 		TOC_VERSION = line:match("^## Version:%s*(.-)%s*$")
 	elseif line:match("%.lua$") and not line:match("^#") then
-		FILES[#FILES + 1] = line
+		FILES[#FILES + 1] = (line:gsub("\\", "/"))
 	end
 end
 

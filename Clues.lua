@@ -452,6 +452,12 @@ function LI.DiscoverUrgent()
 	return false
 end
 
+function LI.ClearDiscovery()
+	for i = #candidates, 1, -1 do
+		candidates[i] = nil
+	end
+end
+
 function LI.DiscoverQueue()
 	return #candidates
 end

@@ -89,6 +89,12 @@ function Scan.Stop(why)
 	end
 	local found = Scan.Found()
 	active = false
+	if LI.ClearDiscovery then
+		LI.ClearDiscovery()
+	end
+	if LI.Reader and LI.Reader.CancelBackground then
+		LI.Reader.CancelBackground()
+	end
 	RestorePlates()
 	LI.Print(string.format("Scan stopped%s. %s read.", why and (": " .. why) or "", found == 1 and "1 crafter" or (found .. " crafters")))
 	LI.Log(string.format("Scan stopped%s after %d seconds, %d crafters read", why and (" (" .. why .. ")") or "", math.floor(time() - startedAt), found))

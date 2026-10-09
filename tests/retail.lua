@@ -781,5 +781,29 @@ do
 	W.autoWorks, W.replyDelay, W.defaultLinks = false, nil, nil
 end
 
+do
+	RetailSetup()
+	W.defaultLinks = true
+	W.noScan = true
+	Boot()
+	Advance(5)
+	W.resting = true
+	W.autoWorks = true
+	LI.Scan.Start()
+	local guid = "Player-1-STP"
+	W.guids[guid] = { class = "MAGE", name = "Stop Me", realm = "" }
+	LI.Discover("Wait Ing-TestRealm", "Player-1-WTG", LI.PRIO.seen)
+	LI.Reader.Scan({ { key = "Stop Me-TestRealm", guid = guid, profs = { "alchemy", "blacksmithing", "enchanting", "engineering", "inscription", "jewelcrafting", "leatherworking", "tailoring" } } }, true)
+	Advance(3)
+	check(LI.Reader.Scanning(), "a scan is busy checking someone")
+	LI.Scan.Stop()
+	local asked = #W.hyperlinks
+	Advance(30)
+	check(#W.hyperlinks == asked, "switching the scan off stops every background check at once, nothing more is asked", #W.hyperlinks - asked)
+	check(not LI.Reader.Scanning() and LI.DiscoverQueue() == 0, "and the queue of people to check is emptied")
+	W.autoWorks, W.resting, W.defaultLinks = false, nil, nil
+end
+W.noScan = nil
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

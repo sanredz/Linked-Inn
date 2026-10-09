@@ -977,6 +977,37 @@ function Reader.Queued(key)
 	return false
 end
 
+function Reader.CancelBackground()
+	local dropped = 0
+	for i = #probes, 1, -1 do
+		if probes[i].scan then
+			table.remove(probes, i)
+			dropped = dropped + 1
+		end
+	end
+	for i = #queue, 1, -1 do
+		local q = queue[i]
+		if q.built and not q.chat then
+			table.remove(queue, i)
+			dropped = dropped + 1
+		end
+	end
+	local job = pending
+	if job and (job.scan or (job.built and not job.chat)) then
+		pending = nil
+		lastDone = Now()
+		ours = true
+		CloseHidden()
+		Hold()
+		dropped = dropped + 1
+	end
+	if scanRun then
+		EndScan(true)
+	end
+	LI.Fire("StatusChanged")
+	return dropped
+end
+
 function Reader.Drop(key)
 	for i = #probes, 1, -1 do
 		local job = probes[i]

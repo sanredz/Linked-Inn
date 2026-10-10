@@ -146,13 +146,15 @@ do
 	local worst, sentAll = 0, 0
 	for i = sent0 + 1, #W.sent do
 		local a = W.sent[i]
-		sentAll = sentAll + 1
-		local inWindow = 0
-		for j = i, #W.sent do
-			local b = W.sent[j]
-			if b.at - a.at <= 5 then inWindow = inWindow + 1 end
+		if a.msg:find("^X1|") then
+			sentAll = sentAll + 1
+			local inWindow = 0
+			for j = i, #W.sent do
+				local b = W.sent[j]
+				if b.at - a.at <= 5 and b.msg:find("^X1|") then inWindow = inWindow + 1 end
+			end
+			worst = math.max(worst, inWindow)
 		end
-		worst = math.max(worst, inWindow)
 	end
 	check(sentAll == 30, "every queued message is sent eventually", sentAll)
 	check(worst <= 10 + 5, "never more than the game's allowance: a burst of ten, then one a second", worst)

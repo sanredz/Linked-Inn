@@ -3549,5 +3549,50 @@ do
 	panel:Hide()
 end
 
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	W.sent = {}
+	Advance(60)
+	local first
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^H1|") and m.chatType == "CHANNEL" and not first then first = m.msg end
+	end
+	check(first and first:find("^H1|0|") and first:find("|J$"), "someone with no professions still says hello on login, so others say hi back", first)
+	W.sent = {}
+	Advance(15 * 60)
+	check(#Sent("H1|", "CHANNEL") == 0, "but only on login, there's nothing to share after that", #Sent("H1|", "CHANNEL"))
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 100, max = 150 }, { { id = 3914, name = "Brown Linen Pants", item = 4343 } }, "own")
+	LI.Fire("OwnRecipesChanged")
+	Advance(60)
+	W.sent = {}
+	Addon("H1|0|WARRIOR||TestRealm|1||J", "No Profs-TestRealm")
+	Advance(8)
+	local reply
+	for _, m in ipairs(W.sent) do
+		if m.msg:find("^H1|") and m.chatType == "CHANNEL" then reply = m.msg end
+	end
+	check(reply and reply:find("tailoring", 1, true), "a newcomer with no professions gets a hello back within seconds", reply)
+	check(not LI.crafters["No Profs-TestRealm"] and #Sent("Q") == 0, "and isn't added to the list or asked for a list they don't have")
+end
+
+do
+	Setup()
+	W.playerGUID = "Player-1-ME"
+	Boot()
+	LI.db.own = { key = "Main Char-TestRealm", ver = "zzzz", payload = "tailoring~2s~4b~x~1" }
+	check(not LI.Sync.OwnCard(), "another character's list is never shared as yours")
+	LI.db.own = { ver = "zzzz", payload = "tailoring~2s~4b~x~1" }
+	LI.Sync.Refresh()
+	check(not LI.Sync.OwnCard() and not (LI.Sync.Hello() or ""):find("zzzz"), "an old list saved before characters were told apart is cleared on a character with no professions")
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

@@ -514,10 +514,11 @@ end
 
 local function OwnState()
 	local own = LI.db.own
-	if type(own) ~= "table" then
+	if type(own) ~= "table" or (own.key and LI.playerKey and own.key ~= LI.playerKey) then
 		own = {}
 		LI.db.own = own
 	end
+	own.key = own.key or LI.playerKey
 	return own
 end
 
@@ -528,6 +529,12 @@ end
 function Sync.Refresh()
 	local payload = Sync.OwnPayload()
 	local own = OwnState()
+	if not payload and own.payload then
+		own.payload = nil
+		own.ver = nil
+		LI.Fire("TestChanged")
+		return true
+	end
 	if payload and payload ~= own.payload then
 		own.payload = payload
 		own.ver = B36(math.max(time(), (FromB36(own.ver or "") or 0) + 1))
@@ -554,7 +561,8 @@ local freshHello = true
 
 function Sync.Hello()
 	local own = OwnState()
-	if not own.payload or not own.ver then
+	local ver = own.payload and own.ver
+	if not ver and not freshHello then
 		return nil
 	end
 	local c = Own()
@@ -571,7 +579,7 @@ function Sync.Hello()
 		parts[#parts + 1] = table.concat({ Clean(key), B36(p.rank or 0), B36(p.max or 0), p.recipes and B36(p.count or 0) or "-" }, "~")
 	end
 	local class = select(2, LI.Try(UnitClass, "player")) or ""
-	local base = string.format("H1|%s|%s|%s|%s|%s", own.ver, Clean(class), table.concat(parts, ";"), MyRealm(), MySid() or "")
+	local base = string.format("H1|%s|%s|%s|%s|%s", ver or "0", Clean(class), table.concat(parts, ";"), MyRealm(), MySid() or "")
 	local links = LinkList()
 	if links ~= "" and #base + #links + 1 > 200 then
 		links = ""
@@ -793,6 +801,9 @@ local function OnHello(key, parts, chatType)
 			Sync.Refresh()
 			SendHello()
 		end)
+	end
+	if ver == "0" and list == "" then
+		return
 	end
 	local c = LI.Crafter(key, true)
 	if class and class ~= "" and class:match("^%u+$") then

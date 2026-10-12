@@ -1,0 +1,1199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linked Inn</title>
+<link rel="icon" href="assets/favicon.png">
+<style>
+@font-face {
+  font-family: "Cinzel";
+  src: url("assets/cinzel.woff2") format("woff2");
+  font-weight: 400 900;
+  font-display: swap;
+}
+:root, body[data-view="duels"] {
+  color-scheme: dark;
+  --page: #150909;
+  --surface: #2a1213;
+  --surface-2: #1d0b0c;
+  --ink: #f6e7e3;
+  --ink-2: #d9b6ae;
+  --muted: #a27f77;
+  --accent: #ef5a3c;
+  --accent-2: #ffb199;
+  --frame: #8d98a6;
+  --border: rgba(170, 182, 196, 0.32);
+  --button: #3a1a1a;
+  --on-accent: #1d0b0c;
+  --glow: rgba(239, 90, 60, 0.16);
+}
+body[data-view="life"] {
+  --page: #0a1120;
+  --surface: #13203a;
+  --surface-2: #0d172b;
+  --ink: #e8eef8;
+  --ink-2: #b5c4dc;
+  --muted: #8193b0;
+  --accent: #7fd8c4;
+  --accent-2: #d8e6ff;
+  --frame: #a9b8d0;
+  --border: rgba(169, 184, 208, 0.3);
+  --button: #1b2a48;
+  --on-accent: #0a1120;
+  --glow: rgba(127, 216, 196, 0.14);
+}
+body[data-theme="light"][data-view="duels"] {
+  color-scheme: light;
+  --page: #f2e4e0;
+  --surface: #fbf2ef;
+  --surface-2: #f1e1dc;
+  --ink: #2a1213;
+  --ink-2: #5e3530;
+  --muted: #8d6a63;
+  --accent: #b5321c;
+  --accent-2: #7a1f10;
+  --frame: #6b7785;
+  --border: rgba(107, 119, 133, 0.4);
+  --button: #f3e2dd;
+  --on-accent: #ffffff;
+  --glow: rgba(181, 50, 28, 0.08);
+}
+body[data-theme="light"][data-view="life"] {
+  color-scheme: light;
+  --page: #e7edf5;
+  --surface: #f7f9fc;
+  --surface-2: #eaf0f7;
+  --ink: #13203a;
+  --ink-2: #3d4f6e;
+  --muted: #6c7c97;
+  --accent: #1e7a68;
+  --accent-2: #13203a;
+  --frame: #7d8ca6;
+  --border: rgba(125, 140, 166, 0.4);
+  --button: #e6edf6;
+  --on-accent: #ffffff;
+  --glow: rgba(30, 122, 104, 0.08);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background-color: var(--page);
+  min-height: 100vh;
+  transition: background-color 0.35s ease;
+}
+body[data-view="duels"] {
+  background-image:
+    radial-gradient(ellipse at 50% -10%, var(--glow), transparent 60%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.018) 0 2px, transparent 2px 14px),
+    repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 14px);
+}
+body[data-view="life"] {
+  background-image:
+    radial-gradient(ellipse at 50% -10%, var(--glow), transparent 60%),
+    radial-gradient(1.2px 1.2px at 12% 18%, rgba(255, 255, 255, 0.55), transparent 60%),
+    radial-gradient(1px 1px at 72% 9%, rgba(255, 255, 255, 0.45), transparent 60%),
+    radial-gradient(1.4px 1.4px at 88% 36%, rgba(255, 255, 255, 0.4), transparent 60%),
+    radial-gradient(1px 1px at 33% 52%, rgba(255, 255, 255, 0.35), transparent 60%),
+    radial-gradient(1.2px 1.2px at 56% 77%, rgba(255, 255, 255, 0.3), transparent 60%);
+  background-attachment: fixed;
+}
+body[data-theme="light"][data-view="life"] { background-image: radial-gradient(ellipse at 50% -10%, var(--glow), transparent 60%); }
+.wrap { max-width: 1232px; margin-left: auto; margin-right: auto; padding-left: 16px; padding-right: 16px; }
+header.page { padding-top: 32px; padding-bottom: 12px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+header.page img.logo { width: 96px; height: auto; filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45)); }
+header.page .titles { flex: 1 1 320px; min-width: 0; }
+header.page .brand { font-family: "Cinzel", serif; color: var(--accent); font-size: 15px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; }
+header.page h1 { font-family: "Cinzel", serif; margin: 2px 0 0; font-size: 34px; font-weight: 700; line-height: 1.15; }
+header.page p.sub { margin: 6px 0 0; color: var(--ink-2); font-size: 15px; }
+button, a.cta {
+  font: inherit; font-size: 13px; color: var(--ink); background: var(--button);
+  border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; cursor: pointer; text-decoration: none;
+}
+button:hover, a.cta:hover { border-color: var(--accent); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 470px; }
+a.cta.primary { background: linear-gradient(#f2c14e, #c98a26); color: #2a1d14; border-color: #f2c14e; font-weight: 600; }
+a.cta.primary:hover { filter: brightness(1.06); border-color: #f2c14e; }
+.views { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 2px; padding-bottom: 10px; min-height: 66px; }
+.views a {
+  display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink-2);
+  border: 1px solid var(--border); border-radius: 12px; padding: 10px 18px; background: color-mix(in srgb, var(--surface) 70%, transparent);
+  font-family: "Cinzel", serif; font-weight: 700; font-size: 15px; letter-spacing: 0.03em; transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.views a svg { width: 22px; height: 22px; flex: none; }
+.views a:hover { transform: translateY(-1px); border-color: var(--accent); color: var(--ink); }
+.views a[aria-current="page"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); box-shadow: 0 6px 18px var(--glow); }
+.views a.tavern { color: #e8c98a; }
+body[data-theme="light"] .views a.tavern { color: #8a5a10; }
+.intro { margin: 0 auto; padding-top: 4px; padding-bottom: 4px; color: var(--ink-2); font-size: 15px; line-height: 1.55; }
+.bar { position: sticky; top: 0; z-index: 5; margin-top: 10px; background: color-mix(in srgb, var(--page) 92%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--border); }
+.filters { padding-top: 10px; padding-bottom: 6px; display: flex; gap: 8px 26px; flex-wrap: wrap; align-items: center; }
+.filters .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.filters .label { font-family: "Cinzel", serif; color: var(--accent); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; margin-right: 4px; }
+.chip { border-radius: 999px; padding: 5px 12px; display: inline-flex; gap: 6px; align-items: center; }
+.chip .n { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.chip[aria-pressed="true"] .n { color: var(--on-accent); opacity: 0.75; }
+.chip:disabled { opacity: 0.45; cursor: not-allowed; }
+.status { padding-bottom: 9px; color: var(--ink-2); font-size: 13.5px; min-height: 26px; display: flex; gap: 6px 14px; flex-wrap: wrap; align-items: center; }
+.status b { color: var(--ink); }
+main { padding-top: 18px; padding-bottom: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.card {
+  grid-column: span 2; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); display: flex; flex-direction: column;
+  animation: rise 0.45s ease both;
+}
+.card.half { grid-column: span 1; }
+.calm .card { animation: none; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.card svg { display: block; width: 100%; height: auto; }
+.card .switch { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px 16px 0; }
+.card .switch button { padding: 4px 11px; border-radius: 999px; font-size: 12.5px; }
+.card .switch button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0; }
+.hero .tile { padding: 22px 22px 20px; border-right: 1px solid var(--border); }
+.hero .tile:last-child { border-right: 0; }
+.hero .num { font-family: "Cinzel", serif; font-size: 34px; font-weight: 700; color: var(--accent-2); line-height: 1.05; font-variant-numeric: tabular-nums; }
+body[data-view="duels"]:not([data-theme="light"]) .hero .num { color: #ffd2c4; text-shadow: 0 0 18px rgba(239, 90, 60, 0.35); }
+body[data-view="life"]:not([data-theme="light"]) .hero .num { color: #e8f4ff; text-shadow: 0 0 18px rgba(127, 216, 196, 0.3); }
+.hero .what { color: var(--ink-2); font-size: 13.5px; margin-top: 6px; }
+.hero .hint { color: var(--muted); font-size: 12px; margin-top: 3px; }
+.card h3.title { font-family: "Cinzel", serif; color: var(--accent); margin: 0; font-size: 24px; padding: 22px 22px 2px; }
+.card p.lede { margin: 4px 22px 8px; color: var(--ink-2); font-size: 14px; }
+.glance { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px 36px; padding: 4px 22px 22px; }
+.glance h4 { margin: 10px 0 6px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.glance h4::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.matchup { display: grid; grid-template-columns: 1fr 150px; grid-template-rows: auto auto; gap: 4px 16px; align-items: center; padding: 9px 0; border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+.matchup .line { font-size: 15px; grid-column: 1; }
+.matchup .line b { font-weight: 700; }
+.matchup .line span { color: var(--muted); margin: 0 4px; }
+.matchup .score { grid-column: 1; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.matchup .split { grid-column: 2; grid-row: 1 / span 2; display: flex; height: 12px; border-radius: 6px; overflow: hidden; gap: 2px; }
+.matchup .split i:first-child { background: var(--accent); }
+.matchup .split i:last-child { background: #7f9cbd; }
+body[data-theme="light"] .matchup .split i:last-child { background: #3f6a99; }
+.glance .none { color: var(--muted); font-size: 13.5px; margin: 8px 0; }
+.hall { padding: 4px 22px 6px; }
+.hall { margin: 10px 14px 6px; padding: 14px 10px 18px; border-radius: 14px; }
+.hall-head { display: flex; align-items: center; gap: 12px; margin: 0 6px 16px; }
+.hall-icon { width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; flex: none; }
+.hall h4 { margin: 0; font-family: "Cinzel", serif; font-size: 19px; letter-spacing: 0.02em; color: var(--ink); }
+.hall-head p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.hall.ring { background: radial-gradient(ellipse at 50% 0%, rgba(239, 90, 60, 0.12), transparent 70%); }
+.hall.ring .hall-icon { background: color-mix(in srgb, var(--accent) 22%, transparent); border: 1px solid var(--accent); }
+.hall.legends { background: linear-gradient(180deg, rgba(150, 170, 200, 0.07), rgba(150, 170, 200, 0.02)); border: 1px solid rgba(170, 186, 210, 0.22); }
+.hall.legends .hall-icon { background: rgba(170, 186, 210, 0.16); border: 1px solid rgba(190, 204, 224, 0.6); }
+.hall.legends .champs { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; }
+.hall.legends .champ {
+  display: grid; grid-template-columns: 76px 1fr; grid-template-rows: auto auto auto auto; column-gap: 14px; text-align: left; padding: 12px 14px 12px 12px; border-radius: 10px; border-width: 1px;
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 7px),
+    linear-gradient(160deg, #39404b, #23272f);
+  border-color: color-mix(in srgb, var(--metal) 70%, #9aa6b4);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -2px 0 rgba(0, 0, 0, 0.35);
+}
+.hall.legends .champ .ribbon { grid-column: 2; grid-row: 1; margin: 0 0 4px; padding: 0; background: none; box-shadow: none; color: var(--metal); font-size: 11px; letter-spacing: 0.14em; }
+.hall.legends .champ .crest { grid-column: 1; grid-row: 1 / span 4; width: 72px; height: 72px; margin: 0; align-self: center; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); }
+.hall.legends .champ .badge { width: 28px; height: 28px; font-size: 14px; }
+.hall.legends .champ .cname { grid-column: 2; font-size: 17px; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.7); }
+.hall.legends .champ .cwho { grid-column: 2; color: #aab3c0; }
+.hall.legends .champ .cbig { grid-column: 2; margin-top: 6px; font-size: 24px; color: #eef2f7; }
+.hall.legends .champ .cbig small { color: #c3ccd8; }
+.hall.legends .champ .cfoot { grid-column: 2; margin-top: 2px; color: #9aa4b2; }
+.hall.legends .champ .honors { grid-column: 2; }
+body[data-theme="light"] .hall.legends .champ { background: repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.025) 0 2px, transparent 2px 7px), linear-gradient(160deg, #eef1f5, #dde2ea); }
+body[data-theme="light"] .hall.legends .champ .cwho, body[data-theme="light"] .hall.legends .champ .cfoot { color: #5d6878; }
+body[data-theme="light"] .hall.legends .champ .cbig { color: #1d2430; }
+body[data-theme="light"] .hall.legends .champ .cbig small { color: #3d4757; }
+.champs { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 16px; }
+.champ {
+  position: relative; overflow: hidden; text-align: center; border-radius: 16px; padding: 0 14px 16px;
+  background:
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--cc) 30%, transparent), transparent 58%),
+    linear-gradient(165deg, color-mix(in srgb, var(--surface) 92%, #fff 8%), var(--surface-2));
+  border: 2px solid var(--metal);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), inset 0 0 0 4px color-mix(in srgb, var(--metal) 14%, transparent), 0 0 22px color-mix(in srgb, var(--metal) 22%, transparent);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.champ::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.16) 50%, transparent 65%); transform: translateX(-120%); transition: transform 0.8s ease; }
+.champ:hover { transform: translateY(-5px); box-shadow: 0 18px 36px rgba(0, 0, 0, 0.55), inset 0 0 0 4px color-mix(in srgb, var(--metal) 20%, transparent), 0 0 34px color-mix(in srgb, var(--metal) 40%, transparent); }
+.champ:hover::before { transform: translateX(120%); }
+.champ .ribbon { margin: 0 -14px 14px; padding: 7px 10px 6px; font-family: "Cinzel", serif; font-weight: 700; font-size: 12.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #1b120c; background: linear-gradient(180deg, color-mix(in srgb, var(--metal) 85%, #fff 15%), var(--metal)); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); }
+.champ .crest { position: relative; width: 86px; height: 86px; margin: 4px auto 10px; border-radius: 50%; padding: 4px;
+  background: conic-gradient(from 210deg, var(--metal), color-mix(in srgb, var(--metal) 45%, #000), var(--metal), color-mix(in srgb, var(--metal) 45%, #000), var(--metal));
+  box-shadow: 0 0 22px color-mix(in srgb, var(--cc) 55%, transparent); }
+.champ .crest img { width: 100%; height: 100%; border-radius: 50%; display: block; border: 2px solid var(--cc); background: #0d0907; }
+.champ .badge { position: absolute; right: -6px; bottom: -4px; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;
+  background: var(--surface-2); border: 2px solid var(--metal); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45); }
+.champ .cname { font-family: "Cinzel", serif; font-weight: 700; font-size: 19px; color: var(--cc); line-height: 1.2; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.55); word-break: break-word; }
+.champ .cwho { margin-top: 3px; font-size: 12px; color: var(--muted); }
+.champ .cfac { font-weight: 700; }
+.champ .cfac.Alliance { color: #5aa2f0; }
+.champ .cfac.Horde { color: #ef6a45; }
+.champ .cbig { margin-top: 10px; font-family: "Cinzel", serif; font-weight: 700; font-size: 32px; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+.champ .cbig small { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.champ .cfoot { margin-top: 6px; font-size: 11.5px; color: var(--muted); }
+body[data-theme="light"] .champ .cname { text-shadow: none; filter: brightness(0.8); }
+.champ .honors { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+.champ .honors span { font-size: 11.5px; font-weight: 600; color: var(--ink); border: 1px solid var(--hm); border-radius: 999px; padding: 3px 8px;
+  background: color-mix(in srgb, var(--hm) 16%, transparent); }
+.champ .place { position: absolute; top: 34px; right: 10px; font-family: "Cinzel", serif; font-weight: 900; font-size: 46px; line-height: 1; color: var(--metal); opacity: 0.32; pointer-events: none; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5); }
+.champ.rank-1 { border-width: 3px; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5), inset 0 0 0 4px color-mix(in srgb, var(--metal) 20%, transparent), 0 0 34px color-mix(in srgb, var(--metal) 45%, transparent); }
+.hall.ring .champ.rank-1 { transform: scale(1.03); }
+.hall.ring .champ.rank-1:hover { transform: scale(1.03) translateY(-5px); }
+.champ.honor { border-style: double; border-width: 4px; border-radius: 22px 22px 16px 16px;
+  background: radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--metal) 26%, transparent), transparent 62%), linear-gradient(165deg, color-mix(in srgb, var(--surface) 92%, #fff 8%), var(--surface-2)); }
+.champ.honor .ribbon { background: none; box-shadow: none; color: var(--metal); border-bottom: 1px solid color-mix(in srgb, var(--metal) 45%, transparent); }
+.champ .ribbon .tag { display: block; font-size: 9.5px; letter-spacing: 0.22em; opacity: 0.85; margin-bottom: 2px; }
+.champs .honor { margin-left: 18px; }
+.hall.legends .champ .place { top: 50%; right: 14px; transform: translateY(-50%); font-size: 54px; opacity: 0.45; }
+.hall.legends .champ.podium { background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 7px),
+    linear-gradient(160deg, color-mix(in srgb, var(--metal) 30%, #3a404a), #23272f 75%); }
+.hall.legends .champ.rank-1 { border-width: 2px; }
+.hall.legends .champ.honor { border-style: double; border-width: 4px; border-radius: 14px;
+  background: radial-gradient(circle at 20% 50%, color-mix(in srgb, var(--metal) 28%, transparent), transparent 60%), linear-gradient(160deg, #26303a, #1b2129); }
+.hall.legends .champ.honor .ribbon { border-bottom: 0; }
+body[data-theme="light"] .hall.legends .champ.podium { background: repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.025) 0 2px, transparent 2px 7px), linear-gradient(160deg, color-mix(in srgb, var(--metal) 30%, #f1f3f6), #dde2ea 75%); }
+body[data-theme="light"] .hall.legends .champ.honor { background: radial-gradient(circle at 20% 50%, color-mix(in srgb, var(--metal) 30%, transparent), transparent 60%), linear-gradient(160deg, #eef3f6, #dfe7ec); }
+.optout { margin: 14px 22px 20px; padding: 10px 14px; border: 1px dashed var(--border); border-radius: 10px; color: var(--ink-2); font-size: 13px; }
+.optout a { color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .champ, .champ::before { transition: none; } }
+.trophies { padding: 6px 22px 8px; }
+.trophies:last-child { padding-bottom: 22px; }
+.trophies h4 { margin: 10px 0 10px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.trophies h4::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.trophy { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px 12px; background: linear-gradient(color-mix(in srgb, var(--surface-2) 70%, transparent), transparent); transition: transform 0.15s ease, border-color 0.15s ease; }
+.trophy:hover { transform: translateY(-2px); border-color: var(--accent); }
+.trophy .head { display: flex; align-items: center; gap: 10px; }
+.trophy .icon { font-size: 20px; width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--accent) 16%, transparent); flex: none; }
+.trophy .label { font-family: "Cinzel", serif; font-weight: 700; font-size: 16px; color: var(--accent); line-height: 1.2; }
+.trophy .amount { margin-top: 8px; color: var(--ink-2); font-size: 13.5px; }
+.trophy .amount b { font-size: 22px; color: var(--ink); font-variant-numeric: tabular-nums; margin-right: 2px; }
+.trophy .holder { margin-top: 4px; font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.trophy .fac { font-style: normal; font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 0 7px; line-height: 16px; color: #fff; margin-left: 2px; }
+.trophy .fac.Alliance { background: #2a78d6; }
+.trophy .fac.Horde { background: #c8461f; }
+.empty { padding: 40px 22px; color: var(--muted); text-align: center; font-size: 14px; }
+footer.page { padding-bottom: 40px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+#tip {
+  position: fixed; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.5; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  display: none; z-index: 10; max-width: 320px;
+}
+#tip b { display: block; margin-bottom: 2px; }
+#tip span { color: var(--ink-2); }
+@media (max-width: 1000px) { main { grid-template-columns: 1fr; } .card, .card.half { grid-column: span 1; } }
+@media (max-width: 700px) {
+  header.page { padding-top: 18px; gap: 12px; }
+  header.page img.logo { width: 64px; }
+  header.page h1 { font-size: 26px; }
+  .views a { padding: 8px 12px; font-size: 13px; gap: 7px; }
+  .views a svg { width: 18px; height: 18px; }
+  .bar { position: static; }
+  .filters .group { flex-wrap: nowrap; overflow-x: auto; width: 100%; scrollbar-width: none; }
+  .chip { flex: none; padding: 4px 10px; font-size: 12px; }
+  .hero { grid-template-columns: 1fr 1fr; }
+  .hero .tile { padding: 14px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .hero .tile:nth-child(odd) { border-right: 1px solid var(--border); }
+  .hero .num { font-size: 22px; }
+  .hero .what { font-size: 12.5px; }
+  .glance { grid-template-columns: 1fr; padding: 4px 16px 16px; }
+  .matchup { grid-template-columns: 1fr 90px; }
+  .hall { margin: 8px 8px 4px; padding: 10px 6px 12px; }
+  .hall.legends .champs { grid-template-columns: 1fr; }
+  .champs .honor { margin-left: 0; }
+  .champ .place { font-size: 32px; top: 28px; }
+  .champs { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .champ { padding: 0 8px 12px; }
+  .champ .ribbon { margin: 0 -8px 10px; font-size: 10.5px; }
+  .champ .crest { width: 64px; height: 64px; }
+  .champ .badge { width: 26px; height: 26px; font-size: 14px; }
+  .champ .cname { font-size: 15px; }
+  .champ .cbig { font-size: 24px; }
+  .optout { margin: 10px 14px 16px; }
+  .trophies { padding: 4px 14px 6px; }
+  .shelf { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .trophy { padding: 10px; }
+  .trophy .label { font-size: 13.5px; }
+  .trophy .icon { width: 28px; height: 28px; font-size: 16px; }
+  .trophy .amount b { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .card { animation: none; } .views a, .trophy { transition: none; } }
+</style>
+</head>
+<body data-view="duels">
+<header class="page wrap">
+  <img class="logo" src="assets/logo.png" alt="">
+  <div class="titles">
+    <p class="brand" id="brand">Linked Inn</p>
+    <h1 id="title">The Dueling Grounds</h1>
+    <p class="sub" id="sub"></p>
+  </div>
+  <div class="actions">
+    <a class="cta primary" href="https://www.curseforge.com/wow/addons/linked-inn-profession-finder" target="_blank" rel="noopener">Get Linked Inn</a>
+    <a class="cta" href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener">&#9749; Buy me a coffee</a>
+    <button id="theme">Daylight</button>
+  </div>
+</header>
+<nav class="views wrap" aria-label="Views">
+  <a class="tavern" href="./"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h10v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M15 10h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><path d="M5 8c0-2 1.5-3 3-3 .5-1.5 2-2 3.5-1.5C13 3 15 4 15 6"/></svg>Crafting</a>
+  <a id="toDuels" href="#duels"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="m13 19 6-6"/><path d="m16 16 4 4"/><path d="M19 21l2-2"/><path d="M9.5 17.5 21 6V3h-3L6.5 14.5"/><path d="m11 19-6-6"/><path d="m8 16-4 4"/><path d="M5 21l-2-2"/></svg>Duels</a>
+  <a id="toLife" href="#life"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/><path d="M17 3v3M15.5 4.5h3"/></svg>Life on Azeroth</a>
+</nav>
+<p class="intro wrap" id="intro"></p>
+<div class="bar">
+  <nav class="filters wrap" id="filters"></nav>
+  <div class="status wrap" id="status"></div>
+</div>
+<main class="wrap" id="cards"></main>
+<footer class="page wrap" id="foot"></footer>
+<div id="tip"></div>
+<script src="data-world.js"></script>
+<script>
+(function () {
+  const A = window.LI_WORLD || { players: [], duels: [], rulesets: [], factions: ['Alliance', 'Horde'], labels: {} };
+  const FONT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
+  const DISPLAY = '"Cinzel", Georgia, serif';
+  const SMALL_DUELS = 5, SMALL_GROUP = 8, LEVEL_CAP = 30;
+  const CLASS_NAMES = { WARRIOR: 'Warrior', PALADIN: 'Paladin', HUNTER: 'Hunter', ROGUE: 'Rogue', PRIEST: 'Priest', SHAMAN: 'Shaman', MAGE: 'Mage', WARLOCK: 'Warlock', DRUID: 'Druid' };
+  const CLASS_COLORS = { WARRIOR: '#c69b6d', PALADIN: '#f48cba', HUNTER: '#aad372', ROGUE: '#fff468', PRIEST: '#ffffff', SHAMAN: '#2f8fff', MAGE: '#3fc7eb', WARLOCK: '#8788ee', DRUID: '#ff7c0a' };
+  const CLASS_COLORS_LIGHT = { WARRIOR: '#a87a4a', PALADIN: '#d9679b', HUNTER: '#6f9e3a', ROGUE: '#b3a21c', PRIEST: '#8a857a', SHAMAN: '#0060c0', MAGE: '#1d97bb', WARLOCK: '#5b5cc9', DRUID: '#d96200' };
+  const RACE_NAMES = { Human: 'Human', Dwarf: 'Dwarf', NightElf: 'Night Elf', Gnome: 'Gnome', Orc: 'Orc', Troll: 'Troll', Tauren: 'Tauren', Scourge: 'Undead', Undead: 'Undead' };
+  const FAC_COLORS = { dark: { Alliance: '#3987e5', Horde: '#e0532f' }, light: { Alliance: '#2a78d6', Horde: '#c8461f' } };
+  const PALETTE = {
+    dark: ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#9085e9'],
+    light: ['#2a78d6', '#eb6834', '#1baf7a', '#c98500', '#e87ba4', '#4a3aa7'],
+  };
+  const THEMES = {
+    duels: {
+      dark: { surface: '#2a1213', surface2: '#1d0b0c', ink: '#f6e7e3', ink2: '#d9b6ae', muted: '#a27f77', title: '#ff7a5c', frame: '#8d98a6', frame2: '#c9d2dc', grid: '#3d2020', base: '#6b4a45', track: '#341819', win: '#ef5a3c', lose: '#7f9cbd', mid: '#5c4a48', bar: '#e2694d' },
+      light: { surface: '#fbf2ef', surface2: '#f1e1dc', ink: '#2a1213', ink2: '#5e3530', muted: '#8d6a63', title: '#a3261a', frame: '#6b7785', frame2: '#9aa6b4', grid: '#ead7d2', base: '#c8aaa3', track: '#f2e2de', win: '#c23b22', lose: '#3f6a99', mid: '#c4b5b1', bar: '#c4472c' },
+    },
+    life: {
+      dark: { surface: '#13203a', surface2: '#0d172b', ink: '#e8eef8', ink2: '#b5c4dc', muted: '#8193b0', title: '#7fd8c4', frame: '#a9b8d0', frame2: '#dfe8f5', grid: '#22324f', base: '#3b4d6e', track: '#1a2843', win: '#7fd8c4', lose: '#9aa9c4', mid: '#3b4d6e', bar: '#7fd8c4' },
+      light: { surface: '#f7f9fc', surface2: '#eaf0f7', ink: '#13203a', ink2: '#3d4f6e', muted: '#6c7c97', title: '#1e7a68', frame: '#7d8ca6', frame2: '#b3c0d4', grid: '#dde5ef', base: '#a9b6ca', track: '#e9eef5', win: '#1e7a68', lose: '#5d6f8f', mid: '#a9b6ca', bar: '#1e7a68' },
+    },
+  };
+  const VIEWS = {
+    duels: { brand: 'Linked Inn', title: 'The Dueling Grounds', sub: 'Every duel spotted out in the world, and who walked away standing', tag: 'LINKED INN · DUELS',
+      intro: 'Duel results are announced to everyone nearby. Each one is written down as it happens, along with what both fighters were: class, race, level and the gear they wore. Names stay out of it, except for the few champions at the top.' },
+    life: { brand: 'Linked Inn', title: 'Life on Azeroth', sub: 'How players live, die, loot and wave, straight from their Statistics panel', tag: 'LINKED INN · LIFE ON AZEROTH',
+      intro: 'Every player has a Statistics panel that counts their whole life: deaths, critters, potions, hugs. These are the totals and tallies from the players we have met, with no names attached.' },
+  };
+
+  let view = location.hash === '#life' ? 'life' : 'duels';
+  let theme = 'dark';
+  let T = THEMES[view][theme];
+  let W = 1200, HALF = false, NARROW = false;
+  const sel = { rs: 'All', fac: 'Both', lvl: 'cap', even: true };
+  const EVEN_GAP = 2;
+  const isEven = (d) => d.w.lv && d.l.lv && Math.abs(d.w.lv - d.l.lv) <= EVEN_GAP;
+  let metric = 'deaths', duelBy = 'class', lifeFac = 'Both';
+
+  const fmt = (n) => Math.round(n).toLocaleString('en-US');
+  const pct = (n, d) => d ? Math.round(100 * n / d) : 0;
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const dateOf = (t) => new Date(t * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const classColor = (c) => (theme === 'light' ? CLASS_COLORS_LIGHT : CLASS_COLORS)[c] || T.muted;
+  const median = (xs) => { if (!xs.length) return null; const s = [...xs].sort((a, b) => a - b); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  const sum = (xs) => xs.reduce((a, b) => a + b, 0);
+  const gold = (c) => { const g = Math.floor(c / 10000); return g >= 1 ? fmt(g) + 'g' : Math.floor(c / 100) + 's'; };
+
+  function text(x, y, s, o = {}) {
+    const a = [`x="${x}"`, `y="${y}"`, `fill="${o.fill || T.ink}"`, `font-size="${o.size || 14}"`, `font-family='${o.display ? DISPLAY : FONT}'`];
+    if (o.weight) a.push(`font-weight="${o.weight}"`);
+    if (o.anchor) a.push(`text-anchor="${o.anchor}"`);
+    a.push(`style="pointer-events:none${o.tabular ? ';font-variant-numeric:tabular-nums' : ''}"`);
+    return `<text ${a.join(' ')}>${esc(s)}</text>`;
+  }
+  function rrect(x, y, w, h, fill, tip, extra = '') {
+    w = Math.max(w, 0);
+    const r = Math.min(4, h / 2, w / 2);
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${fill}"${tip ? ` data-tip="${esc(tip)}"` : ''} ${extra}/>`;
+  }
+  function wrapLines(str, size, maxW) {
+    const per = Math.max(10, Math.floor(maxW / (size * 0.55)));
+    const out = [];
+    let line = '';
+    String(str).split(' ').forEach((word) => {
+      if (line && (line + ' ' + word).length > per) { out.push(line); line = word; } else line = line ? line + ' ' + word : word;
+    });
+    if (line) out.push(line);
+    return out;
+  }
+  function ornaments() {
+    if (view === 'duels') {
+      return [[18, 18], [W - 18, 18]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.5" fill="${T.frame}"/><circle cx="${x - 1}" cy="${y - 1}" r="1.2" fill="${T.frame2}" fill-opacity="0.8"/>`).join('');
+    }
+    return [[22, 24], [W - 22, 24]].map(([x, y]) => `<path d="M${x},${y - 7} L${x + 2},${y - 2} L${x + 7},${y} L${x + 2},${y + 2} L${x},${y + 7} L${x - 2},${y + 2} L${x - 7},${y} L${x - 2},${y - 2} Z" fill="${T.frame2}" fill-opacity="0.75"/>`).join('');
+  }
+  function frame(title, subtitle, height, body, foot) {
+    const titleSize = NARROW ? 21 : HALF ? 22 : 26;
+    const titleLines = wrapLines(title, titleSize * 1.25, W - 90);
+    const subLines = subtitle ? wrapLines(subtitle, 14, W - 90) : [];
+    const extra = (titleLines.length - 1) * (titleSize + 6) + Math.max(0, subLines.length - 1) * 18;
+    height += extra;
+    const heads = titleLines.map((l, i) => text(40, 60 + i * (titleSize + 6), l, { size: titleSize, weight: 700, fill: T.title, display: true })).join('');
+    const subY = 86 + (titleLines.length - 1) * (titleSize + 6);
+    const subs = subLines.map((l, i) => text(40, subY + i * 18, l, { size: 14, fill: T.ink2 })).join('');
+    const border = view === 'duels'
+      ? `<rect x="5" y="5" width="${W - 10}" height="${height - 10}" rx="9" fill="none" stroke="${T.frame}" stroke-width="3"/>
+         <rect x="12" y="12" width="${W - 24}" height="${height - 24}" rx="6" fill="none" stroke="${T.win}" stroke-opacity="0.35" stroke-width="1"/>`
+      : `<rect x="7" y="7" width="${W - 14}" height="${height - 14}" rx="12" fill="none" stroke="${T.frame}" stroke-opacity="0.8" stroke-width="1.5"/>
+         <rect x="13" y="13" width="${W - 26}" height="${height - 26}" rx="9" fill="none" stroke="${T.frame2}" stroke-opacity="0.25" stroke-width="1" stroke-dasharray="2 5"/>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${height}" role="img" aria-label="${esc(title)}">
+      <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${T.surface}"/><stop offset="1" stop-color="${T.surface2}"/></linearGradient></defs>
+      <rect width="${W}" height="${height}" fill="url(#bg)"/>
+      ${border}${ornaments()}${heads}${subs}
+      <g transform="translate(0,${extra})">${body}</g>
+      <line x1="40" x2="${W - 40}" y1="${height - 46}" y2="${height - 46}" stroke="${T.frame}" stroke-opacity="0.35" stroke-width="1"/>
+      ${text(40, height - 22, foot || footNote(), { size: 12, fill: T.muted })}
+      ${NARROW || HALF ? '' : text(W - 40, height - 22, VIEWS[view].tag, { size: 12, fill: T.title, anchor: 'end', display: true, weight: 700 })}
+    </svg>`;
+  }
+
+  function inRs(x) { return sel.rs === 'All' || x.rs === sel.rs; }
+  function players(opts = {}) {
+    return A.players.filter((p) => inRs(p) && (opts.fac ? p.f === opts.fac : (sel.fac === 'Both' || p.f === sel.fac)) && (sel.lvl === 'all' || p.lv === LEVEL_CAP));
+  }
+  function duels() {
+    return A.duels.filter((d) => inRs(d) && (sel.fac === 'Both' || d.w.f === sel.fac || d.l.f === sel.fac));
+  }
+  function lifeGroups() {
+    const out = [];
+    const facs = sel.fac === 'Both' ? A.factions : [sel.fac];
+    facs.forEach((f) => {
+      const ps = players({ fac: f });
+      if (ps.length) out.push({ key: f, label: f, color: FAC_COLORS[theme][f], ps });
+    });
+    return out;
+  }
+  function footNote() {
+    if (view === 'duels') return `${fmt(duels().length)} duels · ${scope()}`;
+    return `${fmt(players().length)} players · ${scope()}`;
+  }
+  function scope() {
+    const f = sel.fac === 'Both' ? 'Alliance and Horde' : sel.fac;
+    const r = sel.rs === 'All' ? 'every realm type' : `${sel.rs} realms`;
+    const l = view === 'life' ? (sel.lvl === 'all' ? ' · all levels' : ` · level ${LEVEL_CAP}`) : '';
+    return `${f} · ${r}${l}`;
+  }
+
+  let sink = null;
+  function card(cls, html) {
+    const el = document.createElement('section');
+    el.className = 'card' + (cls ? ' ' + cls : '');
+    el.innerHTML = html;
+    (sink || document.getElementById('cards')).appendChild(el);
+    return el;
+  }
+
+  function heroTiles(tiles) {
+    return `<div class="hero">${tiles.map((t) => `<div class="tile"><div class="num">${t.num}</div><div class="what">${esc(t.what)}</div>${t.hint ? `<div class="hint">${esc(t.hint)}</div>` : ''}</div>`).join('')}</div>`;
+  }
+
+  function winBars(title, subtitle, rows, foot) {
+    const top = 120, rowH = 40, barH = 20;
+    const labelW = NARROW ? 110 : 170, valueW = NARROW ? 118 : 150;
+    const x0 = 40 + labelW, x1 = W - 40 - valueW, mid = (x0 + x1) / 2;
+    let body = '';
+    body += text(x0, top - 18, '0%', { size: 11, fill: T.muted, anchor: 'start' });
+    body += text(mid, top - 18, '50%', { size: 11, fill: T.muted, anchor: 'middle' });
+    body += text(x1, top - 18, '100%', { size: 11, fill: T.muted, anchor: 'end' });
+    rows.forEach((r, i) => {
+      const y = top + i * rowH;
+      if (i % 2 === 0) body += `<rect x="34" y="${y - 9}" width="${W - 68}" height="${rowH}" rx="6" fill="${T.track}" fill-opacity="0.55"/>`;
+      body += `<circle cx="${46}" cy="${y + barH / 2}" r="5" fill="${r.color || T.bar}"/>`;
+      body += text(58, y + barH / 2 + 5, r.label, { size: 15 });
+      const n = r.w + r.l, rate = n ? r.w / n : 0.5;
+      const xr = x0 + (x1 - x0) * rate;
+      const few = n < SMALL_DUELS;
+      const col = rate >= 0.5 ? T.win : T.lose;
+      const tip = `${r.label}|${r.w} won, ${r.l} lost (${pct(r.w, n)}% wins)${few ? '\nFew duels so far' : ''}`;
+      body += `<rect x="${x0}" y="${y}" width="${x1 - x0}" height="${barH}" rx="4" fill="${T.track}"/>`;
+      const bx = Math.min(mid, xr), bw = Math.abs(xr - mid);
+      body += few
+        ? `<rect x="${bx}" y="${y + 1}" width="${Math.max(bw, 1)}" height="${barH - 2}" rx="3" fill="none" stroke="${col}" stroke-width="2" stroke-dasharray="4 3"/>`
+        : `<rect x="${bx}" y="${y}" width="${Math.max(bw, 1)}" height="${barH}" rx="3" fill="${col}"/>`;
+      body += `<line x1="${mid}" x2="${mid}" y1="${y - 4}" y2="${y + barH + 4}" stroke="${T.ink2}" stroke-opacity="0.6" stroke-width="1.5"/>`;
+      body += text(x1 + 14, y + barH / 2 + 5, `${pct(r.w, n)}%`, { size: 15, weight: 700, tabular: true, fill: few ? T.muted : T.ink });
+      body += text(x1 + (NARROW ? 70 : 62), y + barH / 2 + 5, `${r.w}–${r.l}`, { size: 13, fill: T.muted, tabular: true });
+      body += `<rect x="34" y="${y - 9}" width="${W - 68}" height="${rowH}" fill="transparent" data-tip="${esc(tip)}"/>`;
+    });
+    const bottom = top + rows.length * rowH;
+    return frame(title, subtitle, bottom + 70, body, foot);
+  }
+
+  function splitBars(title, subtitle, rows, foot) {
+    const top = 126, rowH = 74, barH = 28;
+    let body = '';
+    rows.forEach((r, i) => {
+      const y = top + i * rowH;
+      body += text(40, y - 10, r.label, { size: 15, weight: 600 });
+      const n = r.a + r.b;
+      if (!n) {
+        body += `<rect x="40" y="${y}" width="${W - 80}" height="${barH}" rx="5" fill="${T.track}"/>`;
+        body += text(52, y + barH / 2 + 5, r.empty || 'Not enough duels yet', { size: 13, fill: T.muted });
+        return;
+      }
+      const wa = (W - 80) * r.a / n;
+      body += `<rect x="40" y="${y}" width="${Math.max(wa - 2, 0)}" height="${barH}" rx="5" fill="${T.win}" data-tip="${esc(r.label + '|' + r.aLabel + ': ' + r.a + ' of ' + n)}"/>`;
+      body += `<rect x="${40 + wa}" y="${y}" width="${W - 80 - wa}" height="${barH}" rx="5" fill="${T.lose}" data-tip="${esc(r.label + '|' + r.bLabel + ': ' + r.b + ' of ' + n)}"/>`;
+      if (wa > 150) body += text(52, y + barH / 2 + 5, `${r.aLabel} · ${pct(r.a, n)}%`, { size: 13, weight: 700, fill: '#ffffff' });
+      if (W - 80 - wa > 150) body += text(W - 52, y + barH / 2 + 5, `${r.bLabel} · ${pct(r.b, n)}%`, { size: 13, weight: 700, fill: '#ffffff', anchor: 'end' });
+      body += text(W - 40, y - 10, `${n} duels`, { size: 12, fill: T.muted, anchor: 'end' });
+    });
+    return frame(title, subtitle, top + rows.length * rowH + 40, body, foot);
+  }
+
+  function hbars(title, subtitle, items, foot) {
+    const top = 120, rowH = 36, barH = 20;
+    const labelW = Math.min(NARROW ? 150 : 240, Math.max(110, ...items.map((d) => d.label.length * 8.2 + 24)));
+    const x0 = 40 + labelW, maxW = W - x0 - 130;
+    const max = Math.max(1, ...items.map((d) => d.value));
+    let body = '';
+    items.forEach((d, i) => {
+      const y = top + i * rowH;
+      body += text(40, y + barH / 2 + 5, d.label, { size: 15, fill: d.labelColor || T.ink });
+      body += rrect(x0, y, maxW * d.value / max, barH, d.color || T.bar, d.tip);
+      body += text(x0 + maxW * d.value / max + 10, y + barH / 2 + 5, d.valueLabel, { size: 14, fill: T.ink2, tabular: true });
+    });
+    return frame(title, subtitle, top + items.length * rowH + 60, body, foot);
+  }
+
+  function dotRows(title, subtitle, rows, gs, fmtV, foot) {
+    let body = '';
+    let lx = 40;
+    gs.forEach((g) => {
+      body += `<circle cx="${lx + 6}" cy="${112}" r="6" fill="${g.color}"/>`;
+      const label = `${g.label} · ${fmt(g.ps.length)} players`;
+      body += text(lx + 18, 117, label, { size: 13, fill: T.ink2 });
+      lx += 40 + label.length * 7;
+    });
+    const top = 140, rowH = 36;
+    const labelW = NARROW ? 100 : 150, colW = 70;
+    const x0 = 40 + labelW, x1 = W - 40 - (NARROW ? 0 : gs.length * colW + 10);
+    const vals = rows.flatMap((r) => r.vals.filter((v) => v != null));
+    const max = Math.max(1e-9, ...vals) * 1.08;
+    const sx = (v) => x0 + (x1 - x0) * v / max;
+    rows.forEach((r, i) => {
+      const y = top + i * rowH + rowH / 2;
+      if (i % 2 === 0) body += `<rect x="34" y="${top + i * rowH}" width="${W - 68}" height="${rowH}" rx="6" fill="${T.track}" fill-opacity="0.55"/>`;
+      body += `<circle cx="46" cy="${y}" r="5" fill="${r.color}"/>`;
+      body += text(58, y + 5, r.label, { size: 15 });
+      body += `<line x1="${x0}" x2="${x1}" y1="${y}" y2="${y}" stroke="${T.grid}" stroke-width="1"/>`;
+      const present = r.vals.filter((v) => v != null);
+      if (present.length > 1) body += `<line x1="${sx(Math.min(...present))}" x2="${sx(Math.max(...present))}" y1="${y}" y2="${y}" stroke="${T.base}" stroke-width="4" stroke-linecap="round"/>`;
+      r.vals.forEach((v, k) => {
+        if (v == null) return;
+        const few = r.ns[k] < SMALL_GROUP;
+        body += few
+          ? `<circle cx="${sx(v)}" cy="${y}" r="6" fill="${T.surface}" stroke="${gs[k].color}" stroke-width="2.5"/>`
+          : `<circle cx="${sx(v)}" cy="${y}" r="7" fill="${gs[k].color}" stroke="${T.surface}" stroke-width="2"/>`;
+        if (!NARROW) body += text(x1 + 10 + k * colW + colW - 6, y + 5, fmtV(v), { size: 13.5, fill: T.ink2, anchor: 'end', tabular: true });
+      });
+      const tip = r.label + '|' + gs.map((g, k) => `${g.label}: ${r.vals[k] == null ? 'no data' : fmtV(r.vals[k])} (${r.ns[k]} players)`).join('\n');
+      body += `<rect x="34" y="${top + i * rowH}" width="${W - 68}" height="${rowH}" fill="transparent" data-tip="${esc(tip)}"/>`;
+    });
+    if (!NARROW) gs.forEach((g, k) => body += text(x1 + 10 + k * colW + colW - 6, top - 10, g.label, { size: 12, fill: T.ink2, anchor: 'end', weight: 600 }));
+    return frame(title, subtitle, top + rows.length * rowH + 66, body, foot);
+  }
+
+  function stackRows(title, subtitle, parts, rows, foot) {
+    let body = '';
+    let lx = 40, ly = 114;
+    parts.forEach((p) => {
+      const w = 34 + p.name.length * 7.2;
+      if (lx + w > W - 40) { lx = 40; ly += 22; }
+      body += `<rect x="${lx}" y="${ly - 9}" width="11" height="11" rx="2" fill="${p.color}"/>`;
+      body += text(lx + 16, ly + 1, p.name, { size: 12.5, fill: T.ink2 });
+      lx += w;
+    });
+    const labelW = NARROW ? 0 : 130, x0 = 40 + labelW, bw = W - x0 - 40, barH = 34;
+    let y = ly + 30;
+    rows.forEach((r) => {
+      if (NARROW) { body += text(40, y + 4, r.label, { size: 14, weight: 600 }); y += 14; }
+      else body += text(40, y + barH / 2 + 5, r.label, { size: 15, weight: 600 });
+      const total = sum(parts.map((p) => r.cells[p.key] || 0));
+      let x = x0;
+      parts.forEach((p) => {
+        const n = r.cells[p.key] || 0;
+        if (!n || !total) return;
+        const w = bw * n / total;
+        const share = Math.round(100 * n / total);
+        body += `<rect x="${x}" y="${y}" width="${Math.max(w - 2, 0.5)}" height="${barH}" fill="${p.color}" data-tip="${esc(`${r.label}|${p.name}: ${fmt(n)} of ${fmt(total)} deaths (${share}%)`)}"/>`;
+        if (w > 44) body += `<text x="${x + 8}" y="${y + barH / 2 + 4.5}" fill="#ffffff" font-size="12.5" font-weight="700" font-family='${FONT}' style="pointer-events:none">${share}%</text>`;
+        x += w;
+      });
+      y += barH + 22;
+    });
+    return frame(title, subtitle, y + 40, body, foot);
+  }
+
+  function matrix(title, subtitle, classes, cell, foot) {
+    const n = classes.length;
+    const labelW = NARROW ? 76 : 120;
+    const size = Math.min(70, Math.floor((W - 80 - labelW) / Math.max(n, 1)));
+    const x0 = 40 + labelW, top = 150;
+    let body = '';
+    body += text(x0, 124, 'against →', { size: 12, fill: T.muted });
+    classes.forEach((c, j) => {
+      body += text(x0 + j * size + size / 2, top - 10, NARROW ? CLASS_NAMES[c].slice(0, 3) : CLASS_NAMES[c], { size: 12, fill: classColor(c), anchor: 'middle', weight: 600 });
+    });
+    classes.forEach((a, i) => {
+      const y = top + i * size;
+      body += text(40, y + size / 2 + 5, CLASS_NAMES[a], { size: 14, fill: classColor(a), weight: 600 });
+      classes.forEach((b, j) => {
+        const x = x0 + j * size;
+        const c = cell(a, b);
+        if (a === b || !c || !c.n) {
+          body += `<rect x="${x + 2}" y="${y + 2}" width="${size - 4}" height="${size - 4}" rx="5" fill="${T.track}" fill-opacity="${a === b ? 0.25 : 0.7}"/>`;
+          if (a !== b) body += text(x + size / 2, y + size / 2 + 4, '·', { size: 14, fill: T.muted, anchor: 'middle' });
+          return;
+        }
+        const rate = c.w / c.n;
+        const col = rate >= 0.5 ? T.win : T.lose;
+        const strength = Math.min(1, Math.abs(rate - 0.5) * 2) * (c.n < 3 ? 0.45 : 1);
+        body += `<rect x="${x + 2}" y="${y + 2}" width="${size - 4}" height="${size - 4}" rx="5" fill="${T.mid}" fill-opacity="0.5"/>`;
+        body += `<rect x="${x + 2}" y="${y + 2}" width="${size - 4}" height="${size - 4}" rx="5" fill="${col}" fill-opacity="${0.25 + 0.75 * strength}" data-tip="${esc(`${CLASS_NAMES[a]} vs ${CLASS_NAMES[b]}|${c.w} won, ${c.n - c.w} lost`)}"/>`;
+        body += text(x + size / 2, y + size / 2 + (NARROW ? 4 : 1), `${pct(c.w, c.n)}%`, { size: NARROW ? 11 : 14, weight: 700, fill: '#ffffff', anchor: 'middle' });
+        if (!NARROW) body += text(x + size / 2, y + size / 2 + 17, `${c.n}`, { size: 11, fill: '#ffffff', anchor: 'middle' });
+      });
+    });
+    return frame(title, subtitle, top + n * size + 70, body, foot);
+  }
+
+  function build(cls, make, switches) {
+    const wide = (document.getElementById('cards').clientWidth || 1200) >= 1000;
+    HALF = cls === 'half' && wide && !NARROW;
+    W = NARROW ? 640 : HALF ? 590 : 1200;
+    const el = card(cls, (switches || '') + make());
+    HALF = false;
+    W = NARROW ? 640 : 1200;
+    return el;
+  }
+
+  const GLANCE_MIN = 4;
+  function renderGlance(fair) {
+    const pairs = {};
+    fair.forEach((d) => {
+      const a = d.w.c, b = d.l.c;
+      if (!a || !b || a === b) return;
+      const key = [a, b].sort().join('|');
+      const p = pairs[key] = pairs[key] || { [a]: 0, [b]: 0 };
+      p[a] = (p[a] || 0) + 1;
+      p[b] = p[b] || 0;
+    });
+    const list = Object.entries(pairs).map(([key, p]) => {
+      const [x, y] = key.split('|');
+      const top = p[x] >= p[y] ? x : y, bottom = top === x ? y : x;
+      const n = p[x] + p[y];
+      return { top, bottom, w: p[top], l: p[bottom], n, rate: p[top] / n };
+    }).filter((m) => m.n >= GLANCE_MIN);
+    const plural = (c) => (CLASS_NAMES[c] || c) + 's';
+    const who = (c) => `<b style="color:${classColor(c)}">${esc(plural(c))}</b>`;
+    const row = (m, even) => `<div class="matchup">
+        <div class="line">${even ? `${who(m.top)} <span>and</span> ${who(m.bottom)}` : `${who(m.top)} <span>beat</span> ${who(m.bottom)}`}</div>
+        <div class="split"><i style="width:${(100 * m.w / m.n).toFixed(1)}%"></i><i style="width:${(100 * m.l / m.n).toFixed(1)}%"></i></div>
+        <div class="score">${even ? `${m.w}–${m.l} over ${m.n} duels` : `${m.w} of ${m.n} times · ${Math.round(100 * m.rate)}%`}</div>
+      </div>`;
+    const oneSided = [...list].sort((a, b) => b.rate - a.rate || b.n - a.n).slice(0, 5);
+    const rivals = [...list].filter((m) => m.rate <= 0.65).sort((a, b) => Math.floor(Math.abs(a.rate - 0.5) * 10 + 1e-9) - Math.floor(Math.abs(b.rate - 0.5) * 10 + 1e-9) || b.n - a.n).slice(0, 3);
+    if (!oneSided.length) {
+      card('', `<h3 class="title">Matchups at a glance</h3><p class="lede">Needs a few more duels: a matchup shows up here once two classes have met at least ${GLANCE_MIN} times.</p><div style="height:14px"></div>`);
+      return;
+    }
+    card('', `<h3 class="title">Matchups at a glance</h3><p class="lede">From even fights, counting only matchups with at least ${GLANCE_MIN} duels.</p>
+      <div class="glance">
+        <div><h4>Most one-sided</h4>${oneSided.map((m) => row(m, false)).join('')}</div>
+        <div><h4>Closest rivalries</h4>${rivals.length ? rivals.map((m) => row(m, true)).join('') : '<p class="none">No evenly matched pair yet.</p>'}</div>
+      </div>`);
+  }
+
+  const SEEN_TOP_MIN = 3, SEEN_BEST_MIN = 10, LIFE_TOP_MIN = 20, LIFE_BEST_MIN = 50;
+  const METALS = { gold: '#f2c14e', silver: '#d3dae4', bronze: '#d08a4c', fire: '#ff6a3d', royal: '#b896ff', moon: '#7fd8c4' };
+  const CLASS_ICON = (c) => "assets/classes/" + c + ".png";
+  function champCard(c) {
+    const color = classColor(c.who.c);
+    const race = RACE_NAMES[c.who.r] || c.who.r || '';
+    const cls = CLASS_NAMES[c.who.c] || c.who.c || '';
+    const name = c.name || `A ${race} ${cls}`;
+    const kind = c.rank ? `podium rank-${c.rank}` : 'honor';
+    return `<article class="champ ${kind}" style="--cc:${color};--metal:${METALS[c.metal]}">
+      ${c.rank ? `<span class="place" aria-label="Place ${c.rank}">${c.rank}</span>` : ''}
+      <div class="ribbon">${c.rank ? '' : '<span class="tag">✦ Honor</span>'}${esc(c.title)}</div>
+      <div class="crest"><img src="${CLASS_ICON(c.who.c)}" alt=""><span class="badge" aria-hidden="true">${c.badge}</span></div>
+      <div class="cname">${esc(name)}</div>
+      <div class="cwho">${c.who.lv ? 'Level ' + c.who.lv + ' ' : ''}${esc(race)} ${esc(cls)}${c.who.f ? ` · <span class="cfac ${esc(c.who.f)}">${esc(c.who.f)}</span>` : ''}</div>
+      <div class="cbig">${c.big}<small>${esc(c.unit)}</small></div>
+      <div class="cfoot">${esc(c.foot)}</div>
+      ${(c.extra || []).length ? `<div class="honors">${c.extra.map((x) => `<span style="--hm:${METALS[x.metal]}">${x.badge} ${esc(x.title)} · ${x.big}${esc(x.unit)}</span>`).join('')}</div>` : ''}
+    </article>`;
+  }
+  function mergeHonors(list) {
+    const out = [], byKey = {};
+    list.forEach((c) => {
+      const key = c.key;
+      if (key != null && byKey[key]) {
+        byKey[key].extra = byKey[key].extra || [];
+        byKey[key].extra.push(c);
+        return;
+      }
+      if (key != null) byKey[key] = c;
+      out.push(c);
+    });
+    return out;
+  }
+  function renderChampions(fair) {
+    const ordered = [...fair].filter((d) => d.w.id && d.l.id).sort((a, b) => a.t - b.t);
+    const wins = {}, losses = {}, run = {}, last = {};
+    let streak = { n: 0 };
+    ordered.forEach((d) => {
+      wins[d.w.id] = (wins[d.w.id] || 0) + 1;
+      losses[d.l.id] = (losses[d.l.id] || 0) + 1;
+      run[d.w.id] = (run[d.w.id] || 0) + 1;
+      run[d.l.id] = 0;
+      last[d.w.id] = d.w;
+      last[d.l.id] = last[d.l.id] || d.l;
+      if (run[d.w.id] > streak.n) streak = { n: run[d.w.id], id: d.w.id, who: d.w };
+    });
+    const names = A.names || {};
+    const seen = [];
+    const podium = Object.keys(wins).sort((a, b) => wins[b] - wins[a]).slice(0, 3).filter((id) => wins[id] >= SEEN_TOP_MIN);
+    const places = [['gold', '🥇', 'Champion of the Ring'], ['silver', '🥈', 'Runner-up'], ['bronze', '🥉', 'Third in the Ring']];
+    podium.forEach((id, i) => seen.push({ key: id, rank: i + 1, metal: places[i][0], badge: places[i][1], title: places[i][2], who: last[id], name: names[id],
+      big: fmt(wins[id]), unit: ' wins', foot: `${wins[id]} won, ${losses[id] || 0} lost` }));
+    if (streak.n >= SEEN_TOP_MIN) seen.push({ key: streak.id, metal: 'fire', badge: '🔥', title: 'Unbroken', who: streak.who, name: names[streak.id],
+      big: fmt(streak.n), unit: ' in a row', foot: 'longest win streak seen' });
+    const qualified = Object.keys(wins).filter((id) => wins[id] + (losses[id] || 0) >= SEEN_BEST_MIN);
+    if (qualified.length) {
+      const id = qualified.sort((a, b) => wins[b] / (wins[b] + (losses[b] || 0)) - wins[a] / (wins[a] + (losses[a] || 0)))[0];
+      const n = wins[id] + (losses[id] || 0);
+      seen.push({ key: id, metal: 'royal', badge: '👑', title: 'The Untouchable', who: last[id], name: names[id],
+        big: pct(wins[id], n) + '%', unit: ' wins', foot: `best record, ${wins[id]} won, ${losses[id] || 0} lost` });
+    }
+    const pool = A.players.filter((p) => inRs(p) && (sel.fac === 'Both' || p.f === sel.fac) && ((p.v.duelsw || 0) + (p.v.duelsl || 0)) > 0);
+    const life = [];
+    const lifePlaces = [['gold', '🏆', 'Lifetime Legend'], ['silver', '⚔️', 'Seasoned Duelist'], ['bronze', '🛡️', 'Veteran of the Ring']];
+    [...pool].sort((a, b) => (b.v.duelsw || 0) - (a.v.duelsw || 0)).slice(0, 3).filter((p) => (p.v.duelsw || 0) >= LIFE_TOP_MIN)
+      .forEach((p, i) => life.push({ key: A.players.indexOf(p), rank: i + 1, metal: lifePlaces[i][0], badge: lifePlaces[i][1], title: lifePlaces[i][2], who: p, name: p.nm,
+        big: fmt(p.v.duelsw), unit: ' wins', foot: `lifetime, ${fmt(p.v.duelsw)} won, ${fmt(p.v.duelsl || 0)} lost` }));
+    const vets = pool.filter((p) => (p.v.duelsw || 0) + (p.v.duelsl || 0) >= LIFE_BEST_MIN);
+    if (vets.length) {
+      const p = vets.sort((a, b) => b.v.duelsw / (b.v.duelsw + (b.v.duelsl || 0)) - a.v.duelsw / (a.v.duelsw + (a.v.duelsl || 0)))[0];
+      life.push({ key: A.players.indexOf(p), metal: 'moon', badge: '✨', title: 'Flawless Form', who: p, name: p.nm,
+        big: pct(p.v.duelsw, p.v.duelsw + (p.v.duelsl || 0)) + '%', unit: ' wins', foot: `lifetime best, ${fmt(p.v.duelsw)} won, ${fmt(p.v.duelsl || 0)} lost` });
+    }
+    if (!seen.length && !life.length) return;
+    const shelf = (kind, icon, title, sub, list) => list.length ? `<div class="hall ${kind}">
+        <div class="hall-head"><span class="hall-icon" aria-hidden="true">${icon}</span><div><h4>${esc(title)}</h4><p>${esc(sub)}</p></div></div>
+        <div class="champs">${list.map(champCard).join('')}</div></div>` : '';
+    card('', `<h3 class="title">Champions</h3><p class="lede">The best duelists we've come across. Only the top spots are named.</p>
+      ${shelf('ring', '⚔️', 'In the ring', 'Duels we watched happen, counted as they ended.', mergeHonors(seen))}
+      ${shelf('legends', '📜', 'Hall of legends', 'Their whole career, from their own Statistics panel.', mergeHonors(life))}
+      <p class="optout">Your name here and you'd rather it wasn't? Message sanredz on <a href="https://www.curseforge.com/members/sanredz" target="_blank" rel="noopener">CurseForge</a> or <a href="https://github.com/sanredz" target="_blank" rel="noopener">GitHub</a> and it comes off, no questions asked.</p>`);
+  }
+
+  function renderDuels() {
+    const ds = duels();
+    const ko = ds.filter((d) => d.how !== 'fled').length;
+    const fighters = new Set();
+    ds.forEach((d) => { if (d.w.id != null) fighters.add(d.w.id); if (d.l.id != null) fighters.add(d.l.id); });
+    const levelGap = ds.filter((d) => d.w.lv && d.l.lv && d.w.lv !== d.l.lv);
+    const higher = levelGap.filter((d) => d.w.lv > d.l.lv).length;
+    const fair = sel.even ? ds.filter(isEven) : ds;
+    const fairNote = sel.even ? ` Even fights only: within ${EVEN_GAP} levels of each other.` : ' All duels, whatever the level gap.';
+    const fairFoot = `${fmt(fair.length)} ${sel.even ? 'even ' : ''}duels · ${scope()}`;
+    const classRec = {};
+    fair.forEach((d) => {
+      (classRec[d.w.c] = classRec[d.w.c] || { w: 0, l: 0 }).w++;
+      (classRec[d.l.c] = classRec[d.l.c] || { w: 0, l: 0 }).l++;
+    });
+    const champ = Object.entries(classRec).filter(([, r]) => r.w + r.l >= SMALL_DUELS)
+      .sort((a, b) => b[1].w / (b[1].w + b[1].l) - a[1].w / (a[1].w + a[1].l) || b[1].w - a[1].w)[0];
+    const third = { num: champ ? esc(CLASS_NAMES[champ[0]] + 's') : '–', what: 'the class to fear', hint: champ ? `${champ[1].w} won, ${champ[1].l} lost${sel.even ? ' in even fights' : ''}` : 'needs a few more duels' };
+    card('', heroTiles([
+      { num: fmt(ds.length), what: 'duels recorded', hint: A.span ? `since ${dateOf(A.span[0])}` : '' },
+      { num: ds.length ? pct(ko, ds.length) + '%' : '–', what: 'end in a knockout', hint: `${fmt(ds.length - ko)} ended with someone running` },
+      third,
+      { num: fmt(fighters.size), what: 'different duelists', hint: fighters.size ? `${(ds.length * 2 / fighters.size).toFixed(1)} duels each on average` : '' },
+    ]));
+    if (ds.length) renderChampions(fair);
+    if (!ds.length) {
+      card('', `<div class="empty">No duels recorded for this filter yet. Stand where people duel, outside a capital or in Goldshire, and they'll show up.</div>`);
+      return;
+    }
+
+    const by = duelBy;
+    const keyOf = (s) => by === 'class' ? s.c : s.r;
+    const nameOf = (k) => by === 'class' ? CLASS_NAMES[k] || k : RACE_NAMES[k] || k;
+    const tally = {};
+    fair.forEach((d) => {
+      const a = keyOf(d.w), b = keyOf(d.l);
+      if (a) (tally[a] = tally[a] || { w: 0, l: 0 }).w++;
+      if (b) (tally[b] = tally[b] || { w: 0, l: 0 }).l++;
+    });
+    const rows = Object.entries(tally).map(([k, v]) => ({ key: k, label: nameOf(k), color: by === 'class' ? classColor(k) : T.bar, w: v.w, l: v.l }))
+      .sort((a, b) => (b.w / (b.w + b.l)) - (a.w / (a.w + a.l)) || (b.w + b.l) - (a.w + a.l));
+    const sw = `<div class="switch">${['class', 'race'].map((k) => `<button data-duelby="${k}" aria-pressed="${by === k}">By ${k}</button>`).join('')}</div>`;
+    build('', () => winBars(`Who wins? Duel record by ${by}`, 'Share of duels won. Dashed bars have fewer than five duels, so read them loosely.' + fairNote, rows, fairFoot), sw);
+
+    const classes = Object.keys(CLASS_NAMES).filter((c) => fair.some((d) => d.w.c === c || d.l.c === c));
+    const cells = {};
+    fair.forEach((d) => {
+      const k1 = d.w.c + '>' + d.l.c, k2 = d.l.c + '>' + d.w.c;
+      (cells[k1] = cells[k1] || { w: 0, n: 0 }).w++; cells[k1].n++;
+      (cells[k2] = cells[k2] || { w: 0, n: 0 }).n++;
+    });
+    renderGlance(fair);
+    build('half', () => matrix('Matchups', 'How often the class on the left beats the class on top. The small number is how many duels.' + fairNote, classes, (a, b) => cells[a + '>' + b], fairFoot));
+
+    const duelists = A.players.filter((p) => inRs(p) && ((p.v.duelsw || 0) + (p.v.duelsl || 0) > 0));
+    const lifeTabs = ['Both', ...A.factions].map((f) => ({ f, n: duelists.filter((p) => f === 'Both' || p.f === f).length })).filter((t) => t.f === 'Both' || t.n > 0);
+    if (!lifeTabs.some((t) => t.f === lifeFac)) lifeFac = 'Both';
+    const lifetime = {};
+    duelists.filter((p) => lifeFac === 'Both' || p.f === lifeFac).forEach((p) => {
+      const t = lifetime[p.c] = lifetime[p.c] || { w: 0, l: 0, people: 0 };
+      t.w += p.v.duelsw || 0; t.l += p.v.duelsl || 0; t.people++;
+    });
+    const lrows = Object.entries(lifetime).map(([c, v]) => ({ label: CLASS_NAMES[c] || c, color: classColor(c), w: v.w, l: v.l, people: v.people }))
+      .sort((a, b) => (b.w / (b.w + b.l)) - (a.w / (a.w + a.l)));
+    const people = sum(lrows.map((r) => r.people));
+    if (duelists.length) {
+      const lsw = `<div class="switch">${lifeTabs.map((t) => `<button data-lifefac="${t.f}" aria-pressed="${t.f === lifeFac}">${t.f}<span style="opacity:.65;margin-left:6px">${fmt(t.n)}</span></button>`).join('')}</div>`;
+      const who = lifeFac === 'Both' ? 'Alliance and Horde' : lifeFac;
+      build('half', () => winBars('A lifetime of duels', `Every duel they ever fought, from the Statistics panel of ${fmt(people)} duelists.`, lrows, `${fmt(people)} duelists · ${who}`), lsw);
+    }
+
+    const geared = fair.filter((d) => d.w.il && d.l.il && d.w.il !== d.l.il);
+    const better = geared.filter((d) => d.w.il > d.l.il).length;
+    const rareBoth = fair.filter((d) => d.w.rare != null && d.l.rare != null && d.w.rare !== d.l.rare);
+    const moreRare = rareBoth.filter((d) => d.w.rare > d.l.rare).length;
+    build('half', () => splitBars('Does the edge decide it?', `Who won when one fighter had an advantage. The gear rows use ${sel.even ? 'even fights only' : 'all duels'}; the level row uses every duel with a gap.`, [
+      { label: 'Higher average item level', a: better, b: geared.length - better, aLabel: 'Better gear won', bLabel: 'Worse gear won', empty: 'Gear is known for both fighters in only a few duels so far' },
+      { label: 'More blue or purple items', a: moreRare, b: rareBoth.length - moreRare, aLabel: 'More blues won', bLabel: 'Fewer blues won' },
+      { label: 'Higher level', a: higher, b: levelGap.length - higher, aLabel: 'Higher level won', bLabel: 'Lower level won' },
+    ]));
+
+    renderStories(ds);
+  }
+
+  const REMATCH_WINDOW = 30 * 60;
+  function renderStories(ds) {
+    const ordered = [...ds].filter((d) => d.w.id && d.l.id).sort((a, b) => a.t - b.t);
+    const describe = (s) => `a level ${s.lv || '?'} ${RACE_NAMES[s.r] || s.r || ''} <span style="color:${classColor(s.c)}">${esc(CLASS_NAMES[s.c] || s.c || '')}</span>`.replace(/\s+/g, ' ');
+    const run = {}, best = { n: 0 };
+    const seen = {}, busiest = { n: 0 };
+    ordered.forEach((d) => {
+      run[d.w.id] = (run[d.w.id] || 0) + 1;
+      run[d.l.id] = 0;
+      if (run[d.w.id] > best.n) Object.assign(best, { n: run[d.w.id], who: d.w });
+      [d.w, d.l].forEach((s) => {
+        seen[s.id] = (seen[s.id] || 0) + 1;
+        if (seen[s.id] > busiest.n) Object.assign(busiest, { n: seen[s.id], who: s });
+      });
+    });
+    const pairs = {};
+    let rematches = 0, revenge = 0;
+    ordered.forEach((d) => {
+      const key = [d.w.id, d.l.id].sort((a, b) => a - b).join('-');
+      const p = pairs[key] = pairs[key] || { n: 0, wins: {}, sides: {}, last: null };
+      if (p.last && d.t - p.last.t <= REMATCH_WINDOW) {
+        rematches++;
+        if (d.w.id === p.last.l.id) revenge++;
+      }
+      p.n++;
+      p.wins[d.w.id] = (p.wins[d.w.id] || 0) + 1;
+      p.sides[d.w.id] = d.w;
+      p.sides[d.l.id] = d.l;
+      p.last = d;
+    });
+    const grudge = Object.values(pairs).sort((a, b) => b.n - a.n)[0];
+    const tiles = [];
+    if (grudge && grudge.n >= 3) {
+      const [x, y] = Object.keys(grudge.sides).map((k) => grudge.sides[k]);
+      const wx = grudge.wins[x.id] || 0, wy = grudge.wins[y.id] || 0;
+      const [a, b] = wx >= wy ? [x, y] : [y, x];
+      tiles.push({ icon: '⚔️', label: 'Fiercest grudge', amount: `<b>${grudge.n}</b> duels between the same two, ${Math.max(wx, wy)}–${Math.min(wx, wy)}`, holder: `${describe(a)} vs ${describe(b)}` });
+    }
+    if (rematches >= 5) tiles.push({ icon: '😤', label: 'Sweet revenge', amount: `<b>${pct(revenge, rematches)}%</b> of rematches won by the one who just lost`, holder: `out of ${fmt(rematches)} rematches within half an hour` });
+    if (busiest.n >= 3) tiles.push({ icon: '👑', label: 'The regular', amount: `<b>${busiest.n}</b> duels fought`, holder: describe(busiest.who) });
+    const body = tiles.length
+      ? `<div class="trophies"><div class="shelf">${tiles.map((t) => `<div class="trophy"><div class="head"><span class="icon" aria-hidden="true">${t.icon}</span><span class="label">${esc(t.label)}</span></div><div class="amount">${t.amount}</div><div class="holder">${t.holder}</div></div>`).join('')}</div></div>`
+      : '<p class="lede" style="padding-bottom:18px">Needs a few more duels between the same people.</p>';
+    card('half', `<h3 class="title">Grudges and streaks</h3><p class="lede">The stories behind the numbers. No names, just who they are.</p>${body}`);
+  }
+
+  const METRICS = [
+    { key: 'deaths', name: 'Deaths', sub: 'Median deaths per player.', value: (p) => p.v.deaths || 0, fmt: (v) => fmt(v) },
+    { key: 'critters', name: 'Critters killed', sub: 'Median critters killed per player. Squirrels beware.', value: (p) => p.v.critters || 0, fmt: (v) => fmt(v) },
+    { key: 'need', name: 'Need rolls', sub: 'Share of their loot rolls that were Need instead of Greed.', value: (p) => { const n = p.v.need || 0, g = p.v.greed || 0; return n + g >= 5 ? 100 * n / (n + g) : null; }, fmt: (v) => Math.round(v) + '%' },
+    { key: 'hearth', name: 'Hearthstones', sub: 'Median times hearthed per player.', value: (p) => p.v.hearth || 0, fmt: (v) => fmt(v) },
+    { key: 'food', name: 'Food eaten', sub: 'Median food eaten per player.', value: (p) => p.v.food || 0, fmt: (v) => fmt(v) },
+    { key: 'hpots', name: 'Health potions', sub: 'Median health potions per player.', value: (p) => p.v.hpots || 0, fmt: (v) => fmt(v) },
+    { key: 'goldmax', name: 'Richest moment', sub: 'Median of the most gold they ever held at once.', value: (p) => p.v.goldmax || 0, fmt: (v) => gold(v) },
+    { key: 'abandoned', name: 'Quests abandoned', sub: 'Share of quests they gave up on.', value: (p) => { const q = p.v.quests || 0, a = p.v.abandoned || 0; return q + a >= 10 ? 100 * a / (q + a) : null; }, fmt: (v) => Math.round(v) + '%' },
+  ];
+
+  function classRows(gs, fn) {
+    return Object.keys(CLASS_NAMES).map((c) => {
+      const vals = [], ns = [];
+      gs.forEach((g) => {
+        const xs = g.ps.filter((p) => p.c === c).map(fn).filter((v) => v != null);
+        vals.push(xs.length ? median(xs) : null);
+        ns.push(xs.length);
+      });
+      return { label: CLASS_NAMES[c], color: classColor(c), vals, ns };
+    }).filter((r) => r.ns.some((n) => n > 0)).sort((a, b) => (b.vals.find((v) => v != null) || 0) - (a.vals.find((v) => v != null) || 0));
+  }
+
+  function renderLife() {
+    const ps = players();
+    const gs = lifeGroups();
+    const total = (k) => sum(ps.map((p) => p.v[k] || 0));
+    card('', heroTiles([
+      { num: fmt(ps.length), what: 'players whose lives we read', hint: sel.lvl === 'all' ? 'all levels' : `level ${LEVEL_CAP} only` },
+      { num: fmt(total('deaths')), what: 'deaths between them', hint: `${fmt(total('fall'))} of them from falling` },
+      { num: fmt(total('critters')), what: 'critters slain', hint: 'rabbits, squirrels and the odd prairie dog' },
+      { num: gold(total('goldtotal')), what: 'gold earned in total', hint: `${fmt(total('hugs') + total('waves') + total('cheers'))} hugs, waves and cheers` },
+    ]));
+    if (!ps.length) {
+      card('', `<div class="empty">Nobody read for this filter yet.</div>`);
+      return;
+    }
+
+    const parts = [
+      { key: 'fall', name: 'Falling' }, { key: 'drown', name: 'Drowning' }, { key: 'fire', name: 'Fire and lava' },
+      { key: 'pvp', name: 'Other players' }, { key: 'dungeon', name: 'Dungeons' }, { key: 'world', name: 'Everything else out there' },
+    ].map((p, i) => ({ ...p, color: PALETTE[theme][i] }));
+    const deathRows = gs.map((g) => {
+      const t = (k) => sum(g.ps.map((p) => p.v[k] || 0));
+      const fall = t('fall'), drown = t('drown'), fire = t('fire'), pvp = t('pvpdeaths'), dungeon = t('dungeondeaths');
+      return { label: g.label, cells: { fall, drown, fire, pvp, dungeon, world: Math.max(0, t('deaths') - fall - drown - fire - pvp - dungeon) } };
+    });
+    build('', () => stackRows('How Azeroth gets you', 'Every death counted in their Statistics panel, by cause.', parts, deathRows));
+
+    const m = METRICS.find((x) => x.key === metric) || METRICS[0];
+    const sw = `<div class="switch">${METRICS.map((x) => `<button data-metric="${x.key}" aria-pressed="${x.key === m.key}">${esc(x.name)}</button>`).join('')}</div>`;
+    build('', () => dotRows(`Class habits: ${m.name.toLowerCase()}`, m.sub + (gs.length > 1 ? ' Alliance and Horde side by side.' : ''), classRows(gs, m.value), gs, m.fmt), sw);
+
+    const emotes = [['waves', 'Waves'], ['cheers', 'Cheers'], ['lols', "LOL's"], ['hugs', 'Hugs'], ['violin', 'Smallest violin'], ['facepalm', 'Facepalms']];
+    const eRows = emotes.map(([k, name]) => {
+      const vals = gs.map((g) => g.ps.length ? 100 * sum(g.ps.map((p) => p.v[k] || 0)) / g.ps.length : null);
+      return { label: name, color: T.bar, vals, ns: gs.map((g) => g.ps.length) };
+    }).filter((r) => r.vals.some((v) => v >= 1));
+    build('half', () => dotRows('The friendliest faction', 'Emotes per 100 players.', eRows, gs, (v) => fmt(v)));
+
+    const rezzes = [['respal', 'Paladins'], ['respriest', 'Priests'], ['resshaman', 'Shamans'], ['resdruid', 'Druids'], ['soulstone', 'Soulstones']];
+    const rRows = rezzes.map(([k, name]) => ({
+      label: name,
+      color: k === 'soulstone' ? classColor('WARLOCK') : classColor({ respal: 'PALADIN', respriest: 'PRIEST', resshaman: 'SHAMAN', resdruid: 'DRUID' }[k]),
+      vals: gs.map((g) => g.ps.length ? 100 * sum(g.ps.map((p) => p.v[k] || 0)) / g.ps.length : null),
+      ns: gs.map((g) => g.ps.length),
+    })).filter((r) => r.vals.some((v) => v >= 1)).sort((a, b) => (b.vals[0] || 0) - (a.vals[0] || 0));
+    build('half', () => dotRows('Who brings you back', 'Resurrections per 100 players, by who cast them.', rRows, gs, (v) => fmt(v)));
+
+    renderRecords(ps);
+  }
+
+  const RECORD_GROUPS = [
+    { name: 'Death and danger', items: [
+      ['deaths', 'deaths', 'The most deaths', '💀'],
+      ['fall', 'deaths from falling', "Gravity's best customer", '🪂'],
+      ['drown', 'deaths from drowning', 'Forgot to breathe', '🌊'],
+      ['hpots', 'health potions drunk', 'Lives on potions', '🧪'],
+    ] },
+    { name: 'Everyday life', items: [
+      ['critters', 'critters killed', 'Bane of squirrels', '🐿️'],
+      ['food', 'meals eaten', 'Never skips a meal', '🍖'],
+      ['hearth', 'hearthstones used', 'Always going home', '🏠'],
+      ['hugs', 'hugs given', 'The most huggable', '🤗'],
+      ['waves', 'waves', 'Waves at everyone', '👋'],
+      ['abandoned', 'quests abandoned', 'Commitment issues', '📜'],
+      ['camped', 'times camped', 'Sleeps in the field', '⛺'],
+    ] },
+    { name: 'Fortune and glory', items: [
+      ['goldtotal', 'earned in their life', 'The biggest earner', '💰', true],
+      ['goldmax', 'held at once', 'Richest moment', '👑', true],
+      ['vancleef', 'VanCleef kills', "VanCleef's nightmare", '🗡️'],
+      ['duelsw', 'duels won', 'Most duels won', '⚔️'],
+    ] },
+  ];
+  function renderRecords(ps) {
+    const groups = RECORD_GROUPS.map((g) => {
+      const tiles = g.items.map(([k, unit, label, icon, isGold]) => {
+        let best = null;
+        ps.forEach((p) => { if ((p.v[k] || 0) > (best ? best.v[k] : 0)) best = p; });
+        if (!best || (!isGold && best.v[k] < 3)) return '';
+        const value = isGold ? gold(best.v[k]) : fmt(best.v[k]);
+        const race = RACE_NAMES[best.r] || best.r || '';
+        const cls = CLASS_NAMES[best.c] || '';
+        return `<div class="trophy">
+          <div class="head"><span class="icon" aria-hidden="true">${icon}</span><span class="label">${esc(label)}</span></div>
+          <div class="amount"><b>${value}</b> ${esc(unit)}</div>
+          <div class="holder">Level ${best.lv} ${esc(race)} <span style="color:${classColor(best.c)}">${esc(cls)}</span><i class="fac ${esc(best.f || '')}">${esc(best.f || '')}</i></div>
+        </div>`;
+      }).join('');
+      return tiles ? `<div class="trophies"><h4>${esc(g.name)}</h4><div class="shelf">${tiles}</div></div>` : '';
+    }).join('');
+    card('', `<h3 class="title">Hall of records</h3><p class="lede">The single highest number we've seen for each. No names, just who they are.</p>${groups}`);
+  }
+
+  function chip(label, n, pressed, disabled, onClick) {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.setAttribute('aria-pressed', pressed);
+    b.disabled = disabled;
+    b.innerHTML = `${esc(label)}${n != null ? `<span class="n">${fmt(n)}</span>` : ''}`;
+    b.onclick = onClick;
+    return b;
+  }
+  function filters() {
+    const nav = document.getElementById('filters');
+    nav.innerHTML = '';
+    const count = (pred) => view === 'duels' ? A.duels.filter(pred).length : A.players.filter(pred).length;
+    const group = (label, items) => {
+      const g = document.createElement('div');
+      g.className = 'group';
+      g.innerHTML = `<span class="label">${label}</span>`;
+      items.forEach((i) => g.appendChild(i));
+      nav.appendChild(g);
+    };
+    group('Realm type', ['All', ...A.rulesets].map((rs) => chip(rs === 'All' ? 'All realms' : rs, count((x) => rs === 'All' || x.rs === rs), sel.rs === rs, false, () => { sel.rs = rs; render(); })));
+    const facPred = (f) => view === 'duels' ? (d) => d.w.f === f || d.l.f === f : (p) => p.f === f;
+    group('Faction', ['Both', ...A.factions].map((f) => {
+      const n = f === 'Both' ? null : count(facPred(f));
+      return chip(f, n, sel.fac === f, n === 0, () => { sel.fac = f; render(); });
+    }));
+    if (view === 'duels') {
+      const pool = A.duels.filter((d) => inRs(d) && (sel.fac === 'Both' || d.w.f === sel.fac || d.l.f === sel.fac));
+      group('Levels', [
+        chip(`Even fights (within ${EVEN_GAP})`, pool.filter(isEven).length, sel.even, false, () => { sel.even = true; render(); }),
+        chip('All duels', pool.length, !sel.even, false, () => { sel.even = false; render(); }),
+      ]);
+    }
+    if (view === 'life') {
+      const capN = A.players.filter((p) => p.lv === LEVEL_CAP).length;
+      group('Level', [
+        chip(`Level ${LEVEL_CAP}`, capN, sel.lvl === 'cap', capN === 0, () => { sel.lvl = 'cap'; render(); }),
+        chip('All levels', A.players.length, sel.lvl === 'all', false, () => { sel.lvl = 'all'; render(); }),
+      ]);
+    }
+  }
+  function status() {
+    const el = document.getElementById('status');
+    const span = A.span ? `${dateOf(A.span[0])} – ${dateOf(A.span[1])}` : '';
+    el.innerHTML = view === 'duels'
+      ? `<span><b>${fmt(duels().length)}</b> duels</span><span>${esc(scope())}</span><span>${span}</span>`
+      : `<span><b>${fmt(players().length)}</b> players read</span><span>${esc(scope())}</span><span>${span}</span>${sel.lvl === 'cap' ? '<span>Level ' + LEVEL_CAP + ' keeps the comparison fair: more levels, more of everything.</span>' : ''}`;
+  }
+
+  function measure() {
+    const width = document.getElementById('cards').clientWidth || 1200;
+    NARROW = width < 700;
+  }
+  function render() {
+    T = THEMES[view][theme];
+    document.body.dataset.view = view;
+    document.body.dataset.theme = theme;
+    const v = VIEWS[view];
+    document.getElementById('brand').textContent = v.brand;
+    document.getElementById('title').textContent = v.title;
+    document.getElementById('sub').textContent = v.sub;
+    document.getElementById('intro').textContent = v.intro;
+    document.title = `${v.title} · Linked Inn`;
+    document.getElementById('toDuels').setAttribute('aria-current', view === 'duels' ? 'page' : 'false');
+    document.getElementById('toLife').setAttribute('aria-current', view === 'life' ? 'page' : 'false');
+    document.getElementById('theme').textContent = theme === 'dark' ? 'Daylight' : 'Nightfall';
+    document.getElementById('foot').textContent = view === 'duels'
+      ? 'Duels are recorded from the result announced in chat. Item level is the average of the gear they wore, read right after the duel. Lifetime records come from each player\'s own Statistics panel. Only the champions are named; everyone else stays anonymous.'
+      : 'All numbers come from the Statistics panel every player has. Medians are used so one extreme player can\'t skew a class. No names are kept.';
+    measure();
+    if (sel.fac !== 'Both') {
+      const has = view === 'duels' ? A.duels.some((d) => d.w.f === sel.fac || d.l.f === sel.fac) : A.players.some((p) => p.f === sel.fac);
+      if (!has) sel.fac = 'Both';
+    }
+    if (sel.rs !== 'All' && !(view === 'duels' ? A.duels : A.players).some((x) => x.rs === sel.rs)) sel.rs = 'All';
+    const cardsEl = document.getElementById('cards');
+    const y = window.scrollY;
+    const keepHeight = cardsEl.offsetHeight;
+    cardsEl.style.minHeight = keepHeight + 'px';
+    cardsEl.innerHTML = '';
+    filters();
+    status();
+    W = NARROW ? 640 : 1200;
+    HALF = false;
+    if (view === 'duels') renderDuels(); else renderLife();
+    bindSwitches(cardsEl);
+    cardsEl.style.minHeight = '';
+    if (rendered) {
+      cardsEl.classList.add('calm');
+      window.scrollTo(0, y);
+    }
+    rendered = true;
+  }
+
+  let rendered = false;
+  function bindSwitches(root) {
+    root.querySelectorAll('[data-duelby]').forEach((b) => b.onclick = () => { duelBy = b.dataset.duelby; redrawCard(b); });
+    root.querySelectorAll('[data-lifefac]').forEach((b) => b.onclick = () => { lifeFac = b.dataset.lifefac; redrawCard(b); });
+    root.querySelectorAll('[data-metric]').forEach((b) => b.onclick = () => { metric = b.dataset.metric; redrawCard(b); });
+  }
+  function redrawCard(button) {
+    const cardsEl = document.getElementById('cards');
+    const old = button.closest('.card');
+    const index = [...cardsEl.children].indexOf(old);
+    sink = document.createElement('div');
+    W = NARROW ? 640 : 1200;
+    HALF = false;
+    try {
+      if (view === 'duels') renderDuels(); else renderLife();
+    } finally {
+      const fresh = sink.children[index];
+      sink = null;
+      if (fresh) {
+        old.innerHTML = fresh.innerHTML;
+        bindSwitches(old);
+      }
+    }
+  }
+
+  const tip = document.getElementById('tip');
+  document.addEventListener('mousemove', (e) => {
+    const t = e.target.closest && e.target.closest('[data-tip]');
+    if (!t) { tip.style.display = 'none'; return; }
+    const [head, rest] = t.getAttribute('data-tip').split('|');
+    tip.innerHTML = `<b>${esc(head)}</b>${(rest || '').split('\n').map((l) => `<span>${esc(l)}</span>`).join('<br>')}`;
+    tip.style.display = 'block';
+    const x = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 8);
+    const y = Math.min(e.clientY + 14, window.innerHeight - tip.offsetHeight - 8);
+    tip.style.left = x + 'px';
+    tip.style.top = y + 'px';
+  });
+  document.getElementById('theme').onclick = () => {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem('census-theme', theme); } catch (e) {}
+    render();
+  };
+  window.addEventListener('hashchange', () => {
+    view = location.hash === '#life' ? 'life' : 'duels';
+    document.getElementById('cards').classList.remove('calm');
+    rendered = false;
+    render();
+    rendered = true;
+  });
+  let resizeTimer;
+  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
+  try { theme = localStorage.getItem('census-theme') === 'light' ? 'light' : 'dark'; } catch (e) {}
+  if (!A.players.filter((p) => p.lv === LEVEL_CAP).length) sel.lvl = 'all';
+  render();
+})();
+</script>
+</body>
+</html>

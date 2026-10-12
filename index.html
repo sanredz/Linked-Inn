@@ -60,7 +60,7 @@ header.page .titles { flex: 1 1 320px; min-width: 0; }
 header.page .brand { font-family: "Cinzel", serif; color: var(--gold); font-size: 15px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; }
 header.page h1 { font-family: "Cinzel", serif; margin: 2px 0 0; font-size: 34px; font-weight: 700; color: var(--ink); line-height: 1.15; }
 header.page p { margin: 6px 0 0; color: var(--ink-2); font-size: 15px; }
-.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 470px; }
 a.cta, button {
   font: inherit;
   font-size: 13px;
@@ -74,6 +74,15 @@ a.cta, button {
 }
 a.cta.primary { background: linear-gradient(#f2c14e, #c98a26); color: #2a1d14; border-color: #f2c14e; font-weight: 600; }
 a.cta:hover, button:hover { border-color: var(--gold); }
+.views { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 2px; padding-bottom: 10px; min-height: 66px; }
+.views[hidden] { display: none; }
+.views a { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink-2); border: 1px solid var(--border); border-radius: 12px; padding: 10px 18px; background: var(--button); font-family: "Cinzel", serif; font-weight: 700; font-size: 15px; letter-spacing: 0.03em; transition: transform 0.15s ease, border-color 0.15s ease; }
+.views a svg { width: 22px; height: 22px; flex: none; }
+.views a:hover { transform: translateY(-1px); border-color: var(--gold); color: var(--ink); }
+.views a[aria-current="page"] { background: linear-gradient(#f2c14e, #c98a26); color: #2a1d14; border-color: #f2c14e; }
+.views a.duels { color: #ff9a80; }
+.views a.life { color: #9fe3d3; }
+@media (max-width: 700px) { .views a { padding: 8px 12px; font-size: 13px; gap: 7px; } .views a svg { width: 18px; height: 18px; } }
 .intro { margin-top: 0; margin-bottom: 0; padding-top: 4px; padding-bottom: 4px; color: var(--ink-2); font-size: 15px; line-height: 1.55; }
 .bar {
   position: sticky;
@@ -260,11 +269,16 @@ footer.page a { color: var(--ink-2); }
   <div class="actions">
     <a class="cta primary" href="https://www.curseforge.com/wow/addons/linked-inn-profession-finder" target="_blank" rel="noopener">Get Linked Inn</a>
     <a class="cta" href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener">&#9749; Buy me a coffee</a>
-    <button id="theme">Parchment</button>
+    <button id="theme">Daylight</button>
     <button id="regulars" class="regulars-btn" title="The people who help collect the census">&#127867; The Regulars <span class="count" id="regularsCount" hidden></span></button>
     <button id="saveAll" class="dev-only">Save all as PNG</button>
   </div>
 </header>
+<nav class="views wrap" id="views" aria-label="Views" hidden>
+  <a aria-current="page" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h10v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M15 10h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><path d="M5 8c0-2 1.5-3 3-3 .5-1.5 2-2 3.5-1.5C13 3 15 4 15 6"/></svg>Crafting</a>
+  <a class="duels" href="world.html#duels"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="m13 19 6-6"/><path d="m16 16 4 4"/><path d="M19 21l2-2"/><path d="M9.5 17.5 21 6V3h-3L6.5 14.5"/><path d="m11 19-6-6"/><path d="m8 16-4 4"/><path d="M5 21l-2-2"/></svg>Duels</a>
+  <a class="life" href="world.html#life"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/><path d="M17 3v3M15.5 4.5h3"/></svg>Life on Azeroth</a>
+</nav>
 <p class="intro wrap">Linked Inn is a profession finder for WoW Forever. While you play it quietly reads the professions of crafters around you and shares lists between its users. These charts are what that adds up to: no surveys, no hand-picked numbers, just what crafters actually know.</p>
 <div class="bar">
   <nav class="filters wrap" id="filters"></nav>
@@ -293,6 +307,14 @@ footer.page a { color: var(--ink-2); }
   </div>
 </div>
 <script src="data-multi.js"></script>
+<script>
+(function () {
+  const s = document.createElement('script');
+  s.src = 'data-world.js';
+  s.onload = () => { if (window.LI_WORLD) document.getElementById('views').hidden = false; };
+  document.head.appendChild(s);
+})();
+</script>
 <script>
 (function () {
   const M = window.LI_MULTI;
@@ -337,6 +359,7 @@ footer.page a { color: var(--ink-2); }
   const ITEMS = {};
 
   let theme = 'dark';
+  try { if (localStorage.getItem('census-theme') === 'light') theme = 'light'; } catch (e) {}
   let T = THEMES.dark;
   let W = FULL_W, HALF = false, FORCE_H = 0, NARROW = false;
   let sel = { rs: 'All', fac: 'Both', cmp: 'rs' };
@@ -1233,7 +1256,7 @@ footer.page a { color: var(--ink-2); }
   function render() {
     T = THEMES[theme];
     document.documentElement.dataset.theme = theme;
-    document.getElementById('theme').textContent = theme === 'dark' ? 'Parchment' : 'Dark wood';
+    document.getElementById('theme').textContent = theme === 'dark' ? 'Daylight' : 'Nightfall';
     filters();
     status();
     NARROW = (root.clientWidth || window.innerWidth) < NARROW_AT;
@@ -1381,7 +1404,11 @@ footer.page a { color: var(--ink-2); }
     }, 200);
   });
 
-  document.getElementById('theme').onclick = () => { theme = theme === 'dark' ? 'light' : 'dark'; render(); };
+  document.getElementById('theme').onclick = () => {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem('census-theme', theme); } catch (e) {}
+    render();
+  };
   document.getElementById('saveAll').onclick = async () => {
     const svgs = root.querySelectorAll('svg');
     const ids = cards.filter((c) => c.when()).map((c) => c.id);

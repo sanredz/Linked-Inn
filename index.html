@@ -148,6 +148,20 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--gold); text-
 .legend .w { font: 20px "Friz", serif; color: #fff2cf; }
 .legend .w small { font-size: 12px; color: var(--muted); }
 .optout { margin-top: 12px; font-size: 12px; color: var(--muted); }
+.btog { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.cchamps { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 1400px) { .cchamps { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } }
+.cchamp { position: relative; text-align: center; padding: 14px 10px 12px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--cc) 45%, transparent);
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--cc) 14%, transparent), transparent 70%), rgba(0, 0, 0, 0.35); }
+.cchamp .ci { position: absolute; top: 8px; left: 8px; width: 26px; height: 26px; border-radius: 5px; box-shadow: 0 0 0 1px #000; }
+.cchamp .cn { font: 15px "Morpheus", serif; color: var(--cc); margin-bottom: 8px; }
+.cchamp .por { width: 64px; height: 64px; --m: var(--cc); }
+.cchamp .por > img { border-width: 2px; }
+.cchamp .nm { margin-top: 8px; font: 15px "Friz", serif; text-shadow: 0 1px 0 #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cchamp .big { font: 24px/1.1 "Friz", serif; color: #fff2cf; margin-top: 4px; }
+.cchamp .big small { font-size: 12px; color: var(--ink-2); }
+.cchamp .rec { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.cchamp.empty { opacity: 0.55; }
 .hpills { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; align-items: center; }
 .hpill { font-size: 11.5px; color: var(--ink); border: 1px solid var(--hm); background: color-mix(in srgb, var(--hm) 18%, transparent); border-radius: 999px; padding: 2px 9px; }
 .honors { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
@@ -334,6 +348,7 @@ footer a { color: var(--ink-2); }
   .stop, .stop.up .facts { position: static; transform: none; width: auto; margin-bottom: 14px; }
   .row { grid-template-columns: 30px 90px 1fr auto; gap: 8px; }
   .prow { grid-template-columns: 30px 1fr auto; }
+  .cchamps { grid-template-columns: repeat(2, 1fr); }
   .vrow { grid-template-columns: 34px 1fr 28px 1fr 34px; } .vrow .lead { display: none; } .vrow > img { width: 28px; height: 28px; }
   .srow { grid-template-columns: 30px 1fr; } .srow .sbar { grid-column: 1 / -1; } .sbar span { display: none; } .prow .track, .prow .badge { display: none; } .secs { grid-template-columns: 1fr; }
   .grid .ax img { width: 24px; height: 24px; } .grid .cell { height: 36px; font-size: 12px; } .grid .cell small { display: none; }
@@ -433,7 +448,7 @@ footer a { color: var(--ink-2); }
   };
   const hasWorld = !!(S && S.duels);
   if (!hasWorld) document.querySelectorAll('.tab[data-v="duels"], .tab[data-v="life"]').forEach((t) => t.remove());
-  const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen' };
+  const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'wins' };
   try { const saved = JSON.parse(localStorage.getItem('inn-sel') || '{}'); ['rs', 'fac'].forEach((k) => { if (saved[k]) sel[k] = saved[k]; }); } catch (e) {}
   let view = 'crafting';
 
@@ -754,8 +769,26 @@ footer a { color: var(--ink-2); }
     const feudHtml = feuds.length || streak ? `<div class="feud"><h3 class="mini">Grudges and streaks</h3>${streak}${feuds.join('')}</div>` : '';
     h += panel('s4', 'Does the edge decide it?', 'How often the player with the higher level, or the better gear (item level), walks away the winner.',
       `<div class="gauges">${ring(X.lv, '#ff8a3c', 'Higher level', 'wins this often')}${ring(X.gear, '#5aa0ff', 'Better gear', 'wins this often')}</div>${feudHtml}`);
+    const boards = S.duels[`All|${sel.fac}|${sel.even ? 'even' : 'all'}`].boards;
+    const key = (sel.bsrc === 'life' ? 'life' : 'seen') + (sel.bsort === 'rate' ? 'Rate' : 'Wins');
+    const minN = sel.bsrc === 'life' ? 50 : 10;
+    const toggles = `<div class="btog"><div class="chips">${[['seen', 'Duels we saw'], ['life', 'Lifetime']].map(([k, n]) => `<button class="chip plain ${(sel.bsrc || 'seen') === k ? 'on' : ''}" data-bsrc="${k}">${n}</button>`).join('')}</div>
+      <div class="chips">${[['wins', 'Most wins'], ['rate', 'Best win %']].map(([k, n]) => `<button class="chip plain ${(sel.bsort || 'wins') === k ? 'on' : ''}" data-bsort="${k}">${n}</button>`).join('')}</div></div>`;
+    const cards = CLASSES.map((c) => {
+      const x = (boards[c] || {})[key] && boards[c][key][0];
+      if (!x) return `<div class="cchamp empty" style="--cc:${CC[c]}"><img class="ci" src="${cls(c)}" alt=""><div class="cn">${CN[c]}</div><div class="rec">nobody yet${sel.bsort === 'rate' ? ` (needs ${minN}+ duels)` : ''}</div></div>`;
+      const p = x.w / Math.max(1, x.w + x.l);
+      const big = sel.bsort === 'rate' ? `${Math.round(p * 100)}% <small>wins</small>` : `${fmt(x.w)} <small>wins</small>`;
+      return `<div class="cchamp" style="--cc:${CC[c]}"><img class="ci" src="${cls(c)}" alt=""><div class="cn">${CN[c]}</div>
+        <div class="por"><img src="${race(x.r)}" alt=""></div><div class="nm" style="color:${CC[c]}">${who(x)}</div>
+        <div class="big">${big}</div><div class="rec">${RN[x.r] || x.r} · ${fmt(x.w)}–${fmt(x.l)}${sel.bsort === 'rate' ? '' : ` · ${Math.round(p * 100)}%`}</div></div>`;
+    }).join('');
+    h += panel('s12', 'Class champions', `The best of each class across every realm. Duels we saw counts the duels we watched; lifetime comes from their own Statistics panel. Best win % needs at least ${minN} duels.`,
+      toggles + `<div class="cchamps">${cards}</div>`);
     document.getElementById('main').innerHTML = h;
     document.querySelectorAll('[data-wr]').forEach((x) => x.onclick = () => { sel.wr = x.dataset.wr; renderKeep(); });
+    document.querySelectorAll('[data-bsrc]').forEach((x) => x.onclick = () => { sel.bsrc = x.dataset.bsrc; renderKeep(); });
+    document.querySelectorAll('[data-bsort]').forEach((x) => x.onclick = () => { sel.bsort = x.dataset.bsort; renderKeep(); });
     document.getElementById('updated').textContent = `Updated ${S.generated || ''}`;
   }
 

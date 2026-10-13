@@ -80,7 +80,7 @@ a { color: inherit; }
 .count .colon { color: var(--gold-dim); font-size: 26px; padding-top: 6px; }
 .count .d { margin-top: 8px; font-size: 12px; color: var(--muted); }
 
-.bar { position: sticky; top: 0; z-index: 3; margin-top: 18px; background: linear-gradient(rgba(12, 10, 8, 0.96), rgba(12, 10, 8, 0.9));
+.bar { position: sticky; top: 0; z-index: 3; margin-top: 18px; background: #0e0c09;
   border-top: 1px solid var(--soft); border-bottom: 1px solid var(--soft); }
 .bar .wrap { display: flex; gap: 10px; align-items: center; padding-top: 10px; padding-bottom: 10px; flex-wrap: wrap; }
 .seg { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -349,6 +349,14 @@ footer a { color: var(--ink-2); }
   .banner .in { height: auto; flex-direction: column; } .banner h1 { font-size: 40px; } .banner .say { padding: 22px; }
   .banner .count { margin: 0 14px 16px; align-self: stretch; } .count .c b { width: 48px; font-size: 24px; }
   .podium, .legends .list, .gauges { grid-template-columns: 1fr; }
+  .champ.first { order: -1; }
+  .champ, .champ.first { display: grid; grid-template-columns: 76px 1fr; column-gap: 14px; text-align: left; padding: 14px 14px 12px 40px; align-items: center; }
+  .champ .por, .champ.first .por { width: 72px; height: 72px; margin: 0; grid-row: 1 / span 4; }
+  .champ .place { top: 50%; left: 12px; transform: translateY(-50%); font-size: 30px; }
+  .champ .crown { top: 6px; left: auto; right: 10px; transform: none; width: 30px; height: 30px; }
+  .champ .nm { margin-top: 0; } .champ .wins { font-size: 26px; } .hpills { align-items: flex-start; }
+  .bar .wrap { gap: 6px; padding-top: 8px; padding-bottom: 8px; } .bar .sep { display: none; }
+  .btn { padding: 5px 10px; font-size: 15px; } .btn img { width: 18px; height: 18px; }
   .trail { height: auto; } .trail svg { display: none; }
   .stop, .stop.up .facts { position: static; transform: none; width: auto; margin-bottom: 14px; }
   .row { grid-template-columns: 30px 90px 1fr auto; gap: 8px; }

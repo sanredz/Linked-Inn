@@ -436,8 +436,8 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
   </div></div>
 </div>
 
-<script src="data-multi.js"></script>
-<script src="data-summary.js"></script>
+<script src="data-multi.js?v=20261013212850"></script>
+<script src="data-summary.js?v=20261013212850"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -732,8 +732,8 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
       flawless: { t: 'Flawless Form', i: UI('spell_holy_greaterheal'), m: '#7fe0c0', v: (x) => `${Math.round(x.p * 100)}% <small>wins</small>`, s: (x) => `lifetime best, ${fmt(x.w)}–${fmt(x.l)}` },
     };
     const byRate = sel.pod === 'rate';
-    const POD = byRate ? X.podiumRate : X.podium;
-    const LEG = byRate ? X.legendsRate : X.legends;
+    const POD = (byRate && X.podiumRate) || X.podium;
+    const LEG = (byRate && X.legendsRate) || X.legends;
     const pct2 = (x) => Math.round(100 * x.w / Math.max(1, x.w + x.l));
     const onPodium = new Set(POD.map((x) => x.id));
     const podium = [1, 0, 2].filter((i) => POD[i]).map((i) => {

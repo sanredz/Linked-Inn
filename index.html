@@ -445,8 +445,8 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261013213611"></script>
-<script src="data-summary.js?v=20261013213611"></script>
+<script src="data-multi.js?v=20261013213725"></script>
+<script src="data-summary.js?v=20261013213725"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -475,7 +475,7 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
   };
   const hasWorld = !!(S && S.duels);
   if (!hasWorld) document.querySelectorAll('.tab[data-v="duels"], .tab[data-v="life"]').forEach((t) => t.remove());
-  const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'wins', pod: 'wins' };
+  const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'wins', pod: 'rate' };
   try { const saved = JSON.parse(localStorage.getItem('inn-sel') || '{}'); ['rs', 'fac'].forEach((k) => { if (saved[k]) sel[k] = saved[k]; }); } catch (e) {}
   let view = 'crafting';
 
@@ -773,7 +773,7 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
       + `<div class="podium">${podium || '<p>Not enough duels yet.</p>'}</div>${ringHonors ? `<div class="honors">${ringHonors}</div>` : ''}`;
     const hall = LEG.length || lifeHonors ? `<div class="hall2">` + shelf('hallhead', UI('inv_misc_book_09'), 'Hall of legends', byRate ? 'Their whole career, from their own Statistics panel · best record, 50+ duels' : 'Their whole career, from their own Statistics panel · most wins')
       + `${lifeHonors ? `<div class="honors">${lifeHonors}</div>` : ''}${LEG.length ? `<div class="legends"><div class="list">${legendCards}</div></div>` : ''}</div>` : '';
-    const podChips = `<div class="chips" style="margin-bottom:14px">${[['wins', 'Most wins'], ['rate', 'Best record']].map(([k, n]) => `<button class="chip plain ${(sel.pod || 'wins') === k ? 'on' : ''}" data-pod="${k}">${n}</button>`).join('')}</div>`;
+    const podChips = `<div class="chips" style="margin-bottom:14px">${[['rate', 'Best record'], ['wins', 'Most wins']].map(([k, n]) => `<button class="chip plain ${(sel.pod || 'rate') === k ? 'on' : ''}" data-pod="${k}">${n}</button>`).join('')}</div>`;
     h += panel('s7', 'Champions', byRate ? 'Best records, ranked by a confidence-adjusted win rate: a long strong record beats a short perfect one, so 148–11 ranks above 7–0. In the ring counts duels we watched; Hall of legends counts their whole career. Only these top spots are named.' : 'Most wins. In the ring counts duels we watched; Hall of legends counts their whole career from their own Statistics panel. Only these top spots are named.',
       podChips + inRing + hall + `<div class="optout">On here and rather not be? Message sanredz and it comes off.</div>`);
 

@@ -3542,10 +3542,10 @@ do
 	local sitePopup = CreateFrame("Frame")
 	sitePopup.editBox = siteBox
 	StaticPopupDialogs.LINKEDINN_CENSUS_SITE.OnShow(sitePopup)
-	check(siteBox:GetText() == "https://sanredz.github.io/Linked-Inn/", "with the site filled in, ready to copy", siteBox:GetText())
+	check(siteBox:GetText() == "https://lifeonazeroth.com/", "with the site filled in, ready to copy", siteBox:GetText())
 	siteBox:SetText("oops")
 	StaticPopupDialogs.LINKEDINN_CENSUS_SITE.EditBoxOnTextChanged(siteBox)
-	check(siteBox:GetText() == "https://sanredz.github.io/Linked-Inn/", "and the site link can't be typed over either")
+	check(siteBox:GetText() == "https://lifeonazeroth.com/", "and the site link can't be typed over either")
 	panel:Hide()
 end
 

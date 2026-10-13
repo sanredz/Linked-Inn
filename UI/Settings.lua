@@ -252,7 +252,7 @@ if StaticPopupDialogs then
 end
 
 LI.CENSUS_UPLOAD = "https://tally.so/r/RGXxWp"
-LI.CENSUS_SITE = "https://sanredz.github.io/Linked-Inn/"
+LI.CENSUS_SITE = "https://lifeonazeroth.com/"
 
 local function PopupBox(popup)
 	return popup.editBox or popup.EditBox or (popup.GetEditBox and popup:GetEditBox())

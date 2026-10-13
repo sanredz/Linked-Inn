@@ -154,6 +154,7 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .legend .w small { font-size: 12px; color: var(--muted); }
 .optout { margin-top: 12px; font-size: 12px; color: var(--muted); }
 .btog { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.btog .chips { flex-wrap: nowrap; }
 .cchamps { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 10px; }
 @media (max-width: 1400px) { .cchamps { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } }
 .cchamp { position: relative; text-align: center; padding: 14px 10px 12px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--cc) 45%, transparent);
@@ -334,6 +335,10 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 footer { color: var(--muted); font-size: 13px; padding: 22px 0 40px; border-top: 1px solid var(--soft); display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
 footer a { color: var(--ink-2); }
 .dev-only { display: none !important; }
+.snap { display: none; font: 12px "Friz", serif; color: var(--ink-2); background: rgba(0, 0, 0, 0.45); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+.snap:hover { color: var(--ink); border-color: var(--title2); }
+body.dev .snap { display: inline-block; }
+body.snapping *, body.snapping *::before, body.snapping *::after { animation: none !important; transition: none !important; }
 
 @media (max-width: 1180px) {
   .s8, .s7, .s6, .s5, .s4 { grid-column: span 12; } .s3 { grid-column: span 6; }
@@ -461,7 +466,7 @@ footer a { color: var(--ink-2); }
   };
   const hasWorld = !!(S && S.duels);
   if (!hasWorld) document.querySelectorAll('.tab[data-v="duels"], .tab[data-v="life"]').forEach((t) => t.remove());
-  const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'wins' };
+  const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'wins', pod: 'wins' };
   try { const saved = JSON.parse(localStorage.getItem('inn-sel') || '{}'); ['rs', 'fac'].forEach((k) => { if (saved[k]) sel[k] = saved[k]; }); } catch (e) {}
   let view = 'crafting';
 
@@ -494,7 +499,7 @@ footer a { color: var(--ink-2); }
   function save() { try { localStorage.setItem('inn-sel', JSON.stringify({ rs: sel.rs, fac: sel.fac })); } catch (e) {} }
   const help = (t, h) => h ? `<span class="q" data-tip="${esc(t)}|${esc(h)}">?</span>` : '';
   function panel(span, title, h, body, opts = {}) {
-    return `<section class="frame panel ${span} ${opts.cls || ''}"${opts.id ? ` id="${opts.id}"` : ''}><div class="in slab"><div class="head"><h2>${title}</h2>${opts.extra || ''}${help(title, h)}</div><div class="body">${body}</div></div></section>`;
+    return `<section class="frame panel ${span} ${opts.cls || ''}"${opts.id ? ` id="${opts.id}"` : ''}><div class="in slab"><div class="head"><h2>${title}</h2>${opts.extra || ''}<button class="snap" data-act="png">Save PNG</button>${help(title, h)}</div><div class="body">${body}</div></div></section>`;
   }
   function plaque(img, label, num, sub, word) {
     return `<section class="frame plaque s3"><div class="in slab"><img class="icon" src="${img}" alt=""><div><div class="lbl">${label}</div><div class="num${word ? ' word' : ''}">${num}</div><div class="sub">${sub || ''}</div></div></div></section>`;
@@ -726,13 +731,17 @@ footer a { color: var(--ink-2); }
       untouchable: { t: 'The Untouchable', i: 'assets/game/rank14.png', m: '#b98cff', v: (x) => `${Math.round(x.p * 100)}% <small>wins</small>`, s: (x) => `best record, ${x.w}–${x.l}` },
       flawless: { t: 'Flawless Form', i: UI('spell_holy_greaterheal'), m: '#7fe0c0', v: (x) => `${Math.round(x.p * 100)}% <small>wins</small>`, s: (x) => `lifetime best, ${fmt(x.w)}–${fmt(x.l)}` },
     };
-    const onPodium = new Set(X.podium.map((x) => x.id));
-    const podium = [1, 0, 2].filter((i) => X.podium[i]).map((i) => {
-      const w = X.podium[i];
+    const byRate = sel.pod === 'rate';
+    const POD = byRate ? X.podiumRate : X.podium;
+    const LEG = byRate ? X.legendsRate : X.legends;
+    const pct2 = (x) => Math.round(100 * x.w / Math.max(1, x.w + x.l));
+    const onPodium = new Set(POD.map((x) => x.id));
+    const podium = [1, 0, 2].filter((i) => POD[i]).map((i) => {
+      const w = POD[i];
       const extra = X.honors.filter((h2) => h2.id === w.id).map((h2) => `<span class="hpill" style="--hm:${HONOR[h2.kind].m}" data-tip="${HONOR[h2.kind].t}|${HONOR[h2.kind].s instanceof Function ? HONOR[h2.kind].s(h2) : HONOR[h2.kind].s}">✦ ${HONOR[h2.kind].t}</span>`).join('');
       return `<div class="champ ${i === 0 ? 'first' : ''}" style="--m:${metals[i]}">${i === 0 ? '<img class="crown" src="assets/game/rank14.png" alt="">' : ''}<span class="place">${i + 1}</span>
         <div class="por"><img src="${race(w.r)}" alt=""><img class="cls" src="${cls(w.c)}" alt=""></div>
-        <div class="nm" style="color:${CC[w.c]}">${who(w)}</div><div class="wins">${w.w} <small>wins</small></div>
+        <div class="nm" style="color:${CC[w.c]}">${who(w)}</div><div class="wins">${byRate ? `${pct2(w)}% <small>wins</small>` : `${w.w} <small>wins</small>`}</div>
         <div class="rec">${RN[w.r] || w.r} ${CN[w.c]} · ${w.w}–${w.l}</div>${extra ? `<div class="hpills">${extra}</div>` : ''}</div>`;
     }).join('');
     const honors = X.honors.filter((x) => !onPodium.has(x.id)).filter((x, i, all) => all.findIndex((o) => o.id === x.id) === i).map((x) => {
@@ -742,11 +751,12 @@ footer a { color: var(--ink-2); }
         <div class="hbody"><div class="por"><img src="${race(x.r)}" alt=""><img class="cls" src="${cls(x.c)}" alt=""></div>
         <div><div class="nm" style="color:${CC[x.c]}">${who(x)}</div><div class="hv">${H.v(x)}</div><div class="rec">${H.s instanceof Function ? H.s(x) : H.s}</div></div><img class="hicon" src="${H.i}" alt=""></div></div>`;
     }).join('');
-    const legends = X.legends.length ? `<div class="legends"><h3>Lifetime legends${help('Lifetime legends', 'Most duels won in their whole career, from their own Statistics panel.')}</h3><div class="list">${X.legends.map((p, i) => `<div class="legend" style="--m:${metals[i]}">
+    const legends = LEG.length ? `<div class="legends"><h3>Lifetime legends${help('Lifetime legends', byRate ? 'Best career record with at least 50 duels, from their own Statistics panel. Ranked by a confidence-adjusted win rate, so a long strong record beats a short perfect one.' : 'Most duels won in their whole career, from their own Statistics panel.')}</h3><div class="list">${LEG.map((p, i) => `<div class="legend" style="--m:${metals[i]}">
       <div class="por"><img src="${race(p.r)}" alt=""><img class="cls" src="${cls(p.c)}" alt=""></div>
-      <div><div class="nm" style="color:${CC[p.c]}">${who(p)}</div><div class="w">${fmt(p.w)} <small>won · ${fmt(p.l)} lost</small></div></div></div>`).join('')}</div></div>` : '';
-    h += panel('s7', 'Champions', 'The duelists with the most wins we have seen, plus special honors. Only these top spots are named.',
-      `<div class="podium">${podium || '<p>Not enough duels yet.</p>'}</div>${honors ? `<div class="honors">${honors}</div>` : ''}${legends}<div class="optout">On here and rather not be? Message sanredz and it comes off.</div>`);
+      <div><div class="nm" style="color:${CC[p.c]}">${who(p)}</div><div class="w">${byRate ? `${pct2(p)}% <small>${fmt(p.w)}–${fmt(p.l)}</small>` : `${fmt(p.w)} <small>won · ${fmt(p.l)} lost</small>`}</div></div></div>`).join('')}</div></div>` : '';
+    const podChips = `<div class="chips" style="margin-bottom:14px">${[['wins', 'Most wins'], ['rate', 'Best record']].map(([k, n]) => `<button class="chip plain ${(sel.pod || 'wins') === k ? 'on' : ''}" data-pod="${k}">${n}</button>`).join('')}</div>`;
+    h += panel('s7', 'Champions', byRate ? 'Best records among duelists with at least 5 duels we saw, ranked by a confidence-adjusted win rate: a long strong record beats a short perfect one, so 148–11 ranks above 7–0. Only these top spots are named.' : 'The duelists with the most wins we have seen, plus special honors. Only these top spots are named.',
+      podChips + `<div class="podium">${podium || '<p>Not enough duels yet.</p>'}</div>${honors ? `<div class="honors">${honors}</div>` : ''}${legends}<div class="optout">On here and rather not be? Message sanredz and it comes off.</div>`);
 
     const wrChips = `<div class="chips" style="margin-bottom:14px">${[['seen', 'Duels we saw'], ['life', 'Lifetime']].map(([k, n]) => `<button class="chip plain ${sel.wr === k ? 'on' : ''}" data-wr="${k}">${n}</button>`).join('')}</div>`;
     let wrBody, wrHelp;
@@ -784,7 +794,7 @@ footer a { color: var(--ink-2); }
       `<div class="gauges">${ring(X.lv, '#ff8a3c', 'Higher level', 'wins this often')}${ring(X.gear, '#5aa0ff', 'Better gear', 'wins this often')}</div>${feudHtml}`);
     const boards = S.duels[`All|${sel.fac}|${sel.even ? 'even' : 'all'}`].boards;
     const key = (sel.bsrc === 'life' ? 'life' : 'seen') + (sel.bsort === 'rate' ? 'Rate' : 'Wins');
-    const minN = sel.bsrc === 'life' ? 50 : 10;
+    const minN = sel.bsrc === 'life' ? 50 : 5;
     const toggles = `<div class="btog"><div class="chips">${[['seen', 'Duels we saw'], ['life', 'Lifetime']].map(([k, n]) => `<button class="chip plain ${(sel.bsrc || 'seen') === k ? 'on' : ''}" data-bsrc="${k}">${n}</button>`).join('')}</div>
       <div class="chips">${[['wins', 'Most wins'], ['rate', 'Best win %']].map(([k, n]) => `<button class="chip plain ${(sel.bsort || 'wins') === k ? 'on' : ''}" data-bsort="${k}">${n}</button>`).join('')}</div></div>`;
     const cards = CLASSES.map((c) => {
@@ -796,10 +806,11 @@ footer a { color: var(--ink-2); }
         <div class="por"><img src="${race(x.r)}" alt=""></div><div class="nm" style="color:${CC[c]}">${who(x)}</div>
         <div class="big">${big}</div><div class="rec">${RN[x.r] || x.r} · ${fmt(x.w)}–${fmt(x.l)}${sel.bsort === 'rate' ? '' : ` · ${Math.round(p * 100)}%`}</div></div>`;
     }).join('');
-    h += panel('s12', 'Class champions', `The best of each class across every realm. Duels we saw counts the duels we watched; lifetime comes from their own Statistics panel. Best win % needs at least ${minN} duels.`,
+    h += panel('s12', 'Class champions', `The best of each class across every realm. Duels we saw counts the duels we watched; lifetime comes from their own Statistics panel. Best win % needs at least ${minN} duels and is confidence-adjusted, so a long strong record beats a short perfect one.`,
       toggles + `<div class="cchamps">${cards}</div>`);
     document.getElementById('main').innerHTML = h;
     document.querySelectorAll('[data-wr]').forEach((x) => x.onclick = () => { sel.wr = x.dataset.wr; renderKeep(); });
+    document.querySelectorAll('[data-pod]').forEach((x) => x.onclick = () => { sel.pod = x.dataset.pod; renderKeep(); });
     document.querySelectorAll('[data-bsrc]').forEach((x) => x.onclick = () => { sel.bsrc = x.dataset.bsrc; renderKeep(); });
     document.querySelectorAll('[data-bsort]').forEach((x) => x.onclick = () => { sel.bsort = x.dataset.bsort; renderKeep(); });
     document.getElementById('updated').textContent = `Updated ${S.generated || ''}`;
@@ -899,6 +910,47 @@ footer a { color: var(--ink-2); }
     render();
   }
   window.addEventListener('hashchange', () => { const y = scrollY; route(); scrollTo(0, Math.min(y, document.querySelector('.bar').offsetTop)); });
+
+  if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) || /[?&]dev/.test(location.search)) document.body.classList.add('dev');
+  let imageLib;
+  function loadImageLib() {
+    if (window.htmlToImage) return Promise.resolve();
+    imageLib = imageLib || new Promise((ok, fail) => {
+      const el = document.createElement('script');
+      el.src = 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js';
+      el.onload = ok;
+      el.onerror = fail;
+      document.head.appendChild(el);
+    });
+    return imageLib;
+  }
+  async function savePng(panelEl) {
+    await loadImageLib();
+    const title = panelEl.querySelector('h2').textContent;
+    const file = `lifeonazeroth-${view}-${title}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-$/, '') + '.png';
+    const opts = { pixelRatio: 2, backgroundColor: '#0d0c0a', filter: (n) => !(n.classList && (n.classList.contains('snap') || n.classList.contains('q'))) };
+    document.body.classList.add('snapping');
+    let blob;
+    try {
+      await htmlToImage.toBlob(panelEl, opts);
+      blob = await htmlToImage.toBlob(panelEl, opts);
+    } finally {
+      document.body.classList.remove('snapping');
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = file;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+  document.getElementById('main').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-act="png"]');
+    if (!b || b.disabled) return;
+    b.disabled = true;
+    b.textContent = 'Saving…';
+    savePng(b.closest('.panel')).then(() => b.textContent = 'Saved ✓', () => b.textContent = 'Failed')
+      .finally(() => setTimeout(() => { b.disabled = false; b.textContent = 'Save PNG'; }, 2000));
+  });
 
   const tip = document.getElementById('tip');
   function itemTip(id) {

@@ -142,6 +142,15 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .champ .wins small { font-size: 14px; color: var(--ink-2); }
 .champ .rec { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
 .champ .crown { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; filter: drop-shadow(0 2px 4px #000); }
+.shelf { display: flex; align-items: center; gap: 12px; margin: 4px 0 14px; }
+.shelf img { width: 34px; height: 34px; border-radius: 7px; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--fr1); }
+.shelf b { display: block; font: 21px "Morpheus", serif; font-weight: normal; color: var(--title); }
+.shelf small { font-size: 12.5px; color: var(--ink-2); }
+.hall2 { margin-top: 22px; padding: 16px 16px 6px; border-radius: 10px; background: linear-gradient(rgba(150, 175, 210, 0.08), rgba(150, 175, 210, 0.02)); border: 1px solid rgba(170, 190, 220, 0.25); }
+.hall2 .shelf b { color: #cfe0f5; }
+.hall2 .shelf img { box-shadow: 0 0 0 1px #000, 0 0 0 2px #8aa3c2; }
+.hall2 .honors { margin-top: 0; margin-bottom: 12px; }
+.hall2 .legends { margin-top: 0; padding-top: 0; border-top: 0; }
 .legends { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--soft); }
 .legends h3 { margin: 0 0 10px; font: 18px "Morpheus", serif; font-weight: normal; color: var(--title2); display: flex; align-items: center; gap: 8px; }
 .legends .q { width: 18px; height: 18px; font-size: 11px; line-height: 16px; }
@@ -436,8 +445,8 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261013212850"></script>
-<script src="data-summary.js?v=20261013212850"></script>
+<script src="data-multi.js?v=20261013213611"></script>
+<script src="data-summary.js?v=20261013213611"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -744,19 +753,29 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
         <div class="nm" style="color:${CC[w.c]}">${who(w)}</div><div class="wins">${byRate ? `${pct2(w)}% <small>wins</small>` : `${w.w} <small>wins</small>`}</div>
         <div class="rec">${RN[w.r] || w.r} ${CN[w.c]} · ${w.w}–${w.l}</div>${extra ? `<div class="hpills">${extra}</div>` : ''}</div>`;
     }).join('');
-    const honors = X.honors.filter((x) => !onPodium.has(x.id)).filter((x, i, all) => all.findIndex((o) => o.id === x.id) === i).map((x) => {
-      const mine = X.honors.filter((o) => o.id === x.id);
+    const honorCard = (x, mine) => {
       const H = HONOR[x.kind];
       return `<div class="honor" style="--m:${H.m}"><div class="htag">✦ Honor · ${mine.map((o) => HONOR[o.kind].t).join(' · ')}</div>
         <div class="hbody"><div class="por"><img src="${race(x.r)}" alt=""><img class="cls" src="${cls(x.c)}" alt=""></div>
         <div><div class="nm" style="color:${CC[x.c]}">${who(x)}</div><div class="hv">${H.v(x)}</div><div class="rec">${H.s instanceof Function ? H.s(x) : H.s}</div></div><img class="hicon" src="${H.i}" alt=""></div></div>`;
-    }).join('');
-    const legends = LEG.length ? `<div class="legends"><h3>Lifetime legends${help('Lifetime legends', byRate ? 'Best career record with at least 50 duels, from their own Statistics panel. Ranked by a confidence-adjusted win rate, so a long strong record beats a short perfect one.' : 'Most duels won in their whole career, from their own Statistics panel.')}</h3><div class="list">${LEG.map((p, i) => `<div class="legend" style="--m:${metals[i]}">
+    };
+    const seenHonors = X.honors.filter((x) => x.kind !== 'flawless');
+    const ringHonors = seenHonors.filter((x) => !onPodium.has(x.id)).filter((x, i, all) => all.findIndex((o) => o.id === x.id) === i)
+      .map((x) => honorCard(x, seenHonors.filter((o) => o.id === x.id))).join('');
+    const flawless = X.honors.find((x) => x.kind === 'flawless');
+    const flawlessOnTop = byRate && flawless && LEG[0] && LEG[0].id === flawless.id;
+    const lifeHonors = flawless && !flawlessOnTop ? honorCard(flawless, [flawless]) : '';
+    const shelf = (cls2, icon, title, sub) => `<div class="shelf ${cls2}"><img src="${icon}" alt=""><div><b>${title}</b><small>${sub}</small></div></div>`;
+    const legendCards = LEG.map((p, i) => `<div class="legend" style="--m:${metals[i]}">
       <div class="por"><img src="${race(p.r)}" alt=""><img class="cls" src="${cls(p.c)}" alt=""></div>
-      <div><div class="nm" style="color:${CC[p.c]}">${who(p)}</div><div class="w">${byRate ? `${pct2(p)}% <small>${fmt(p.w)}–${fmt(p.l)}</small>` : `${fmt(p.w)} <small>won · ${fmt(p.l)} lost</small>`}</div></div></div>`).join('')}</div></div>` : '';
+      <div><div class="nm" style="color:${CC[p.c]}">${who(p)}</div><div class="w">${byRate ? `${pct2(p)}% <small>${fmt(p.w)}–${fmt(p.l)}</small>` : `${fmt(p.w)} <small>won · ${fmt(p.l)} lost</small>`}</div>${i === 0 && flawlessOnTop ? `<span class="hpill" style="--hm:${HONOR.flawless.m}" data-tip="Flawless Form|Best lifetime record with 50+ duels">✦ Flawless Form</span>` : ''}</div></div>`).join('');
+    const inRing = shelf('ring', UI('ability_parry'), 'In the ring', byRate ? 'Duels we watched happen · best record, 5+ duels' : 'Duels we watched happen · most wins')
+      + `<div class="podium">${podium || '<p>Not enough duels yet.</p>'}</div>${ringHonors ? `<div class="honors">${ringHonors}</div>` : ''}`;
+    const hall = LEG.length || lifeHonors ? `<div class="hall2">` + shelf('hallhead', UI('inv_misc_book_09'), 'Hall of legends', byRate ? 'Their whole career, from their own Statistics panel · best record, 50+ duels' : 'Their whole career, from their own Statistics panel · most wins')
+      + `${lifeHonors ? `<div class="honors">${lifeHonors}</div>` : ''}${LEG.length ? `<div class="legends"><div class="list">${legendCards}</div></div>` : ''}</div>` : '';
     const podChips = `<div class="chips" style="margin-bottom:14px">${[['wins', 'Most wins'], ['rate', 'Best record']].map(([k, n]) => `<button class="chip plain ${(sel.pod || 'wins') === k ? 'on' : ''}" data-pod="${k}">${n}</button>`).join('')}</div>`;
-    h += panel('s7', 'Champions', byRate ? 'Best records among duelists with at least 5 duels we saw, ranked by a confidence-adjusted win rate: a long strong record beats a short perfect one, so 148–11 ranks above 7–0. Only these top spots are named.' : 'The duelists with the most wins we have seen, plus special honors. Only these top spots are named.',
-      podChips + `<div class="podium">${podium || '<p>Not enough duels yet.</p>'}</div>${honors ? `<div class="honors">${honors}</div>` : ''}${legends}<div class="optout">On here and rather not be? Message sanredz and it comes off.</div>`);
+    h += panel('s7', 'Champions', byRate ? 'Best records, ranked by a confidence-adjusted win rate: a long strong record beats a short perfect one, so 148–11 ranks above 7–0. In the ring counts duels we watched; Hall of legends counts their whole career. Only these top spots are named.' : 'Most wins. In the ring counts duels we watched; Hall of legends counts their whole career from their own Statistics panel. Only these top spots are named.',
+      podChips + inRing + hall + `<div class="optout">On here and rather not be? Message sanredz and it comes off.</div>`);
 
     const wrChips = `<div class="chips" style="margin-bottom:14px">${[['seen', 'Duels we saw'], ['life', 'Lifetime']].map(([k, n]) => `<button class="chip plain ${sel.wr === k ? 'on' : ''}" data-wr="${k}">${n}</button>`).join('')}</div>`;
     let wrBody, wrHelp;

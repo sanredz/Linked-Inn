@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy · Linked Inn</title>
+<link rel="icon" href="assets/favicon.png">
+<style>
+@font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
+@font-face { font-family: "Friz"; src: url("assets/game/frizqt.ttf") format("truetype"); font-display: swap; }
+* { box-sizing: border-box; }
+html { background: #0c0b09; }
+body { margin: 0; color: #3a2a14; font: 16px/1.6 "Friz", "Segoe UI", system-ui, sans-serif; min-height: 100vh; padding: 40px 16px;
+  background: linear-gradient(rgba(10, 9, 7, 0.82), rgba(8, 7, 5, 0.94)), url("assets/game/rock.jpg") center top / 900px repeat; }
+.frame { max-width: 760px; margin: 0 auto; border-radius: 10px; padding: 3px; background: linear-gradient(160deg, #6b5226, #2a2010 40%, #5b451f 60%, #2a2010); box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65); }
+.in { border-radius: 8px; padding: 34px 40px 30px; color: #2e2010; box-shadow: inset 0 0 60px rgba(120, 80, 30, 0.35);
+  background: radial-gradient(ellipse at 50% 20%, rgba(255, 246, 222, 0.9), rgba(240, 222, 182, 0.88) 70%), url("assets/game/parchment.jpg") center / cover; }
+h1 { margin: 0 0 4px; font: 44px "Morpheus", serif; color: #4a2c08; text-shadow: 0 1px 0 rgba(255, 240, 200, 0.7); }
+h2 { margin: 26px 0 4px; font: 24px "Morpheus", serif; font-weight: normal; color: #5a3a12; }
+p { margin: 6px 0; }
+a { color: #6b3a08; }
+.back { display: inline-block; margin-bottom: 18px; font: 18px "Morpheus", serif; text-decoration: none; }
+.fine { margin-top: 28px; font-size: 13px; color: #6b5030; }
+@media (max-width: 600px) { .in { padding: 24px 20px; } h1 { font-size: 34px; } }
+</style>
+</head>
+<body>
+<div class="frame"><div class="in">
+  <a class="back" href="./">&larr; Back to the census</a>
+  <h1>Privacy</h1>
+  <p>Short version: this site keeps nothing about you, and only a handful of player names ever appear on it.</p>
+
+  <h2>Visiting the site</h2>
+  <p>There are no accounts, no sign-ups, no cookies, no analytics and no ads. Fonts and images are served from this site, nothing is loaded from anywhere else.</p>
+  <p>Your browser remembers the realm type and faction you picked, so the page opens the way you left it. That stays on your device and is never sent anywhere.</p>
+  <p>The site is hosted on GitHub Pages. GitHub may keep standard server logs, like any web host; see GitHub's own privacy statement for what they keep.</p>
+
+  <h2>Where the numbers come from</h2>
+  <p>Everything is read from World of Warcraft: Forever, as any player can see it in the game:</p>
+  <p><b>Crafting:</b> professions and recipes of crafters, picked up by the Linked Inn addon and by players who send in their lists.</p>
+  <p><b>Duels:</b> duel results that the game announces to everyone nearby, with each fighter's class, race, level and gear.</p>
+  <p><b>Life on Azeroth:</b> the Statistics panel every player has, the same one anyone can open when comparing achievements.</p>
+
+  <h2>Names</h2>
+  <p>Names are left out everywhere, with two exceptions: the few duel champions at the very top, and the Regulars who chose to have their name on the board when they sent in their list.</p>
+  <p>If your name is on here and you would rather it was not, message <a href="https://www.curseforge.com/members/sanredz" target="_blank" rel="noopener">sanredz on CurseForge</a> or <a href="https://github.com/sanredz" target="_blank" rel="noopener">GitHub</a> and it comes off, no questions asked.</p>
+
+  <h2>Sending in your list</h2>
+  <p>If you upload your Linked Inn file, it is used only to add crafters to the census. The name you give is shown on the Regulars board; leave it empty to stay anonymous.</p>
+
+  <p class="fine">Fan-made project. Not affiliated with or endorsed by Blizzard Entertainment. World of Warcraft art and fonts belong to Blizzard Entertainment.</p>
+</div></div>
+</body>
+</html>

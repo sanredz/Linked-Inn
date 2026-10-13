@@ -13,9 +13,14 @@
   --gold: #f8d36b; --gold-2: #c99a3b; --gold-dim: #8a6a2a; --ink: #f3e7cf; --ink-2: #c9b99a; --muted: #8f8170;
   --line: rgba(248, 211, 107, 0.28); --soft: rgba(248, 211, 107, 0.14); --accent: #ff8a3c; --art: url("assets/game/art-priestholy.jpg");
   --glow: rgba(255, 170, 70, 0.25);
+  --fr1: #6b5226; --fr2: #2a2010; --fr3: #5b451f; --title: #f8d36b; --title2: #c99a3b; --tint: rgba(248, 211, 107, 0.06);
 }
-body[data-view="duels"] { --accent: #ff6a3c; --art: url("assets/game/art-warriorarms.jpg"); --glow: rgba(255, 110, 40, 0.3); }
-body[data-view="life"] { --accent: #8fd16a; --art: url("assets/game/art-druidrestoration.jpg"); --glow: rgba(140, 210, 110, 0.22); }
+body[data-view="duels"] { --accent: #ff6a3c; --art: url("assets/game/art-warriorarms.jpg"); --glow: rgba(255, 90, 40, 0.28);
+  --fr1: #8a2e1e; --fr2: #2a0f0a; --fr3: #6e2416; --title: #ff9f7a; --title2: #d8694a; --tint: rgba(255, 110, 70, 0.07);
+  --line: rgba(255, 120, 80, 0.3); --soft: rgba(255, 120, 80, 0.15); }
+body[data-view="life"] { --accent: #6fb6ff; --art: url("assets/game/art-druidrestoration.jpg"); --glow: rgba(90, 160, 255, 0.2);
+  --fr1: #2f5d86; --fr2: #0e1b28; --fr3: #244a6b; --title: #9fd0ff; --title2: #6ea3d6; --tint: rgba(120, 180, 255, 0.07);
+  --line: rgba(120, 180, 255, 0.3); --soft: rgba(120, 180, 255, 0.15); }
 * { box-sizing: border-box; }
 html { background: #0c0b09; }
 body {
@@ -52,7 +57,7 @@ a { color: inherit; }
 .hbtn.get { color: #1a1206; background: linear-gradient(#ffe39a, #d5a548); border-color: #f3cf74; box-shadow: inset 0 1px 0 #fff3c4, 0 2px 8px rgba(0, 0, 0, 0.6); padding: 8px 14px; }
 .hbtn.get:hover { color: #000; }
 
-.frame { position: relative; border-radius: 10px; padding: 3px; background: linear-gradient(160deg, #6b5226, #2a2010 40%, #5b451f 60%, #2a2010);
+.frame { position: relative; border-radius: 10px; padding: 3px; background: linear-gradient(160deg, var(--fr1), var(--fr2) 40%, var(--fr3) 60%, var(--fr2));
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 230, 160, 0.25); }
 .frame > .in { position: relative; height: 100%; border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.9), inset 0 0 40px rgba(0, 0, 0, 0.6); }
 .slab { background: linear-gradient(rgba(16, 14, 11, 0.86), rgba(10, 9, 7, 0.92)), url("assets/game/rock.jpg") center / 600px; }
@@ -92,8 +97,8 @@ main { padding: 22px 0 50px; display: grid; grid-template-columns: repeat(12, 1f
 .s12 { grid-column: span 12; } .s8 { grid-column: span 8; } .s7 { grid-column: span 7; } .s6 { grid-column: span 6; } .s5 { grid-column: span 5; } .s4 { grid-column: span 4; } .s3 { grid-column: span 3; }
 .panel { display: flex; flex-direction: column; }
 .panel > .in { display: flex; flex-direction: column; }
-.head { display: flex; align-items: center; gap: 12px; padding: 15px 20px 11px; border-bottom: 1px solid var(--soft); background: linear-gradient(rgba(248, 211, 107, 0.06), transparent); flex-wrap: wrap; }
-h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--gold); text-shadow: 0 2px 0 #000; white-space: nowrap; }
+.head { display: flex; align-items: center; gap: 12px; padding: 15px 20px 11px; border-bottom: 1px solid var(--soft); background: linear-gradient(var(--tint), transparent); flex-wrap: wrap; }
+h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text-shadow: 0 2px 0 #000; white-space: nowrap; }
 .q { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line); color: var(--gold-2); font: 13px/20px "Friz", serif; text-align: center; cursor: help; }
 .body { padding: 18px 20px 20px; flex: 1; }
 .chips { display: flex; gap: 5px; flex-wrap: wrap; }
@@ -104,8 +109,8 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--gold); text-
 .chip.plain { padding-left: 10px; }
 
 .plaque .in { display: flex; align-items: center; gap: 16px; padding: 16px 18px; min-height: 104px; }
-.plaque .icon { width: 58px; height: 58px; border-radius: 8px; box-shadow: 0 0 0 1px #000, 0 0 0 3px #6b5226, 0 4px 10px rgba(0, 0, 0, 0.7); flex: none; }
-.plaque .lbl { font: 15px "Morpheus", serif; color: var(--gold-2); letter-spacing: 0.03em; }
+.plaque .icon { width: 58px; height: 58px; border-radius: 8px; box-shadow: 0 0 0 1px #000, 0 0 0 3px var(--fr1), 0 4px 10px rgba(0, 0, 0, 0.7); flex: none; }
+.plaque .lbl { font: 15px "Morpheus", serif; color: var(--title2); letter-spacing: 0.03em; }
 .plaque .num { font: 36px/1.05 "Friz", serif; color: #fff2cf; text-shadow: 0 2px 0 #000; white-space: nowrap; }
 .plaque .num.word { font-family: "Morpheus", serif; font-size: 33px; }
 .plaque .sub { font-size: 12.5px; color: var(--muted); }
@@ -138,7 +143,7 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--gold); text-
 .champ .rec { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
 .champ .crown { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; filter: drop-shadow(0 2px 4px #000); }
 .legends { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--soft); }
-.legends h3 { margin: 0 0 10px; font: 18px "Morpheus", serif; font-weight: normal; color: var(--gold-2); display: flex; align-items: center; gap: 8px; }
+.legends h3 { margin: 0 0 10px; font: 18px "Morpheus", serif; font-weight: normal; color: var(--title2); display: flex; align-items: center; gap: 8px; }
 .legends .q { width: 18px; height: 18px; font-size: 11px; line-height: 16px; }
 .legends .list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .legend { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.35); border: 1px solid color-mix(in srgb, var(--m) 40%, transparent); }
@@ -188,13 +193,13 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--gold); text-
 .gauges { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .gauge { text-align: center; padding: 8px 4px; }
 .gauge svg { width: 132px; height: 132px; display: block; margin: 0 auto; }
-.gauge .lbl { margin-top: 6px; font: 17px "Morpheus", serif; color: var(--gold-2); }
+.gauge .lbl { margin-top: 6px; font: 17px "Morpheus", serif; color: var(--title2); }
 .gauge .sub { font-size: 12px; color: var(--muted); }
 .feud { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--soft); display: flex; flex-direction: column; gap: 8px; }
 .feud .f { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--ink-2); }
 .feud .f b { color: #fff2cf; font-weight: normal; }
 .feud .f img { width: 28px; height: 28px; border-radius: 5px; flex: none; }
-.mini { margin: 0 0 2px; font: 18px "Morpheus", serif; font-weight: normal; color: var(--gold-2); }
+.mini { margin: 0 0 2px; font: 18px "Morpheus", serif; font-weight: normal; color: var(--title2); }
 
 .cols { display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; align-items: end; height: 220px; padding-top: 10px; }
 .col { display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
@@ -279,9 +284,9 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--gold); text-
 .stack > .panel { flex: 1; }
 .trophy { display: flex; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 10px; background: linear-gradient(rgba(40, 32, 20, 0.6), rgba(14, 11, 8, 0.8)); border: 1px solid #4a3a1c; }
 .trophy:hover { border-color: var(--gold-2); }
-.trophy img { width: 44px; height: 44px; border-radius: 6px; box-shadow: 0 0 0 1px #000, 0 0 0 2px #6b5226; flex: none; }
+.trophy img { width: 44px; height: 44px; border-radius: 6px; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--fr1); flex: none; }
 .trophy .v { font: 22px "Friz", serif; color: #fff2cf; line-height: 1.1; }
-.trophy .l { font: 14px "Morpheus", serif; color: var(--gold-2); }
+.trophy .l { font: 14px "Morpheus", serif; color: var(--title2); }
 .trophy .w { font-size: 11.5px; color: var(--muted); }
 
 #tip { position: fixed; z-index: 20; pointer-events: none; display: none; max-width: 300px; padding: 9px 12px; border-radius: 6px; font-size: 13px; color: var(--ink);

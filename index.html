@@ -344,6 +344,8 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 footer { color: var(--muted); font-size: 13px; padding: 22px 0 40px; border-top: 1px solid var(--soft); display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
 footer a { color: var(--ink-2); }
 .dev-only { display: none !important; }
+.chip { white-space: nowrap; }
+.vwide .v { min-width: 120px; text-align: right; }
 .snap { display: none; font: 12px "Friz", serif; color: var(--ink-2); background: rgba(0, 0, 0, 0.45); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
 .snap:hover { color: var(--ink); border-color: var(--title2); }
 body.dev .snap { display: inline-block; }
@@ -460,8 +462,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261016201821"></script>
-<script src="data-summary.js?v=20261016201821"></script>
+<script src="data-multi.js?v=20261016203133"></script>
+<script src="data-summary.js?v=20261016203133"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -490,7 +492,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   };
   const hasWorld = !!(S && S.duels);
   if (!hasWorld) document.querySelectorAll('.tab[data-v="duels"], .tab[data-v="life"]').forEach((t) => t.remove());
-  const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'rate', pod: 'rate', rare: 'all' };
+  const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'rate', pod: 'rate', rare: 'all', wrBy: 'class' };
   try { const saved = JSON.parse(localStorage.getItem('inn-sel') || '{}'); ['rs', 'fac'].forEach((k) => { if (saved[k]) sel[k] = saved[k]; }); } catch (e) {}
   let view = 'crafting';
 
@@ -800,9 +802,20 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     h += panel('s7', 'Champions', byRate ? 'Best records, ranked by a confidence-adjusted win rate: a long strong record beats a short perfect one, so 148–11 ranks above 7–0. In the ring counts duels we watched; Hall of legends counts their whole career. Only these top spots are named.' : 'Most wins. In the ring counts duels we watched; Hall of legends counts their whole career from their own Statistics panel. Only these top spots are named.',
       podChips + inRing + hall + `<div class="optout">On here and rather not be? Message sanredz and it comes off.</div>`);
 
-    const wrChips = `<div class="chips" style="margin-bottom:14px">${[['seen', 'Duels we saw'], ['life', 'Lifetime']].map(([k, n]) => `<button class="chip plain ${sel.wr === k ? 'on' : ''}" data-wr="${k}">${n}</button>`).join('')}</div>`;
+    const byRace = sel.wrBy === 'race';
+    const wrChips = `<div class="btog" style="margin-bottom:14px"><div class="chips">${[['class', 'By class'], ['race', 'By race']].map(([k, n]) => `<button class="chip plain ${(sel.wrBy || 'class') === k ? 'on' : ''}" data-wrby="${k}">${n}</button>`).join('')}</div>
+      <div class="chips">${[['seen', 'Duels we saw'], ['life', 'Lifetime']].map(([k, n]) => `<button class="chip plain ${sel.wr === k ? 'on' : ''}" data-wr="${k}">${n}</button>`).join('')}</div></div>`;
+    const RF = { Human: '#4a8fe7', Dwarf: '#4a8fe7', Gnome: '#4a8fe7', NightElf: '#4a8fe7', Orc: '#d8443a', Scourge: '#d8443a', Tauren: '#d8443a', Troll: '#d8443a', Skyborne: '#c9a6ff' };
     let wrBody, wrHelp;
-    if (sel.wr === 'life') {
+    if (byRace && sel.wr === 'life') {
+      wrBody = `<div class="rows">${X.raceLife.map((x) => row(race(x.r), RN[x.r], RF[x.r], x.p, Math.round(x.p * 100) + '%', `${RN[x.r]}|${fmt(x.w)} won, ${fmt(x.l)} lost in their careers\n${fmt(x.n)} players`, 1, '<div class="mid"></div>')).join('')}</div>
+        <div class="optout">${fmt(sum(X.raceLife.map((x) => x.w + x.l)))} duels from ${fmt(X.lifePlayers)} players’ Statistics panels. Mirror matches count too.</div>`;
+      wrHelp = 'Every duel players have ever fought, from their own Statistics panel, by race. The line marks 50%.';
+    } else if (byRace) {
+      wrBody = `<div class="rows vwide">${X.raceLadder.map((x) => row(race(x.r), RN[x.r], RF[x.r], x.p, `${Math.round(x.p * 100)}% <small style="color:var(--muted);font-size:12px">${fmt(x.w)}–${fmt(x.l)}</small>`, `${RN[x.r]}|${x.w} won, ${x.l} lost against other races`, 1, '<div class="mid"></div>')).join('')}</div>
+        <div class="optout">${fmt(sum(X.raceLadder.map((x) => x.w + x.l)) / 2)} duels we watched between different races.</div>`;
+      wrHelp = 'Duels we watched happen, between two different races. Racials, in numbers. The line marks 50%.';
+    } else if (sel.wr === 'life') {
       wrBody = `<div class="rows">${X.life.map((x) => row(cls(x.c), CN[x.c], CC[x.c], x.p, Math.round(x.p * 100) + '%', `${CN[x.c]}|${fmt(x.w)} won, ${fmt(x.l)} lost in their careers\n${fmt(x.n)} players`, 1, '<div class="mid"></div>')).join('')}</div>
         <div class="optout">${fmt(sum(X.life.map((x) => x.w + x.l)))} duels from ${fmt(X.lifePlayers)} players’ Statistics panels. Mirror matches count too.</div>`;
       wrHelp = 'Every duel players have ever fought, from their own Statistics panel. The line marks 50%.';
@@ -811,7 +824,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         <div class="optout">${fmt(sum(X.ladder.map((x) => x.w + x.l)) / 2)} duels we watched between different classes.</div>`;
       wrHelp = 'Duels we watched happen, between two different classes. The line marks 50%.';
     }
-    h += panel('s5', 'Win rate by class', wrHelp, wrChips + wrBody);
+    h += panel('s5', byRace ? 'Win rate by race' : 'Win rate by class', wrHelp, wrChips + wrBody);
 
     const cl = CLASSES.filter((c) => X.rec[c].w + X.rec[c].l > 0);
     let grid = `<div class="grid" style="grid-template-columns:44px repeat(${cl.length}, 1fr)"><div class="corner">wins vs</div>`;
@@ -851,6 +864,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     h += panel('s12', 'Class champions', `The best of each class across every realm. Duels we saw counts the duels we watched; lifetime comes from their own Statistics panel. Best win % needs at least ${minN} duels and is confidence-adjusted, so a long strong record beats a short perfect one.`,
       toggles + `<div class="cchamps">${cards}</div>`);
     document.getElementById('main').innerHTML = h;
+    document.querySelectorAll('[data-wrby]').forEach((x) => x.onclick = () => { sel.wrBy = x.dataset.wrby; renderKeep(); });
     document.querySelectorAll('[data-wr]').forEach((x) => x.onclick = () => { sel.wr = x.dataset.wr; renderKeep(); });
     document.querySelectorAll('[data-pod]').forEach((x) => x.onclick = () => { sel.pod = x.dataset.pod; renderKeep(); });
     document.querySelectorAll('[data-bsrc]').forEach((x) => x.onclick = () => { sel.bsrc = x.dataset.bsrc; renderKeep(); });

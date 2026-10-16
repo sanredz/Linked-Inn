@@ -27,7 +27,7 @@ a { color: #6b3a08; }
 let me = false;
 try {
   if (/[?&]me=off/.test(location.search)) localStorage.removeItem('li-me');
-  else if (/[?&](me|dev)/.test(location.search)) localStorage.setItem('li-me', '1');
+  else if (/[?&](me|dev)/.test(location.search)) localStorage.setItem('li-me', '1');
   me = localStorage.getItem('li-me') === '1';
 } catch (e) {}
 if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(location.search)) {

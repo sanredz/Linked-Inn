@@ -454,8 +454,8 @@ if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(loc
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261016125255"></script>
-<script src="data-summary.js?v=20261016125255"></script>
+<script src="data-multi.js?v=20261016130559"></script>
+<script src="data-summary.js?v=20261016130559"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -484,7 +484,7 @@ if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(loc
   };
   const hasWorld = !!(S && S.duels);
   if (!hasWorld) document.querySelectorAll('.tab[data-v="duels"], .tab[data-v="life"]').forEach((t) => t.remove());
-  const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'rate', pod: 'rate' };
+  const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'rate', pod: 'rate', rare: 'all' };
   try { const saved = JSON.parse(localStorage.getItem('inn-sel') || '{}'); ['rs', 'fac'].forEach((k) => { if (saved[k]) sel[k] = saved[k]; }); } catch (e) {}
   let view = 'crafting';
 
@@ -674,18 +674,30 @@ if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(loc
     const fq = `<div class="split">${qparts.map(([n, v]) => `<div style="flex:${v};background:${qcol[n] || '#888'}" data-tip="${n}|${fmt(v)} new recipes"></div>`).join('')}</div>
       <div class="legend3">${qparts.map(([n, v]) => `<span><i style="background:${qcol[n] || '#888'}"></i>${n} <b>${v}</b></span>`).join('')}</div>`;
     const fRows = bp.map(([n, v]) => row(prof(key(n)), n, 'inherit', v, String(v), `${n}|${v} recipes that did not exist in original Classic`, bmax)).join('');
-    const best = Object.keys(M.tips).map((id) => M.tips[id]).filter((r) => r.forever && (D.known[r.id] || 0) > 0 && !D.rarestBlues.some((b) => b.id === r.id))
-      .sort((x, y) => (y.q - x.q) || ((y.ilvl || 0) - (x.ilvl || 0)) || ((D.known[y.id] || 0) - (D.known[x.id] || 0)))
-      .filter((r, i, all) => all.findIndex((o) => o.prof === r.prof) === i).slice(0, 6);
-    const fTop = best.map((r) => itemTile(r, 0, `item level ${r.ilvl || '–'} · ${fmt(D.known[r.id] || 0)} know it`)).join('');
-    h += panel('s6', 'New in Forever', 'Recipes that did not exist in original Classic: how many each profession got, how rare they are, and the best ones by quality and item level.',
-      `${fq}<div class="rows" style="margin-top:14px">${fRows}</div><h3 class="mini" style="margin-top:18px">Best new recipe in each profession</h3><div class="recipes two" style="margin-top:8px">${fTop}</div>`);
+    const best = Object.keys(M.tips).map((id) => M.tips[id]).filter((r) => r.forever && r.cls !== 7 && (D.known[r.id] || 0) > 0)
+      .sort((x, y) => ((y.skill || 0) - (x.skill || 0)) || (y.q - x.q) || ((D.known[x.id] || 0) - (D.known[y.id] || 0)))
+      .filter((r, i, all) => all.findIndex((o) => o.prof === r.prof) === i);
+    const fTop = best.map((r) => itemTile(r, 0, `${r.skill ? `skill ${r.skill} · ` : ''}${fmt(D.known[r.id] || 0)} ${(D.known[r.id] || 0) === 1 ? 'crafter knows' : 'crafters know'} it`)).join('');
+    h += panel('s6', 'New in Forever', 'Recipes that did not exist in original Classic: how many each profession got, and the furthest one up each profession that crafters have learned so far.',
+      `${fq}<div class="rows" style="margin-top:14px">${fRows}</div><h3 class="mini" style="margin-top:18px;display:flex;gap:8px;align-items:center">Top new recipe in each profession ${help('Top new recipe', 'The new recipe that needs the most skill, among gear, potions and other things you use. Materials like dyes are left out.')}</h3><div class="recipes two" style="margin-top:8px">${fTop}</div>`);
 
     const blues = D.rarestBlues.slice(0, 16).map((r) => itemTile(r, 0, `${fmt(D.known[r.id] || 0)} ${(D.known[r.id] || 0) === 1 ? 'crafter knows' : 'crafters know'} it`)).join('');
     const bq = D.quality.map((x) => ({ key: x.key, name: x.name, n: (x.parts.Rare || 0) + (x.parts.Epic || 0) })).sort((x, y) => y.n - x.n);
     const bqmax = Math.max(1, ...bq.map((x) => x.n));
     const bRows = bq.map((x) => row(prof(x.key), x.name, '#3a95f5', x.n, String(x.n), `${x.name}|${x.n} blue recipes seen`, bqmax)).join('');
     h += panel('s6', 'Blue recipes', `How many blue recipes each profession has, and the ones the fewest crafters know. ${fmt(D.blueHolders)} crafters know at least one.`, `<div class="rows">${bRows}</div><h3 class="mini" style="margin-top:18px">Rarest blue recipes</h3><div class="recipes two" style="margin-top:8px">${blues}</div>`);
+
+    const popN = Object.fromEntries(D.popularity.map((x) => [x.key, x.n]));
+    const rareOf = (pk) => Object.keys(M.recipes).filter((id) => M.recipes[id][1] === pk && (D.known[id] || 0) > 0 && M.tips[id])
+      .map((id) => M.tips[id]).sort((x, y) => ((D.known[x.id] || 0) - (D.known[y.id] || 0)) || ((y.skill || 0) - (x.skill || 0)) || (y.q - x.q));
+    const rk = PROF_KEYS.includes(sel.rare) ? sel.rare : 'all';
+    const rareList = rk === 'all' ? PROF_KEYS.map((k) => rareOf(k)[0]).filter(Boolean) : rareOf(rk).slice(0, 8);
+    const rareTiles = rareList.map((r) => {
+      const n = D.known[r.id] || 0, pk = M.recipes[r.id][1];
+      return itemTile(r, 0, `${fmt(n)} of ${fmt(popN[pk] || 0)} ${PROF_NAMES[pk].toLowerCase()} crafters`);
+    }).join('');
+    const rareChips = `<div class="chips" style="margin-bottom:14px">${[['all', 'One per profession']].concat(PROF_KEYS.map((k) => [k, PROF_NAMES[k]])).map(([k, n]) => `<button class="chip ${k === 'all' ? 'plain' : ''} ${rk === k ? 'on' : ''}" data-rare="${k}">${k === 'all' ? '' : `<img src="${prof(k)}" alt="">`}${n}</button>`).join('')}</div>`;
+    h += panel('s6', 'Rarest recipes', 'The recipes the fewest crafters know, in every profession. Pick a profession to see more of its rarest.', rareChips + `<div class="recipes two">${rareTiles}</div>`);
 
     const profChips = `<div class="chips">${[['all', 'All']].concat(PROF_KEYS.map((k) => [k, PROF_NAMES[k]])).map(([k, n]) => `<button class="chip ${k === 'all' ? 'plain' : ''} ${sel.prof === k ? 'on' : ''}" data-prof="${k}">${k === 'all' ? '' : `<img src="${prof(k)}" alt="">`}${n}</button>`).join('')}</div>`;
     const kindChips = `<div class="chips">${[['all', 'Every recipe'], ['new', 'New in Forever'], ['blue', 'Blue']].map(([k, n]) => `<button class="chip plain ${sel.rq === k ? 'on' : ''}" data-rq="${k}">${n}</button>`).join('')}</div>`;
@@ -713,6 +725,7 @@ if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(loc
     document.getElementById('main').innerHTML = h;
     document.querySelectorAll('[data-prof]').forEach((x) => x.onclick = () => { sel.prof = x.dataset.prof; sel.more = 0; renderKeep(); });
     document.querySelectorAll('[data-rq]').forEach((x) => x.onclick = () => { sel.rq = x.dataset.rq; sel.more = 0; renderKeep(); });
+    document.querySelectorAll('[data-rare]').forEach((x) => x.onclick = () => { sel.rare = x.dataset.rare; renderKeep(); });
     document.querySelectorAll('[data-h2h]').forEach((x) => x.onclick = () => { sel.h2h = x.dataset.h2h; renderKeep(); });
     const m = document.getElementById('more');
     if (m) m.onclick = () => { sel.more += 96; renderKeep(); };

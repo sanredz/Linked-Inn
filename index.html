@@ -454,8 +454,8 @@ if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(loc
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261016130559"></script>
-<script src="data-summary.js?v=20261016130559"></script>
+<script src="data-multi.js?v=20261016131308"></script>
+<script src="data-summary.js?v=20261016131308"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -540,7 +540,7 @@ if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(loc
   const GATHER = ['mining', 'skinning', 'herbalism'];
   const ALL_PROFS = ['mining', 'skinning', 'herbalism', ...PROF_KEYS];
   const PN = Object.assign({ mining: 'Mining', skinning: 'Skinning', herbalism: 'Herbalism', cooking: 'Cooking', firstaid: 'First Aid', fishing: 'Fishing' }, PROF_NAMES);
-  const TIER_C = { Apprentice: '#9c7b4a', Journeyman: '#c9d2dc', Expert: '#f8d36b' };
+  const TIER_C = { Apprentice: '#9c7b4a', Journeyman: '#c9d2dc', Expert: '#f8d36b', Artisan: '#c77dff' };
   const itemTile = (r, n, sub) => `<div class="recipe" style="--qc:${QC[r.q] || '#fff'}" data-item="${r.id}"><img src="assets/icons/${r.icon}.png" alt="" onerror="this.style.visibility='hidden'">
     <div style="min-width:0"><div class="nm">${esc(r.name)}</div><div class="meta pm"><img class="pi" src="${prof(PROF_KEYS.find((k) => PROF_NAMES[k] === r.prof) || 'alchemy')}" alt=""><span class="pn">${esc(r.prof)}</span><span>${esc(sub)}</span></div></div></div>`;
 
@@ -569,8 +569,8 @@ if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(loc
       return `<div class="row prow" data-tip="${esc(tipT)}"><img src="${prof(x.key)}" alt=""><span class="n">${esc(x.name)}</span>
         <div class="track stack3">${segs}</div><span class="v">${pct(x.n, D.crafters)}%</span><span class="badge gold">skill ${sk.median ?? '–'}</span><span class="badge">${Math.round(per.meanKnown || 0)} recipes</span></div>`;
     }).join('');
-    const legend = `<div class="legend3">${Object.entries(TIER_C).map(([t, c]) => `<span><i style="background:${c}"></i>${t}</span>`).join('')}</div>`;
-    h += panel('s7', 'Professions', 'Share of crafters with each profession, split by training tier: Apprentice up to 75, Journeyman up to 150, Expert beyond. Badges: median skill and recipes known.', `<div class="rows">${profRows}</div>${legend}`);
+    const legend = `<div class="legend3">${Object.entries(TIER_C).filter(([t]) => D.tiers.some((x) => x.parts.some((p) => p.tier === t && p.n > 0))).map(([t, c]) => `<span><i style="background:${c}"></i>${t}</span>`).join('')}</div>`;
+    h += panel('s7', 'Professions', 'Share of crafters with each profession, split by training tier: Apprentice up to 75, Journeyman up to 150, Expert up to 225, Artisan beyond. Badges: median skill and recipes known.', `<div class="rows">${profRows}</div>${legend}`);
 
     const hist = D.histogram, hmax = Math.max(...hist.map((x) => x.n));
     const colsHtml = hist.map((x, i) => `<div class="col" data-tip="Skill ${x.lo}–${x.hi}|${fmt(x.n)} professions">
@@ -879,7 +879,7 @@ if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(loc
     realmButtons(S.avail.life.rs);
     facButtons((f) => S.avail.life.fac.includes(f));
     document.getElementById('sep2').hidden = false;
-    buttons(document.getElementById('opt'), [['all', 'All levels'], ['cap', 'Level 30']], 'lvl');
+    buttons(document.getElementById('opt'), [['all', 'All levels'], ['cap', `Level ${S.cap || 30}`]], 'lvl');
     const L = S.life[`${sel.rs}|${sel.fac}|${sel.lvl}`];
     document.getElementById('note').textContent = `${fmt(L.n)} players`;
     const tot = (k) => L.totals[k] || 0;
@@ -919,7 +919,7 @@ if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(loc
         <span class="f"><img src="${UI('spell_shadow_deathscream')}" alt="">${s.deaths ?? '–'} deaths</span>
         <span class="f"><img src="${UI('inv_misc_book_09')}" alt="">${s.quests ?? '–'} quests</span>
         <span class="f"><img src="${UI('inv_misc_coin_01')}" alt="">${s.gold ? gold(s.gold) : '–'} peak</span></div></div>`).join('');
-    h += panel('s12', 'The road to 30', 'What a typical character at each level has been through so far: deaths, quests done and the most gold they ever held. Medians, so one extreme player cannot skew it.',
+    h += panel('s12', `The road to ${S.cap || 30}`, 'What a typical character at each level has been through so far: deaths, quests done and the most gold they ever held. Medians, so one extreme player cannot skew it.',
       `<div class="trail"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="#7a5524" stroke-dasharray="10 8" vector-effect="non-scaling-stroke" style="stroke-width:4px"/></svg>${stopHtml}</div>`, { cls: 'road' });
 
 

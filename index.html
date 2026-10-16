@@ -454,8 +454,8 @@ if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(loc
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261016150124"></script>
-<script src="data-summary.js?v=20261016150124"></script>
+<script src="data-multi.js?v=20261016150508"></script>
+<script src="data-summary.js?v=20261016150508"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -759,8 +759,6 @@ if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(loc
     const who = (x) => x.name ? esc(x.name) : `A ${RN[x.r] || x.r} ${CN[x.c]}`;
     const HONOR = {
       unbroken: { t: 'Unbroken', i: UI('spell_fire_fire'), m: '#ff7a3c', v: (x) => `${x.n} <small>in a row</small>`, s: 'longest win streak seen' },
-      untouchable: { t: 'The Untouchable', i: 'assets/game/rank14.png', m: '#b98cff', v: (x) => `${Math.round(x.p * 100)}% <small>wins</small>`, s: (x) => `best record, ${x.w}–${x.l}` },
-      flawless: { t: 'Flawless Form', i: UI('spell_holy_greaterheal'), m: '#7fe0c0', v: (x) => `${Math.round(x.p * 100)}% <small>wins</small>`, s: (x) => `lifetime best, ${fmt(x.w)}–${fmt(x.l)}` },
     };
     const byRate = sel.pod === 'rate';
     const POD = (byRate && X.podiumRate) || X.podium;
@@ -781,20 +779,17 @@ if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(loc
         <div class="hbody"><div class="por"><img src="${race(x.r)}" alt=""><img class="cls" src="${cls(x.c)}" alt=""></div>
         <div><div class="nm" style="color:${CC[x.c]}">${who(x)}</div><div class="hv">${H.v(x)}</div><div class="rec">${H.s instanceof Function ? H.s(x) : H.s}</div></div><img class="hicon" src="${H.i}" alt=""></div></div>`;
     };
-    const seenHonors = X.honors.filter((x) => x.kind !== 'flawless');
+    const seenHonors = X.honors.filter((x) => HONOR[x.kind]);
     const ringHonors = seenHonors.filter((x) => !onPodium.has(x.id)).filter((x, i, all) => all.findIndex((o) => o.id === x.id) === i)
       .map((x) => honorCard(x, seenHonors.filter((o) => o.id === x.id))).join('');
-    const flawless = X.honors.find((x) => x.kind === 'flawless');
-    const flawlessOnTop = byRate && flawless && LEG[0] && LEG[0].id === flawless.id;
-    const lifeHonors = flawless && !flawlessOnTop ? honorCard(flawless, [flawless]) : '';
     const shelf = (cls2, icon, title, sub) => `<div class="shelf ${cls2}"><img src="${icon}" alt=""><div><b>${title}</b><small>${sub}</small></div></div>`;
     const legendCards = LEG.map((p, i) => `<div class="legend" style="--m:${metals[i]}">
       <div class="por"><img src="${race(p.r)}" alt=""><img class="cls" src="${cls(p.c)}" alt=""></div>
-      <div><div class="nm" style="color:${CC[p.c]}">${who(p)}</div><div class="w">${byRate ? `${pct2(p)}% <small>${fmt(p.w)}–${fmt(p.l)}</small>` : `${fmt(p.w)} <small>won · ${fmt(p.l)} lost</small>`}</div>${i === 0 && flawlessOnTop ? `<span class="hpill" style="--hm:${HONOR.flawless.m}" data-tip="Flawless Form|Best lifetime record with 50+ duels">✦ Flawless Form</span>` : ''}</div></div>`).join('');
+      <div><div class="nm" style="color:${CC[p.c]}">${who(p)}</div><div class="w">${byRate ? `${pct2(p)}% <small>${fmt(p.w)}–${fmt(p.l)}</small>` : `${fmt(p.w)} <small>won · ${fmt(p.l)} lost</small>`}</div></div></div>`).join('');
     const inRing = shelf('ring', UI('ability_parry'), 'In the ring', byRate ? 'Duels we watched happen · best record, 5+ duels' : 'Duels we watched happen · most wins')
       + `<div class="podium">${podium || '<p>Not enough duels yet.</p>'}</div>${ringHonors ? `<div class="honors">${ringHonors}</div>` : ''}`;
-    const hall = LEG.length || lifeHonors ? `<div class="hall2">` + shelf('hallhead', UI('inv_misc_book_09'), 'Hall of legends', byRate ? 'Their whole career, from their own Statistics panel · best record, 50+ duels' : 'Their whole career, from their own Statistics panel · most wins')
-      + `${lifeHonors ? `<div class="honors">${lifeHonors}</div>` : ''}${LEG.length ? `<div class="legends"><div class="list">${legendCards}</div></div>` : ''}</div>` : '';
+    const hall = LEG.length ? `<div class="hall2">` + shelf('hallhead', UI('inv_misc_book_09'), 'Hall of legends', byRate ? 'Their whole career, from their own Statistics panel · best record, 50+ duels' : 'Their whole career, from their own Statistics panel · most wins')
+      + `<div class="legends"><div class="list">${legendCards}</div></div></div>` : '';
     const podChips = `<div class="chips" style="margin-bottom:14px">${[['rate', 'Best record'], ['wins', 'Most wins']].map(([k, n]) => `<button class="chip plain ${(sel.pod || 'rate') === k ? 'on' : ''}" data-pod="${k}">${n}</button>`).join('')}</div>`;
     h += panel('s7', 'Champions', byRate ? 'Best records, ranked by a confidence-adjusted win rate: a long strong record beats a short perfect one, so 148–11 ranks above 7–0. In the ring counts duels we watched; Hall of legends counts their whole career. Only these top spots are named.' : 'Most wins. In the ring counts duels we watched; Hall of legends counts their whole career from their own Statistics panel. Only these top spots are named.',
       podChips + inRing + hall + `<div class="optout">On here and rather not be? Message sanredz and it comes off.</div>`);

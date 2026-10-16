@@ -303,6 +303,16 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
   background: rgba(8, 8, 16, 0.95); border: 1px solid #7d7d9a; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7); }
 #tip b { display: block; font: 16px "Morpheus", serif; color: var(--gold); margin-bottom: 2px; font-weight: normal; }
 #tip.item { max-width: 340px; color: #fff; }
+#tip.pl { min-width: 250px; }
+#tip .pt { display: flex; justify-content: space-between; gap: 14px; margin-top: 2px; }
+#tip .pt span { color: #fff; }
+#tip .pt.dim { color: var(--muted); }
+#tip .pvh { margin: 9px 0 4px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+#tip .pv { display: grid; grid-template-columns: 18px 84px 1fr 46px; gap: 7px; align-items: center; margin: 3px 0; }
+#tip .pv img { width: 18px; height: 18px; border-radius: 3px; }
+#tip .pv i { display: block; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+#tip .pv em { display: block; height: 100%; background: linear-gradient(90deg, #7a5a1e, #f8d36b); }
+#tip .pv .r { text-align: right; color: #fff; }
 #tip.item .name { font: 15px "Friz", serif; display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
 #tip.item .name img { width: 36px; height: 36px; border-radius: 4px; border: 1px solid #555; }
 #tip.item .row2 { display: flex; justify-content: space-between; gap: 16px; }
@@ -462,8 +472,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261016223428"></script>
-<script src="data-summary.js?v=20261016223428"></script>
+<script src="data-multi.js?v=20261016224003"></script>
+<script src="data-summary.js?v=20261016224003"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -492,6 +502,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   };
   const hasWorld = !!(S && S.duels);
   if (!hasWorld) document.querySelectorAll('.tab[data-v="duels"], .tab[data-v="life"]').forEach((t) => t.remove());
+  let PV = { s: {}, b: {} };
   const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'rate', pod: 'rate', rare: 'all' };
   try { const saved = JSON.parse(localStorage.getItem('inn-sel') || '{}'); ['rs', 'fac'].forEach((k) => { if (saved[k]) sel[k] = saved[k]; }); } catch (e) {}
   let view = 'crafting';
@@ -755,6 +766,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.getElementById('sep2').hidden = false;
     buttons(document.getElementById('opt'), [[true, 'Even fights'], [false, 'All duels']], 'even');
     const X = S.duels[`${sel.rs}|${sel.fac}|${sel.even ? 'even' : 'all'}`];
+    PV = { s: X.vs || {}, b: (S.duels[`All|${sel.fac}|${sel.even ? 'even' : 'all'}`] || {}).vs || {} };
     document.getElementById('note').textContent = `${fmt(X.n)} duels`;
     const top = X.ladder[0];
     let h = '';
@@ -776,14 +788,14 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const podium = [1, 0, 2].filter((i) => POD[i]).map((i) => {
       const w = POD[i];
       const extra = X.honors.filter((h2) => h2.id === w.id).map((h2) => `<span class="hpill" style="--hm:${HONOR[h2.kind].m}" data-tip="${HONOR[h2.kind].t}|${HONOR[h2.kind].s instanceof Function ? HONOR[h2.kind].s(h2) : HONOR[h2.kind].s}">✦ ${HONOR[h2.kind].t}${h2.n ? ` · ${h2.n} wins in a row` : ''}</span>`).join('');
-      return `<div class="champ ${i === 0 ? 'first' : ''}" style="--m:${metals[i]}">${i === 0 ? '<img class="crown" src="assets/game/rank14.png" alt="">' : ''}<span class="place">${i + 1}</span>
+      return `<div class="champ ${i === 0 ? 'first' : ''}" style="--m:${metals[i]}" data-pl="s:${w.id}">${i === 0 ? '<img class="crown" src="assets/game/rank14.png" alt="">' : ''}<span class="place">${i + 1}</span>
         <div class="por"><img src="${race(w.r)}" alt=""><img class="cls" src="${cls(w.c)}" alt=""></div>
         <div class="nm" style="color:${CC[w.c]}">${who(w)}</div><div class="wins">${byRate ? `${pct2(w)}% <small>wins</small>` : `${w.w} <small>wins</small>`}</div>
         <div class="rec">${RN[w.r] || w.r} ${CN[w.c]} · ${w.w}–${w.l}</div>${extra ? `<div class="hpills">${extra}</div>` : ''}</div>`;
     }).join('');
     const honorCard = (x, mine) => {
       const H = HONOR[x.kind];
-      return `<div class="honor" style="--m:${H.m}"><div class="htag">✦ Honor · ${mine.map((o) => HONOR[o.kind].t).join(' · ')}</div>
+      return `<div class="honor" style="--m:${H.m}" data-pl="s:${x.id}"><div class="htag">✦ Honor · ${mine.map((o) => HONOR[o.kind].t).join(' · ')}</div>
         <div class="hbody"><div class="por"><img src="${race(x.r)}" alt=""><img class="cls" src="${cls(x.c)}" alt=""></div>
         <div><div class="nm" style="color:${CC[x.c]}">${who(x)}</div><div class="hv">${H.v(x)}</div><div class="rec">${H.s instanceof Function ? H.s(x) : H.s}</div></div><img class="hicon" src="${H.i}" alt=""></div></div>`;
     };
@@ -791,7 +803,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const ringHonors = seenHonors.filter((x) => !onPodium.has(x.id)).filter((x, i, all) => all.findIndex((o) => o.id === x.id) === i)
       .map((x) => honorCard(x, seenHonors.filter((o) => o.id === x.id))).join('');
     const shelf = (cls2, icon, title, sub) => `<div class="shelf ${cls2}"><img src="${icon}" alt=""><div><b>${title}</b><small>${sub}</small></div></div>`;
-    const legendCards = LEG.map((p, i) => `<div class="legend" style="--m:${metals[i]}">
+    const legendCards = LEG.map((p, i) => `<div class="legend" style="--m:${metals[i]}" data-pl="s:${p.id}">
       <div class="por"><img src="${race(p.r)}" alt=""><img class="cls" src="${cls(p.c)}" alt=""></div>
       <div><div class="nm" style="color:${CC[p.c]}">${who(p)}</div><div class="w">${byRate ? `${pct2(p)}% <small>${fmt(p.w)}–${fmt(p.l)}</small>` : `${fmt(p.w)} <small>won · ${fmt(p.l)} lost</small>`}</div></div></div>`).join('');
     const inRing = shelf('ring', UI('ability_parry'), 'In the ring', byRate ? 'Duels we watched happen · best record, 5+ duels' : 'Duels we watched happen · most wins')
@@ -847,7 +859,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       if (!x) return `<div class="cchamp empty" style="--cc:${CC[c]}"><img class="ci" src="${cls(c)}" alt=""><div class="cn">${CN[c]}</div><div class="rec">nobody yet${sel.bsort === 'rate' ? ` (needs ${minN}+ duels)` : ''}</div></div>`;
       const p = x.w / Math.max(1, x.w + x.l);
       const big = sel.bsort === 'rate' ? `${Math.round(p * 100)}% <small>wins</small>` : `${fmt(x.w)} <small>wins</small>`;
-      return `<div class="cchamp" style="--cc:${CC[c]}"><img class="ci" src="${cls(c)}" alt=""><div class="cn">${CN[c]}</div>
+      return `<div class="cchamp" style="--cc:${CC[c]}" data-pl="b:${x.id}"><img class="ci" src="${cls(c)}" alt=""><div class="cn">${CN[c]}</div>
         <div class="por"><img src="${race(x.r)}" alt=""></div><div class="nm" style="color:${CC[c]}">${who(x)}</div>
         <div class="big">${big}</div><div class="rec">${RN[x.r] || x.r} · ${fmt(x.w)}–${fmt(x.l)}${sel.bsort === 'rate' ? '' : ` · ${Math.round(p * 100)}%`}</div></div>`;
     }).join('');
@@ -1019,11 +1031,30 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     L.push(`<div class="dim">Known by ${fmt(n)} ${n === 1 ? 'crafter' : 'crafters'}</div>`);
     return L.join('');
   }
+  function playerTip(el) {
+    const cut = el.dataset.pl.indexOf(':');
+    const v = (PV[el.dataset.pl.slice(0, cut)] || {})[el.dataset.pl.slice(cut + 1)];
+    if (!v) return null;
+    const nm = el.querySelector('.nm');
+    const pc = (w, l) => Math.round(100 * w / Math.max(1, w + l));
+    let out = `<b>${esc(nm ? nm.textContent : '')}</b>`;
+    if (v.w != null) out += `<div class="pt">Duels we saw <span>${fmt(v.w)}–${fmt(v.l)} · ${pc(v.w, v.l)}%</span></div>`;
+    if (v.life) out += `<div class="pt">Lifetime <span>${fmt(v.life[0])}–${fmt(v.life[1])} · ${pc(v.life[0], v.life[1])}%</span></div>`;
+    const rows = Object.entries(v.c || {}).sort((a, b) => (b[1][0] + b[1][1]) - (a[1][0] + a[1][1]) || b[1][0] - a[1][0]);
+    if (rows.length) out += `<div class="pvh">Against each class · duels we saw</div>` + rows.map(([c, [w, l]]) => `<div class="pv"><img src="${cls(c)}" alt=""><span style="color:${CC[c]}">${CN[c]}</span><i><em style="width:${pc(w, l)}%"></em></i><span class="r">${w}–${l}</span></div>`).join('');
+    if (v.fled) out += `<div class="pt dim">Ran away from ${v.fled} ${v.fled === 1 ? 'duel' : 'duels'}</div>`;
+    if (v.w == null) out += `<div class="pt dim">No duels we saw for this player yet.</div>`;
+    return out;
+  }
+
   document.addEventListener('mousemove', (e) => {
     const it = e.target.closest && e.target.closest('[data-item]');
     const t = !it && e.target.closest && e.target.closest('[data-tip]');
-    if (!it && !t) { tip.style.display = 'none'; return; }
+    const pl = !it && !t && e.target.closest && e.target.closest('[data-pl]');
+    const plHtml = pl && playerTip(pl);
+    if (!it && !t && !plHtml) { tip.style.display = 'none'; return; }
     if (it) { tip.className = 'item'; tip.innerHTML = itemTip(it.dataset.item); }
+    else if (plHtml) { tip.className = 'pl'; tip.innerHTML = plHtml; }
     else {
       tip.className = '';
       const [hd, rest] = t.getAttribute('data-tip').split('|');

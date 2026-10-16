@@ -24,7 +24,13 @@ a { color: #6b3a08; }
 @media (max-width: 600px) { .in { padding: 24px 20px; } h1 { font-size: 34px; } }
 </style>
 <script>
-if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(location.search)) {
+let me = false;
+try {
+  if (/[?&]me=off/.test(location.search)) localStorage.removeItem('li-me');
+  else if (/[?&](me|dev)/.test(location.search)) localStorage.setItem('li-me', '1');
+  me = localStorage.getItem('li-me') === '1';
+} catch (e) {}
+if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(location.search)) {
   const s = document.createElement('script');
   s.defer = true;
   s.src = 'https://static.cloudflareinsights.com/beacon.min.js';

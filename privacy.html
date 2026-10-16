@@ -23,6 +23,15 @@ a { color: #6b3a08; }
 .fine { margin-top: 28px; font-size: 13px; color: #6b5030; }
 @media (max-width: 600px) { .in { padding: 24px 20px; } h1 { font-size: 34px; } }
 </style>
+<script>
+if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.test(location.search)) {
+  const s = document.createElement('script');
+  s.defer = true;
+  s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+  s.dataset.cfBeacon = '{"token": "281387153887410e9a371945a11ddd07"}';
+  document.head.appendChild(s);
+}
+</script>
 </head>
 <body>
 <div class="frame"><div class="in">
@@ -31,7 +40,8 @@ a { color: #6b3a08; }
   <p>Short version: this site keeps nothing about you, and only a handful of player names ever appear on it.</p>
 
   <h2>Visiting the site</h2>
-  <p>There are no accounts, no sign-ups, no cookies, no analytics and no ads. Fonts and images are served from this site, nothing is loaded from anywhere else.</p>
+  <p>There are no accounts, no sign-ups, no cookies and no ads. Fonts and images are served from this site.</p>
+  <p>To see how many people visit, the site uses Cloudflare Web Analytics. It counts anonymous page views (which page, the country, the kind of device and which site sent you here) without cookies, without tracking you across other sites and without storing anything personal.</p>
   <p>Your browser remembers the realm type and faction you picked, so the page opens the way you left it. That stays on your device and is never sent anywhere.</p>
   <p>The site is hosted on GitHub Pages. GitHub may keep standard server logs, like any web host; see GitHub's own privacy statement for what they keep.</p>
 

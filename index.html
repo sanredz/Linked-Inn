@@ -584,9 +584,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261017212445"></script>
-<script src="data-summary.js?v=20261017212445"></script>
-<script src="data-open.js?v=20261017212445"></script>
+<script src="data-multi.js?v=20261017213627"></script>
+<script src="data-summary.js?v=20261017213627"></script>
+<script src="data-open.js?v=20261017213627"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -619,7 +619,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   const hasWorld = !!(S && S.duels);
   if (!hasWorld) document.querySelectorAll('.tab[data-v="duels"], .tab[data-v="life"]').forEach((t) => t.remove());
   let PV = { s: {}, b: {} };
-  const OS = { q: '', c: '', sp: -1, st: 'all', sort: 'rank', more: 0, open: -1 };
+  const OS = { tc: '', q: '', c: '', sp: -1, st: 'all', sort: 'rank', more: 0, open: -1 };
   const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'rate', pod: 'rate', rare: 'all', tcls: '', tgrp: 'all' };
   try { const saved = JSON.parse(localStorage.getItem('inn-sel') || '{}'); ['rs', 'fac'].forEach((k) => { if (saved[k]) sel[k] = saved[k]; }); } catch (e) {}
   let view = 'crafting';
@@ -942,26 +942,33 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const wrFoot = life ? `${fmt(sum(X.life.map((x) => x.w + x.l)))} duels from ${fmt(X.lifePlayers)} players’ Statistics panels. Mirror matches count too.`
       : `${fmt(sum(X.ladder.map((x) => x.w + x.l)) / 2)} duels we watched between different classes, ${fmt(sum(races.map((x) => x.w + x.l)) / 2)} between different races.`;
     const wrHelp = life ? 'Every duel players have ever fought, from their own Statistics panel. The line marks 50%.' : 'Duels we watched happen. Classes count fights between two different classes, races between two different races. The line marks 50%.';
-    const wrBody = `<h3 class="mini">Class</h3><div class="rows vwide">${classRows}</div>${raceRows ? `<h3 class="mini" style="margin-top:18px">Race</h3><div class="rows vwide">${raceRows}</div>` : ''}<div class="optout">${wrFoot}</div>`;
-    h += panel('s5', 'Win rate by class and race', wrHelp, wrChips + wrBody);
+    const wrBody = (life ? `<h3 class="mini">Class</h3><div class="rows vwide">${classRows}</div>` : '') + (raceRows ? `<h3 class="mini"${life ? ' style="margin-top:18px"' : ''}>Race</h3><div class="rows vwide">${raceRows}</div>` : '') + `<div class="optout">${wrFoot}</div>`;
+    h += panel('s5', life ? 'Win rate by class and race' : 'Win rate by race', life ? wrHelp : wrHelp + ' Class win rates are in the Overall column of Matchups.', wrChips + wrBody);
 
-    const cl = CLASSES.filter((c) => X.rec[c].w + X.rec[c].l > 0);
-    let grid = `<div class="grid" style="grid-template-columns:44px repeat(${cl.length}, 1fr)"><div class="corner">wins vs</div>`;
-    grid += cl.map((c) => `<div class="ax" data-tip="${CN[c]}"><img src="${cls(c)}" alt=""></div>`).join('');
+    const lad = {};
+    X.ladder.forEach((x) => lad[x.c] = x);
+    const cl = CLASSES.filter((c) => X.rec[c].w + X.rec[c].l > 0).sort((a, b) => ((lad[b] || {}).p || 0) - ((lad[a] || {}).p || 0));
+    const shadeG = (p, t) => p >= 0.5 ? `rgba(224,102,47,${0.18 + 0.75 * t})` : `rgba(93,132,180,${0.18 + 0.75 * t})`;
+    let grid = `<div class="grid fogrid" style="--n:${cl.length}"><div class="corner">wins vs</div>`;
+    grid += cl.map((c) => `<div class="ch" data-tip="${CN[c]}"><img src="${cls(c)}" alt=""></div>`).join('') + '<div></div><div class="toth">Overall</div>';
     cl.forEach((a) => {
-      grid += `<div class="ax" data-tip="${CN[a]}"><img src="${cls(a)}" alt=""></div>`;
+      grid += `<div class="rh" data-tip="${CN[a]}"><img src="${cls(a)}" alt=""><i></i></div>`;
       cl.forEach((b) => {
         const w = X.cells[a + '>' + b] || 0, l = X.cells[b + '>' + a] || 0, n = w + l;
         if (a === b || !n) { grid += '<div class="cell none"></div>'; return; }
         const p = w / n, t = Math.min(1, Math.abs(p - 0.5) * 2) * Math.min(1, n / 12);
-        grid += `<div class="cell" style="background:${p >= 0.5 ? `rgba(224,102,47,${0.18 + 0.75 * t})` : `rgba(93,132,180,${0.18 + 0.75 * t})`}" data-tip="${CN[a]} vs ${CN[b]}|${w} won, ${l} lost">${Math.round(p * 100)}%<small>${n}</small></div>`;
+        grid += `<div class="cell" style="background:${shadeG(p, t)}" data-tip="${CN[a]} vs ${CN[b]}|${w} won, ${l} lost">${Math.round(p * 100)}%<small>${n}</small></div>`;
       });
+      const o = lad[a];
+      if (!o) { grid += '<div></div><div class="cell none"></div>'; return; }
+      const edge = shadeG(o.p, 0.35 + 0.6 * Math.min(1, Math.abs(o.p - 0.5) * 2.5));
+      grid += `<div></div><div class="tot" style="box-shadow:inset 0 0 0 1px ${edge},inset 4px 0 0 ${edge}" data-tip="${CN[a]}|${fmt(o.w)} won, ${fmt(o.l)} lost against other classes">${Math.round(o.p * 100)}%<small>${fmt(o.w)}–${fmt(o.l)}</small></div>`;
     });
     grid += '</div>';
     const SL = X.slayers;
     const slayHtml = SL ? `<div class="rows vmid">${SL.rows.map((x) => row(cls(x.c), CN[x.c], CC[x.c], x.p, `${Math.round(x.p * 100)}% <small style="color:var(--muted);font-size:12px">${x.w}/${x.n}</small>`, `${CN[x.c]}|Won ${x.w} of ${x.n} duels against the top duelists`, 0.5)).join('')}</div>
       <div class="optout">${SL.n} top duelists: 15+ duels we saw and a 70%+ win rate.</div>` : '';
-    h += panel('s8', 'Matchups', 'Row class against column class. Orange: the row usually wins. Blue: it usually loses. Small number: duels fought.', grid);
+    h += panel('s8', 'Matchups', 'Row class against column class; the last column is each class against everyone. Orange: the row usually wins. Blue: it usually loses. Small number: duels fought.', grid + `<div class="optout"><span class="fokey"><span style="background:rgba(224,102,47,0.85)"></span>left class usually wins</span><span class="fokey"><span style="background:rgba(93,132,180,0.85)"></span>usually loses</span>Small number: duels fought.</div>`);
 
     const who2 = (x) => `<b style="color:${CC[x.c]}">${RN[x.r] || x.r} ${CN[x.c]}</b>`;
     const feuds = X.feuds.map((f) => `<div class="f"><img src="${cls(f.a.c)}" alt=""><img src="${cls(f.b.c)}" alt=""><span>${who2(f.a)} vs ${who2(f.b)} · <b>${f.n}</b> duels, ${f.aw}–${f.n - f.aw}</span></div>`);
@@ -992,47 +999,10 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     if (tclasses.length) {
       if (!tclasses.includes(sel.tcls)) sel.tcls = tclasses.slice().sort((a, b) => TT[b].n - TT[a].n)[0];
       const c = sel.tcls, T = TT[c], tree = trees[c];
-      const CW = 54, CH = 66;
       const classChips = `<div class="chips">${tclasses.map((k) => `<button class="chip ${sel.tcls === k ? 'on' : ''}" data-tcls="${k}"><img src="${cls(k)}" alt="">${CN[k]}</button>`).join('')}</div>`;
       const grpChips = `<div class="chips">${[['all', 'Everyone'], ['fp', 'Foreverpvp players']].map(([k, n]) => `<button class="chip plain ${sel.tgrp === k ? 'on' : ''}" data-tgrp="${k}">${n}</button>`).join('')}</div>`;
-      const byId = {};
-      tree.nodes.forEach((nd) => byId[nd.id] = nd);
-      const cols = Math.max(4, ...tree.nodes.map((nd) => nd.col + 1)), rows = Math.max(...tree.nodes.map((nd) => nd.row)) + 1;
-      const tabsHtml = tree.tabs.map((name, t) => {
-        const nodes = tree.nodes.filter((nd) => nd.tab === t);
-        if (!nodes.length) return '';
-        const share = T.specs[t] / Math.max(1, T.n);
-        const sw = (T.specWin || [])[t] || [0, 0], swn = sw[0] + sw[1];
-        const winTxt = swn >= 20 ? `<span class="win" data-tip="${esc(`${name} ${CN[c].toLowerCase()}s|Players whose most points are in ${name}: won ${sw[0]}, lost ${sw[1]} of the duels we saw.`)}">${name} ${CN[c].toLowerCase()}s win ${Math.round(100 * sw[0] / swn)}% of their duels</span>` : `<span class="win none">Not enough duels yet for a win rate</span>`;
-        const lines = nodes.flatMap((nd) => nd.to.filter((id) => byId[id] && byId[id].tab === t).map((id) => {
-          const to = byId[id], on = (T.nodes[id] || [0])[0] / T.n >= 0.2;
-          return `<line x1="${nd.col * CW + CW / 2}" y1="${nd.row * CH + 20}" x2="${to.col * CW + CW / 2}" y2="${to.row * CH + 20}" stroke="${on ? 'var(--title2)' : 'rgba(255,255,255,0.12)'}" stroke-width="3"/>`;
-        })).join('');
-        const nodeHtml = nodes.map((nd) => {
-          const e = T.nodes[nd.id] || [0, 0, 0];
-          const pct = e[0] / T.n, avg = e[0] ? e[1] / e[0] : 0;
-          const cl = pct >= 0.5 ? 'hot' : pct < 0.05 ? 'cold' : '';
-          const rankLine = nd.max > 1 && e[0] ? `\nThose who take it put in ${avg.toFixed(1)} of ${nd.max} points on average; ${Math.round(100 * e[2] / e[0])}% go all the way.` : '';
-          const nw = (T.nodeWin || {})[nd.id] || [0, 0, 0, 0], nWith = nw[0] + nw[1], nWithout = nw[2] + nw[3];
-          const enough = nWith >= 20 && nWithout >= 20;
-          const diff = enough ? 100 * nw[0] / nWith - 100 * nw[2] / nWithout : 0;
-          const dot = enough && Math.abs(diff) >= 5 ? `<span class="arr ${diff > 0 ? 'up' : 'down'}">${diff > 0 ? '▲' : '▼'}</span>` : '';
-          const winLine = enough ? `\nAmong ${tree.tabs[nd.tab]} ${CN[c].toLowerCase()}s, those with it win ${Math.round(100 * nw[0] / nWith)}% of duels (${nWith}), those without ${Math.round(100 * nw[2] / nWithout)}% (${nWithout})` : '';
-          const tip = `${nd.name}|Taken by ${Math.round(pct * 100)}% (${e[0]} of ${T.n})${rankLine}${winLine}${nd.desc ? '\n\n' + nd.desc : ''}`;
-          return `<div class="tn ${cl}" style="left:${nd.col * CW}px;top:${nd.row * CH}px" data-tip="${esc(tip)}">${dot}<img src="assets/icons/${nd.icon || 134400}.png" alt="" style="opacity:${(0.35 + 0.65 * Math.min(1, pct * 1.6)).toFixed(2)}">
-            <div class="p">${Math.round(pct * 100)}%</div>${nd.max > 1 ? `<div class="rk"><span style="width:${e[0] ? 100 * avg / nd.max : 0}%"></span></div>` : ''}</div>`;
-        }).join('');
-        const sIcon = tree.icons && tree.icons[t] ? `<img class="si" src="assets/icons/${tree.icons[t]}.png" alt="">` : '';
-        return `<div class="ttab" style="--art:url('assets/game/talents/${c}-${t}.jpg');width:${cols * CW + 36}px"><div class="th"><div class="row1">${sIcon}<div><b>${name}</b><small>${Math.round(share * 100)}% of ${CN[c].toLowerCase()}s</small></div></div><i style="width:${Math.max(4, share * 100)}%"></i>${winTxt}</div>
-          <div class="tbox" style="width:${cols * CW}px;height:${rows * CH}px"><svg width="${cols * CW}" height="${rows * CH}">${lines}</svg>${nodeHtml}</div></div>`;
-      }).join('');
-      const builds = T.builds.map(([k, v]) => {
-        const pts = k.split('/').map(Number);
-        const main = tree.tabs[pts.indexOf(Math.max(...pts))];
-        return `<span><b>${k}</b> ${main} · ${v} ${v === 1 ? 'player' : 'players'} (${Math.round(100 * v / T.n)}%)</span>`;
-      }).join('');
       h += panel('s12', 'Talent builds', `What players actually pick. The % under each talent is how many ${CN[c].toLowerCase()}s took it; the thin bar shows how far they take it. Bright talents are the popular path. Win rates come from duels we saw (even fights), using each player's talents at the time or their latest known build. Hover a talent to compare players with and without it. From ${fmt(T.n)} ${CN[c].toLowerCase()}s we inspected with 10 or more points spent.`,
-        `<div class="btog" style="margin-bottom:14px">${classChips}${grpChips}</div><div class="ttrees">${tabsHtml}</div><div class="tlegend"><i style="background:#2f9e48">▲</i>within the same spec, players who take it win more<i style="background:#c0392b">▼</i>win less · hover any talent for the numbers</div><div class="tbuilds">Most common builds: ${builds}</div>`);
+        `<div class="btog" style="margin-bottom:14px">${classChips}${grpChips}</div>` + talentTrees(T, c, tree, 'duels'));
     }
     document.getElementById('main').innerHTML = h;
     document.querySelectorAll('[data-tcls]').forEach((x) => x.onclick = () => { sel.tcls = x.dataset.tcls; renderKeep(); });
@@ -1122,6 +1092,47 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.getElementById('updated').textContent = `Updated ${S.generated || ''}`;
   }
 
+  function talentTrees(T, c, tree, noun) {
+    const CW = 54, CH = 66;
+    const byId = {};
+    tree.nodes.forEach((nd) => byId[nd.id] = nd);
+    const cols = Math.max(4, ...tree.nodes.map((nd) => nd.col + 1)), rows = Math.max(...tree.nodes.map((nd) => nd.row)) + 1;
+    const tabsHtml = tree.tabs.map((name, t) => {
+      const nodes = tree.nodes.filter((nd) => nd.tab === t);
+      if (!nodes.length) return '';
+      const share = T.specs[t] / Math.max(1, T.n);
+      const sw = (T.specWin || [])[t] || [0, 0], swn = sw[0] + sw[1];
+      const winTxt = swn >= 20 ? `<span class="win" data-tip="${esc(`${name} ${CN[c].toLowerCase()}s|Players whose most points are in ${name}: won ${sw[0]}, lost ${sw[1]} ${noun}.`)}">${name} ${CN[c].toLowerCase()}s win ${Math.round(100 * sw[0] / swn)}% of their ${noun}</span>` : `<span class="win none">Not enough ${noun} yet for a win rate</span>`;
+      const lines = nodes.flatMap((nd) => nd.to.filter((id) => byId[id] && byId[id].tab === t).map((id) => {
+        const to = byId[id], on = (T.nodes[id] || [0])[0] / T.n >= 0.2;
+        return `<line x1="${nd.col * CW + CW / 2}" y1="${nd.row * CH + 20}" x2="${to.col * CW + CW / 2}" y2="${to.row * CH + 20}" stroke="${on ? 'var(--title2)' : 'rgba(255,255,255,0.12)'}" stroke-width="3"/>`;
+      })).join('');
+      const nodeHtml = nodes.map((nd) => {
+        const e = T.nodes[nd.id] || [0, 0, 0];
+        const pct = e[0] / T.n, avg = e[0] ? e[1] / e[0] : 0;
+        const cl = pct >= 0.5 ? 'hot' : pct < 0.05 ? 'cold' : '';
+        const rankLine = nd.max > 1 && e[0] ? `\nThose who take it put in ${avg.toFixed(1)} of ${nd.max} points on average; ${Math.round(100 * e[2] / e[0])}% go all the way.` : '';
+        const nw = (T.nodeWin || {})[nd.id] || [0, 0, 0, 0], nWith = nw[0] + nw[1], nWithout = nw[2] + nw[3];
+        const enough = nWith >= 20 && nWithout >= 20;
+        const diff = enough ? 100 * nw[0] / nWith - 100 * nw[2] / nWithout : 0;
+        const dot = enough && Math.abs(diff) >= 5 ? `<span class="arr ${diff > 0 ? 'up' : 'down'}">${diff > 0 ? '▲' : '▼'}</span>` : '';
+        const winLine = enough ? `\nAmong ${tree.tabs[nd.tab]} ${CN[c].toLowerCase()}s, those with it win ${Math.round(100 * nw[0] / nWith)}% of ${noun} (${nWith}), those without ${Math.round(100 * nw[2] / nWithout)}% (${nWithout})` : '';
+        const tip = `${nd.name}|Taken by ${Math.round(pct * 100)}% (${e[0]} of ${T.n})${rankLine}${winLine}${nd.desc ? '\n\n' + nd.desc : ''}`;
+        return `<div class="tn ${cl}" style="left:${nd.col * CW}px;top:${nd.row * CH}px" data-tip="${esc(tip)}">${dot}<img src="assets/icons/${nd.icon || 134400}.png" alt="" style="opacity:${(0.35 + 0.65 * Math.min(1, pct * 1.6)).toFixed(2)}">
+          <div class="p">${Math.round(pct * 100)}%</div>${nd.max > 1 ? `<div class="rk"><span style="width:${e[0] ? 100 * avg / nd.max : 0}%"></span></div>` : ''}</div>`;
+      }).join('');
+      const sIcon = tree.icons && tree.icons[t] ? `<img class="si" src="assets/icons/${tree.icons[t]}.png" alt="">` : '';
+      return `<div class="ttab" style="--art:url('assets/game/talents/${c}-${t}.jpg');width:${cols * CW + 36}px"><div class="th"><div class="row1">${sIcon}<div><b>${name}</b><small>${Math.round(share * 100)}% of ${CN[c].toLowerCase()}s</small></div></div><i style="width:${Math.max(4, share * 100)}%"></i>${winTxt}</div>
+        <div class="tbox" style="width:${cols * CW}px;height:${rows * CH}px"><svg width="${cols * CW}" height="${rows * CH}">${lines}</svg>${nodeHtml}</div></div>`;
+    }).join('');
+    const builds = T.builds.map(([k, v]) => {
+      const pts = k.split('/').map(Number);
+      const main = tree.tabs[pts.indexOf(Math.max(...pts))];
+      return `<span><b>${k}</b> ${main} · ${v} ${v === 1 ? 'player' : 'players'} (${Math.round(100 * v / T.n)}%)</span>`;
+    }).join('');
+    return `<div class="ttrees">${tabsHtml}</div><div class="tlegend"><i style="background:#2f9e48">▲</i>within the same spec, players who take it win more<i style="background:#c0392b">▼</i>win less · hover any talent for the numbers</div><div class="tbuilds">Most common builds: ${builds}</div>`;
+  }
+
   function renderOpen() {
     document.getElementById('realm').innerHTML = '';
     document.getElementById('fac').innerHTML = '';
@@ -1140,7 +1151,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     let h = '';
     h += plaque(UI('ability_dualwield'), 'Matches', fmt(O.played), O.live ? (O.expected ? `of about ${fmt(Math.round(O.expected / 100) * 100)}` : 'decided so far') : 'in the qualifiers');
     h += plaque(UI('inv_bannerpvp_02'), 'Players', fmt(O.entrants), `across ${O.pods} pods`);
-    h += plaque(UI('ability_warrior_rampage'), 'Undefeated', fmt(O.undefeated), 'won every match so far');
+    h += plaque(UI('ability_warrior_rampage'), 'Undefeated', fmt(O.undefeated), O.live ? 'won every match so far' : 'won all six');
     h += plaque(UI('achievement_arena_2v2_7'), 'Round', O.live ? (O.roundMin && O.roundMin < O.round ? `${O.roundMin}–${O.round}` : `${O.round}`) + ` of ${O.rounds}` : 'Done', O.live ? `${O.podsDone} of ${O.pods} pods finished` : 'top 4 per class go to the finals', !O.live);
 
     let g = `<div class="grid fogrid" style="--n:${cl.length}"><div class="corner">wins vs</div>`;
@@ -1176,7 +1187,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     h += panel('s4', 'Spec win rates', 'Win rate of each spec in the qualifiers, mirrors included. Hover for how many play it.', specHtml);
 
     const road = O.finals.slice().sort((a, b) => CLASSES.indexOf(a.c) - CLASSES.indexOf(b.c)).map((f) => `<div class="rc"><h4 style="color:${CC[f.c]}"><img src="${cls(f.c)}" alt="">${CN[f.c]}<small>${fmt(f.n)} entered</small></h4>
-      ${f.top.map((r, i) => `<div class="rr" data-ofind="${esc(r.n)}"><i>${i + 1}</i><span class="nm">${esc(r.n)}</span><span class="rec">${r.w}–${r.l}</span><span class="bh">Bh ${r.b}</span></div>`).join('')}</div>`).join('');
+      ${f.top.map((r, i) => `<div class="rr" data-ofind="${esc(r.n)}"${r.t ? ` data-tip="${esc(r.n)}|Tied at the cut line${O.live ? '' : ', decided by a playoff'}"` : ''}><i>${i + 1}</i><span class="nm">${esc(r.n)}${r.t ? ' <small style="color:#ffd98a">tie</small>' : ''}</span><span class="rec">${r.w}–${r.l}</span><span class="bh">Bh ${r.b}</span></div>`).join('')}</div>`).join('');
     h += panel('s8', O.live ? 'Current finals spots' : 'Finalists', 'Top 4 of each class go to the finals, ranked by record and then Buchholz (the combined points of everyone they played). Click a name to see their matches.',
       `<div class="road">${road}</div><div class="optout">${O.live ? 'Live standings, changes after every round.' : 'Final standings after six rounds.'} Bh: Buchholz, the tiebreaker.</div>`);
 
@@ -1192,10 +1203,18 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     h += panel('s4', 'Ring vs open world', 'Bar: win rate in the qualifiers. White mark: the same class in the Horde duels we watched around the world before the tournament.',
       `<div class="rows vs2">${vsRows}</div><div class="optout">Open world: ${fmt(sum(X.ladder.map((x) => x.w + x.l)) / 2)} Horde duels we saw, even fights only.</div>`);
 
+    const OT = O.talents || {}, otc = CLASSES.filter((k) => OT[k] && T[k]);
+    if (otc.length) {
+      if (!otc.includes(OS.tc)) OS.tc = otc.slice().sort((a, b) => OT[b].n - OT[a].n)[0];
+      const chips = `<div class="chips">${otc.map((k) => `<button class="chip ${OS.tc === k ? 'on' : ''}" data-otc="${k}"><img src="${cls(k)}" alt="">${CN[k]}</button>`).join('')}</div>`;
+      h += panel('s12', 'Talent builds', `What the entrants brought. The % under each talent is how many ${CN[OS.tc].toLowerCase()}s entered with it; the thin bar shows how far they take it. Spec win rates and the arrows come from decided qualifier matches. Hover a talent to compare players with and without it. From ${fmt(OT[OS.tc].n)} ${CN[OS.tc].toLowerCase()}s' registered talents.`,
+        `<div class="btog" style="margin-bottom:14px">${chips}</div>` + talentTrees(OT[OS.tc], OS.tc, T[OS.tc], 'matches'), { id: 'otal' });
+    }
+
     const classChips = `<div class="chips"><button class="chip plain ${OS.c ? '' : 'on'}" data-oc="">All classes</button>${CLASSES.map((c) => `<button class="chip ${OS.c === c ? 'on' : ''}" data-oc="${c}"><img src="${cls(c)}" alt="">${CN[c]}</button>`).join('')}</div>`;
     h += panel('s12', 'Every player', 'All entrants with their record, spec and talent points. Click anyone to see who they played.',
       `<div class="pbar"><input class="search" id="osearch" placeholder="Find a player" value="${esc(OS.q)}" autocomplete="off">
-        <div class="chips" id="ost">${[['all', 'Everyone'], ['top', 'In a finals spot'], ['unb', 'Undefeated'], ['in', 'Still checked in']].map(([k, n]) => `<button class="chip plain ${OS.st === k ? 'on' : ''}" data-ost="${k}">${n}</button>`).join('')}</div>
+        <div class="chips" id="ost">${[['all', 'Everyone'], ['top', O.live ? 'In a finals spot' : 'Finalists'], ['unb', 'Undefeated'], ['in', O.live ? 'Still checked in' : 'Played it out']].map(([k, n]) => `<button class="chip plain ${OS.st === k ? 'on' : ''}" data-ost="${k}">${n}</button>`).join('')}</div>
         <span class="count" id="ocount"></span></div>
        <div style="margin-bottom:10px">${classChips}</div><div id="ospec" style="margin-bottom:12px"></div><div id="oplist"></div>`, { id: 'everyone' });
 
@@ -1203,7 +1222,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 
     const games = {};
     O.games.forEach((g2) => { (games[g2[1]] = games[g2[1]] || []).push(g2); (games[g2[2]] = games[g2[2]] || []).push(g2); });
-    const BADGE = { q: ['q', 'Finals spot'], t: ['t', 'Tied for a spot'], x: ['x', 'Dropped'] };
+    const BADGE = { q: ['q', O.live ? 'Finals spot' : 'Finalist'], t: ['t', O.live ? 'Tied for a spot' : 'Playoff'], x: ['x', 'Dropped'] };
     function draw() {
       const q = OS.q.toLowerCase();
       let list = P.map((p, i) => i).filter((i) => {
@@ -1255,6 +1274,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.querySelectorAll('[data-oc]').forEach((x) => x.onclick = () => { OS.c = x.dataset.oc; OS.sp = -1; OS.more = 0; document.querySelectorAll('[data-oc]').forEach((y) => y.classList.toggle('on', y === x)); draw(); });
     document.querySelectorAll('[data-ost]').forEach((x) => x.onclick = () => { OS.st = x.dataset.ost; OS.more = 0; document.querySelectorAll('[data-ost]').forEach((y) => y.classList.toggle('on', y === x)); draw(); });
     document.querySelectorAll('[data-ofind]').forEach((x) => x.onclick = () => find(x.dataset.ofind));
+    document.querySelectorAll('[data-otc]').forEach((x) => x.onclick = () => { OS.tc = x.dataset.otc; renderKeep(); });
     const listEl = document.getElementById('everyone');
     listEl.addEventListener('click', (e) => {
       const sp = e.target.closest('[data-osp]');

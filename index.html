@@ -446,16 +446,16 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 .fogrid .toth { display: flex; align-items: flex-end; justify-content: center; font: 13px "Morpheus", serif; color: var(--title); padding-bottom: 6px; }
 .fokey { display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; }
 .fokey span { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
-.road { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.road .rc { border-radius: 8px; padding: 10px 12px; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1px var(--soft); }
-.road .rc h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font: 17px "Morpheus", serif; font-weight: normal; }
-.road .rc h4 img { width: 24px; height: 24px; border-radius: 50%; }
-.road .rc h4 small { margin-left: auto; font: 11.5px "Friz", serif; color: var(--muted); }
-.road .rr { display: grid; grid-template-columns: 18px 1fr auto auto; gap: 8px; align-items: baseline; font-size: 13.5px; padding: 2px 0; cursor: pointer; }
-.road .rr:hover .nm { text-decoration: underline; }
-.road .rr i { font-style: normal; color: var(--muted); font-size: 12px; }
-.road .rr .rec { color: var(--ink); }
-.road .rr .bh { color: var(--muted); font-size: 11.5px; min-width: 44px; text-align: right; }
+.froad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.froad .rc { border-radius: 8px; padding: 10px 12px; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1px var(--soft); }
+.froad .rc h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font: 17px "Morpheus", serif; font-weight: normal; }
+.froad .rc h4 img { width: 24px; height: 24px; border-radius: 50%; }
+.froad .rc h4 small { margin-left: auto; font: 11.5px "Friz", serif; color: var(--muted); }
+.froad .rr { display: grid; grid-template-columns: 18px 1fr auto auto; gap: 8px; align-items: baseline; font-size: 13.5px; padding: 2px 0; cursor: pointer; }
+.froad .rr:hover .nm { text-decoration: underline; }
+.froad .rr i { font-style: normal; color: var(--muted); font-size: 12px; }
+.froad .rr .rec { color: var(--ink); }
+.froad .rr .bh { color: var(--muted); font-size: 11.5px; min-width: 44px; text-align: right; }
 .vs2 .row, .vspec .row { grid-template-columns: 30px 108px 1fr 70px; }
 .vspec .v, .vs2 .v { text-align: right; line-height: 1.15; min-width: 0; }
 .vspec .v small, .vs2 .v small { display: block; font-size: 11px !important; }
@@ -494,9 +494,9 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 .hist .g .res.w { color: #7ddc8a; } .hist .g .res.l { color: #ef7d6d; } .hist .g .res.p { color: var(--muted); }
 .hist .none { color: var(--muted); font-size: 13px; }
 .more { display: block; margin: 12px auto 0; }
-@media (max-width: 1180px) { .road { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1180px) { .froad { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 720px) {
-  .road { grid-template-columns: 1fr; }
+  .froad { grid-template-columns: 1fr; }
   .fo-hero img { width: 90px; }
   .fogrid { grid-template-columns: 30px repeat(var(--n), 1fr) 2px 50px; gap: 2px; }
   .fogrid .rh i { display: none; } .fogrid .rh img { width: 24px; height: 24px; } .fogrid .ch img { width: 18px; height: 18px; }
@@ -584,9 +584,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261017214255"></script>
-<script src="data-summary.js?v=20261017214255"></script>
-<script src="data-open.js?v=20261017214255"></script>
+<script src="data-multi.js?v=20261017214418"></script>
+<script src="data-summary.js?v=20261017214418"></script>
+<script src="data-open.js?v=20261017214418"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1189,7 +1189,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const road = O.finals.slice().sort((a, b) => CLASSES.indexOf(a.c) - CLASSES.indexOf(b.c)).map((f) => `<div class="rc"><h4 style="color:${CC[f.c]}"><img src="${cls(f.c)}" alt="">${CN[f.c]}<small>${fmt(f.n)} entered</small></h4>
       ${f.top.map((r, i) => `<div class="rr" data-ofind="${esc(r.n)}"${r.t ? ` data-tip="${esc(r.n)}|Tied at the cut line${O.live ? '' : ', decided by a playoff'}"` : ''}><i>${i + 1}</i><span class="nm">${esc(r.n)}${r.t ? ' <small style="color:#ffd98a">tie</small>' : ''}</span><span class="rec">${r.w}–${r.l}</span><span class="bh">Bh ${r.b}</span></div>`).join('')}</div>`).join('');
     h += panel('s8', O.live ? 'Current finals spots' : 'Finalists', 'Top 4 of each class go to the finals, ranked by record and then Buchholz (the combined points of everyone they played). Click a name to see their matches.',
-      `<div class="road">${road}</div><div class="optout">${O.live ? 'Live standings, changes after every round.' : 'Final standings after six rounds.'} Bh: Buchholz, the tiebreaker.</div>`);
+      `<div class="froad">${road}</div><div class="optout">${O.live ? 'Live standings, changes after every round.' : 'Final standings after six rounds.'} Bh: Buchholz, the tiebreaker.</div>`);
 
     const X = (S.duels && S.duels['All|Horde|even']) || { ladder: [] };
     const ow = {};

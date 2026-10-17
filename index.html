@@ -18,6 +18,9 @@
 body[data-view="duels"] { --accent: #ff6a3c; --art: url("assets/game/art-warriorarms.jpg"); --glow: rgba(255, 90, 40, 0.28);
   --fr1: #8a2e1e; --fr2: #2a0f0a; --fr3: #6e2416; --title: #ff9f7a; --title2: #d8694a; --tint: rgba(255, 110, 70, 0.07);
   --line: rgba(255, 120, 80, 0.3); --soft: rgba(255, 120, 80, 0.15); }
+body[data-view="open"] { --accent: #3fd8c8; --art: url("assets/game/art-shamanrestoration.jpg"); --glow: rgba(60, 210, 200, 0.2);
+  --fr1: #2d6a64; --fr2: #0b1c1b; --fr3: #23524d; --title: #8ff0e2; --title2: #4fb8ad; --tint: rgba(80, 220, 200, 0.07);
+  --line: rgba(90, 220, 200, 0.3); --soft: rgba(90, 220, 200, 0.15); }
 body[data-view="life"] { --accent: #6fb6ff; --art: url("assets/game/art-druidrestoration.jpg"); --glow: rgba(90, 160, 255, 0.2);
   --fr1: #2f5d86; --fr2: #0e1b28; --fr3: #244a6b; --title: #9fd0ff; --title2: #6ea3d6; --tint: rgba(120, 180, 255, 0.07);
   --line: rgba(120, 180, 255, 0.3); --soft: rgba(120, 180, 255, 0.15); }
@@ -428,6 +431,79 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
   .grid .ax img { width: 24px; height: 24px; } .grid .cell { height: 36px; font-size: 12px; } .grid .cell small { display: none; }
   h2 { font-size: 22px; white-space: normal; } .bar .note { display: none; }
 }
+.fo-hero { display: flex; align-items: center; gap: 18px; margin-bottom: 14px; }
+.fo-hero img { width: 132px; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.7)); }
+.fo-hero p { margin: 0; color: var(--ink-2); font-size: 14px; }
+.fo-hero .tag { display: inline-block; margin-top: 8px; font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
+.fogrid { grid-template-columns: 52px repeat(var(--n), 1fr) 4px 74px; }
+.fogrid .rh { display: flex; align-items: center; gap: 4px; }
+.fogrid .rh img { width: 34px; height: 34px; border-radius: 6px; box-shadow: 0 0 0 1px #000, 0 0 0 2px rgba(248, 211, 107, 0.45); }
+.fogrid .rh i { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid var(--title2); opacity: 0.8; }
+.fogrid .ch { display: flex; align-items: flex-end; justify-content: center; padding-bottom: 2px; }
+.fogrid .ch img { width: 26px; height: 26px; border-radius: 50%; opacity: 0.85; box-shadow: 0 0 0 1px #000, 0 0 0 2px rgba(248, 211, 107, 0.15); }
+.fogrid .tot { border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font: 15px "Friz", serif; color: #fff; background: rgba(0, 0, 0, 0.35); }
+.fogrid .tot small { font-size: 10.5px; color: var(--ink-2); }
+.fogrid .toth { display: flex; align-items: flex-end; justify-content: center; font: 13px "Morpheus", serif; color: var(--title); padding-bottom: 6px; }
+.fokey { display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; }
+.fokey span { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.road { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.road .rc { border-radius: 8px; padding: 10px 12px; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1px var(--soft); }
+.road .rc h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font: 17px "Morpheus", serif; font-weight: normal; }
+.road .rc h4 img { width: 24px; height: 24px; border-radius: 50%; }
+.road .rc h4 small { margin-left: auto; font: 11.5px "Friz", serif; color: var(--muted); }
+.road .rr { display: grid; grid-template-columns: 18px 1fr auto auto; gap: 8px; align-items: baseline; font-size: 13.5px; padding: 2px 0; cursor: pointer; }
+.road .rr:hover .nm { text-decoration: underline; }
+.road .rr i { font-style: normal; color: var(--muted); font-size: 12px; }
+.road .rr .rec { color: var(--ink); }
+.road .rr .bh { color: var(--muted); font-size: 11.5px; min-width: 44px; text-align: right; }
+.vs2 .row, .vspec .row { grid-template-columns: 30px 108px 1fr 70px; }
+.vspec .v, .vs2 .v { text-align: right; line-height: 1.15; min-width: 0; }
+.vspec .v small, .vs2 .v small { display: block; font-size: 11px !important; }
+.vs2 .track { height: 16px; }
+.vs2 .track .ow { position: absolute; top: -4px; bottom: -4px; width: 3px; border-radius: 2px; background: #fff; box-shadow: 0 0 0 1px #000; }
+.vs2 .v small { color: var(--muted); font-size: 12px; }
+.pbar { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin-bottom: 12px; }
+.pbar .search { flex: 1 1 220px; max-width: 280px; }
+.pbar .count { margin-left: auto; color: var(--muted); font-size: 13px; }
+.plist { display: flex; flex-direction: column; gap: 3px; }
+.pr { display: grid; grid-template-columns: 44px 30px minmax(120px, 1.4fr) minmax(130px, 1.2fr) 60px 74px 54px 120px; gap: 10px; align-items: center; padding: 6px 10px; border-radius: 8px; cursor: pointer; background: rgba(0, 0, 0, 0.22); }
+.pr:hover { background: rgba(255, 255, 255, 0.04); }
+.pr.open { background: rgba(90, 220, 200, 0.08); box-shadow: inset 0 0 0 1px var(--soft); }
+.pr.hd { background: none; cursor: default; color: var(--muted); font-size: 12px; padding-top: 0; padding-bottom: 2px; }
+.pr .rk { color: var(--muted); font-size: 12.5px; }
+.pr > img { width: 28px; height: 28px; border-radius: 50%; }
+.pr .nm { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr .sp { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-2); min-width: 0; }
+.pr .sp img { width: 20px; height: 20px; border-radius: 4px; }
+.pr .sp small { color: var(--muted); }
+.pr .pod, .pr .bh { color: var(--muted); font-size: 13px; }
+.pr .rec { font-size: 15px; }
+.pr .badge { width: max-content; display: inline-block; line-height: 1.4; }
+.badge { justify-self: start; font-size: 11.5px; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.badge.q { color: #1a1206; background: linear-gradient(#ffe39a, #d5a548); }
+.badge.t { color: #ffd98a; box-shadow: inset 0 0 0 1px rgba(255, 210, 120, 0.5); }
+.badge.x { color: var(--muted); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); }
+.badge.u { color: #9ff3e6; box-shadow: inset 0 0 0 1px rgba(120, 240, 220, 0.45); }
+.hist { margin: 2px 0 8px 84px; padding: 8px 12px; border-left: 2px solid var(--soft); display: flex; flex-direction: column; gap: 5px; }
+.hist .g { display: grid; grid-template-columns: 62px 22px minmax(110px, 200px) minmax(120px, 1fr) 70px; gap: 8px; align-items: center; font-size: 13.5px; }
+.hist .g img { width: 20px; height: 20px; border-radius: 50%; }
+.hist .g .r { color: var(--muted); font-size: 12px; }
+.hist .g .o { cursor: pointer; }
+.hist .g .o:hover { text-decoration: underline; }
+.hist .g .res { font-size: 13px; text-align: right; }
+.hist .g .res.w { color: #7ddc8a; } .hist .g .res.l { color: #ef7d6d; } .hist .g .res.p { color: var(--muted); }
+.hist .none { color: var(--muted); font-size: 13px; }
+.more { display: block; margin: 12px auto 0; }
+@media (max-width: 1180px) { .road { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 720px) {
+  .road { grid-template-columns: 1fr; }
+  .fo-hero img { width: 90px; }
+  .fogrid { grid-template-columns: 30px repeat(var(--n), 1fr) 2px 50px; gap: 2px; }
+  .fogrid .rh i { display: none; } .fogrid .rh img { width: 24px; height: 24px; } .fogrid .ch img { width: 18px; height: 18px; }
+  .fogrid .cell { font-size: 10.5px; height: 34px; } .fogrid .cell small { display: none; } .fogrid .tot { font-size: 12px; } .fogrid .tot small { display: none; } .fogrid .toth { font-size: 10px; }
+  .pr { grid-template-columns: 30px 26px 1fr auto; gap: 8px; } .pr .sp, .pr .pod, .pr .bh, .pr.hd { display: none; } .pr .badge { grid-column: 3 / 5; }
+  .hist { margin-left: 10px; } .hist .g { grid-template-columns: 30px 20px 1fr auto; } .hist .g .s { display: none; }
+}
 </style>
 <script>
 let me = false;
@@ -453,6 +529,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       <a class="tab" data-v="crafting" href="#crafting"><img src="assets/game/ui/inv_misc_bag_10.png" alt=""><span>Crafting</span></a>
       <a class="tab" data-v="duels" href="#duels"><img src="assets/game/ui/ability_parry.png" alt=""><span>Duels</span></a>
       <a class="tab" data-v="life" href="#life"><img src="assets/game/ui/inv_misc_book_09.png" alt=""><span>Life</span></a>
+      <a class="tab" data-v="open" href="#open"><img src="assets/forever-open-logo.png" alt="" style="object-fit:contain;box-shadow:none"><span>Forever Open</span></a>
     </nav>
     <div class="right">
       <div class="realm" id="realm"></div>
@@ -507,8 +584,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261017185154"></script>
-<script src="data-summary.js?v=20261017185154"></script>
+<script src="data-multi.js?v=20261017212445"></script>
+<script src="data-summary.js?v=20261017212445"></script>
+<script src="data-open.js?v=20261017212445"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -534,10 +612,14 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     crafting: { kicker: 'World of Warcraft: Forever', title: 'The Crafting Census' },
     duels: { kicker: 'World of Warcraft: Forever', title: 'The Dueling Grounds' },
     life: { kicker: 'World of Warcraft: Forever', title: 'Life on Azeroth' },
+    open: { kicker: 'The Forever Open', title: 'Road to the Finals' },
   };
+  const O = window.LI_OPEN;
+  if (!O) document.querySelectorAll('.tab[data-v="open"]').forEach((t) => t.remove());
   const hasWorld = !!(S && S.duels);
   if (!hasWorld) document.querySelectorAll('.tab[data-v="duels"], .tab[data-v="life"]').forEach((t) => t.remove());
   let PV = { s: {}, b: {} };
+  const OS = { q: '', c: '', sp: -1, st: 'all', sort: 'rank', more: 0, open: -1 };
   const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'rate', pod: 'rate', rare: 'all', tcls: '', tgrp: 'all' };
   try { const saved = JSON.parse(localStorage.getItem('inn-sel') || '{}'); ['rs', 'fac'].forEach((k) => { if (saved[k]) sel[k] = saved[k]; }); } catch (e) {}
   let view = 'crafting';
@@ -1040,6 +1122,151 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.getElementById('updated').textContent = `Updated ${S.generated || ''}`;
   }
 
+  function renderOpen() {
+    document.getElementById('realm').innerHTML = '';
+    document.getElementById('fac').innerHTML = '';
+    document.getElementById('opt').innerHTML = '';
+    document.getElementById('sep2').hidden = true;
+    const at = new Date(O.at);
+    const clock = at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('note').textContent = O.live ? `Live · updated ${clock}` : `Qualifiers finished · ${fmt(O.played)} matches`;
+    const RACE_N = { Orc: 'Orc', Scourge: 'Undead', Tauren: 'Tauren', Troll: 'Troll', Skyborne: 'Skyborne' };
+    const P = O.players, T = S.trees || {};
+    const specName = (c, i) => (T[c] && T[c].tabs[i]) || '';
+    const specIcon = (c, i) => T[c] && T[c].icons && T[c].icons[i] ? `assets/icons/${T[c].icons[i]}.png` : cls(c);
+    const rate = (c) => O.rec[c] ? O.rec[c][0] / Math.max(1, O.rec[c][0] + O.rec[c][1]) : 0;
+    const cl = CLASSES.filter((c) => O.rec[c]).sort((a, b) => rate(b) - rate(a));
+    const shade = (p, t) => p >= 0.5 ? `rgba(224,102,47,${0.18 + 0.75 * t})` : `rgba(93,132,180,${0.18 + 0.75 * t})`;
+    let h = '';
+    h += plaque(UI('ability_dualwield'), 'Matches', fmt(O.played), O.live ? (O.expected ? `of about ${fmt(Math.round(O.expected / 100) * 100)}` : 'decided so far') : 'in the qualifiers');
+    h += plaque(UI('inv_bannerpvp_02'), 'Players', fmt(O.entrants), `across ${O.pods} pods`);
+    h += plaque(UI('ability_warrior_rampage'), 'Undefeated', fmt(O.undefeated), 'won every match so far');
+    h += plaque(UI('achievement_arena_2v2_7'), 'Round', O.live ? (O.roundMin && O.roundMin < O.round ? `${O.roundMin}–${O.round}` : `${O.round}`) + ` of ${O.rounds}` : 'Done', O.live ? `${O.podsDone} of ${O.pods} pods finished` : 'top 4 per class go to the finals', !O.live);
+
+    let g = `<div class="grid fogrid" style="--n:${cl.length}"><div class="corner">wins vs</div>`;
+    g += cl.map((c) => `<div class="ch" data-tip="${CN[c]}"><img src="${cls(c)}" alt=""></div>`).join('') + '<div></div><div class="toth">Overall</div>';
+    cl.forEach((a) => {
+      g += `<div class="rh" data-tip="${CN[a]}"><img src="${cls(a)}" alt=""><i></i></div>`;
+      cl.forEach((b) => {
+        const w = O.cells[a + '>' + b] || 0, l = O.cells[b + '>' + a] || 0, n = w + l;
+        if (a === b || !n) { g += '<div class="cell none"></div>'; return; }
+        const p = w / n, t = Math.min(1, Math.abs(p - 0.5) * 2) * Math.min(1, n / 12);
+        g += `<div class="cell" style="background:${shade(p, t)}" data-tip="${CN[a]} vs ${CN[b]}|${w} won, ${l} lost">${Math.round(p * 100)}%<small>${n}</small></div>`;
+      });
+      const [w, l] = O.rec[a], p = w / (w + l), edge = shade(p, 0.35 + 0.6 * Math.min(1, Math.abs(p - 0.5) * 2.5));
+      g += `<div></div><div class="tot" style="box-shadow:inset 0 0 0 1px ${edge},inset 4px 0 0 ${edge}" data-tip="${CN[a]}|${w} won, ${l} lost against other classes">${Math.round(p * 100)}%<small>${w}–${l}</small></div>`;
+    });
+    g += '</div>';
+    const hero = `<div class="fo-hero"><img src="assets/forever-open-logo.png" alt="The Forever Open"><div><p>Swiss qualifiers · ${O.live && O.expected ? `${fmt(O.played)} of about ${fmt(Math.round(O.expected / 100) * 100)} matches so far` : `${fmt(O.played)} matches, all 6 rounds`}</p><span class="tag">Read across: the class on the left vs the class on top</span></div></div>`;
+    const key = `<div class="optout"><span class="fokey"><span style="background:rgba(224,102,47,0.85)"></span>left class usually wins</span><span class="fokey"><span style="background:rgba(93,132,180,0.85)"></span>usually loses</span>Small number: matches played.<span style="float:right">Results from Raider.IO · <b style="color:var(--ink-2);font-weight:normal">lifeonazeroth.com</b></span></div>`;
+    h += panel('s8', 'Class matchups', 'Every decided qualifier match between two different classes. Row class against column class; the last column is each class against everyone.', hero + g + key);
+
+    const specRows = [];
+    Object.entries(O.specs).forEach(([c, arr]) => {
+      const players = sum(arr.map((x) => x[0]));
+      arr.forEach((x, i) => { if (x[1] + x[2] >= 20 && x[0] >= Math.max(5, players * 0.1)) specRows.push({ c, i, n: x[0], share: x[0] / Math.max(1, players), w: x[1], l: x[2], p: x[1] / (x[1] + x[2]) }); });
+    });
+    specRows.sort((a, b) => (b.w + b.l) - (a.w + a.l));
+    specRows.splice(12);
+    specRows.sort((a, b) => b.p - a.p);
+    const specHtml = `<div class="rows vspec">${specRows.map((x) => row(specIcon(x.c, x.i), `${specName(x.c, x.i)}`, CC[x.c], x.p,
+      `${Math.round(x.p * 100)}% <small style="color:var(--muted);font-size:12px">${x.w}–${x.l}</small>`,
+      `${specName(x.c, x.i)} ${CN[x.c]}|${x.w} won, ${x.l} lost\n${Math.round(x.share * 100)}% of ${CN[x.c].toLowerCase()}s play it (${x.n})`, 1, '<div class="mid"></div>')).join('')}</div>
+      <div class="optout">The 12 most played specs, from the talents each player entered with.</div>`;
+    h += panel('s4', 'Spec win rates', 'Win rate of each spec in the qualifiers, mirrors included. Hover for how many play it.', specHtml);
+
+    const road = O.finals.slice().sort((a, b) => CLASSES.indexOf(a.c) - CLASSES.indexOf(b.c)).map((f) => `<div class="rc"><h4 style="color:${CC[f.c]}"><img src="${cls(f.c)}" alt="">${CN[f.c]}<small>${fmt(f.n)} entered</small></h4>
+      ${f.top.map((r, i) => `<div class="rr" data-ofind="${esc(r.n)}"><i>${i + 1}</i><span class="nm">${esc(r.n)}</span><span class="rec">${r.w}–${r.l}</span><span class="bh">Bh ${r.b}</span></div>`).join('')}</div>`).join('');
+    h += panel('s8', O.live ? 'Current finals spots' : 'Finalists', 'Top 4 of each class go to the finals, ranked by record and then Buchholz (the combined points of everyone they played). Click a name to see their matches.',
+      `<div class="road">${road}</div><div class="optout">${O.live ? 'Live standings, changes after every round.' : 'Final standings after six rounds.'} Bh: Buchholz, the tiebreaker.</div>`);
+
+    const X = (S.duels && S.duels['All|Horde|even']) || { ladder: [] };
+    const ow = {};
+    X.ladder.forEach((x) => ow[x.c] = x.p);
+    const vsRows = cl.map((c) => {
+      const p = rate(c), q = ow[c];
+      const marker = q != null ? `<div class="ow" style="left:calc(${q * 100}% - 1px)"></div>` : '';
+      return row(cls(c), CN[c], CC[c], p, `${Math.round(p * 100)}% <small>${q != null ? `${Math.round(q * 100)}% outside` : ''}</small>`,
+        `${CN[c]}|Tournament: ${Math.round(p * 100)}%${q != null ? `\nDuels we watched in the open world: ${Math.round(q * 100)}%` : ''}`, 1, '<div class="mid"></div>' + marker);
+    }).join('');
+    h += panel('s4', 'Ring vs open world', 'Bar: win rate in the qualifiers. White mark: the same class in the Horde duels we watched around the world before the tournament.',
+      `<div class="rows vs2">${vsRows}</div><div class="optout">Open world: ${fmt(sum(X.ladder.map((x) => x.w + x.l)) / 2)} Horde duels we saw, even fights only.</div>`);
+
+    const classChips = `<div class="chips"><button class="chip plain ${OS.c ? '' : 'on'}" data-oc="">All classes</button>${CLASSES.map((c) => `<button class="chip ${OS.c === c ? 'on' : ''}" data-oc="${c}"><img src="${cls(c)}" alt="">${CN[c]}</button>`).join('')}</div>`;
+    h += panel('s12', 'Every player', 'All entrants with their record, spec and talent points. Click anyone to see who they played.',
+      `<div class="pbar"><input class="search" id="osearch" placeholder="Find a player" value="${esc(OS.q)}" autocomplete="off">
+        <div class="chips" id="ost">${[['all', 'Everyone'], ['top', 'In a finals spot'], ['unb', 'Undefeated'], ['in', 'Still checked in']].map(([k, n]) => `<button class="chip plain ${OS.st === k ? 'on' : ''}" data-ost="${k}">${n}</button>`).join('')}</div>
+        <span class="count" id="ocount"></span></div>
+       <div style="margin-bottom:10px">${classChips}</div><div id="ospec" style="margin-bottom:12px"></div><div id="oplist"></div>`, { id: 'everyone' });
+
+    document.getElementById('main').innerHTML = h;
+
+    const games = {};
+    O.games.forEach((g2) => { (games[g2[1]] = games[g2[1]] || []).push(g2); (games[g2[2]] = games[g2[2]] || []).push(g2); });
+    const BADGE = { q: ['q', 'Finals spot'], t: ['t', 'Tied for a spot'], x: ['x', 'Dropped'] };
+    function draw() {
+      const q = OS.q.toLowerCase();
+      let list = P.map((p, i) => i).filter((i) => {
+        const p = P[i];
+        if (OS.c && p[1] !== OS.c) return false;
+        if (OS.c && OS.sp >= 0 && p[9] !== OS.sp) return false;
+        if (OS.st === 'top' && p[8] !== 'q' && p[8] !== 't') return false;
+        if (OS.st === 'unb' && !(p[4] >= 1 && p[5] === 0)) return false;
+        if (OS.st === 'in' && p[8] === 'x') return false;
+        return !q || p[0].toLowerCase().includes(q);
+      });
+      list.sort((a, b) => (P[b][4] * 3 + P[b][6]) - (P[a][4] * 3 + P[a][6]) || P[b][7] - P[a][7] || P[a][5] - P[b][5] || P[a][0].localeCompare(P[b][0]));
+      const specs = OS.c && T[OS.c] ? T[OS.c].tabs : null;
+      document.getElementById('ospec').innerHTML = specs ? `<div class="chips"><button class="chip plain ${OS.sp < 0 ? 'on' : ''}" data-osp="-1">Any spec</button>${specs.map((n, i) => `<button class="chip ${OS.sp === i ? 'on' : ''}" data-osp="${i}"><img src="${specIcon(OS.c, i)}" alt="">${n}</button>`).join('')}</div>` : '';
+      document.getElementById('ocount').textContent = `${fmt(list.length)} ${list.length === 1 ? 'player' : 'players'}`;
+      const limit = 60 + OS.more * 120;
+      const head = '<div class="pr hd"><span>Rank</span><span></span><span>Name</span><span>Spec · points</span><span>Pod</span><span>Record</span><span>Bh</span><span></span></div>';
+      const rowsHtml = list.slice(0, limit).map((i) => {
+        const p = P[i];
+        const sp = p[9] >= 0 ? `<img src="${specIcon(p[1], p[9])}" alt="">${specName(p[1], p[9])} <small>${p[10]}</small>` : '<small>No talents listed</small>';
+        const b = p[4] >= 1 && p[5] === 0 && p[8] !== 'q' && p[8] !== 'x' ? ['u', 'Undefeated'] : BADGE[p[8]];
+        let out = `<div class="pr ${OS.open === i ? 'open' : ''}" data-oi="${i}"><span class="rk">#${p[11]}</span><img src="${cls(p[1])}" alt="" data-tip="${CN[p[1]]}${p[2] ? ` · ${RACE_N[p[2]] || p[2]}` : ''}">
+          <span class="nm" style="color:${CC[p[1]]}">${esc(p[0])}</span><span class="sp">${sp}</span><span class="pod">Pod ${p[3]}</span>
+          <span class="rec">${p[4]}–${p[5]}${p[6] ? `–${p[6]}` : ''}</span><span class="bh">${p[7]}</span>${b ? `<span class="badge ${b[0]}">${b[1]}</span>` : '<span></span>'}</div>`;
+        if (OS.open === i) {
+          const mine = (games[i] || []).slice().sort((x, y) => x[0] - y[0]);
+          out += `<div class="hist">${mine.length ? mine.map((m) => {
+            const me = m[1] === i ? 0 : 1, oi = me ? m[1] : m[2], o = P[oi];
+            const res = m[3] === -2 ? ['p', 'Playing'] : m[3] === -1 ? ['p', 'Tie'] : m[3] === me ? ['w', 'Won'] : ['l', 'Lost'];
+            return `<div class="g"><span class="r">Round ${m[0]}</span><img src="${cls(o[1])}" alt=""><span class="o" data-ojump="${oi}" style="color:${CC[o[1]]}">${esc(o[0])} <small style="color:var(--muted)">${o[4]}–${o[5]}</small></span>
+              <span class="s r">${o[9] >= 0 ? `${specName(o[1], o[9])} ${o[10]}` : ''}</span><span class="res ${res[0]}">${res[1]}</span></div>`;
+          }).join('') : '<div class="none">No matches yet.</div>'}</div>`;
+        }
+        return out;
+      }).join('');
+      document.getElementById('oplist').innerHTML = `<div class="plist">${head}${rowsHtml || '<div class="none" style="color:var(--muted);padding:10px">Nobody matches that.</div>'}</div>`
+        + (list.length > limit ? `<button class="chip plain more" id="omore">Show more (${fmt(list.length - limit)} left)</button>` : '');
+      const more = document.getElementById('omore');
+      if (more) more.onclick = () => { OS.more++; draw(); };
+    }
+    const find = (name, idx) => {
+      OS.q = name; OS.c = ''; OS.sp = -1; OS.st = 'all'; OS.more = 0;
+      OS.open = idx != null ? idx : P.findIndex((p) => p[0] === name);
+      renderKeep();
+      document.getElementById('everyone').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    const box = document.getElementById('osearch');
+    box.oninput = () => { OS.q = box.value.trim(); OS.more = 0; OS.open = -1; draw(); };
+    document.querySelectorAll('[data-oc]').forEach((x) => x.onclick = () => { OS.c = x.dataset.oc; OS.sp = -1; OS.more = 0; document.querySelectorAll('[data-oc]').forEach((y) => y.classList.toggle('on', y === x)); draw(); });
+    document.querySelectorAll('[data-ost]').forEach((x) => x.onclick = () => { OS.st = x.dataset.ost; OS.more = 0; document.querySelectorAll('[data-ost]').forEach((y) => y.classList.toggle('on', y === x)); draw(); });
+    document.querySelectorAll('[data-ofind]').forEach((x) => x.onclick = () => find(x.dataset.ofind));
+    const listEl = document.getElementById('everyone');
+    listEl.addEventListener('click', (e) => {
+      const sp = e.target.closest('[data-osp]');
+      if (sp) { OS.sp = +sp.dataset.osp; OS.more = 0; draw(); return; }
+      const j = e.target.closest('[data-ojump]');
+      if (j) { find(P[+j.dataset.ojump][0], +j.dataset.ojump); return; }
+      const r = e.target.closest('[data-oi]');
+      if (r) { const i = +r.dataset.oi; OS.open = OS.open === i ? -1 : i; draw(); }
+    });
+    draw();
+  }
+
   function render() {
     document.body.dataset.view = view;
     const v = VIEWS[view];
@@ -1047,12 +1274,12 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.getElementById('title').textContent = v.title;
     document.title = `${v.title} · Linked Inn`;
     document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('on', t.dataset.v === view));
-    if (view === 'duels') renderDuels(); else if (view === 'life') renderLife(); else renderCrafting();
+    if (view === 'duels') renderDuels(); else if (view === 'life') renderLife(); else if (view === 'open') renderOpen(); else renderCrafting();
   }
   function renderKeep() { const y = scrollY; render(); scrollTo(0, y); }
   function route() {
     const want = location.hash.replace('#', '');
-    view = VIEWS[want] && (want === 'crafting' || hasWorld) ? want : 'crafting';
+    view = VIEWS[want] && (want === 'crafting' || (want === 'open' ? !!O : hasWorld)) ? want : 'crafting';
     render();
   }
   window.addEventListener('hashchange', () => { const y = scrollY; route(); scrollTo(0, Math.min(y, document.querySelector('.bar').offsetTop)); });
@@ -1082,6 +1309,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       blob = await htmlToImage.toBlob(panelEl, opts);
     } finally {
       document.body.classList.remove('snapping');
+    }
+    if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+      try { if ((await fetch('/save/' + file, { method: 'POST', body: blob })).ok) return; } catch (e) {}
     }
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);

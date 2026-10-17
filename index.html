@@ -176,6 +176,12 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .tn img { width: 40px; height: 40px; border-radius: 6px; display: block; margin: 0 auto; box-shadow: 0 0 0 1px #000, 0 0 0 2px rgba(255, 255, 255, 0.12); }
 .tn.hot img { box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--title), 0 0 12px color-mix(in srgb, var(--title) 45%, transparent); }
 .tn.cold img { filter: grayscale(1) brightness(0.55); }
+.tn .dot { position: absolute; top: -3px; right: 3px; width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 2px #0d0c0a; }
+.tn .dot.up { background: #4fd36a; }
+.tn .dot.down { background: #e5534b; }
+.ttab .th .win { display: block; margin-top: 6px; font-size: 12.5px; color: var(--ink-2); }
+.tlegend { margin-top: 12px; text-align: center; color: var(--muted); font-size: 12.5px; }
+.tlegend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0 4px 0 12px; vertical-align: 0; }
 .tn .p { font-size: 12px; color: #fff2cf; margin-top: 3px; line-height: 1; }
 .tn.cold .p { color: var(--muted); }
 .tn .rk { height: 2px; width: 32px; margin: 3px auto 0; border-radius: 1px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
@@ -496,8 +502,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261017180843"></script>
-<script src="data-summary.js?v=20261017180843"></script>
+<script src="data-multi.js?v=20261017182257"></script>
+<script src="data-summary.js?v=20261017182257"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -910,7 +916,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         const cols = Math.max(...nodes.map((nd) => nd.col)) + 1, rows = Math.max(...nodes.map((nd) => nd.row)) + 1;
         const share = T.specs[t] / Math.max(1, T.n);
         const sw = (T.specWin || [])[t] || [0, 0], swn = sw[0] + sw[1];
-        const winTxt = swn >= 20 ? ` · <span data-tip="${esc(`${name}|Won ${sw[0]} and lost ${sw[1]} of the duels we saw`)}">wins ${Math.round(100 * sw[0] / swn)}%</span>` : '';
+        const winTxt = swn >= 20 ? `<span class="win" data-tip="${esc(`${name} ${CN[c].toLowerCase()}s|Players whose most points are in ${name}: won ${sw[0]}, lost ${sw[1]} of the duels we saw.`)}">${name} ${CN[c].toLowerCase()}s win ${Math.round(100 * sw[0] / swn)}% of their duels</span>` : '';
         const lines = nodes.flatMap((nd) => nd.to.filter((id) => byId[id] && byId[id].tab === t).map((id) => {
           const to = byId[id], on = (T.nodes[id] || [0])[0] / T.n >= 0.2;
           return `<line x1="${nd.col * CW + CW / 2}" y1="${nd.row * CH + 20}" x2="${to.col * CW + CW / 2}" y2="${to.row * CH + 20}" stroke="${on ? 'var(--title2)' : 'rgba(255,255,255,0.12)'}" stroke-width="3"/>`;
@@ -921,12 +927,15 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
           const cl = pct >= 0.5 ? 'hot' : pct < 0.05 ? 'cold' : '';
           const rankLine = nd.max > 1 && e[0] ? `\nThose who take it put in ${avg.toFixed(1)} of ${nd.max} points on average; ${Math.round(100 * e[2] / e[0])}% go all the way.` : '';
           const nw = (T.nodeWin || {})[nd.id] || [0, 0, 0, 0], nWith = nw[0] + nw[1], nWithout = nw[2] + nw[3];
-          const winLine = nWith >= 20 && nWithout >= 20 ? `\nWith it: ${Math.round(100 * nw[0] / nWith)}% wins (${nWith} duels) · without: ${Math.round(100 * nw[2] / nWithout)}% (${nWithout})` : '';
+          const enough = nWith >= 20 && nWithout >= 20;
+          const diff = enough ? 100 * nw[0] / nWith - 100 * nw[2] / nWithout : 0;
+          const dot = enough && Math.abs(diff) >= 5 ? `<span class="dot ${diff > 0 ? 'up' : 'down'}"></span>` : '';
+          const winLine = enough ? `\nAmong ${tree.tabs[nd.tab]} ${CN[c].toLowerCase()}s, those with it win ${Math.round(100 * nw[0] / nWith)}% of duels (${nWith}), those without ${Math.round(100 * nw[2] / nWithout)}% (${nWithout})` : '';
           const tip = `${nd.name}|Taken by ${Math.round(pct * 100)}% (${e[0]} of ${T.n})${rankLine}${winLine}${nd.desc ? '\n\n' + nd.desc : ''}`;
-          return `<div class="tn ${cl}" style="left:${nd.col * CW}px;top:${nd.row * CH}px" data-tip="${esc(tip)}"><img src="assets/icons/${nd.icon || 134400}.png" alt="" style="opacity:${(0.35 + 0.65 * Math.min(1, pct * 1.6)).toFixed(2)}">
+          return `<div class="tn ${cl}" style="left:${nd.col * CW}px;top:${nd.row * CH}px" data-tip="${esc(tip)}">${dot}<img src="assets/icons/${nd.icon || 134400}.png" alt="" style="opacity:${(0.35 + 0.65 * Math.min(1, pct * 1.6)).toFixed(2)}">
             <div class="p">${Math.round(pct * 100)}%</div>${nd.max > 1 ? `<div class="rk"><span style="width:${e[0] ? 100 * avg / nd.max : 0}%"></span></div>` : ''}</div>`;
         }).join('');
-        return `<div class="ttab"><div class="th"><b>${name}</b><small>${Math.round(share * 100)}% of ${CN[c].toLowerCase()}s${winTxt}</small><i style="width:${Math.max(4, share * 100)}%"></i></div>
+        return `<div class="ttab"><div class="th"><b>${name}</b><small>${Math.round(share * 100)}% of ${CN[c].toLowerCase()}s</small><i style="width:${Math.max(4, share * 100)}%"></i>${winTxt}</div>
           <div class="tbox" style="width:${cols * CW}px;height:${rows * CH}px"><svg width="${cols * CW}" height="${rows * CH}">${lines}</svg>${nodeHtml}</div></div>`;
       }).join('');
       const builds = T.builds.map(([k, v]) => {
@@ -935,7 +944,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         return `<span><b>${k}</b> ${main} · ${v} ${v === 1 ? 'player' : 'players'} (${Math.round(100 * v / T.n)}%)</span>`;
       }).join('');
       h += panel('s12', 'Talent builds', `What players actually pick. The % under each talent is how many ${CN[c].toLowerCase()}s took it; the thin bar shows how far they take it. Bright talents are the popular path. Win rates come from duels we saw (even fights), using each player's talents at the time or their latest known build. Hover a talent to compare players with and without it. From ${fmt(T.n)} ${CN[c].toLowerCase()}s we inspected with 10 or more points spent.`,
-        `<div class="btog" style="margin-bottom:14px">${classChips}${grpChips}</div><div class="ttrees">${tabsHtml}</div><div class="tbuilds">Most common builds: ${builds}</div>`);
+        `<div class="btog" style="margin-bottom:14px">${classChips}${grpChips}</div><div class="ttrees">${tabsHtml}</div><div class="tlegend"><i style="background:#4fd36a"></i>within the same spec, players who take it win more<i style="background:#e5534b"></i>win less · hover any talent for the numbers</div><div class="tbuilds">Most common builds: ${builds}</div>`);
     }
     document.getElementById('main').innerHTML = h;
     document.querySelectorAll('[data-tcls]').forEach((x) => x.onclick = () => { sel.tcls = x.dataset.tcls; renderKeep(); });

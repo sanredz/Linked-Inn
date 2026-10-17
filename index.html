@@ -166,7 +166,7 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .btog .chips { flex-wrap: nowrap; }
 .ttrees { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 6px; padding: 6px; border-radius: 10px; background: #050403; box-shadow: inset 0 0 0 1px rgba(255, 220, 150, 0.12); }
 .ttab { flex: none; position: relative; padding: 14px 18px 20px; border-radius: 6px; overflow: hidden;
-  background: linear-gradient(rgba(6, 5, 4, 0.45), rgba(6, 5, 4, 0.62) 55%, rgba(6, 5, 4, 0.85)), var(--art) center top / cover;
+  background: linear-gradient(rgba(6, 5, 4, 0.55), rgba(6, 5, 4, 0.6) 55%, rgba(6, 5, 4, 0.78)), var(--art) center / cover;
   box-shadow: inset 0 0 0 1px rgba(255, 220, 150, 0.14), inset 0 0 40px rgba(0, 0, 0, 0.6); }
 .ttab .th { margin: -14px -18px 14px; padding: 10px 14px 10px; background: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.15)); border-bottom: 1px solid rgba(255, 220, 150, 0.22); text-align: left; }
 .ttab .th .row1 { display: flex; align-items: center; gap: 10px; }
@@ -506,8 +506,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261017183919"></script>
-<script src="data-summary.js?v=20261017183919"></script>
+<script src="data-multi.js?v=20261017184438"></script>
+<script src="data-summary.js?v=20261017184438"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -914,10 +914,10 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       const grpChips = `<div class="chips">${[['all', 'Everyone'], ['fp', 'Foreverpvp players']].map(([k, n]) => `<button class="chip plain ${sel.tgrp === k ? 'on' : ''}" data-tgrp="${k}">${n}</button>`).join('')}</div>`;
       const byId = {};
       tree.nodes.forEach((nd) => byId[nd.id] = nd);
+      const cols = Math.max(4, ...tree.nodes.map((nd) => nd.col + 1)), rows = Math.max(...tree.nodes.map((nd) => nd.row)) + 1;
       const tabsHtml = tree.tabs.map((name, t) => {
         const nodes = tree.nodes.filter((nd) => nd.tab === t);
         if (!nodes.length) return '';
-        const cols = Math.max(...nodes.map((nd) => nd.col)) + 1, rows = Math.max(...nodes.map((nd) => nd.row)) + 1;
         const share = T.specs[t] / Math.max(1, T.n);
         const sw = (T.specWin || [])[t] || [0, 0], swn = sw[0] + sw[1];
         const winTxt = swn >= 20 ? `<span class="win" data-tip="${esc(`${name} ${CN[c].toLowerCase()}s|Players whose most points are in ${name}: won ${sw[0]}, lost ${sw[1]} of the duels we saw.`)}">${name} ${CN[c].toLowerCase()}s win ${Math.round(100 * sw[0] / swn)}% of their duels</span>` : '';
@@ -940,7 +940,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
             <div class="p">${Math.round(pct * 100)}%</div>${nd.max > 1 ? `<div class="rk"><span style="width:${e[0] ? 100 * avg / nd.max : 0}%"></span></div>` : ''}</div>`;
         }).join('');
         const sIcon = tree.icons && tree.icons[t] ? `<img class="si" src="assets/icons/${tree.icons[t]}.png" alt="">` : '';
-        return `<div class="ttab" style="--art:url('assets/game/talents/${c}-${t}.jpg')"><div class="th"><div class="row1">${sIcon}<div><b>${name}</b><small>${Math.round(share * 100)}% of ${CN[c].toLowerCase()}s</small></div></div><i style="width:${Math.max(4, share * 100)}%"></i>${winTxt}</div>
+        return `<div class="ttab" style="--art:url('assets/game/talents/${c}-${t}.jpg');width:${cols * CW + 36}px"><div class="th"><div class="row1">${sIcon}<div><b>${name}</b><small>${Math.round(share * 100)}% of ${CN[c].toLowerCase()}s</small></div></div><i style="width:${Math.max(4, share * 100)}%"></i>${winTxt}</div>
           <div class="tbox" style="width:${cols * CW}px;height:${rows * CH}px"><svg width="${cols * CW}" height="${rows * CH}">${lines}</svg>${nodeHtml}</div></div>`;
       }).join('');
       const builds = T.builds.map(([k, v]) => {

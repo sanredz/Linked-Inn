@@ -164,6 +164,24 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .optout { margin-top: 12px; font-size: 12px; color: var(--muted); }
 .btog { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
 .btog .chips { flex-wrap: nowrap; }
+.ttrees { display: flex; flex-wrap: wrap; gap: 26px; justify-content: center; margin-top: 6px; }
+.ttab { flex: none; }
+.ttab .th { text-align: center; margin-bottom: 10px; }
+.ttab .th b { display: block; font: 19px "Morpheus", serif; color: var(--title); font-weight: normal; }
+.ttab .th small { color: var(--muted); font-size: 12.5px; }
+.ttab .th i { display: block; height: 4px; margin: 6px auto 0; border-radius: 2px; background: linear-gradient(90deg, var(--title2), var(--title)); }
+.tbox { position: relative; }
+.tbox svg { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+.tn { position: absolute; width: 52px; text-align: center; }
+.tn img { width: 40px; height: 40px; border-radius: 6px; display: block; margin: 0 auto; box-shadow: 0 0 0 1px #000, 0 0 0 2px rgba(255, 255, 255, 0.12); }
+.tn.hot img { box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--title), 0 0 12px color-mix(in srgb, var(--title) 45%, transparent); }
+.tn.cold img { filter: grayscale(1) brightness(0.55); }
+.tn .p { font-size: 12px; color: #fff2cf; margin-top: 3px; line-height: 1; }
+.tn.cold .p { color: var(--muted); }
+.tn .rk { height: 2px; width: 32px; margin: 3px auto 0; border-radius: 1px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.tn .rk span { display: block; height: 100%; background: color-mix(in srgb, var(--title) 65%, transparent); }
+.tbuilds { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; color: var(--ink-2); font-size: 13.5px; }
+.tbuilds b { color: #fff2cf; font-weight: normal; }
 .cchamps { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 10px; }
 @media (max-width: 1400px) { .cchamps { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } }
 .cchamp { position: relative; text-align: center; padding: 14px 10px 12px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--cc) 45%, transparent);
@@ -478,8 +496,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261017095143"></script>
-<script src="data-summary.js?v=20261017095143"></script>
+<script src="data-multi.js?v=20261017175850"></script>
+<script src="data-summary.js?v=20261017175850"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -509,7 +527,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   const hasWorld = !!(S && S.duels);
   if (!hasWorld) document.querySelectorAll('.tab[data-v="duels"], .tab[data-v="life"]').forEach((t) => t.remove());
   let PV = { s: {}, b: {} };
-  const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'rate', pod: 'rate', rare: 'all' };
+  const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'rate', pod: 'rate', rare: 'all', tcls: '', tgrp: 'all' };
   try { const saved = JSON.parse(localStorage.getItem('inn-sel') || '{}'); ['rs', 'fac'].forEach((k) => { if (saved[k]) sel[k] = saved[k]; }); } catch (e) {}
   let view = 'crafting';
 
@@ -875,7 +893,49 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     }).join('');
     h += panel('s12', 'Class champions', `The best of each class across every realm. Duels we saw counts the duels we watched; lifetime comes from their own Statistics panel. Best win % needs at least ${minN} duels and is confidence-adjusted, so a long strong record beats a short perfect one.`,
       toggles + `<div class="cchamps">${cards}</div>`);
+    const TT = (S.talents || {})[`${sel.fac}|${sel.tgrp}`] || {};
+    const trees = S.trees || {};
+    const tclasses = CLASSES.filter((c) => TT[c] && trees[c]);
+    if (tclasses.length) {
+      if (!tclasses.includes(sel.tcls)) sel.tcls = tclasses.slice().sort((a, b) => TT[b].n - TT[a].n)[0];
+      const c = sel.tcls, T = TT[c], tree = trees[c];
+      const CW = 54, CH = 66;
+      const classChips = `<div class="chips">${tclasses.map((k) => `<button class="chip ${sel.tcls === k ? 'on' : ''}" data-tcls="${k}"><img src="${cls(k)}" alt="">${CN[k]}</button>`).join('')}</div>`;
+      const grpChips = `<div class="chips">${[['all', 'Everyone'], ['fp', 'Foreverpvp players']].map(([k, n]) => `<button class="chip plain ${sel.tgrp === k ? 'on' : ''}" data-tgrp="${k}">${n}</button>`).join('')}</div>`;
+      const byId = {};
+      tree.nodes.forEach((nd) => byId[nd.id] = nd);
+      const tabsHtml = tree.tabs.map((name, t) => {
+        const nodes = tree.nodes.filter((nd) => nd.tab === t);
+        if (!nodes.length) return '';
+        const cols = Math.max(...nodes.map((nd) => nd.col)) + 1, rows = Math.max(...nodes.map((nd) => nd.row)) + 1;
+        const share = T.specs[t] / Math.max(1, T.n);
+        const lines = nodes.flatMap((nd) => nd.to.filter((id) => byId[id] && byId[id].tab === t).map((id) => {
+          const to = byId[id], on = (T.nodes[id] || [0])[0] / T.n >= 0.2;
+          return `<line x1="${nd.col * CW + CW / 2}" y1="${nd.row * CH + 20}" x2="${to.col * CW + CW / 2}" y2="${to.row * CH + 20}" stroke="${on ? 'var(--title2)' : 'rgba(255,255,255,0.12)'}" stroke-width="3"/>`;
+        })).join('');
+        const nodeHtml = nodes.map((nd) => {
+          const e = T.nodes[nd.id] || [0, 0, 0];
+          const pct = e[0] / T.n, avg = e[0] ? e[1] / e[0] : 0;
+          const cl = pct >= 0.5 ? 'hot' : pct < 0.05 ? 'cold' : '';
+          const rankLine = nd.max > 1 && e[0] ? `\nThose who take it put in ${avg.toFixed(1)} of ${nd.max} points on average; ${Math.round(100 * e[2] / e[0])}% go all the way.` : '';
+          const tip = `${nd.name}|Taken by ${Math.round(pct * 100)}% (${e[0]} of ${T.n})${rankLine}${nd.desc ? '\n\n' + nd.desc : ''}`;
+          return `<div class="tn ${cl}" style="left:${nd.col * CW}px;top:${nd.row * CH}px" data-tip="${esc(tip)}"><img src="assets/icons/${nd.icon || 134400}.png" alt="" style="opacity:${(0.35 + 0.65 * Math.min(1, pct * 1.6)).toFixed(2)}">
+            <div class="p">${Math.round(pct * 100)}%</div>${nd.max > 1 ? `<div class="rk"><span style="width:${e[0] ? 100 * avg / nd.max : 0}%"></span></div>` : ''}</div>`;
+        }).join('');
+        return `<div class="ttab"><div class="th"><b>${name}</b><small>${Math.round(share * 100)}% of ${CN[c].toLowerCase()}s</small><i style="width:${Math.max(4, share * 100)}%"></i></div>
+          <div class="tbox" style="width:${cols * CW}px;height:${rows * CH}px"><svg width="${cols * CW}" height="${rows * CH}">${lines}</svg>${nodeHtml}</div></div>`;
+      }).join('');
+      const builds = T.builds.map(([k, v]) => {
+        const pts = k.split('/').map(Number);
+        const main = tree.tabs[pts.indexOf(Math.max(...pts))];
+        return `<span><b>${k}</b> ${main} · ${v} ${v === 1 ? 'player' : 'players'} (${Math.round(100 * v / T.n)}%)</span>`;
+      }).join('');
+      h += panel('s12', 'Talent builds', `What players actually pick. The % under each talent is how many ${CN[c].toLowerCase()}s took it; the thin bar shows how far they take it. Bright talents are the popular path. From ${fmt(T.n)} ${CN[c].toLowerCase()}s we inspected with 10 or more points spent.`,
+        `<div class="btog" style="margin-bottom:14px">${classChips}${grpChips}</div><div class="ttrees">${tabsHtml}</div><div class="tbuilds">Most common builds: ${builds}</div>`);
+    }
     document.getElementById('main').innerHTML = h;
+    document.querySelectorAll('[data-tcls]').forEach((x) => x.onclick = () => { sel.tcls = x.dataset.tcls; renderKeep(); });
+    document.querySelectorAll('[data-tgrp]').forEach((x) => x.onclick = () => { sel.tgrp = x.dataset.tgrp; renderKeep(); });
     document.querySelectorAll('[data-wr]').forEach((x) => x.onclick = () => { sel.wr = x.dataset.wr; renderKeep(); });
     document.querySelectorAll('[data-pod]').forEach((x) => x.onclick = () => { sel.pod = x.dataset.pod; renderKeep(); });
     document.querySelectorAll('[data-bsrc]').forEach((x) => x.onclick = () => { sel.bsrc = x.dataset.bsrc; renderKeep(); });

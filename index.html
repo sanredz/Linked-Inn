@@ -164,24 +164,28 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .optout { margin-top: 12px; font-size: 12px; color: var(--muted); }
 .btog { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
 .btog .chips { flex-wrap: nowrap; }
-.ttrees { display: flex; flex-wrap: wrap; gap: 26px; justify-content: center; margin-top: 6px; }
-.ttab { flex: none; }
-.ttab .th { text-align: center; margin-bottom: 10px; }
-.ttab .th b { display: block; font: 19px "Morpheus", serif; color: var(--title); font-weight: normal; }
-.ttab .th small { color: var(--muted); font-size: 12.5px; }
-.ttab .th i { display: block; height: 4px; margin: 6px auto 0; border-radius: 2px; background: linear-gradient(90deg, var(--title2), var(--title)); }
+.ttrees { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 6px; padding: 6px; border-radius: 10px; background: #050403; box-shadow: inset 0 0 0 1px rgba(255, 220, 150, 0.12); }
+.ttab { flex: none; position: relative; padding: 14px 18px 20px; border-radius: 6px; overflow: hidden;
+  background: linear-gradient(rgba(6, 5, 4, 0.45), rgba(6, 5, 4, 0.62) 55%, rgba(6, 5, 4, 0.85)), var(--art) center top / cover;
+  box-shadow: inset 0 0 0 1px rgba(255, 220, 150, 0.14), inset 0 0 40px rgba(0, 0, 0, 0.6); }
+.ttab .th { margin: -14px -18px 14px; padding: 10px 14px 10px; background: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.15)); border-bottom: 1px solid rgba(255, 220, 150, 0.22); text-align: left; }
+.ttab .th .row1 { display: flex; align-items: center; gap: 10px; }
+.ttab .th .si { width: 32px; height: 32px; border-radius: 50%; box-shadow: 0 0 0 2px #000, 0 0 0 3px rgba(255, 220, 150, 0.5); }
+.ttab .th b { display: block; font: 19px "Morpheus", serif; color: #ffe6a8; font-weight: normal; text-shadow: 0 2px 0 #000; }
+.ttab .th small { color: var(--ink-2); font-size: 12.5px; }
+.ttab .th i { display: block; height: 3px; margin: 8px 0 0; border-radius: 2px; background: linear-gradient(90deg, var(--title2), var(--title)); }
 .tbox { position: relative; }
 .tbox svg { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
 .tn { position: absolute; width: 52px; text-align: center; }
 .tn img { width: 40px; height: 40px; border-radius: 6px; display: block; margin: 0 auto; box-shadow: 0 0 0 1px #000, 0 0 0 2px rgba(255, 255, 255, 0.12); }
 .tn.hot img { box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--title), 0 0 12px color-mix(in srgb, var(--title) 45%, transparent); }
 .tn.cold img { filter: grayscale(1) brightness(0.55); }
-.tn .dot { position: absolute; top: -3px; right: 3px; width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 2px #0d0c0a; }
-.tn .dot.up { background: #4fd36a; }
-.tn .dot.down { background: #e5534b; }
+.tn .arr { position: absolute; z-index: 2; top: -5px; right: 1px; width: 15px; height: 15px; border-radius: 4px; font: 9px/15px Arial, sans-serif; color: #fff; text-align: center; box-shadow: 0 0 0 1px #000, 0 2px 4px rgba(0, 0, 0, 0.6); }
+.tn .arr.up { background: #2f9e48; }
+.tn .arr.down { background: #c0392b; }
 .ttab .th .win { display: block; margin-top: 6px; font-size: 12.5px; color: var(--ink-2); }
 .tlegend { margin-top: 12px; text-align: center; color: var(--muted); font-size: 12.5px; }
-.tlegend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0 4px 0 12px; vertical-align: 0; }
+.tlegend i { display: inline-block; width: 15px; height: 15px; border-radius: 4px; margin: 0 5px 0 12px; font: normal 9px/15px Arial, sans-serif; color: #fff; text-align: center; vertical-align: 1px; }
 .tn .p { font-size: 12px; color: #fff2cf; margin-top: 3px; line-height: 1; }
 .tn.cold .p { color: var(--muted); }
 .tn .rk { height: 2px; width: 32px; margin: 3px auto 0; border-radius: 1px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
@@ -502,8 +506,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261017182257"></script>
-<script src="data-summary.js?v=20261017182257"></script>
+<script src="data-multi.js?v=20261017183520"></script>
+<script src="data-summary.js?v=20261017183520"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -929,13 +933,14 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
           const nw = (T.nodeWin || {})[nd.id] || [0, 0, 0, 0], nWith = nw[0] + nw[1], nWithout = nw[2] + nw[3];
           const enough = nWith >= 20 && nWithout >= 20;
           const diff = enough ? 100 * nw[0] / nWith - 100 * nw[2] / nWithout : 0;
-          const dot = enough && Math.abs(diff) >= 5 ? `<span class="dot ${diff > 0 ? 'up' : 'down'}"></span>` : '';
+          const dot = enough && Math.abs(diff) >= 5 ? `<span class="arr ${diff > 0 ? 'up' : 'down'}">${diff > 0 ? '▲' : '▼'}</span>` : '';
           const winLine = enough ? `\nAmong ${tree.tabs[nd.tab]} ${CN[c].toLowerCase()}s, those with it win ${Math.round(100 * nw[0] / nWith)}% of duels (${nWith}), those without ${Math.round(100 * nw[2] / nWithout)}% (${nWithout})` : '';
           const tip = `${nd.name}|Taken by ${Math.round(pct * 100)}% (${e[0]} of ${T.n})${rankLine}${winLine}${nd.desc ? '\n\n' + nd.desc : ''}`;
           return `<div class="tn ${cl}" style="left:${nd.col * CW}px;top:${nd.row * CH}px" data-tip="${esc(tip)}">${dot}<img src="assets/icons/${nd.icon || 134400}.png" alt="" style="opacity:${(0.35 + 0.65 * Math.min(1, pct * 1.6)).toFixed(2)}">
             <div class="p">${Math.round(pct * 100)}%</div>${nd.max > 1 ? `<div class="rk"><span style="width:${e[0] ? 100 * avg / nd.max : 0}%"></span></div>` : ''}</div>`;
         }).join('');
-        return `<div class="ttab"><div class="th"><b>${name}</b><small>${Math.round(share * 100)}% of ${CN[c].toLowerCase()}s</small><i style="width:${Math.max(4, share * 100)}%"></i>${winTxt}</div>
+        const sIcon = tree.icons && tree.icons[t] ? `<img class="si" src="assets/icons/${tree.icons[t]}.png" alt="">` : '';
+        return `<div class="ttab" style="--art:url('assets/game/talents/${c}-${t}.jpg')"><div class="th"><div class="row1">${sIcon}<div><b>${name}</b><small>${Math.round(share * 100)}% of ${CN[c].toLowerCase()}s</small></div></div><i style="width:${Math.max(4, share * 100)}%"></i>${winTxt}</div>
           <div class="tbox" style="width:${cols * CW}px;height:${rows * CH}px"><svg width="${cols * CW}" height="${rows * CH}">${lines}</svg>${nodeHtml}</div></div>`;
       }).join('');
       const builds = T.builds.map(([k, v]) => {
@@ -944,7 +949,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         return `<span><b>${k}</b> ${main} · ${v} ${v === 1 ? 'player' : 'players'} (${Math.round(100 * v / T.n)}%)</span>`;
       }).join('');
       h += panel('s12', 'Talent builds', `What players actually pick. The % under each talent is how many ${CN[c].toLowerCase()}s took it; the thin bar shows how far they take it. Bright talents are the popular path. Win rates come from duels we saw (even fights), using each player's talents at the time or their latest known build. Hover a talent to compare players with and without it. From ${fmt(T.n)} ${CN[c].toLowerCase()}s we inspected with 10 or more points spent.`,
-        `<div class="btog" style="margin-bottom:14px">${classChips}${grpChips}</div><div class="ttrees">${tabsHtml}</div><div class="tlegend"><i style="background:#4fd36a"></i>within the same spec, players who take it win more<i style="background:#e5534b"></i>win less · hover any talent for the numbers</div><div class="tbuilds">Most common builds: ${builds}</div>`);
+        `<div class="btog" style="margin-bottom:14px">${classChips}${grpChips}</div><div class="ttrees">${tabsHtml}</div><div class="tlegend"><i style="background:#2f9e48">▲</i>within the same spec, players who take it win more<i style="background:#c0392b">▼</i>win less · hover any talent for the numbers</div><div class="tbuilds">Most common builds: ${builds}</div>`);
     }
     document.getElementById('main').innerHTML = h;
     document.querySelectorAll('[data-tcls]').forEach((x) => x.onclick = () => { sel.tcls = x.dataset.tcls; renderKeep(); });

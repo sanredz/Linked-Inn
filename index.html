@@ -584,9 +584,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261017232441"></script>
-<script src="data-summary.js?v=20261017232441"></script>
-<script src="data-open.js?v=20261017232441"></script>
+<script src="data-multi.js?v=20261017233257"></script>
+<script src="data-summary.js?v=20261017233257"></script>
+<script src="data-open.js?v=20261017233257"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -650,6 +650,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       el.appendChild(b);
     });
   }
+  function lastTcls() { try { return localStorage.getItem('li-tcls') || ''; } catch (e) { return ''; } }
+  function keepTcls(c) { try { localStorage.setItem('li-tcls', c); } catch (e) {} }
   function save() { try { localStorage.setItem('inn-sel', JSON.stringify({ rs: sel.rs, fac: sel.fac })); } catch (e) {} }
   const help = (t, h) => h ? `<span class="q" data-tip="${esc(t)}|${esc(h)}">?</span>` : '';
   function panel(span, title, h, body, opts = {}) {
@@ -997,7 +999,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const trees = S.trees || {};
     const tclasses = CLASSES.filter((c) => TT[c] && trees[c]);
     if (tclasses.length) {
-      if (!tclasses.includes(sel.tcls)) sel.tcls = tclasses.slice().sort((a, b) => TT[b].n - TT[a].n)[0];
+      if (!tclasses.includes(sel.tcls)) sel.tcls = tclasses.includes(lastTcls()) ? lastTcls() : tclasses[0];
       const c = sel.tcls, T = TT[c], tree = trees[c];
       const classChips = `<div class="chips">${tclasses.map((k) => `<button class="chip ${sel.tcls === k ? 'on' : ''}" data-tcls="${k}"><img src="${cls(k)}" alt="">${CN[k]}</button>`).join('')}</div>`;
       const grpChips = `<div class="chips">${[['all', 'Everyone'], ['fp', 'Foreverpvp players']].map(([k, n]) => `<button class="chip plain ${sel.tgrp === k ? 'on' : ''}" data-tgrp="${k}">${n}</button>`).join('')}</div>`;
@@ -1005,7 +1007,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         `<div class="btog" style="margin-bottom:14px">${classChips}${grpChips}</div>` + talentTrees(T, c, tree, 'duels'));
     }
     document.getElementById('main').innerHTML = h;
-    document.querySelectorAll('[data-tcls]').forEach((x) => x.onclick = () => { sel.tcls = x.dataset.tcls; renderKeep(); });
+    document.querySelectorAll('[data-tcls]').forEach((x) => x.onclick = () => { sel.tcls = x.dataset.tcls; keepTcls(sel.tcls); renderKeep(); });
     document.querySelectorAll('[data-tgrp]').forEach((x) => x.onclick = () => { sel.tgrp = x.dataset.tgrp; renderKeep(); });
     document.querySelectorAll('[data-wr]').forEach((x) => x.onclick = () => { sel.wr = x.dataset.wr; renderKeep(); });
     document.querySelectorAll('[data-pod]').forEach((x) => x.onclick = () => { sel.pod = x.dataset.pod; renderKeep(); });
@@ -1205,7 +1207,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 
     const OT = O.talents || {}, otc = CLASSES.filter((k) => OT[k] && T[k]);
     if (otc.length) {
-      if (!otc.includes(OS.tc)) OS.tc = otc.slice().sort((a, b) => OT[b].n - OT[a].n)[0];
+      if (!otc.includes(OS.tc)) OS.tc = otc.includes(lastTcls()) ? lastTcls() : otc[0];
       const chips = `<div class="chips">${otc.map((k) => `<button class="chip ${OS.tc === k ? 'on' : ''}" data-otc="${k}"><img src="${cls(k)}" alt="">${CN[k]}</button>`).join('')}</div>`;
       h += panel('s12', 'Talent builds', `What the entrants brought. The % under each talent is how many ${CN[OS.tc].toLowerCase()}s entered with it; the thin bar shows how far they take it. Spec win rates and the arrows come from decided qualifier matches. Hover a talent to compare players with and without it. From ${fmt(OT[OS.tc].n)} ${CN[OS.tc].toLowerCase()}s' registered talents.`,
         `<div class="btog" style="margin-bottom:14px">${chips}</div>` + talentTrees(OT[OS.tc], OS.tc, T[OS.tc], 'matches'), { id: 'otal' });
@@ -1274,7 +1276,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.querySelectorAll('[data-oc]').forEach((x) => x.onclick = () => { OS.c = x.dataset.oc; OS.sp = -1; OS.more = 0; document.querySelectorAll('[data-oc]').forEach((y) => y.classList.toggle('on', y === x)); draw(); });
     document.querySelectorAll('[data-ost]').forEach((x) => x.onclick = () => { OS.st = x.dataset.ost; OS.more = 0; document.querySelectorAll('[data-ost]').forEach((y) => y.classList.toggle('on', y === x)); draw(); });
     document.querySelectorAll('[data-ofind]').forEach((x) => x.onclick = () => find(x.dataset.ofind));
-    document.querySelectorAll('[data-otc]').forEach((x) => x.onclick = () => { OS.tc = x.dataset.otc; renderKeep(); });
+    document.querySelectorAll('[data-otc]').forEach((x) => x.onclick = () => { OS.tc = x.dataset.otc; keepTcls(OS.tc); renderKeep(); });
     const listEl = document.getElementById('everyone');
     listEl.addEventListener('click', (e) => {
       const sp = e.target.closest('[data-osp]');

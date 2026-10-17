@@ -183,7 +183,8 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .tn .arr { position: absolute; z-index: 2; top: -5px; right: 1px; width: 15px; height: 15px; border-radius: 4px; font: 9px/15px Arial, sans-serif; color: #fff; text-align: center; box-shadow: 0 0 0 1px #000, 0 2px 4px rgba(0, 0, 0, 0.6); }
 .tn .arr.up { background: #2f9e48; }
 .tn .arr.down { background: #c0392b; }
-.ttab .th .win { display: block; margin-top: 6px; font-size: 12.5px; color: var(--ink-2); }
+.ttab .th .win { display: block; margin-top: 6px; min-height: 34px; font-size: 12.5px; line-height: 17px; color: var(--ink-2); }
+.ttab .th .win.none { color: var(--muted); }
 .tlegend { margin-top: 12px; text-align: center; color: var(--muted); font-size: 12.5px; }
 .tlegend i { display: inline-block; width: 15px; height: 15px; border-radius: 4px; margin: 0 5px 0 12px; font: normal 9px/15px Arial, sans-serif; color: #fff; text-align: center; vertical-align: 1px; }
 .tn .p { font-size: 12px; color: #fff2cf; margin-top: 3px; line-height: 1; }
@@ -506,8 +507,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261017184438"></script>
-<script src="data-summary.js?v=20261017184438"></script>
+<script src="data-multi.js?v=20261017185154"></script>
+<script src="data-summary.js?v=20261017185154"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -920,7 +921,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         if (!nodes.length) return '';
         const share = T.specs[t] / Math.max(1, T.n);
         const sw = (T.specWin || [])[t] || [0, 0], swn = sw[0] + sw[1];
-        const winTxt = swn >= 20 ? `<span class="win" data-tip="${esc(`${name} ${CN[c].toLowerCase()}s|Players whose most points are in ${name}: won ${sw[0]}, lost ${sw[1]} of the duels we saw.`)}">${name} ${CN[c].toLowerCase()}s win ${Math.round(100 * sw[0] / swn)}% of their duels</span>` : '';
+        const winTxt = swn >= 20 ? `<span class="win" data-tip="${esc(`${name} ${CN[c].toLowerCase()}s|Players whose most points are in ${name}: won ${sw[0]}, lost ${sw[1]} of the duels we saw.`)}">${name} ${CN[c].toLowerCase()}s win ${Math.round(100 * sw[0] / swn)}% of their duels</span>` : `<span class="win none">Not enough duels yet for a win rate</span>`;
         const lines = nodes.flatMap((nd) => nd.to.filter((id) => byId[id] && byId[id].tab === t).map((id) => {
           const to = byId[id], on = (T.nodes[id] || [0])[0] / T.n >= 0.2;
           return `<line x1="${nd.col * CW + CW / 2}" y1="${nd.row * CH + 20}" x2="${to.col * CW + CW / 2}" y2="${to.row * CH + 20}" stroke="${on ? 'var(--title2)' : 'rgba(255,255,255,0.12)'}" stroke-width="3"/>`;

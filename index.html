@@ -45,6 +45,8 @@ a { color: inherit; }
 .tabs { display: flex; gap: 6px; margin-left: 14px; }
 .tab { display: flex; align-items: center; gap: 9px; padding: 7px 16px 7px 8px; border-radius: 8px; text-decoration: none; color: var(--ink-2); font: 19px "Morpheus", serif;
   border: 1px solid transparent; transition: background 0.15s, color 0.15s; }
+.realm:empty { display: none; }
+.tab img.folg { object-fit: contain; padding: 2px; background: radial-gradient(circle at 50% 40%, #1f4440, #07110f 75%); }
 .tab img { width: 32px; height: 32px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(248, 211, 107, 0.25); }
 .tab:hover { color: var(--ink); background: rgba(255, 255, 255, 0.04); }
 .tab.on { color: var(--gold); border-color: var(--line); background: linear-gradient(rgba(248, 211, 107, 0.14), rgba(248, 211, 107, 0.03)); }
@@ -420,7 +422,7 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
   .plaque .in { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; min-height: 0; }
   .plaque .icon { width: 36px; height: 36px; } .plaque .num, .plaque .num.word { font-size: 24px; }
   .top .wrap { height: auto; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; gap: 10px; }
-  .brand small, .hbtn.get { display: none; } .tabs { margin-left: 0; } .right { margin-left: 0; width: 100%; justify-content: space-between; }
+  .brand small, .hbtn.get { display: none; } .tabs { margin-left: 0; } .right { margin-left: 0; width: 100%; justify-content: flex-end; } .right .realm { margin-right: auto; }
   .banner .in { height: auto; flex-direction: column; } .banner h1 { font-size: 40px; } .banner .say { padding: 22px; }
   .banner .count { margin: 0 14px 16px; align-self: stretch; } .count .c b { width: 48px; font-size: 24px; }
   .podium, .legends .list, .gauges { grid-template-columns: 1fr; }
@@ -565,7 +567,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       <a class="tab" data-v="crafting" href="#crafting"><img src="assets/game/ui/inv_misc_bag_10.png" alt=""><span>Crafting</span></a>
       <a class="tab" data-v="duels" href="#duels"><img src="assets/game/ui/ability_parry.png" alt=""><span>Duels</span></a>
       <a class="tab" data-v="life" href="#life"><img src="assets/game/ui/inv_misc_book_09.png" alt=""><span>Life</span></a>
-      <a class="tab" data-v="open" href="#open"><img src="assets/forever-open-logo.png" alt="" style="object-fit:contain;box-shadow:none"><span>Forever Open</span></a>
+      <a class="tab" data-v="open" href="#open"><img class="folg" src="assets/forever-open-logo.png" alt=""><span>Forever Open</span></a>
     </nav>
     <div class="right">
       <div class="realm" id="realm"></div>
@@ -620,9 +622,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018003922"></script>
-<script src="data-summary.js?v=20261018003922"></script>
-<script src="data-open.js?v=20261018003922"></script>
+<script src="data-multi.js?v=20261018004742"></script>
+<script src="data-summary.js?v=20261018004742"></script>
+<script src="data-open.js?v=20261018004742"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;

@@ -465,6 +465,12 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 .vb.on { color: #0b1c1b; background: linear-gradient(#a6f5ea, #4fb8ad); border-color: #8ff0e2; }
 .vb.on i { display: none; }
 .vb:disabled { cursor: default; opacity: 0.85; }
+.swaph { display: flex; align-items: baseline; gap: 6px; }
+.sw { font: 19px "Morpheus", serif; color: var(--muted); background: none; border: 0; padding: 2px 4px 6px; cursor: pointer; border-bottom: 2px solid transparent; text-shadow: 0 2px 0 #000; transition: color 0.15s; white-space: nowrap; }
+.sw:hover { color: var(--ink); }
+.sw.on { color: var(--title); border-bottom-color: var(--title2); }
+.swaph .dot { color: var(--muted); font-size: 16px; opacity: 0.6; }
+.swap[data-sr="spec"] .swb[data-k="race"], .swap[data-sr="race"] .swb[data-k="spec"] { display: none; }
 .vhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(90, 220, 200, 0.07); box-shadow: inset 0 0 0 1px var(--soft); font-size: 14px; color: var(--ink-2); }
 .vhead b { font: 18px "Morpheus", serif; font-weight: normal; color: var(--title); }
 .vhead .err { color: #ef7d6d; }
@@ -597,9 +603,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018002242"></script>
-<script src="data-summary.js?v=20261018002242"></script>
-<script src="data-open.js?v=20261018002242"></script>
+<script src="data-multi.js?v=20261018003101"></script>
+<script src="data-summary.js?v=20261018003101"></script>
+<script src="data-open.js?v=20261018003101"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1201,7 +1207,16 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       `${Math.round(x.p * 100)}% <small style="color:var(--muted);font-size:12px">${x.w}–${x.l}</small>`,
       `${specName(x.c, x.i)} ${CN[x.c]}|${x.w} won, ${x.l} lost\n${Math.round(x.share * 100)}% of ${CN[x.c].toLowerCase()}s play it (${x.n})`, 1, '<div class="mid"></div>')).join('')}</div>
       <div class="optout">The 12 most played specs, from the talents each player entered with.</div>`;
-    h += panel('s4', 'Spec win rates', 'Win rate of each spec in the qualifiers, mirrors included. Hover for how many play it.', specHtml);
+    const RACE_C = { Orc: '#e0734f', Scourge: '#b48fe0', Tauren: '#d9b26a', Troll: '#5fc7a8', Skyborne: '#c9a6ff' };
+    const raceRows = Object.entries(O.races || {}).map(([r, [w, l]]) => ({ r, w, l, p: w / Math.max(1, w + l) })).filter((x) => x.w + x.l >= 10).sort((a, b) => b.p - a.p);
+    const raceHtml = `<div class="rows vspec">${raceRows.map((x) => row(race(x.r), RACE_N[x.r] || x.r, RACE_C[x.r] || 'var(--ink)', x.p,
+      `${Math.round(x.p * 100)}% <small style="color:var(--muted);font-size:12px">${x.w}–${x.l}</small>`,
+      `${RACE_N[x.r] || x.r}|${x.w} won, ${x.l} lost against other races\n${fmt((O.raceN || {})[x.r] || 0)} entrants`, 1, '<div class="mid"></div>')).join('')}</div>
+      <div class="optout">Matches between two different races only, all classes together. Race mostly follows class here (every Paladin is Undead and almost every Druid is Tauren), so read it as a mix of both.</div>`;
+    const sr = OS.sr || 'spec';
+    const swHelp = help('Spec and race win rates', 'Specs: win rate of each spec in the qualifiers, mirrors included. Races: matches between two different races. Hover any row for the numbers.');
+    h += `<section class="frame panel s4 swap" data-sr="${sr}" id="swap"><div class="in slab"><div class="head"><h2 class="swaph"><button class="sw ${sr === 'spec' ? 'on' : ''}" data-srk="spec">Spec win rates</button><span class="dot">·</span><button class="sw ${sr === 'race' ? 'on' : ''}" data-srk="race">Race win rates</button></h2><button class="snap" data-act="png">Save PNG</button>${swHelp}</div>
+      <div class="body"><div class="swb" data-k="spec">${specHtml}</div><div class="swb" data-k="race">${raceHtml}</div></div></div></section>`;
 
     const voting = VOTE && VOTE.state !== 'soon';
     const voted = VOTE && VOTE.mine != null;
@@ -1307,6 +1322,11 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.querySelectorAll('[data-ost]').forEach((x) => x.onclick = () => { OS.st = x.dataset.ost; OS.more = 0; document.querySelectorAll('[data-ost]').forEach((y) => y.classList.toggle('on', y === x)); draw(); });
     document.querySelectorAll('[data-ofind]').forEach((x) => x.onclick = (e) => { if (!e.target.closest('[data-vote]')) find(x.dataset.ofind); });
     document.querySelectorAll('[data-vote]').forEach((x) => x.onclick = () => castVote(+x.dataset.vote));
+    document.querySelectorAll('[data-srk]').forEach((x) => x.onclick = () => {
+      OS.sr = x.dataset.srk;
+      document.getElementById('swap').dataset.sr = OS.sr;
+      document.querySelectorAll('[data-srk]').forEach((y) => y.classList.toggle('on', y === x));
+    });
     document.querySelectorAll('[data-otc]').forEach((x) => x.onclick = () => { OS.tc = x.dataset.otc; keepTcls(OS.tc); renderKeep(); });
     const listEl = document.getElementById('everyone');
     listEl.addEventListener('click', (e) => {

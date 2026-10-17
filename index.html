@@ -455,6 +455,17 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 .froad .rr:hover .nm { text-decoration: underline; }
 .froad .rr i { font-style: normal; color: var(--muted); font-size: 12px; }
 .froad .rr .rec { color: var(--ink); }
+.froad.voting .rr { grid-template-columns: 18px 1fr auto auto 58px; }
+.vb { font: 11.5px "Friz", serif; padding: 2px 0; border-radius: 999px; cursor: pointer; color: var(--title); background: rgba(90, 220, 200, 0.08); border: 1px solid var(--line); position: relative; overflow: hidden; text-align: center; }
+.vb:hover { background: rgba(90, 220, 200, 0.2); color: #fff; }
+.vb i { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(90, 220, 200, 0.25); }
+.vb span { position: relative; }
+.vb.on { color: #0b1c1b; background: linear-gradient(#a6f5ea, #4fb8ad); border-color: #8ff0e2; }
+.vb.on i { display: none; }
+.vb:disabled { cursor: default; opacity: 0.85; }
+.vhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(90, 220, 200, 0.07); box-shadow: inset 0 0 0 1px var(--soft); font-size: 14px; color: var(--ink-2); }
+.vhead b { font: 18px "Morpheus", serif; font-weight: normal; color: var(--title); }
+.vhead .err { color: #ef7d6d; }
 .froad .rr .bh { color: var(--muted); font-size: 11.5px; min-width: 44px; text-align: right; }
 .vs2 .row, .vspec .row { grid-template-columns: 30px 108px 1fr 70px; }
 .vspec .v, .vs2 .v { text-align: right; line-height: 1.15; min-width: 0; }
@@ -584,9 +595,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261017234112"></script>
-<script src="data-summary.js?v=20261017234112"></script>
-<script src="data-open.js?v=20261017234112"></script>
+<script src="data-multi.js?v=20261017234928"></script>
+<script src="data-summary.js?v=20261017234928"></script>
+<script src="data-open.js?v=20261017234928"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -615,6 +626,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     open: { kicker: 'The Forever Open', title: 'Road to the Finals' },
   };
   let O = window.LI_OPEN;
+  const VOTE_API = 'https://forever-vote.sanredz.workers.dev';
+  let VOTE = null, voteErr = '';
   if (!O) document.querySelectorAll('.tab[data-v="open"]').forEach((t) => t.remove());
   const hasWorld = !!(S && S.duels);
   if (!hasWorld) document.querySelectorAll('.tab[data-v="duels"], .tab[data-v="life"]').forEach((t) => t.remove());
@@ -1188,10 +1201,25 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       <div class="optout">The 12 most played specs, from the talents each player entered with.</div>`;
     h += panel('s4', 'Spec win rates', 'Win rate of each spec in the qualifiers, mirrors included. Hover for how many play it.', specHtml);
 
+    const voting = VOTE && VOTE.state !== 'soon';
+    const voted = VOTE && VOTE.mine != null;
+    const showShare = VOTE && (voted || VOTE.state === 'closed');
+    const voteBtn = (r) => {
+      if (!voting) return '';
+      if (!r.q) return '<span></span>';
+      const n = (VOTE.counts || {})[r.id] || 0, share = VOTE.total ? n / VOTE.total : 0;
+      const mine = VOTE.mine === r.id;
+      const label = showShare ? `${Math.round(share * 100)}%` : 'Vote';
+      return `<button class="vb ${mine ? 'on' : ''}" data-vote="${r.id}" ${VOTE.state === 'closed' ? 'disabled' : ''} data-tip="${esc(r.n)}|${mine ? 'Your pick. ' : ''}${showShare ? `${fmt(n)} ${n === 1 ? 'vote' : 'votes'}` : 'Vote for them to win the Forever Open'}">${showShare && !mine ? `<i style="width:${share * 100}%"></i>` : ''}<span>${mine ? '✓ ' : ''}${label}</span></button>`;
+    };
     const road = O.finals.slice().sort((a, b) => CLASSES.indexOf(a.c) - CLASSES.indexOf(b.c)).map((f) => `<div class="rc"><h4 style="color:${CC[f.c]}"><img src="${cls(f.c)}" alt="">${CN[f.c]}<small>${fmt(f.n)} entered</small></h4>
-      ${f.top.map((r, i) => `<div class="rr" data-ofind="${esc(r.n)}"${r.t ? ` data-tip="${esc(r.n)}|Tied at the cut line${O.live ? '' : ', decided by a playoff'}"` : ''}><i>${i + 1}</i><span class="nm">${esc(r.n)}${r.t ? ' <small style="color:#ffd98a">tie</small>' : ''}</span><span class="rec">${r.w}–${r.l}</span><span class="bh">Bh ${r.b}</span></div>`).join('')}</div>`).join('');
+      ${f.top.map((r, i) => `<div class="rr" data-ofind="${esc(r.n)}"${r.t ? ` data-tip="${esc(r.n)}|Tied at the cut line${O.live ? '' : ', decided by a playoff'}"` : ''}><i>${i + 1}</i><span class="nm">${esc(r.n)}${r.t ? ' <small style="color:#ffd98a">tie</small>' : ''}</span><span class="rec">${r.w}–${r.l}</span><span class="bh">Bh ${r.b}</span>${voteBtn(r)}</div>`).join('')}</div>`).join('');
+    let vhead = '';
+    if (VOTE && VOTE.state === 'open') vhead = `<div class="vhead"><b>Who wins it all?</b><span>${voted ? 'Thanks for voting. You can change your pick until the finals start.' : 'Pick the finalist you think takes the whole thing. One vote per connection.'} ${fmt(VOTE.total)} ${VOTE.total === 1 ? 'vote' : 'votes'} so far.</span>${voteErr ? `<span class="err">${esc(voteErr)}</span>` : ''}</div>`;
+    else if (VOTE && VOTE.state === 'closed') vhead = `<div class="vhead"><b>The crowd's pick</b><span>Voting closed with ${fmt(VOTE.total)} votes.</span></div>`;
+    else if (VOTE && VOTE.state === 'soon') vhead = `<div class="vhead"><b>Who wins it all?</b><span>Voting on the winner opens here when the qualifiers finish.</span></div>`;
     h += panel('s8', O.live ? 'Current finals spots' : 'Finalists', 'Top 4 of each class go to the finals, ranked by record and then Buchholz (the combined points of everyone they played). Click a name to see their matches.',
-      `<div class="froad">${road}</div><div class="optout">${O.live ? 'Live standings, changes after every round.' : 'Final standings after six rounds.'} Bh: Buchholz, the tiebreaker.</div>`);
+      `${vhead}<div class="froad${voting ? ' voting' : ''}">${road}</div><div class="optout">${O.live ? 'Live standings, changes after every round.' : 'Final standings after six rounds.'} Bh: Buchholz, the tiebreaker.</div>`, { id: 'finals' });
 
     const X = (S.duels && S.duels['All|Horde|even']) || { ladder: [] };
     const ow = {};
@@ -1275,7 +1303,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     box.oninput = () => { OS.q = box.value.trim(); OS.more = 0; OS.open = -1; draw(); };
     document.querySelectorAll('[data-oc]').forEach((x) => x.onclick = () => { OS.c = x.dataset.oc; OS.sp = -1; OS.more = 0; document.querySelectorAll('[data-oc]').forEach((y) => y.classList.toggle('on', y === x)); draw(); });
     document.querySelectorAll('[data-ost]').forEach((x) => x.onclick = () => { OS.st = x.dataset.ost; OS.more = 0; document.querySelectorAll('[data-ost]').forEach((y) => y.classList.toggle('on', y === x)); draw(); });
-    document.querySelectorAll('[data-ofind]').forEach((x) => x.onclick = () => find(x.dataset.ofind));
+    document.querySelectorAll('[data-ofind]').forEach((x) => x.onclick = (e) => { if (!e.target.closest('[data-vote]')) find(x.dataset.ofind); });
+    document.querySelectorAll('[data-vote]').forEach((x) => x.onclick = () => castVote(+x.dataset.vote));
     document.querySelectorAll('[data-otc]').forEach((x) => x.onclick = () => { OS.tc = x.dataset.otc; keepTcls(OS.tc); renderKeep(); });
     const listEl = document.getElementById('everyone');
     listEl.addEventListener('click', (e) => {
@@ -1420,7 +1449,23 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   veil.addEventListener('click', (e) => { if (e.target === veil) close(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
   route();
+  function loadVotes() {
+    
+    fetch(VOTE_API + '/api/votes').then((r) => r.json()).then((v) => {
+      if (!v || !v.state) return;
+      const changed = JSON.stringify(v) !== JSON.stringify(VOTE);
+      VOTE = v;
+      if (changed && view === 'open') renderKeep();
+    }).catch(() => {});
+  }
+  function castVote(id) {
+    voteErr = '';
+    fetch(VOTE_API + '/api/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pick: id }) })
+      .then((r) => r.json()).then((v) => { if (v.error) voteErr = v.error; else VOTE = v; renderKeep(); })
+      .catch(() => { voteErr = 'Could not reach the vote box. Try again in a moment.'; renderKeep(); });
+  }
   function freshOpen() {
+    loadVotes();
     const el = document.createElement('script');
     el.src = 'data-open.js?t=' + Math.floor(Date.now() / 60000);
     el.onload = () => {
@@ -1438,6 +1483,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   if (O) {
     freshOpen();
     setInterval(() => { if (view === 'open' && O.live && !document.hidden && document.activeElement?.id !== 'osearch') freshOpen(); }, 120000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && view === 'open' && O.live) freshOpen(); });
   }
 })();
 </script>

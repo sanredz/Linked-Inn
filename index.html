@@ -167,6 +167,19 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .optout { margin-top: 12px; font-size: 12px; color: var(--muted); }
 .btog { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
 .btog .chips { flex-wrap: nowrap; }
+.tspec { display: none; }
+@media (max-width: 720px) {
+  .btog .chips { flex-wrap: wrap; }
+  .tspec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 8px; }
+  .tspec button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px 7px; border-radius: 8px; cursor: pointer; font: 13px "Friz", serif; color: var(--ink-2);
+    background: rgba(0, 0, 0, 0.35); border: 1px solid var(--soft); }
+  .tspec button img { width: 28px; height: 28px; border-radius: 50%; opacity: 0.7; }
+  .tspec button small { font-size: 11px; color: var(--muted); }
+  .tspec button.on { color: var(--title); border-color: var(--title2); background: linear-gradient(rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.3)); }
+  .tspec button.on img { opacity: 1; box-shadow: 0 0 0 2px var(--title2); }
+  .ttrees .ttab:not(.on) { display: none; }
+  .ttrees { padding: 6px 0; }
+}
 .ttrees { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 6px; padding: 6px; border-radius: 10px; background: #050403; box-shadow: inset 0 0 0 1px rgba(255, 220, 150, 0.12); }
 .ttab { flex: none; position: relative; padding: 14px 18px 20px; border-radius: 6px; overflow: hidden;
   background: linear-gradient(rgba(6, 5, 4, 0.55), rgba(6, 5, 4, 0.6) 55%, rgba(6, 5, 4, 0.78)), var(--art) center / cover;
@@ -523,6 +536,10 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
   .pr { grid-template-columns: 30px 26px 1fr auto; gap: 8px; } .pr .sp, .pr .pod, .pr .bh, .pr.hd { display: none; } .pr .badge { grid-column: 3 / 5; }
   .hist { margin-left: 10px; } .hist .g { grid-template-columns: 30px 20px 1fr auto; } .hist .g .s { display: none; }
 }
+@media (max-width: 720px) {
+  .vs2 .row, .vspec .row { grid-template-columns: 28px 78px 1fr 56px; gap: 8px; padding: 5px 2px; }
+  .vs2 .row .n, .vspec .row .n { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
 </style>
 <script>
 let me = false;
@@ -603,9 +620,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018003101"></script>
-<script src="data-summary.js?v=20261018003101"></script>
-<script src="data-open.js?v=20261018003101"></script>
+<script src="data-multi.js?v=20261018003922"></script>
+<script src="data-summary.js?v=20261018003922"></script>
+<script src="data-open.js?v=20261018003922"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1115,11 +1132,22 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.getElementById('updated').textContent = `Updated ${S.generated || ''}`;
   }
 
+  const TSPEC = {};
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-tspec]');
+    if (!b) return;
+    const bar = b.closest('.tspec'), t = +b.dataset.tspec;
+    TSPEC[bar.dataset.tc] = t;
+    bar.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+    bar.nextElementSibling.querySelectorAll('.ttab').forEach((x) => x.classList.toggle('on', +x.dataset.tab === t));
+  });
   function talentTrees(T, c, tree, noun) {
     const CW = 54, CH = 66;
     const byId = {};
     tree.nodes.forEach((nd) => byId[nd.id] = nd);
     const cols = Math.max(4, ...tree.nodes.map((nd) => nd.col + 1)), rows = Math.max(...tree.nodes.map((nd) => nd.row)) + 1;
+    const active = TSPEC[c] != null ? TSPEC[c] : T.specs.indexOf(Math.max(...T.specs));
+    const switcher = `<div class="tspec" data-tc="${c}">${tree.tabs.map((name, t) => `<button class="${t === active ? 'on' : ''}" data-tspec="${t}">${tree.icons && tree.icons[t] ? `<img src="assets/icons/${tree.icons[t]}.png" alt="">` : ''}${name}<small>${Math.round(100 * T.specs[t] / Math.max(1, T.n))}%</small></button>`).join('')}</div>`;
     const tabsHtml = tree.tabs.map((name, t) => {
       const nodes = tree.nodes.filter((nd) => nd.tab === t);
       if (!nodes.length) return '';
@@ -1145,7 +1173,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
           <div class="p">${Math.round(pct * 100)}%</div>${nd.max > 1 ? `<div class="rk"><span style="width:${e[0] ? 100 * avg / nd.max : 0}%"></span></div>` : ''}</div>`;
       }).join('');
       const sIcon = tree.icons && tree.icons[t] ? `<img class="si" src="assets/icons/${tree.icons[t]}.png" alt="">` : '';
-      return `<div class="ttab" style="--art:url('assets/game/talents/${c}-${t}.jpg');width:${cols * CW + 36}px"><div class="th"><div class="row1">${sIcon}<div><b>${name}</b><small>${Math.round(share * 100)}% of ${CN[c].toLowerCase()}s</small></div></div><i style="width:${Math.max(4, share * 100)}%"></i>${winTxt}</div>
+      return `<div class="ttab ${t === active ? 'on' : ''}" data-tab="${t}" style="--art:url('assets/game/talents/${c}-${t}.jpg');width:${cols * CW + 36}px"><div class="th"><div class="row1">${sIcon}<div><b>${name}</b><small>${Math.round(share * 100)}% of ${CN[c].toLowerCase()}s</small></div></div><i style="width:${Math.max(4, share * 100)}%"></i>${winTxt}</div>
         <div class="tbox" style="width:${cols * CW}px;height:${rows * CH}px"><svg width="${cols * CW}" height="${rows * CH}">${lines}</svg>${nodeHtml}</div></div>`;
     }).join('');
     const builds = T.builds.map(([k, v]) => {
@@ -1153,7 +1181,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       const main = tree.tabs[pts.indexOf(Math.max(...pts))];
       return `<span><b>${k}</b> ${main} · ${v} ${v === 1 ? 'player' : 'players'} (${Math.round(100 * v / T.n)}%)</span>`;
     }).join('');
-    return `<div class="ttrees">${tabsHtml}</div><div class="tlegend"><i style="background:#2f9e48">▲</i>within the same spec, players who take it win more<i style="background:#c0392b">▼</i>win less · hover any talent for the numbers</div><div class="tbuilds">Most common builds: ${builds}</div>`;
+    return `${switcher}<div class="ttrees">${tabsHtml}</div><div class="tlegend"><i style="background:#2f9e48">▲</i>within the same spec, players who take it win more<i style="background:#c0392b">▼</i>win less · hover any talent for the numbers</div><div class="tbuilds">Most common builds: ${builds}</div>`;
   }
 
   function renderOpen() {

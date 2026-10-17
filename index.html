@@ -455,7 +455,9 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 .froad .rr:hover .nm { text-decoration: underline; }
 .froad .rr i { font-style: normal; color: var(--muted); font-size: 12px; }
 .froad .rr .rec { color: var(--ink); }
-.froad.voting .rr { grid-template-columns: 18px 1fr auto auto 58px; }
+.froad.voting .rr { grid-template-columns: 18px minmax(0, 1fr) auto auto 52px; }
+.froad .rr .nm { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.froad .rr .rec { white-space: nowrap; }
 .vb { font: 11.5px "Friz", serif; padding: 2px 0; border-radius: 999px; cursor: pointer; color: var(--title); background: rgba(90, 220, 200, 0.08); border: 1px solid var(--line); position: relative; overflow: hidden; text-align: center; }
 .vb:hover { background: rgba(90, 220, 200, 0.2); color: #fff; }
 .vb i { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(90, 220, 200, 0.25); }
@@ -595,9 +597,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261017234928"></script>
-<script src="data-summary.js?v=20261017234928"></script>
-<script src="data-open.js?v=20261017234928"></script>
+<script src="data-multi.js?v=20261017235746"></script>
+<script src="data-summary.js?v=20261017235746"></script>
+<script src="data-open.js?v=20261017235746"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;

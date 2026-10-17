@@ -390,6 +390,8 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
   .trail { height: auto; } .trail svg { display: none; }
   .stop, .stop.up .facts { position: static; transform: none; width: auto; margin-bottom: 14px; }
   .row { grid-template-columns: 30px 90px 1fr auto; gap: 8px; }
+  .vwide .v, .vmid .v { min-width: 50px; line-height: 1.1; }
+  .vwide .v small, .vmid .v small { display: block; font-size: 11px !important; }
   .prow { grid-template-columns: 30px 1fr auto; }
   .cchamps { grid-template-columns: repeat(2, 1fr); }
   .vrow { grid-template-columns: 34px 1fr 28px 1fr 34px; } .vrow .lead { display: none; } .vrow > img { width: 28px; height: 28px; }
@@ -476,8 +478,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261017081351"></script>
-<script src="data-summary.js?v=20261017081351"></script>
+<script src="data-multi.js?v=20261017095143"></script>
+<script src="data-summary.js?v=20261017095143"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;

@@ -31,6 +31,7 @@ Work\Work.lua
 UI\UI.lua
 UI\Book.lua
 UI\Orders.lua
+UI\Tooltips.lua
 UI\Settings.lua
 Work\WorkUI.lua
 UI\Minimap.lua

@@ -128,6 +128,7 @@ local DEFAULTS = {
 	keepSkill = 0,
 	housekeeping = "off",
 	guildOnly = false,
+	tooltips = true,
 	collapsed = {},
 }
 

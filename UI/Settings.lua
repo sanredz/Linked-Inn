@@ -530,7 +530,13 @@ local function Create()
 		end
 	end)
 
-	local minimap = Section(page, frame.wipe, "Minimap", 22)
+	local tips = Section(page, frame.wipe, "Item tooltips", 22)
+	frame.tooltips, frame.tooltipsLast = Option(page, tips, "Show who can make it",
+		"Items show who on your list can make them. Recipes you could learn show how many crafters on your list already know them.",
+		function() return LI.settings.tooltips ~= false end,
+		function(on) LI.settings.tooltips = on end)
+
+	local minimap = Section(page, frame.tooltipsLast, "Minimap", 22)
 	frame.minimap = Option(page, minimap, "Show the minimap button", nil,
 		function() return LI.settings.showMinimap ~= false end,
 		function(on) LI.settings.showMinimap = on end)
@@ -576,7 +582,7 @@ function Settings.Refresh()
 	if not frame then
 		return
 	end
-	for _, box in pairs({ frame.city or false, frame.nearby or false, frame.read, frame.hide, frame.guild, frame.minimap }) do
+	for _, box in pairs({ frame.city or false, frame.nearby or false, frame.read, frame.hide, frame.guild, frame.tooltips, frame.minimap }) do
 		if box then
 			box:SetChecked(box.get() and true or false)
 		end

@@ -3594,5 +3594,80 @@ do
 	check(not LI.Sync.OwnCard() and not (LI.Sync.Hello() or ""):find("zzzz"), "an old list saved before characters were told apart is cleared on a character with no professions")
 end
 
+do
+	Setup()
+	Boot()
+	Advance(1)
+	local function Tailor(name, recipes)
+		local c = LI.Crafter(name .. "-TestRealm", true)
+		c.seen = time()
+		c.profs.tailoring = { name = "Tailoring", rank = 100, max = 150, recipes = recipes, count = 1 }
+		return c
+	end
+	LI.db.recipes[3914] = { n = "Brown Linen Pants", item = 4343, p = "tailoring" }
+	LI.db.recipes[3915] = { n = "Brown Linen Shirt", item = 4344, p = "tailoring" }
+	Tailor("Needle Point", { [3914] = true })
+	LI.SetRecipes(LI.playerKey, { name = "Tailoring", rank = 100, max = 150 }, { { id = 3914, name = "Brown Linen Pants", item = 4343 } }, "own")
+	LI.Fire("CraftersChanged")
+	local lines = {}
+	local tip = {
+		AddLine = function(_, t) lines[#lines + 1] = t end,
+		AddDoubleLine = function(_, l, r) lines[#lines + 1] = l .. " || " .. r end,
+		Show = function() end,
+	}
+	local realTip, realInstant = _G.GameTooltip, C_Item.GetItemInfoInstant
+	_G.GameTooltip = tip
+	local class = {}
+	C_Item.GetItemInfoInstant = function(id) return id, "x", "y", "", 1, (class[id] or {})[1] or 4, (class[id] or {})[2] or 0 end
+	local function Hover(id)
+		lines = {}
+		LI.Tooltips.Decorate(tip, { id = id })
+		return lines[1]
+	end
+	local line = Hover(4343)
+	check(line and line:find("Needle Point can make this", 1, true), "hovering a crafted item names who on your list can make it", line)
+	check(not (line or ""):find(LI.ShortName(LI.playerKey), 1, true), "and never counts you")
+	check(Hover(4344) == nil, "an item nobody on your list makes gets no extra line")
+	check(Hover(9999) == nil, "and neither does an item that isn't crafted at all")
+	Tailor("Silk Purse", { [3914] = true })
+	Tailor("Bolt Cloth", { [3914] = true })
+	LI.Fire("CraftersChanged")
+	line = Hover(4343)
+	check(line and line:find("and 2 others can make this", 1, true), "with more crafters it stays one short line", line)
+	class[20001] = { 9, 2 }
+	W.itemNames = { [20001] = "Pattern: Brown Linen Pants", [20002] = "Pattern: Brown Linen Shirt" }
+	class[20002] = { 9, 2 }
+	line = Hover(20001)
+	check(line and line:find("Known by 3 of 3 tailors", 1, true), "a pattern shows how many tailors on your list already know it", line)
+	check(not line:find("Rare", 1, true), "and isn't called rare with so few tailors to compare", line)
+	line = Hover(20002)
+	check(line and line:find("None of your 3 tailors know this", 1, true), "an unknown pattern says nobody knows it yet", line)
+	check(not line:find("Rare", 1, true), "but three tailors are too few to call it rare", line)
+	for i = 1, 20 do
+		Tailor("Extra Tailor" .. i, { [3914] = true })
+	end
+	LI.Fire("CraftersChanged")
+	line = Hover(20002)
+	check(line and line:find("Rare", 1, true), "with enough tailors to compare, an unknown pattern is marked rare", line)
+	line = Hover(20001)
+	check(line and not line:find("Rare", 1, true), "but a common one isn't", line)
+	LI.settings.tooltips = false
+	check(Hover(4343) == nil and Hover(20002) == nil, "turning the setting off removes the lines")
+	LI.settings.tooltips = true
+	check(Hover(4343) ~= nil, "and turning it back on brings them back")
+	_G.GameTooltip, C_Item.GetItemInfoInstant = realTip, realInstant
+	W.itemNames = nil
+end
+
+do
+	Setup()
+	Boot()
+	Advance(1)
+	check(LI.settings.tooltips == true, "item tooltip lines are on by default")
+	LI.settings.tooltips = nil
+	Boot(SaveVars())
+	check(LI.settings.tooltips == true, "and an existing save without the setting gets it switched on")
+end
+
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))
 FAILURES = fail + #W.errors

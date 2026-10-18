@@ -571,6 +571,17 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
   .vs2 .row, .vspec .row { grid-template-columns: 28px 78px 1fr 56px; gap: 8px; padding: 5px 2px; }
   .vs2 .row .n, .vspec .row .n { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
+@media (max-width: 720px) {
+  .fogrid { grid-template-columns: 26px repeat(var(--n), minmax(0, 1fr)) 2px 44px; }
+  .fogrid .cell { min-width: 0; overflow: hidden; }
+  .fogrid.many { grid-template-columns: 22px repeat(var(--n), minmax(0, 1fr)) 2px 40px; gap: 1.5px; }
+  .fogrid.many .cell { font-size: 10px; height: 30px; border-radius: 4px; }
+  .fogrid.many .cell .pc { display: none; }
+  .fogrid.many .rh img { width: 20px; height: 20px; }
+  .fogrid.many .ch img.sp { width: 17px; height: 17px; border-radius: 4px; }
+  .fogrid.many .tot { font-size: 11px; }
+  .fogrid.many .corner { font-size: 9px; padding: 2px; }
+}
 </style>
 <script>
 let me = false;
@@ -651,9 +662,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018120341"></script>
-<script src="data-summary.js?v=20261018120341"></script>
-<script src="data-open.js?v=20261018120341"></script>
+<script src="data-multi.js?v=20261018120702"></script>
+<script src="data-summary.js?v=20261018120702"></script>
+<script src="data-open.js?v=20261018120702"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1256,7 +1267,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const sk = Object.keys(SR).filter((k) => SR[k][0] + SR[k][1] >= 200).sort((a, b) => SR[b][0] / (SR[b][0] + SR[b][1]) - SR[a][0] / (SR[a][0] + SR[a][1]));
     const sName = (k) => { const [c, i] = k.split(':'); return `${specName(c, +i)} ${CN[c]}`; };
     const sImg = (k, tip) => { const [c, i] = k.split(':'); return `<img class="sp" style="--cc:${CC[c]}" src="${specIcon(c, +i)}" alt="" title="">`; };
-    let sg = `<div class="grid fogrid" style="--n:${sk.length}"><div class="corner">wins vs</div>`;
+    let sg = `<div class="grid fogrid many" style="--n:${sk.length}"><div class="corner">wins vs</div>`;
     sg += sk.map((k) => `<div class="ch" data-tip="${esc(sName(k))}">${sImg(k)}</div>`).join('') + '<div></div><div class="toth">Overall</div>';
     sk.forEach((a) => {
       sg += `<div class="rh" data-tip="${esc(sName(a))}">${sImg(a)}<i></i></div>`;
@@ -1264,7 +1275,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         const w = SC[a + '>' + b] || 0, l = SC[b + '>' + a] || 0, n = w + l;
         if (a === b || n < 5) { sg += `<div class="cell none"${a !== b && n ? ` data-tip="${esc(sName(a))} vs ${esc(sName(b))}|Only ${n} ${n === 1 ? 'match' : 'matches'}, too few to show"` : ''}></div>`; return; }
         const p = w / n, t = Math.min(1, Math.abs(p - 0.5) * 2) * Math.min(1, n / 12);
-        sg += `<div class="cell" style="background:${shade(p, t)}" data-tip="${esc(sName(a))} vs ${esc(sName(b))}|${w} won, ${l} lost">${Math.round(p * 100)}%<small>${n}</small></div>`;
+        sg += `<div class="cell" style="background:${shade(p, t)}" data-tip="${esc(sName(a))} vs ${esc(sName(b))}|${w} won, ${l} lost">${Math.round(p * 100)}<span class="pc">%</span><small>${n}</small></div>`;
       });
       const [w, l] = SR[a], p = w / (w + l), edge = shade(p, 0.35 + 0.6 * Math.min(1, Math.abs(p - 0.5) * 2.5));
       sg += `<div></div><div class="tot" style="box-shadow:inset 0 0 0 1px ${edge},inset 4px 0 0 ${edge}" data-tip="${esc(sName(a))}|${w} won, ${l} lost against other specs">${Math.round(p * 100)}%<small>${w}–${l}</small></div>`;
@@ -1637,7 +1648,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     el.onload = () => {
       el.remove();
       const N = window.LI_OPEN;
-      if (!N || !O || N.at === O.at) return;
+      if (!N || !O || !(N.at > O.at)) { window.LI_OPEN = O; return; }
       const was = OS.open >= 0 && O.players[OS.open] ? O.players[OS.open][0] : null;
       O = N;
       OS.open = was ? O.players.findIndex((p) => p[0] === was) : -1;

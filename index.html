@@ -480,6 +480,33 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 .vb.on { color: #0b1c1b; background: linear-gradient(#a6f5ea, #4fb8ad); border-color: #8ff0e2; }
 .vb.on i { display: none; }
 .vb:disabled { cursor: default; opacity: 0.85; }
+.pexp { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 18px; align-items: start; margin: 2px 0 10px 84px; }
+.pexp .hist { margin: 0; }
+.doll { display: grid; grid-template-columns: 46px 1fr 46px; gap: 8px 10px; padding: 14px; border-radius: 10px; position: relative; overflow: hidden;
+  background: linear-gradient(rgba(5, 4, 3, 0.62), rgba(5, 4, 3, 0.82)), var(--art) center / cover; box-shadow: inset 0 0 0 1px rgba(255, 220, 150, 0.16), 0 6px 20px rgba(0, 0, 0, 0.5); }
+.doll .col { display: flex; flex-direction: column; gap: 6px; }
+.doll .wpn { grid-column: 1 / -1; display: flex; justify-content: center; gap: 8px; margin-top: 2px; }
+.slot { width: 46px; height: 46px; border-radius: 6px; position: relative; background: rgba(0, 0, 0, 0.55); box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--qc, rgba(255, 255, 255, 0.07)); }
+.slot img { width: 100%; height: 100%; border-radius: 6px; display: block; }
+.slot.empty { box-shadow: 0 0 0 1px #000, inset 0 0 12px rgba(0, 0, 0, 0.8); opacity: 0.45; }
+.slot .en { position: absolute; right: -3px; bottom: -3px; width: 11px; height: 11px; border-radius: 50%; background: #3fd06a; box-shadow: 0 0 0 2px #000; }
+.doll .who { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; }
+.doll .por { position: relative; width: 104px; height: 104px; }
+.doll .por > img { width: 104px; height: 104px; border-radius: 50%; box-shadow: 0 0 0 3px #000, 0 0 0 5px var(--cc), 0 8px 24px rgba(0, 0, 0, 0.7); }
+.doll .por .ci { position: absolute; right: -4px; bottom: -2px; width: 36px; height: 36px; border-radius: 50%; box-shadow: 0 0 0 2px #000; }
+.doll .who b { font: 22px "Morpheus", serif; font-weight: normal; text-shadow: 0 2px 0 #000; margin-top: 6px; }
+.doll .who .sub { font-size: 13px; color: var(--ink-2); }
+.doll .who .il { font: 26px "Friz", serif; color: #fff; text-shadow: 0 2px 0 #000; line-height: 1; margin-top: 6px; }
+.doll .who .il small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+.doll .note { grid-column: 1 / -1; font-size: 11.5px; color: var(--muted); text-align: center; line-height: 1.4; margin-top: 4px; }
+.nogear { padding: 22px 16px; border-radius: 10px; text-align: center; color: var(--muted); font-size: 13px; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1px var(--soft); }
+#tip .gn { font: 15px "Friz", serif; margin-bottom: 3px; }
+#tip .gl { color: #ffd100; }
+#tip .gr { display: flex; justify-content: space-between; gap: 16px; }
+#tip .ge { color: #1eff00; }
+#tip .gd { color: var(--muted); margin-top: 4px; }
+@media (max-width: 900px) { .pexp { grid-template-columns: 1fr; margin-left: 10px; } .doll { max-width: 440px; } }
+@media (max-width: 400px) { .doll { grid-template-columns: 40px 1fr 40px; padding: 10px; gap: 6px; } .slot { width: 40px; height: 40px; } .doll .por, .doll .por > img { width: 84px; height: 84px; } }
 .swaph { display: flex; align-items: baseline; gap: 6px; }
 .sw { font: 19px "Morpheus", serif; color: var(--muted); background: none; border: 0; padding: 2px 4px 6px; cursor: pointer; border-bottom: 2px solid transparent; text-shadow: 0 2px 0 #000; transition: color 0.15s; white-space: nowrap; }
 .sw:hover { color: var(--ink); }
@@ -622,9 +649,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018081143"></script>
-<script src="data-summary.js?v=20261018081143"></script>
-<script src="data-open.js?v=20261018081143"></script>
+<script src="data-multi.js?v=20261018092813"></script>
+<script src="data-summary.js?v=20261018092813"></script>
+<script src="data-open.js?v=20261018092813"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1326,12 +1353,12 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
           <span class="rec">${p[4]}–${p[5]}${p[6] ? `–${p[6]}` : ''}</span><span class="bh">${p[7]}</span>${b ? `<span class="badge ${b[0]}">${b[1]}</span>` : '<span></span>'}</div>`;
         if (OS.open === i) {
           const mine = (games[i] || []).slice().sort((x, y) => x[0] - y[0]);
-          out += `<div class="hist">${mine.length ? mine.map((m) => {
+          out += `<div class="pexp"><div class="hist">${mine.length ? mine.map((m) => {
             const me = m[1] === i ? 0 : 1, oi = me ? m[1] : m[2], o = P[oi];
             const res = m[3] === -2 ? ['p', 'Playing'] : m[3] === -1 ? ['p', 'Tie'] : m[3] === me ? ['w', 'Won'] : ['l', 'Lost'];
             return `<div class="g"><span class="r">Round ${m[0]}</span><img src="${cls(o[1])}" alt=""><span class="o" data-ojump="${oi}" style="color:${CC[o[1]]}">${esc(o[0])} <small style="color:var(--muted)">${o[4]}–${o[5]}</small></span>
               <span class="s r">${o[9] >= 0 ? `${specName(o[1], o[9])} ${o[10]}` : ''}</span><span class="res ${res[0]}">${res[1]}</span></div>`;
-          }).join('') : '<div class="none">No matches yet.</div>'}</div>`;
+          }).join('') : '<div class="none">No matches yet.</div>'}</div>${dollHtml(p)}</div>`;
         }
         return out;
       }).join('');
@@ -1339,6 +1366,31 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         + (list.length > limit ? `<button class="chip plain more" id="omore">Show more (${fmt(list.length - limit)} left)</button>` : '');
       const more = document.getElementById('omore');
       if (more) more.onclick = () => { OS.more++; draw(); };
+    }
+    function dollHtml(p) {
+      if (!window.LI_GEAR) { loadGear().then(draw); return '<div class="nogear">Loading gear…</div>'; }
+      const G = window.LI_GEAR, g = G.p[p[0].toLowerCase()];
+      if (!g) return '<div class="nogear">I never inspected this player before the tournament, so there is no gear to show.</div>';
+      const [t, lv, slots] = g;
+      const slot = (id) => {
+        const e = slots[id], it = e && G.i[e[0]];
+        if (!it) return `<div class="slot empty" data-tip="${GEAR_SLOT[id]}|Nothing seen here"></div>`;
+        return `<div class="slot" style="--qc:${QC[it[1]] || '#fff'}" data-gi="${e[0]}:${e[1] || 0}"><img src="assets/icons/${it[10]}.png" alt="">${e[1] && G.e[e[1]] ? '<i class="en"></i>' : ''}</div>`;
+      };
+      const lvls = Object.entries(slots).filter(([k]) => k !== '4' && k !== '19').map(([, e]) => G.i[e[0]] && G.i[e[0]][2]).filter((x) => x);
+      const avg = lvls.length ? (lvls.reduce((a, b) => a + b, 0) / lvls.length).toFixed(1) : '–';
+      const rare = Object.values(slots).filter((e) => G.i[e[0]] && G.i[e[0]][1] >= 3).length;
+      const when = t ? new Date(t * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+      const art = p[9] >= 0 ? `assets/game/talents/${p[1]}-${p[9]}.jpg` : '';
+      return `<div class="doll" style="${art ? `--art:url('${art}');` : ''}--cc:${CC[p[1]]}">
+        <div class="col">${[1, 2, 3, 15, 5, 4, 19, 9].map(slot).join('')}</div>
+        <div class="who"><div class="por"><img src="${race(p[2] || 'Orc')}" alt=""><img class="ci" src="${cls(p[1])}" alt=""></div>
+          <b style="color:${CC[p[1]]}">${esc(p[0])}</b><span class="sub">${lv ? `Level ${lv} ` : ''}${RACE_N[p[2]] || ''} ${p[9] >= 0 ? specName(p[1], p[9]) : ''} ${CN[p[1]]}</span>
+          <span class="il">${avg}<small>average item level · ${rare} rare</small></span></div>
+        <div class="col">${[10, 6, 7, 8, 11, 12, 13, 14].map(slot).join('')}</div>
+        <div class="wpn">${[16, 17, 18].map(slot).join('')}</div>
+        <div class="note">Gear from my own inspections before the tournament${when ? `, last seen ${when}` : ''}. It may not be what they wore in their matches, and not every player was seen.</div>
+      </div>`;
     }
     const find = (name, idx) => {
       OS.q = name; OS.c = ''; OS.sp = -1; OS.st = 'all'; OS.more = 0;
@@ -1453,6 +1505,35 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     L.push(`<div class="dim">Known by ${fmt(n)} ${n === 1 ? 'crafter' : 'crafters'}</div>`);
     return L.join('');
   }
+  const GEAR_SLOT = { 1: 'Head', 2: 'Neck', 3: 'Shoulder', 4: 'Shirt', 5: 'Chest', 6: 'Waist', 7: 'Legs', 8: 'Feet', 9: 'Wrist', 10: 'Hands', 11: 'Finger', 12: 'Finger', 13: 'Trinket', 14: 'Trinket', 15: 'Back', 16: 'Main Hand', 17: 'Off Hand', 18: 'Ranged', 19: 'Tabard' };
+  let gearLoad;
+  function loadGear() {
+    gearLoad = gearLoad || new Promise((ok) => {
+      const el = document.createElement('script');
+      el.src = 'data-gear.js?v=' + ((O && O.gearAt) || '1');
+      el.onload = ok;
+      el.onerror = () => { window.LI_GEAR = { p: {}, i: {}, e: {} }; ok(); };
+      document.head.appendChild(el);
+    });
+    return gearLoad;
+  }
+  function gearTip(code) {
+    const G = window.LI_GEAR;
+    const [iid, eid] = code.split(':').map(Number);
+    const it = G && G.i[iid];
+    if (!it) return '';
+    const [name, q, ilvl, req, slot, kind, stats, equip, armor, bind, icon] = it;
+    const L = [`<div class="name"><img src="assets/icons/${icon}.png" alt=""><span style="color:${QC[q] || '#fff'}">${esc(name)}</span></div>`];
+    if (ilvl) L.push(`<div class="gl">Item Level ${ilvl}</div>`);
+    if (bind) L.push(`<div>${esc(bind)}</div>`);
+    if (slot || kind) L.push(`<div class="gr"><span>${esc(slot || '')}</span><span>${esc(kind || '')}</span></div>`);
+    if (armor) L.push(`<div>${armor} Armor</div>`);
+    (stats || []).forEach((x) => L.push(`<div>${esc(x)}</div>`));
+    if (eid && G.e[eid]) L.push(`<div class="ge">${esc(G.e[eid])}</div>`);
+    (equip || []).forEach((x) => L.push(`<div class="ge">${esc(x)}</div>`));
+    if (req) L.push(`<div>Requires Level ${req}</div>`);
+    return L.join('');
+  }
   function playerTip(el) {
     const cut = el.dataset.pl.indexOf(':');
     const v = (PV[el.dataset.pl.slice(0, cut)] || {})[el.dataset.pl.slice(cut + 1)];
@@ -1470,6 +1551,15 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   }
 
   document.addEventListener('mousemove', (e) => {
+    const gi = e.target.closest && e.target.closest('[data-gi]');
+    if (gi && window.LI_GEAR) {
+      tip.className = 'item';
+      tip.innerHTML = gearTip(gi.dataset.gi);
+      tip.style.display = 'block';
+      tip.style.left = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8) + 'px';
+      tip.style.top = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8) + 'px';
+      return;
+    }
     const it = e.target.closest && e.target.closest('[data-item]');
     const t = !it && e.target.closest && e.target.closest('[data-tip]');
     const pl = !it && !t && e.target.closest && e.target.closest('[data-pl]');

@@ -860,9 +860,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018181317"></script>
-<script src="data-summary.js?v=20261018181317"></script>
-<script src="data-open.js?v=20261018181317"></script>
+<script src="data-multi.js?v=20261018181619"></script>
+<script src="data-summary.js?v=20261018181619"></script>
+<script src="data-open.js?v=20261018181619"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -2072,6 +2072,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     if (eid && G.e[eid]) L.push(`<div class="ge">${esc(G.e[eid])}</div>`);
     (equip || []).forEach((x) => L.push(`<div class="ge">${esc(x)}</div>`));
     if (req) L.push(`<div>Requires Level ${req}</div>`);
+    if (it[11]) L.push('<div class="gd">Its bonus stats roll per item and were not recorded when I inspected them.</div>');
     return L.join('');
   }
   function playerTip(el) {

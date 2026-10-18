@@ -860,9 +860,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018202528"></script>
-<script src="data-summary.js?v=20261018202528"></script>
-<script src="data-open.js?v=20261018202528"></script>
+<script src="data-multi.js?v=20261018203016"></script>
+<script src="data-summary.js?v=20261018203016"></script>
+<script src="data-open.js?v=20261018203016"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -2140,7 +2140,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   document.getElementById('boardX').onclick = close;
   veil.addEventListener('click', (e) => { if (e.target === veil) close(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
-  route();
+  const waitLive = !!(O && O.fin && O.fin.live);
+  if (!waitLive) route();
   function loadVotes() {
     
     fetch(VOTE_API + '/api/votes').then((r) => r.json()).then((v) => {
@@ -2184,8 +2185,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     target.fin.live = !(gf && gf[5] === 'd');
     return before !== JSON.stringify(target.fin.m);
   }
-  function freshFin() {
-    if (!O || !O.fin) return;
+  function freshFin(done) {
+    if (!O || !O.fin) { if (done) done(); return; }
     fetch(VOTE_API + '/api/finals').then((r) => r.json()).then((d) => {
       if (!d || !Array.isArray(d.m) || d.m.length !== O.fin.m.length) return;
       const idx = {};
@@ -2201,7 +2202,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       if (bad) return;
       LIVEFIN = { m, at: d.at };
       if (applyLive(O) && view === 'open') renderKeep();
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => { if (done) done(); });
   }
   function freshOpen() {
     loadVotes();
@@ -2225,7 +2226,10 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   if (O) {
     freshOpen();
     if (O.fin) {
-      freshFin();
+      let routed = !waitLive;
+      const first = () => { if (!routed) { routed = true; route(); } };
+      freshFin(first);
+      setTimeout(first, 1500);
       setInterval(() => { if (view === 'open' && O.fin && O.fin.live && !document.hidden) freshFin(); }, 30000);
       document.addEventListener('visibilitychange', () => { if (!document.hidden && view === 'open' && O.fin && O.fin.live) freshFin(); });
     }

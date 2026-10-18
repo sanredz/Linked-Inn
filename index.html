@@ -860,9 +860,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018183810"></script>
-<script src="data-summary.js?v=20261018183810"></script>
-<script src="data-open.js?v=20261018183810"></script>
+<script src="data-multi.js?v=20261018184034"></script>
+<script src="data-summary.js?v=20261018184034"></script>
+<script src="data-open.js?v=20261018184034"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1694,16 +1694,20 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       const card = (m) => {
         const c = cheersOf(m), n = c[0] + c[1], A = P[m[3]], B = P[m[4]];
         const fan = A && B ? `${fanBar(m, A, B)}<div class="fc"><span>${n ? `${Math.round(100 * c[0] / n)}%` : ''}</span><span>${n ? `${fmt(n)} ${n === 1 ? 'cheer' : 'cheers'}` : m[5] === 'd' ? '' : 'Tap to cheer'}</span><span>${n ? `${Math.round(100 * c[1] / n)}%` : ''}</span></div>` : '';
-        return `<div class="mcard ${m[5]}" data-h2h="${key(m)}"><div class="mh"><span>${rname(m[0], m[1])} · ${bo(m[8])}</span>${m[5] === 'p' ? '<span class="lv">● Live</span>' : m[5] === 'd' ? '<span>Final</span>' : '<span>Up next</span>'}</div>${sideHtml(m, 0)}${sideHtml(m, 1)}${fan}</div>`;
+        return `<div class="mcard ${m[5]}" data-h2h="${key(m)}"><div class="mh"><span>${rname(m[0], m[1])} · ${bo(m[8])}</span>${m[5] === 'p' ? '<span class="lv">● Live</span>' : m[5] === 'd' ? '<span>Final</span>' : '<span>Ready</span>'}</div>${sideHtml(m, 0)}${sideHtml(m, 1)}${fan}</div>`;
       };
       const order = (m) => (m[0] === 'u' ? m[1] * 2 : m[1] + 1) * 100 + m[2];
-      const next = M.filter((m) => m[5] === 'n' && m[3] != null && m[4] != null).sort((a, b) => order(a) - order(b)).slice(0, live.length ? 6 : 9);
+      const next = M.filter((m) => m[5] === 'n' && m[3] != null && m[4] != null).sort((a, b) => order(a) - order(b));
       const recent = done.slice().sort((a, b) => (b[11] || '').localeCompare(a[11] || '')).slice(0, 6);
       let now = '';
       if (live.length) now += `<div class="mcards">${live.map(card).join('')}</div>`;
-      if (next.length && champ == null) now += `${live.length ? '<div class="rl2">Up next</div>' : ''}<div class="mcards">${next.map(card).join('')}</div>`;
+      if (next.length && champ == null) {
+        const groups = [];
+        next.forEach((m) => { const g = groups.find((x) => x[0] === m[0] && x[1] === m[1]); if (g) g[2].push(m); else groups.push([m[0], m[1], [m]]); });
+        now += groups.map(([sg, r, ms]) => `<div class="rl2">${live.length ? 'Ready · ' : ''}${rname(sg, r)} · ${bo(ms[0][8])} · ${ms.length} ${ms.length === 1 ? 'match' : 'matches'}</div><div class="mcards">${ms.map(card).join('')}</div>`).join('');
+      }
       if (recent.length) now += `<div class="rl2">Just finished</div><div class="mcards">${recent.map(card).join('')}</div>`;
-      h += panel('s12', live.length ? 'Live now' : champ != null ? 'Last results' : 'Up next', 'Click any match for the full head to head: their records, talents, gear and how the classes fared against each other in the qualifiers.', now || '<div class="optout">Nothing scheduled yet.</div>', { id: 'fnow' });
+      h += panel('s12', live.length ? 'Live now' : champ != null ? 'Last results' : 'Ready to play', 'Every match whose two players are known, grouped by round. There is no published order of play, so matches within a round are listed by bracket position. Click any match for the full head to head: their records, talents, gear and how the classes fared against each other in the qualifiers.', now || '<div class="optout">Nothing scheduled yet.</div>', { id: 'fnow' });
 
       const fcl = CLASSES.filter((c) => [...entered].some((i) => P[i][1] === c)).sort((a, b) => rate(b) - rate(a));
       const board = fcl.map((c) => {

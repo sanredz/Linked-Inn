@@ -350,7 +350,7 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .trophy .l { font: 14px "Morpheus", serif; color: var(--title2); }
 .trophy .w { font-size: 11.5px; color: var(--muted); }
 
-#tip { position: fixed; z-index: 20; pointer-events: none; display: none; max-width: 300px; padding: 9px 12px; border-radius: 6px; font-size: 13px; color: var(--ink);
+#tip { position: fixed; z-index: 40; pointer-events: none; display: none; max-width: 300px; padding: 9px 12px; border-radius: 6px; font-size: 13px; color: var(--ink);
   background: rgba(8, 8, 16, 0.95); border: 1px solid #7d7d9a; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7); }
 #tip b { display: block; font: 16px "Morpheus", serif; color: var(--gold); margin-bottom: 2px; font-weight: normal; }
 #tip.item { max-width: 340px; color: #fff; }
@@ -555,17 +555,29 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 .fp.champ { background: linear-gradient(90deg, rgba(255, 210, 100, 0.18), transparent); } .fp.champ .nm { color: #ffe39a; }
 .fkey { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 10px; }
 .fkey span { display: inline-flex; align-items: center; gap: 6px; }
-.brk { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; scrollbar-color: var(--fr1) transparent; scroll-snap-type: x proximity; }
-.brk .rd { flex: 0 0 min(210px, 46vw); display: flex; flex-direction: column; gap: 8px; scroll-snap-align: start; }
-.brk .rd h5 { margin: 0 0 2px; font: 15px "Morpheus", serif; font-weight: normal; color: var(--title2); }
-.brk .rd h5 small { display: block; font: 11px "Friz", serif; color: var(--muted); }
-.brk .bm { cursor: pointer; border-radius: 8px; padding: 5px 8px; background: rgba(0, 0, 0, 0.35); box-shadow: inset 0 0 0 1px var(--soft); }
-.brk .bm:hover { box-shadow: inset 0 0 0 1px var(--line); }
-.brk .bm.p { box-shadow: inset 0 0 0 1px rgba(255, 120, 100, 0.6); }
-.brk .mside { grid-template-columns: 20px minmax(0, 1fr) auto; gap: 6px; padding: 1px 0; }
-.brk .mside img { width: 20px; height: 20px; }
-.brk .mside .nm { font-size: 13px; }
-.brk .mside .sc { font-size: 14px; }
+.brk { overflow-x: auto; padding: 14px 16px 16px; border-radius: 10px; scrollbar-color: var(--fr1) transparent;
+  background: radial-gradient(ellipse at 50% -10%, rgba(63, 216, 200, 0.1), transparent 60%), linear-gradient(rgba(5, 11, 11, 0.86), rgba(5, 11, 11, 0.94)), url("assets/game/art-warriorarms.jpg") center / cover;
+  box-shadow: inset 0 0 0 1px var(--soft), inset 0 0 40px rgba(0, 0, 0, 0.6); }
+.btree { position: relative; margin: 0 auto; }
+.btree svg { position: absolute; left: 0; top: 0; }
+.btree .bh { position: absolute; top: 0; }
+.btree .bh b { display: block; font: 16px "Morpheus", serif; font-weight: normal; color: var(--title); text-shadow: 0 2px 0 #000; white-space: nowrap; }
+.btree .bh small { font-size: 11px; color: var(--muted); }
+.bt { position: absolute; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 3px 8px 3px 6px; border-radius: 8px; cursor: pointer;
+  background: linear-gradient(90deg, rgba(14, 30, 29, 0.95), rgba(8, 16, 16, 0.95)); box-shadow: inset 0 0 0 1px var(--soft), 0 3px 10px rgba(0, 0, 0, 0.45); transition: box-shadow 0.15s, transform 0.15s; }
+.bt:hover { box-shadow: inset 0 0 0 1px var(--line), 0 0 16px rgba(63, 216, 200, 0.2); transform: translateY(-1px); }
+.bt.p { box-shadow: inset 0 0 0 1px rgba(255, 120, 100, 0.7), 0 0 16px rgba(255, 90, 68, 0.25); }
+.bt.gf { box-shadow: inset 0 0 0 1px rgba(255, 210, 120, 0.6), 0 0 22px rgba(255, 200, 90, 0.18); background: linear-gradient(90deg, rgba(40, 32, 14, 0.95), rgba(14, 12, 8, 0.95)); }
+.ts { display: grid; grid-template-columns: 16px 20px minmax(0, 1fr) auto; gap: 6px; align-items: center; height: 22px; font-size: 13px; }
+.ts .sd { font-size: 10.5px; color: var(--muted); text-align: right; }
+.ts img { width: 20px; height: 20px; border-radius: 50%; box-shadow: 0 0 0 1px #000, 0 0 0 1.5px var(--cc, transparent); }
+.ts .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ts .sc { font: 14px "Friz", serif; color: var(--ink-2); min-width: 10px; text-align: right; }
+.ts.w .nm { color: #fff2cf; } .ts.w .sc { color: var(--title); }
+.ts.l { opacity: 0.45; }
+.ts.tbd .nm { color: var(--muted); font-style: italic; font-size: 12px; }
+.ts.tbd img { opacity: 0.5; }
+.ts .dp { font-style: normal; font-size: 9px; color: #ef9d6d; margin-right: 4px; vertical-align: 1px; }
 .h2hv { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(3px); overflow-y: auto; padding: 30px 16px; }
 body.modal { overflow: hidden; }
 .h2h { max-width: 1060px; margin: 0 auto; border-radius: 12px; padding: 3px; background: linear-gradient(160deg, var(--fr1), var(--fr2) 40%, var(--fr3) 60%, var(--fr2)); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8); }
@@ -803,9 +815,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018173958"></script>
-<script src="data-summary.js?v=20261018173958"></script>
-<script src="data-open.js?v=20261018173958"></script>
+<script src="data-multi.js?v=20261018174819"></script>
+<script src="data-summary.js?v=20261018174819"></script>
+<script src="data-open.js?v=20261018174819"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1581,6 +1593,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         const x = /^(Winner|Loser) of (?:(Upper|Lower) R(\d+)|(QF|SF|LF|LS))\/M(\d+)$/.exec(t || '');
         if (!x) return t || 'To be decided';
         const [sg, r] = x[4] ? ALIAS[x[4]] : [x[2] === 'Upper' ? 'u' : 'l', +x[3]];
+        const f = M.find((y) => y[0] === sg && y[1] === r && y[2] === +x[5]);
+        if (f && f[3] != null && f[4] != null) return `${x[1]} of ${P[f[3]][0]} / ${P[f[4]][0]}`;
         const many = M.filter((y) => y[0] === sg && y[1] === r).length > 1;
         return `${x[1]}, ${rname(sg, r).replace(/s$/, '')}${many ? ` ${x[5]}` : ''}`;
       };
@@ -1643,15 +1657,52 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 
       const bseg = OS.bseg || 'u';
       const brk = (sg) => {
+        const mob = innerWidth < 720, W = mob ? 150 : 206, CH = 56, GAP = mob ? 26 : 44, HEAD = 50, PITCH = CH + (mob ? 10 : 14);
         const rounds = [...new Set(M.filter((m) => m[0] === sg).map((m) => m[1]))].sort((a, b) => a - b);
-        return `<div class="brk">${rounds.map((r) => {
-          const ms = M.filter((m) => m[0] === sg && m[1] === r).sort((a, b) => a[2] - b[2]);
-          return `<div class="rd"><h5>${rname(sg, r)}<small>${bo(ms[0][8])} · ${ms.filter((m) => m[5] === 'd').length} of ${ms.length} done</small></h5>${ms.map((m) => `<div class="bm ${m[5]}" data-h2h="${key(m)}">${sideHtml(m, 0, 1)}${sideHtml(m, 1, 1)}</div>`).join('')}</div>`;
-        }).join('')}</div>`;
+        const inR = (r) => M.filter((m) => m[0] === sg && m[1] === r);
+        const slots = (r) => 2 ** Math.ceil(Math.log2(Math.max(1, ...inR(r).map((m) => m[2]))));
+        const rows = Math.max(...rounds.map((r) => inR(r).length));
+        const H = rows * PITCH;
+        const col = {};
+        rounds.forEach((r, i) => col[r] = i);
+        const src = (t) => {
+          const x = /^Winner of (?:(Upper|Lower) R(\d+)|(QF|SF|LF|LS))\/M(\d+)$/.exec(t || '');
+          if (!x) return null;
+          const [g, r] = x[3] ? ALIAS[x[3]] : [x[1] === 'Upper' ? 'u' : 'l', +x[2]];
+          return g === sg ? M.find((y) => y[0] === g && y[1] === r && y[2] === +x[4]) : null;
+        };
+        const feeds = new Map();
+        M.filter((m) => m[0] === sg).forEach((m) => [m[12], m[13]].forEach((t, k) => { const f = src(t); if (f) feeds.set(f, [m, k]); }));
+        const X = (m) => col[m[1]] * (W + GAP);
+        const Y = (m) => {
+          const to = feeds.get(m);
+          if (slots(m[1]) > rows && to && slots(to[0][1]) <= rows) return Y(to[0]) + (to[1] ? CH / 4 : -CH / 4);
+          return HEAD + (m[2] - 0.5) / slots(m[1]) * H;
+        };
+        let paths = '';
+        rounds.forEach((r, i) => { if (i % 2) paths += `<rect x="${i * (W + GAP) - GAP / 2}" y="0" width="${W + GAP}" height="${H + HEAD + 10}" fill="rgba(255,255,255,0.018)"/>`; });
+        M.filter((m) => m[0] === sg).forEach((m) => [m[12], m[13]].forEach((t, k) => {
+          const f = src(t);
+          if (!f) return;
+          const x1 = X(f) + W, y1 = Y(f), x2 = X(m), y2 = Y(m) + (k ? CH / 4 : -CH / 4), mx = x1 + GAP / 2;
+          const lit = f[5] === 'd';
+          paths += `<path d="M${x1} ${y1}H${mx}V${y2}H${x2}" fill="none" stroke="${lit ? 'rgba(143,240,226,0.75)' : 'rgba(143,240,226,0.18)'}" stroke-width="${lit ? 2 : 1.5}"/>`;
+        }));
+        const tside = (m, k) => {
+          const i = m[3 + k], p = i != null ? P[i] : null, sc = score(m), drop = /^Loser of/.test(m[12 + k] || '');
+          const dropT = drop ? `<em class="dp" data-tip="Dropped down|Lost in the upper bracket and gets a second life here.">▼</em>` : '';
+          if (!p) return `<div class="ts tbd"><span class="sd"></span><img src="${UI('inv_misc_questionmark')}" alt=""><span class="nm">${dropT}${esc(slotName(m[9 + k]))}</span><span class="sc"></span></div>`;
+          const st = m[5] === 'd' ? (m[6] === k ? 'w' : 'l') : '';
+          return `<div class="ts ${st}"><span class="sd">${seeds[i] || ''}</span><img src="${race(p[2] || 'Orc')}" alt="" style="--cc:${CC[p[1]]}"><span class="nm" style="color:${st === 'l' ? '' : CC[p[1]]}">${dropT}${esc(p[0])}</span><span class="sc">${m[5] === 'n' ? '' : sc[k]}</span></div>`;
+        };
+        const heads = rounds.map((r) => { const ms = inR(r); return `<div class="bh" style="left:${col[r] * (W + GAP)}px;width:${W}px"><b>${rname(sg, r)}</b><small>${bo(ms[0][8])} · ${ms.filter((m) => m[5] === 'd').length} of ${ms.length} done</small></div>`; }).join('');
+        const cards = M.filter((m) => m[0] === sg).map((m) => `<div class="bt ${m[5]}${m[0] === 'u' && m[1] === uMax ? ' gf' : ''}" data-h2h="${key(m)}" style="left:${X(m)}px;top:${Y(m) - CH / 2}px;width:${W}px;height:${CH}px">${tside(m, 0)}${tside(m, 1)}</div>`).join('');
+        const w = rounds.length * (W + GAP) - GAP;
+        return `<div class="brk"><div class="btree" style="width:${w}px;height:${H + HEAD + 10}px"><svg width="${w}" height="${H + HEAD + 10}">${paths}</svg>${heads}${cards}</div></div>`;
       };
       const bHelp = help('Bracket', 'Double elimination. Upper bracket series are best of 3, lower bracket games are single games until the lower final (best of 3), and the grand final is best of 5. Seeds 29 to 36 play in first. Scroll sideways for later rounds; click a match for the head to head.');
       h += `<section class="frame panel s12 swap" data-sr="${bseg}" id="fbrk"><div class="in slab"><div class="head"><h2 class="swaph"><button class="sw ${bseg === 'u' ? 'on' : ''}" data-bseg="u">Upper bracket</button><span class="dot">·</span><button class="sw ${bseg === 'l' ? 'on' : ''}" data-bseg="l">Lower bracket</button></h2>${bHelp}</div>
-        <div class="body">${brk(bseg)}<div class="optout">Byes are left out. Results from Raider.IO, refreshed every few minutes.</div></div></div></section>`;
+        <div class="body">${brk(bseg)}<div class="optout">${bseg === 'l' ? '<span style="color:#ef9d6d">▼</span> dropped down from the upper bracket. The lower final winner meets the upper final winner in the grand final. ' : 'The grand final winner takes it all. '}Byes are left out. Results from Raider.IO, refreshed every few minutes.</div></div></div></section>`;
 
       const crec = {};
       done.concat(live).forEach((m) => m[7].forEach((g) => {

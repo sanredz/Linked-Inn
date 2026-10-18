@@ -860,9 +860,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018203016"></script>
-<script src="data-summary.js?v=20261018203016"></script>
-<script src="data-open.js?v=20261018203016"></script>
+<script src="data-multi.js?v=20261018203303"></script>
+<script src="data-summary.js?v=20261018203303"></script>
+<script src="data-open.js?v=20261018203303"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -2141,6 +2141,15 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   veil.addEventListener('click', (e) => { if (e.target === veil) close(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
   const waitLive = !!(O && O.fin && O.fin.live);
+  const reloaded = (() => { try { return performance.getEntriesByType('navigation')[0].type === 'reload'; } catch (e) { return false; } })();
+  if (waitLive) { try { history.scrollRestoration = 'manual'; } catch (e) {} }
+  addEventListener('pagehide', () => { try { sessionStorage.setItem('li-y', String(Math.round(scrollY))); } catch (e) {} });
+  function restoreY() {
+    if (!waitLive || !reloaded) return;
+    let y = 0;
+    try { y = +sessionStorage.getItem('li-y') || 0; } catch (e) {}
+    if (y) { scrollTo(0, y); setTimeout(() => { if (Math.abs(scrollY - y) > 2) scrollTo(0, y); }, 60); }
+  }
   if (!waitLive) route();
   function loadVotes() {
     
@@ -2227,7 +2236,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     freshOpen();
     if (O.fin) {
       let routed = !waitLive;
-      const first = () => { if (!routed) { routed = true; route(); } };
+      const first = () => { if (!routed) { routed = true; route(); restoreY(); } };
       freshFin(first);
       setTimeout(first, 1500);
       setInterval(() => { if (view === 'open' && O.fin && O.fin.live && !document.hidden) freshFin(); }, 30000);

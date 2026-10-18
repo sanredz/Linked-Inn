@@ -507,6 +507,146 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 #tip .gd { color: var(--muted); margin-top: 4px; }
 @media (max-width: 900px) { .pexp { grid-template-columns: 1fr; margin-left: 10px; } .doll { max-width: 440px; } }
 @media (max-width: 400px) { .doll { grid-template-columns: 40px 1fr 40px; padding: 10px; gap: 6px; } .slot { width: 40px; height: 40px; } .doll .por, .doll .por > img { width: 84px; height: 84px; } }
+.stagesw { grid-column: span 12; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.stagesw button { position: relative; display: flex; align-items: center; gap: 16px; text-align: left; cursor: pointer; padding: 14px 20px; border-radius: 12px; border: 0; color: var(--ink-2);
+  background: linear-gradient(160deg, rgba(20, 40, 38, 0.85), rgba(6, 12, 12, 0.9)); box-shadow: inset 0 0 0 1px var(--soft), 0 4px 14px rgba(0, 0, 0, 0.5); transition: box-shadow 0.15s, transform 0.15s; }
+.stagesw button:hover { box-shadow: inset 0 0 0 1px var(--line), 0 6px 18px rgba(0, 0, 0, 0.6); }
+.stagesw button.on { color: var(--ink); background: linear-gradient(160deg, rgba(40, 110, 102, 0.9), rgba(10, 30, 28, 0.95)); box-shadow: inset 0 0 0 2px var(--accent), 0 0 26px rgba(63, 216, 200, 0.28), 0 6px 18px rgba(0, 0, 0, 0.6); }
+.stagesw .ic { width: 52px; height: 52px; border-radius: 10px; flex: none; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--fr1); }
+.stagesw button:not(.on) .ic { filter: grayscale(0.6) brightness(0.8); }
+.stagesw b { display: block; font: 30px/1.05 "Morpheus", serif; font-weight: normal; color: var(--title); text-shadow: 0 2px 0 #000; }
+.stagesw button:not(.on) b { color: var(--ink-2); }
+.stagesw small { display: block; font-size: 13px; color: var(--muted); margin-top: 3px; }
+.stagesw .live { position: absolute; top: 12px; right: 14px; display: flex; align-items: center; gap: 6px; font: 12px "Friz", serif; color: #ff8f7a; letter-spacing: 0.08em; }
+.stagesw .live i { width: 8px; height: 8px; border-radius: 50%; background: #ff5a44; box-shadow: 0 0 0 0 rgba(255, 90, 68, 0.6); animation: pulse 1.6s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 90, 68, 0.6); } 70% { box-shadow: 0 0 0 8px rgba(255, 90, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 90, 68, 0); } }
+.mcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+.mcard { cursor: pointer; border-radius: 10px; padding: 10px 12px; background: rgba(0, 0, 0, 0.32); box-shadow: inset 0 0 0 1px var(--soft); transition: box-shadow 0.15s, background 0.15s; }
+.mcard:hover { background: rgba(20, 60, 56, 0.35); box-shadow: inset 0 0 0 1px var(--line); }
+.mcard.p { box-shadow: inset 0 0 0 1px rgba(255, 120, 100, 0.55), 0 0 18px rgba(255, 90, 68, 0.12); }
+.mcard .mh { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.02em; }
+.mcard .mh .lv { color: #ff8f7a; }
+.mside { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 3px 0; }
+.mside img { width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--cc, transparent); }
+.mside .nm { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mside .nm small { color: var(--muted); font-size: 11.5px; margin-left: 4px; }
+.mside .pips { display: flex; gap: 3px; }
+.mside .pips i { width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); }
+.mside .pips i.on { background: var(--title); box-shadow: 0 0 6px rgba(143, 240, 226, 0.6); }
+.mside .sc { font: 18px "Friz", serif; min-width: 14px; text-align: right; color: var(--ink-2); }
+.mside.w .nm, .mside.w .sc { color: #fff2cf; } .mside.w .sc { color: var(--title); }
+.mside.l { opacity: 0.5; }
+.mside.tbd .nm { color: var(--muted); font-style: italic; font-size: 13px; }
+.f36 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media (max-width: 1100px) { .f36 { grid-template-columns: repeat(2, 1fr); } }
+.f36 .cc { border-radius: 10px; padding: 10px; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1px var(--soft), inset 0 3px 0 var(--cc); }
+.f36 h4 { display: flex; align-items: center; gap: 7px; margin: 2px 0 8px; font: 17px "Morpheus", serif; font-weight: normal; color: var(--cc); }
+.f36 h4 img { width: 22px; height: 22px; border-radius: 50%; }
+.f36 h4 small { margin-left: auto; font: 11.5px "Friz", serif; color: var(--muted); white-space: nowrap; }
+.fp { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 4px; border-radius: 7px; cursor: pointer; }
+.fp:hover { background: rgba(255, 255, 255, 0.05); }
+.fp img { width: 30px; height: 30px; border-radius: 50%; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--cc); }
+.fp .nm { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fp .nm small { display: block; font-size: 11px; color: var(--muted); }
+.fp .lives { display: flex; gap: 3px; }
+.fp .lives i { width: 10px; height: 10px; transform: rotate(45deg); border-radius: 2px; background: rgba(255, 255, 255, 0.08); }
+.fp .lives i.on { background: linear-gradient(135deg, #b9fff4, #3fd8c8); box-shadow: 0 0 6px rgba(63, 216, 200, 0.6); }
+.fp.out { opacity: 0.42; } .fp.out .nm { text-decoration: line-through; text-decoration-color: rgba(255, 255, 255, 0.35); }
+.fp.champ { background: linear-gradient(90deg, rgba(255, 210, 100, 0.18), transparent); } .fp.champ .nm { color: #ffe39a; }
+.fkey { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 10px; }
+.fkey span { display: inline-flex; align-items: center; gap: 6px; }
+.brk { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; scrollbar-color: var(--fr1) transparent; scroll-snap-type: x proximity; }
+.brk .rd { flex: 0 0 min(210px, 46vw); display: flex; flex-direction: column; gap: 8px; scroll-snap-align: start; }
+.brk .rd h5 { margin: 0 0 2px; font: 15px "Morpheus", serif; font-weight: normal; color: var(--title2); }
+.brk .rd h5 small { display: block; font: 11px "Friz", serif; color: var(--muted); }
+.brk .bm { cursor: pointer; border-radius: 8px; padding: 5px 8px; background: rgba(0, 0, 0, 0.35); box-shadow: inset 0 0 0 1px var(--soft); }
+.brk .bm:hover { box-shadow: inset 0 0 0 1px var(--line); }
+.brk .bm.p { box-shadow: inset 0 0 0 1px rgba(255, 120, 100, 0.6); }
+.brk .mside { grid-template-columns: 20px minmax(0, 1fr) auto; gap: 6px; padding: 1px 0; }
+.brk .mside img { width: 20px; height: 20px; }
+.brk .mside .nm { font-size: 13px; }
+.brk .mside .sc { font-size: 14px; }
+.h2hv { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(3px); overflow-y: auto; padding: 30px 16px; }
+body.modal { overflow: hidden; }
+.h2h { max-width: 1060px; margin: 0 auto; border-radius: 12px; padding: 3px; background: linear-gradient(160deg, var(--fr1), var(--fr2) 40%, var(--fr3) 60%, var(--fr2)); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8); }
+.h2h > .in { border-radius: 10px; background: linear-gradient(rgba(8, 14, 14, 0.94), rgba(5, 8, 8, 0.97)), var(--art) center / cover; padding: 0 0 22px; }
+.h2h .top { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--soft); font-size: 13px; color: var(--muted); }
+.h2h .top b { font: 18px "Morpheus", serif; font-weight: normal; color: var(--title); }
+.h2h .top .x { margin-left: auto; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.4); color: var(--ink); font-size: 18px; cursor: pointer; }
+.vsb { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center; padding: 22px 22px 10px; }
+.vsb .pl { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.vsb .pl.r { flex-direction: row-reverse; text-align: right; }
+.vsb .av { position: relative; flex: none; }
+.vsb .av > img { width: 92px; height: 92px; border-radius: 50%; box-shadow: 0 0 0 3px #000, 0 0 0 5px var(--cc), 0 8px 24px rgba(0, 0, 0, 0.7); }
+.vsb .av .ci { position: absolute; right: -4px; bottom: -2px; width: 32px; height: 32px; border-radius: 50%; box-shadow: 0 0 0 2px #000; }
+.vsb .pl.r .av .ci { right: auto; left: -4px; }
+.vsb .who { min-width: 0; }
+.vsb .who b { display: block; font: 30px/1.05 "Morpheus", serif; font-weight: normal; text-shadow: 0 2px 0 #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vsb .who span { display: block; font-size: 13px; color: var(--ink-2); margin-top: 3px; }
+.vsb .who .st { display: inline-block; margin-top: 6px; font-size: 11.5px; padding: 1px 8px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line); color: var(--title); }
+.vsb .who .st.out { color: var(--muted); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15); }
+.vsb .mid { text-align: center; }
+.vsb .score { font: 52px/1 "Friz", serif; color: #fff2cf; text-shadow: 0 3px 0 #000; white-space: nowrap; }
+.vsb .score .d { color: var(--muted); margin: 0 6px; }
+.vsb .score.vs { font: 40px "Morpheus", serif; color: var(--title2); }
+.vsb .mid small { display: block; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.gpips { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
+.gpips span { font-size: 11px; padding: 2px 7px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--muted); }
+.gpips span.a { box-shadow: inset 3px 0 0 var(--ca); color: var(--ink); } .gpips span.b { box-shadow: inset -3px 0 0 var(--cb); color: var(--ink); }
+.cmp { padding: 6px 22px 4px; display: flex; flex-direction: column; gap: 4px; }
+.cmp .cr { display: grid; grid-template-columns: 1fr minmax(120px, 190px) 1fr; gap: 10px; align-items: center; font-size: 14px; }
+.cmp .cr > span:first-child { text-align: right; }
+.cmp .cr .lb { text-align: center; font-size: 11.5px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.cmp .cr .hi { color: var(--title); }
+.cmp .cr .bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 3px; background: rgba(255, 255, 255, 0.06); }
+.mup { margin: 14px 22px 0; padding: 12px 16px; border-radius: 10px; background: rgba(90, 220, 200, 0.06); box-shadow: inset 0 0 0 1px var(--soft); font-size: 14px; color: var(--ink-2); line-height: 1.55; }
+.mup b { color: var(--ink); font-weight: normal; }
+.h2h h3 { margin: 22px 22px 10px; font: 20px "Morpheus", serif; font-weight: normal; color: var(--title); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 0 22px; align-items: start; }
+.road2 { display: flex; flex-direction: column; gap: 4px; }
+.road2 .g { display: grid; grid-template-columns: 92px 20px minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 13px; padding: 3px 6px; border-radius: 6px; background: rgba(0, 0, 0, 0.25); }
+.road2 .g img { width: 20px; height: 20px; border-radius: 50%; }
+.road2 .g .r { color: var(--muted); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.road2 .g .o { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.road2 .g .res.w { color: #7ddc8a; } .road2 .g .res.l { color: #ef7d6d; } .road2 .g .res.p { color: var(--muted); }
+.road2 .sep { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin: 6px 0 2px; }
+.mtree { border-radius: 10px; padding: 10px; background: linear-gradient(rgba(5, 4, 3, 0.55), rgba(5, 4, 3, 0.8)), var(--art) center / cover; box-shadow: inset 0 0 0 1px rgba(255, 220, 150, 0.14); }
+.mtree .mt { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 14px; }
+.mtree .mt img { width: 26px; height: 26px; border-radius: 6px; }
+.mtree .mt small { margin-left: auto; color: var(--muted); font-size: 12px; }
+.mtree .tb { position: relative; margin: 0 auto; }
+.mtree .tb svg { position: absolute; inset: 0; }
+.mtree .n { position: absolute; width: 34px; height: 34px; }
+.mtree .n img { width: 34px; height: 34px; border-radius: 6px; box-shadow: 0 0 0 1px #000; filter: grayscale(1) brightness(0.45); }
+.mtree .n.on img { filter: none; box-shadow: 0 0 0 1px #000, 0 0 0 2px #3fd06a; }
+.mtree .n.on.part img { box-shadow: 0 0 0 1px #000, 0 0 0 2px #ffd100; }
+.mtree .n b { position: absolute; right: -5px; bottom: -5px; font: 10.5px/1 "Friz", serif; font-weight: normal; padding: 2px 3px; border-radius: 4px; background: #000; color: #3fd06a; }
+.mtree .n.part b { color: #ffd100; }
+.mtree .other { margin-top: 8px; font-size: 12px; color: var(--muted); text-align: center; }
+.h2h .doll { max-width: none; }
+.tbk { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.tbk .rc { border-radius: 8px; padding: 10px 12px; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1px var(--soft); }
+.tbk h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font: 17px "Morpheus", serif; font-weight: normal; }
+.tbk h4 img { width: 22px; height: 22px; border-radius: 50%; }
+.tbk .rl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin: 6px 0 3px; }
+.tbk .tm { display: grid; grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr); gap: 6px; font-size: 13.5px; padding: 2px 0; }
+.tbk .tm span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.tbk .tm span:last-child { text-align: right; }
+.tbk .tm .w { color: #fff2cf; } .tbk .tm .w::before { content: '✓ '; color: #7ddc8a; } .tbk .tm span:last-child.w::before { content: ''; } .tbk .tm span:last-child.w::after { content: ' ✓'; color: #7ddc8a; }
+.tbk .tm .l { color: var(--muted); }
+.tbk .tm i { font-style: normal; text-align: center; color: var(--muted); font-size: 11px; }
+@media (max-width: 720px) {
+  .stagesw { gap: 8px; } .stagesw button { padding: 10px 12px; gap: 10px; } .stagesw .ic { width: 34px; height: 34px; } .stagesw b { font-size: 22px; } .stagesw small { font-size: 11px; }
+  .stagesw .live { top: 6px; right: 8px; font-size: 10px; } .stagesw .xs { display: none; }
+  .mcards { grid-template-columns: 1fr; }
+  .f36 { grid-template-columns: 1fr 1fr; gap: 8px; } .f36 .cc { padding: 8px 6px; } .fp { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 6px; padding: 3px 2px; } .fp img { width: 24px; height: 24px; } .fp .nm { font-size: 13px; } .fp .lives i { width: 8px; height: 8px; }
+  .h2hv { padding: 0; } .h2h { border-radius: 0; min-height: 100%; } .h2h > .in { border-radius: 0; min-height: 100%; }
+  .vsb { padding: 16px 12px 8px; gap: 8px; } .vsb .pl, .vsb .pl.r { flex-direction: column; text-align: center; gap: 8px; } .vsb .av > img { width: 62px; height: 62px; } .vsb .av .ci { width: 24px; height: 24px; }
+  .vsb .who b { font-size: 19px; } .vsb .who span { font-size: 11.5px; } .vsb .score { font-size: 36px; } .vsb .score.vs { font-size: 28px; }
+  .cmp { padding: 6px 12px; } .cmp .cr { grid-template-columns: 1fr 96px 1fr; font-size: 13px; gap: 6px; } .cmp .cr .lb { font-size: 10px; }
+  .mup { margin: 12px 12px 0; } .h2h h3 { margin: 18px 12px 8px; } .two { grid-template-columns: 1fr; padding: 0 12px; gap: 12px; }
+  .road2 .g { grid-template-columns: 70px 20px minmax(0, 1fr) auto; }
+}
 .swaph { display: flex; align-items: baseline; gap: 6px; }
 .sw { font: 19px "Morpheus", serif; color: var(--muted); background: none; border: 0; padding: 2px 4px 6px; cursor: pointer; border-bottom: 2px solid transparent; text-shadow: 0 2px 0 #000; transition: color 0.15s; white-space: nowrap; }
 .sw:hover { color: var(--ink); }
@@ -557,6 +697,7 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 .hist .g .res.w { color: #7ddc8a; } .hist .g .res.l { color: #ef7d6d; } .hist .g .res.p { color: var(--muted); }
 .hist .none { color: var(--muted); font-size: 13px; }
 .more { display: block; margin: 12px auto 0; }
+.rl2 { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin: 16px 0 8px; }
 @media (max-width: 1180px) { .froad { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 720px) {
   .froad { grid-template-columns: 1fr; }
@@ -662,9 +803,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018120702"></script>
-<script src="data-summary.js?v=20261018120702"></script>
-<script src="data-open.js?v=20261018120702"></script>
+<script src="data-multi.js?v=20261018173851"></script>
+<script src="data-summary.js?v=20261018173851"></script>
+<script src="data-open.js?v=20261018173851"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1242,6 +1383,15 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const cl = CLASSES.filter((c) => O.rec[c]).sort((a, b) => rate(b) - rate(a));
     const shade = (p, t) => p >= 0.5 ? `rgba(224,102,47,${0.18 + 0.75 * t})` : `rgba(93,132,180,${0.18 + 0.75 * t})`;
     let h = '';
+    const F = O.fin;
+    if (!OS.stage) { try { OS.stage = localStorage.getItem('li-ostage') || ''; } catch (e) {} }
+    const stage = F && OS.stage !== 'q' ? 'fin' : 'q';
+    if (F) {
+      const fLive = F.live && Date.parse(F.start) <= Date.now() + 5 * 60000;
+      h += `<div class="stagesw"><button class="${stage === 'q' ? 'on' : ''}" data-stage="q"><img class="ic" src="${UI('inv_bannerpvp_02')}" alt=""><div><b>Qualifiers</b><small>Oct 17 · ${fmt(O.entrants)} players<span class="xs"> · six Swiss rounds</span></small></div></button>
+        <button class="${stage === 'fin' ? 'on' : ''}" data-stage="fin">${fLive ? '<span class="live"><i></i>LIVE</span>' : ''}<img class="ic" src="${UI('achievement_arena_2v2_7')}" alt=""><div><b>Finals</b><small>Oct 18 · 36 players<span class="xs"> · double elimination</span></small></div></button></div>`;
+    }
+    if (stage === 'fin') { renderFinals(h); return; }
     h += plaque(UI('ability_dualwield'), 'Matches', fmt(O.played), O.live ? (O.expected ? `of about ${fmt(Math.round(O.expected / 100) * 100)}` : 'decided so far') : 'in the qualifiers');
     h += plaque(UI('inv_bannerpvp_02'), 'Players', fmt(O.entrants), `across ${O.pods} pods`);
     h += plaque(UI('ability_warrior_rampage'), 'Undefeated', fmt(O.undefeated), O.live ? 'won every match so far' : 'won all six');
@@ -1350,13 +1500,23 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     }
 
     const classChips = `<div class="chips"><button class="chip plain ${OS.c ? '' : 'on'}" data-oc="">All classes</button>${CLASSES.map((c) => `<button class="chip ${OS.c === c ? 'on' : ''}" data-oc="${c}"><img src="${cls(c)}" alt="">${CN[c]}</button>`).join('')}</div>`;
+    const tieHtml = (O.tiebreak || []).filter((t) => t.m.some((m) => m[3] != null && m[4] != null)).map((t) => {
+      const rounds = [...new Set(t.m.map((m) => m[1]))].sort((a, b) => a - b);
+      return `<div class="rc"><h4 style="color:${CC[t.c]}"><img src="${cls(t.c)}" alt="">${esc(t.t)}</h4>${rounds.map((r) => `<div class="rl">${rounds.length > 1 ? `Round ${r}` : 'For the last spot'}</div>${t.m.filter((m) => m[1] === r && m[3] != null && m[4] != null).map((m) => {
+        const a = P[m[3]], b = P[m[4]];
+        return `<div class="tm"><span class="${m[6] === 0 ? 'w' : m[6] === 1 ? 'l' : ''}" data-ofind="${esc(a[0])}">${esc(a[0])}</span><i>vs</i><span class="${m[6] === 1 ? 'w' : m[6] === 0 ? 'l' : ''}" data-ofind="${esc(b[0])}">${esc(b[0])}</span></div>`;
+      }).join('')}`).join('')}</div>`;
+    }).join('');
+    const tiePanel = tieHtml ? panel('s12', 'Tiebreakers', 'Players level on record and Buchholz at the cut line played single games for the last finals spots. Click a name to see their qualifier matches.',
+      `<div class="tbk">${tieHtml}</div><div class="optout">Single games, played the night of the qualifiers. Classes not listed had a clean cut.</div>`, { id: 'tiebreak' }) : '';
     h += panel('s12', 'Every player', 'All entrants with their record, spec and talent points. Click anyone to see who they played.',
       `<div class="pbar"><input class="search" id="osearch" placeholder="Find a player" value="${esc(OS.q)}" autocomplete="off">
         <div class="chips" id="ost">${[['all', 'Everyone'], ['top', O.live ? 'In a finals spot' : 'Finalists'], ['unb', 'Undefeated'], ['in', O.live ? 'Still checked in' : 'Played it out']].map(([k, n]) => `<button class="chip plain ${OS.st === k ? 'on' : ''}" data-ost="${k}">${n}</button>`).join('')}</div>
         <span class="count" id="ocount"></span></div>
-       <div style="margin-bottom:10px">${classChips}</div><div id="ospec" style="margin-bottom:12px"></div><div id="oplist"></div>`, { id: 'everyone' });
+       <div style="margin-bottom:10px">${classChips}</div><div id="ospec" style="margin-bottom:12px"></div><div id="oplist"></div>`, { id: 'everyone' }) + tiePanel;
 
     document.getElementById('main').innerHTML = h;
+    bindStage();
 
     const games = {};
     O.games.forEach((g2) => { (games[g2[1]] = games[g2[1]] || []).push(g2); (games[g2[2]] = games[g2[2]] || []).push(g2); });
@@ -1390,7 +1550,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
           out += `<div class="pexp"><div class="hist">${mine.length ? mine.map((m) => {
             const me = m[1] === i ? 0 : 1, oi = me ? m[1] : m[2], o = P[oi];
             const res = m[3] === -2 ? ['p', 'Playing'] : m[3] === -1 ? ['p', 'Tie'] : m[3] === me ? ['w', 'Won'] : ['l', 'Lost'];
-            return `<div class="g"><span class="r">Round ${m[0]}</span><img src="${cls(o[1])}" alt=""><span class="o" data-ojump="${oi}" style="color:${CC[o[1]]}">${esc(o[0])} <small style="color:var(--muted)">${o[4]}–${o[5]}</small></span>
+            return `<div class="g"><span class="r">${m[0] > 10 ? 'Tiebreak' : `Round ${m[0]}`}</span><img src="${cls(o[1])}" alt=""><span class="o" data-ojump="${oi}" style="color:${CC[o[1]]}">${esc(o[0])} <small style="color:var(--muted)">${o[4]}–${o[5]}</small></span>
               <span class="s r">${o[9] >= 0 ? `${specName(o[1], o[9])} ${o[10]}` : ''}</span><span class="res ${res[0]}">${res[1]}</span></div>`;
           }).join('') : '<div class="none">No matches yet.</div>'}</div>${dollHtml(p)}</div>`;
         }
@@ -1401,8 +1561,234 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       const more = document.getElementById('omore');
       if (more) more.onclick = () => { OS.more++; draw(); };
     }
+    function bindStage() {
+      document.querySelectorAll('[data-stage]').forEach((x) => x.onclick = () => {
+        OS.stage = x.dataset.stage;
+        try { localStorage.setItem('li-ostage', OS.stage); } catch (e) {}
+        OS.h2h = '';
+        render();
+      });
+    }
+    function renderFinals(h) {
+      const M = F.m, seeds = F.seeds || {};
+      const RN = { u: { 1: 'Play-ins', 2: 'Round of 32', 3: 'Round of 16', 4: 'Upper quarterfinals', 5: 'Upper semifinals', 6: 'Upper final', 7: 'Grand final' }, l: { 9: 'Lower semifinal', 10: 'Lower final' } };
+      const uMax = Math.max(...M.filter((m) => m[0] === 'u').map((m) => m[1])), lMax = Math.max(...M.filter((m) => m[0] === 'l').map((m) => m[1]));
+      const rname = (sg, r) => sg === 'u' ? (r === uMax ? 'Grand final' : RN.u[r] || `Upper round ${r}`) : (r === lMax ? 'Lower final' : r === lMax - 1 ? 'Lower semifinal' : `Lower round ${r}`);
+      const bo = (n) => n === 1 ? 'Single game' : `Best of ${n}`;
+      const key = (m) => `${m[0]}:${m[1]}:${m[2]}`;
+      const ALIAS = { QF: ['u', 5], SF: ['u', 6], LF: ['l', lMax], LS: ['l', lMax - 1] };
+      const slotName = (t) => {
+        const x = /^(Winner|Loser) of (?:(Upper|Lower) R(\d+)|(QF|SF|LF|LS))\/M(\d+)$/.exec(t || '');
+        if (!x) return t || 'To be decided';
+        const [sg, r] = x[4] ? ALIAS[x[4]] : [x[2] === 'Upper' ? 'u' : 'l', +x[3]];
+        const many = M.filter((y) => y[0] === sg && y[1] === r).length > 1;
+        return `${x[1]}, ${rname(sg, r).replace(/s$/, '')}${many ? ` ${x[5]}` : ''}`;
+      };
+      const score = (m) => [m[7].filter((x) => x === 0).length, m[7].filter((x) => x === 1).length];
+      const loss = {}, lostIn = {}, alive = new Set(), entered = new Set();
+      M.forEach((m) => { [m[3], m[4]].forEach((i) => { if (i != null) entered.add(i); }); });
+      M.filter((m) => m[5] === 'd').forEach((m) => { const lo = m[6] === 0 ? m[4] : m[3]; if (lo == null) return; loss[lo] = (loss[lo] || 0) + 1; lostIn[lo] = m; });
+      const gf = M.find((m) => m[0] === 'u' && m[1] === uMax);
+      const champ = gf && gf[5] === 'd' ? (gf[6] === 0 ? gf[3] : gf[4]) : null;
+      const lives = (i) => champ != null ? (i === champ ? 2 - (loss[i] || 0) : 0) : Math.max(0, 2 - (loss[i] || 0));
+      entered.forEach((i) => { if (lives(i) > 0) alive.add(i); });
+      const ID = {};
+      O.finals.forEach((f) => f.top.forEach((r) => { const i = P.findIndex((p) => p[0] === r.n && p[1] === f.c); if (i >= 0) ID[i] = r.id; }));
+      const votes = (i) => VOTE && VOTE.total ? ((VOTE.counts || {})[ID[i]] || 0) : null;
+      const real = M;
+      const done = M.filter((m) => m[5] === 'd'), live = M.filter((m) => m[5] === 'p');
+      const gamesPlayed = sum(M.map((m) => m[7].length));
+      const started = Date.parse(F.start) <= Date.now() || done.length + live.length > 0;
+      const startAt = new Date(F.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const upperN = [...alive].filter((i) => !loss[i]).length;
+      document.getElementById('title').textContent = 'The Finals';
+      document.getElementById('note').textContent = champ != null ? `Finals over · ${P[champ][0]} wins` : started ? `Finals live · updated ${new Date(O.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : `Finals start at ${startAt}`;
+
+      if (champ != null) h += plaque(race(P[champ][2] || 'Orc'), 'Champion', esc(P[champ][0]), `${specName(P[champ][1], P[champ][9])} ${CN[P[champ][1]]}`, true);
+      else h += plaque(UI('inv_bannerpvp_02'), 'Still standing', `${alive.size}<small style="font-size:18px;color:var(--muted)"> of ${entered.size}</small>`, `${upperN} unbeaten · ${alive.size - upperN} on their last life`);
+      h += plaque(UI('ability_dualwield'), 'Series', `${done.length}<small style="font-size:18px;color:var(--muted)"> of ${real.length}</small>`, live.length ? `${live.length} being played right now` : 'Bo3 upper, Bo1 lower, Bo5 final');
+      h += plaque(UI('ability_warrior_rampage'), 'Games', fmt(gamesPlayed), `${done.filter((m) => m[8] > 1 && m[7].length === m[8]).length} series went the distance`);
+      const nowRounds = [...new Set((live.length ? live : M.filter((m) => m[5] === 'n' && m[3] != null && m[4] != null)).map((m) => rname(m[0], m[1])))];
+      h += plaque(UI('achievement_arena_2v2_7'), champ != null ? 'Done' : started ? 'Now' : 'Starts', champ != null ? 'Done' : started ? (nowRounds[0] || '–') : startAt, champ != null ? `${real.length} series in all` : started ? (nowRounds.slice(1).join(', ') || 'double elimination') : new Date(F.start).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' }), true);
+
+      const sideHtml = (m, s, small) => {
+        const i = m[3 + s], p = i != null ? P[i] : null, sc = score(m), need = Math.ceil(m[8] / 2);
+        if (!p) return `<div class="mside tbd"><img src="${UI('inv_misc_questionmark')}" alt=""><span class="nm">${esc(slotName(m[9 + s]))}</span>${small ? '' : '<span></span>'}<span class="sc"></span></div>`;
+        const st = m[5] === 'd' ? (m[6] === s ? 'w' : 'l') : '';
+        const pips = small || m[8] === 1 ? '' : `<span class="pips">${Array.from({ length: need }, (_, k) => `<i class="${k < sc[s] ? 'on' : ''}"></i>`).join('')}</span>`;
+        return `<div class="mside ${st}" style="--cc:${CC[p[1]]}"><img src="${race(p[2] || 'Orc')}" alt=""><span class="nm" style="color:${st === 'l' ? '' : CC[p[1]]}">${esc(p[0])}${small ? '' : `<small>${seeds[i] ? `#${seeds[i]} · ` : ''}${p[4]}–${p[5]}</small>`}</span>${small ? '' : pips || '<span></span>'}<span class="sc">${m[5] === 'n' ? '' : sc[s]}</span></div>`;
+      };
+      const card = (m) => `<div class="mcard ${m[5]}" data-h2h="${key(m)}"><div class="mh"><span>${rname(m[0], m[1])} · ${bo(m[8])}</span>${m[5] === 'p' ? '<span class="lv">● Live</span>' : m[5] === 'd' ? '<span>Final</span>' : '<span>Up next</span>'}</div>${sideHtml(m, 0)}${sideHtml(m, 1)}</div>`;
+      const order = (m) => (m[0] === 'u' ? m[1] * 2 : m[1] + 1) * 100 + m[2];
+      const next = M.filter((m) => m[5] === 'n' && m[3] != null && m[4] != null).sort((a, b) => order(a) - order(b)).slice(0, live.length ? 6 : 9);
+      const recent = done.slice().sort((a, b) => (b[11] || '').localeCompare(a[11] || '')).slice(0, 6);
+      let now = '';
+      if (live.length) now += `<div class="mcards">${live.map(card).join('')}</div>`;
+      if (next.length && champ == null) now += `${live.length ? '<div class="rl2">Up next</div>' : ''}<div class="mcards">${next.map(card).join('')}</div>`;
+      if (recent.length) now += `<div class="rl2">Just finished</div><div class="mcards">${recent.map(card).join('')}</div>`;
+      h += panel('s12', live.length ? 'Live now' : champ != null ? 'Last results' : 'Up next', 'Click any match for the full head to head: their records, talents, gear and how the classes fared against each other in the qualifiers.', now || '<div class="optout">Nothing scheduled yet.</div>', { id: 'fnow' });
+
+      const fcl = CLASSES.filter((c) => [...entered].some((i) => P[i][1] === c)).sort((a, b) => rate(b) - rate(a));
+      const board = fcl.map((c) => {
+        const mine = [...entered].filter((i) => P[i][1] === c).sort((a, b) => lives(b) - lives(a) || (seeds[a] || 99) - (seeds[b] || 99));
+        const lv = sum(mine.map(lives));
+        return `<div class="cc" style="--cc:${CC[c]}"><h4><img src="${cls(c)}" alt="">${CN[c]}<small data-tip="${CN[c]}|${lv} of ${mine.length * 2} lives left">${lv}/${mine.length * 2} lives</small></h4>${mine.map((i) => {
+          const p = P[i], l = lives(i), out = l === 0 && i !== champ;
+          const where = i === champ ? 'Champion' : out ? (lostIn[i] ? `Out in ${rname(lostIn[i][0], lostIn[i][1]).replace('Lower ', 'lower ')}` : 'Out') : loss[i] ? 'Lower bracket' : `Seed ${seeds[i] || '–'}`;
+          return `<div class="fp ${out ? 'out' : ''} ${i === champ ? 'champ' : ''}" style="--cc:${CC[c]}" data-fp="${i}" data-tip="${esc(p[0])}|${specName(p[1], p[9])} ${CN[p[1]]} · ${p[4]}–${p[5]} in the qualifiers\n${out ? 'Knocked out' : l === 2 ? 'Unbeaten in the finals' : l === 1 ? 'One more loss and they are out' : ''}"><img src="${race(p[2] || 'Orc')}" alt=""><span class="nm">${esc(p[0])}<small>${where}</small></span><span class="lives">${i === champ ? '👑' : `<i class="${l >= 1 ? 'on' : ''}"></i><i class="${l >= 2 ? 'on' : ''}"></i>`}</span></div>`;
+        }).join('')}</div>`;
+      }).join('');
+      h += panel('s12', 'The 36', 'Every finalist by class. Each player has two lives: the first loss drops them to the lower bracket, the second knocks them out. Classes are ordered by their qualifier win rate.',
+        `<div class="f36">${board}</div><div class="fkey"><span><span class="lives" style="display:inline-flex;gap:3px"><i style="width:9px;height:9px;transform:rotate(45deg);border-radius:2px;background:#3fd8c8;display:inline-block"></i><i style="width:9px;height:9px;transform:rotate(45deg);border-radius:2px;background:#3fd8c8;display:inline-block"></i></span>unbeaten</span><span><i style="width:9px;height:9px;transform:rotate(45deg);border-radius:2px;background:#3fd8c8;display:inline-block"></i>lower bracket, one life left</span><span>Click a player for their match</span></div>`, { id: 'f36' });
+
+      const bseg = OS.bseg || 'u';
+      const brk = (sg) => {
+        const rounds = [...new Set(M.filter((m) => m[0] === sg).map((m) => m[1]))].sort((a, b) => a - b);
+        return `<div class="brk">${rounds.map((r) => {
+          const ms = M.filter((m) => m[0] === sg && m[1] === r).sort((a, b) => a[2] - b[2]);
+          return `<div class="rd"><h5>${rname(sg, r)}<small>${bo(ms[0][8])} · ${ms.filter((m) => m[5] === 'd').length} of ${ms.length} done</small></h5>${ms.map((m) => `<div class="bm ${m[5]}" data-h2h="${key(m)}">${sideHtml(m, 0, 1)}${sideHtml(m, 1, 1)}</div>`).join('')}</div>`;
+        }).join('')}</div>`;
+      };
+      const bHelp = help('Bracket', 'Double elimination. Upper bracket series are best of 3, lower bracket games are single games until the lower final (best of 3), and the grand final is best of 5. Seeds 29 to 36 play in first. Scroll sideways for later rounds; click a match for the head to head.');
+      h += `<section class="frame panel s12 swap" data-sr="${bseg}" id="fbrk"><div class="in slab"><div class="head"><h2 class="swaph"><button class="sw ${bseg === 'u' ? 'on' : ''}" data-bseg="u">Upper bracket</button><span class="dot">·</span><button class="sw ${bseg === 'l' ? 'on' : ''}" data-bseg="l">Lower bracket</button></h2>${bHelp}</div>
+        <div class="body">${brk(bseg)}<div class="optout">Byes are left out. Results from Raider.IO, refreshed every few minutes.</div></div></div></section>`;
+
+      const crec = {};
+      done.concat(live).forEach((m) => m[7].forEach((g) => {
+        const w = P[g === 0 ? m[3] : m[4]], l = P[g === 0 ? m[4] : m[3]];
+        if (!w || !l || w[1] === l[1]) return;
+        (crec[w[1]] = crec[w[1]] || [0, 0])[0]++;
+        (crec[l[1]] = crec[l[1]] || [0, 0])[1]++;
+      }));
+      const crows = fcl.map((c) => ({ c, lv: sum([...entered].filter((i) => P[i][1] === c).map(lives)), n: [...entered].filter((i) => P[i][1] === c).length * 2, r: crec[c] || [0, 0] }))
+        .sort((a, b) => b.lv - a.lv || (b.r[0] / Math.max(1, b.r[0] + b.r[1])) - (a.r[0] / Math.max(1, a.r[0] + a.r[1])));
+      const survHtml = `<div class="rows vs2">${crows.map((x) => row(cls(x.c), CN[x.c], CC[x.c], x.lv / x.n, `${x.lv}<small> / ${x.n}</small>`,
+        `${CN[x.c]}|${x.lv} of ${x.n} lives left\nFinals games against other classes: ${x.r[0]} won, ${x.r[1]} lost${x.r[0] + x.r[1] ? ` (${Math.round(100 * x.r[0] / (x.r[0] + x.r[1]))}%)` : ''}\nQualifiers: ${Math.round(rate(x.c) * 100)}%`)).join('')}</div>
+        <div class="optout">Bar: lives left out of 8 per class (two per player). Hover for each class's finals games.</div>`;
+      h += panel('s6', 'Class survival', 'How many lives each class has left. Every finalist starts with two; hover a row for that class\'s game record in the finals against other classes.', survHtml);
+
+      let crowd = '<div class="optout">Loading the crowd vote…</div>';
+      if (VOTE && VOTE.total) {
+        const ranked = [...entered].map((i) => [i, votes(i) || 0]).filter((x) => x[1]).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        const top = ranked.length ? ranked[0][1] : 1;
+        crowd = `<div class="rows vs2">${ranked.map(([i, n]) => {
+          const p = P[i], l = lives(i), out = l === 0 && i !== champ;
+          return row(race(p[2] || 'Orc'), p[0], out ? 'var(--muted)' : CC[p[1]], n / top, `${Math.round(100 * n / VOTE.total)}%<small> ${i === champ ? '👑' : out ? 'out' : l === 1 ? 'last life' : 'alive'}</small>`,
+            `${p[0]}|${fmt(n)} of ${fmt(VOTE.total)} votes${out ? '\nKnocked out' : ''}`);
+        }).join('')}</div><div class="optout">${fmt(VOTE.total)} votes cast before the finals. ${VOTE.state === 'open' ? 'Voting is still open on the Qualifiers page.' : ''}</div>`;
+      } else if (VOTE) crowd = '<div class="optout">No votes yet.</div>';
+      h += panel('s6', "The crowd's pick", 'Who visitors voted to win it all, and whether their pick is still alive. One vote per connection.', crowd);
+
+      if (OS.h2h) h += h2hHtml(M.find((m) => key(m) === OS.h2h));
+      document.getElementById('main').innerHTML = h;
+      document.body.classList.toggle('modal', !!OS.h2h);
+      bindStage();
+      const main = document.getElementById('main');
+      main.querySelectorAll('[data-bseg]').forEach((x) => x.onclick = () => { OS.bseg = x.dataset.bseg; renderKeep(); });
+      main.querySelectorAll('[data-h2h]').forEach((x) => x.onclick = () => { OS.h2h = x.dataset.h2h; renderKeep(); });
+      main.querySelectorAll('[data-fp]').forEach((x) => x.onclick = () => {
+        const i = +x.dataset.fp;
+        const mine = M.filter((m) => m[3] === i || m[4] === i);
+        const pick = mine.find((m) => m[5] === 'p') || mine.find((m) => m[5] === 'n') || mine.slice().sort((a, b) => (b[11] || '').localeCompare(a[11] || ''))[0];
+        if (pick) { OS.h2h = key(pick); renderKeep(); }
+      });
+      const veilH = main.querySelector('.h2hv');
+      if (veilH) {
+        const shut = () => { OS.h2h = ''; document.body.classList.remove('modal'); veilH.remove(); };
+        veilH.addEventListener('click', (e) => { if (e.target === veilH || e.target.closest('.x')) shut(); });
+        veilH.querySelectorAll('[data-h2h]').forEach((x) => x.onclick = () => { OS.h2h = x.dataset.h2h; renderKeep(); });
+        document.onkeydown = (e) => { if (e.key === 'Escape' && OS.h2h) shut(); };
+      }
+
+      function h2hHtml(m) {
+        if (!m) return '';
+        const [ia, ib] = [m[3], m[4]], A = ia != null ? P[ia] : null, B = ib != null ? P[ib] : null, sc = score(m);
+        const G = window.LI_GEAR;
+        if (!G) loadGear().then(() => { if (view === 'open' && OS.h2h) renderKeep(); });
+        const ilvl = (p) => {
+          const g = G && p && G.p[p[0].toLowerCase()];
+          if (!g) return null;
+          const l = Object.entries(g[2]).filter(([k]) => k !== '4' && k !== '19').map(([, e]) => G.i[e[0]] && G.i[e[0]][2]).filter((x) => x);
+          return l.length ? sum(l) / l.length : null;
+        };
+        const status = (i) => i == null ? '' : i === champ ? '<span class="st">Champion</span>' : lives(i) === 0 ? '<span class="st out">Knocked out</span>' : lives(i) === 1 ? '<span class="st">Lower bracket · last life</span>' : '<span class="st">Unbeaten in the finals</span>';
+        const pl = (p, i, side) => p ? `<div class="pl ${side}"><div class="av" style="--cc:${CC[p[1]]}"><img src="${race(p[2] || 'Orc')}" alt=""><img class="ci" src="${cls(p[1])}" alt=""></div>
+          <div class="who"><b style="color:${CC[p[1]]}">${esc(p[0])}</b><span>${RACE_N[p[2]] || ''} ${specName(p[1], p[9])} ${CN[p[1]]}</span>${status(i)}</div></div>`
+          : `<div class="pl ${side}"><div class="who"><b style="color:var(--muted)">TBD</b><span>${esc(m[9 + (side === 'r' ? 1 : 0)] || '')}</span></div></div>`;
+        const pip = m[7].map((g, k) => `<span class="${g === 0 ? 'a' : 'b'}">G${k + 1} ${esc((g === 0 ? A : B)[0])}</span>`).join('');
+        const mid = `<div class="mid"><div class="score${m[5] === 'n' ? ' vs' : ''}">${m[5] === 'n' ? 'vs' : `${sc[0]}<span class="d">–</span>${sc[1]}`}</div><small>${m[5] === 'p' ? '<span style="color:#ff8f7a">● Live</span> · ' : m[5] === 'd' ? 'Final · ' : ''}${bo(m[8])}</small>${pip ? `<div class="gpips" style="--ca:${A ? CC[A[1]] : '#fff'};--cb:${B ? CC[B[1]] : '#fff'}">${pip}</div>` : ''}</div>`;
+        let body = `<div class="vsb">${pl(A, ia, 'l')}${mid}${pl(B, ib, 'r')}</div>`;
+        if (A && B) {
+          const cr = (lb, a, b, better, da, db, bar) => {
+            const ha = a != null && b != null && better(a, b) > 0, hb = a != null && b != null && better(a, b) < 0;
+            const barH = bar ? `<div class="bar"><i style="width:${100 * bar[0]}%;background:${CC[A[1]]}"></i><i style="flex:1"></i><i style="width:${100 * bar[1]}%;background:${CC[B[1]]}"></i></div>` : '';
+            return `<div class="cr"><span class="${ha ? 'hi' : ''}">${a == null ? '–' : da}</span><span class="lb">${lb}${barH}</span><span class="${hb ? 'hi' : ''}">${b == null ? '–' : db}</span></div>`;
+          };
+          const fRec = (i) => { const ms = M.filter((x) => x[5] === 'd' && (x[3] === i || x[4] === i)); const w = ms.filter((x) => (x[6] === 0 ? x[3] : x[4]) === i).length; return [w, ms.length - w]; };
+          const fGames = (i) => { let w = 0, l = 0; M.forEach((x) => { const s2 = x[3] === i ? 0 : x[4] === i ? 1 : -1; if (s2 < 0) return; x[7].forEach((g) => g === s2 ? w++ : l++); }); return [w, l]; };
+          const va = votes(ia), vb = votes(ib), la = ilvl(A), lb2 = ilvl(B);
+          const fa = fRec(ia), fb = fRec(ib), ga = fGames(ia), gb = fGames(ib);
+          const up = (a, b) => a - b;
+          body += `<div class="cmp">
+            ${cr('Seed', seeds[ia], seeds[ib], (a, b) => b - a, `#${seeds[ia]}`, `#${seeds[ib]}`)}
+            ${cr('Qualifiers', A[4] * 10 - A[5], B[4] * 10 - B[5], up, `${A[4]}–${A[5]}`, `${B[4]}–${B[5]}`)}
+            ${cr('Buchholz', A[7], B[7], up, A[7], B[7])}
+            ${fa[0] + fa[1] + fb[0] + fb[1] ? cr('Finals series', fa[0] - fa[1], fb[0] - fb[1], up, `${fa[0]}–${fa[1]} <small style="color:var(--muted)">(${ga[0]}–${ga[1]})</small>`, `<small style="color:var(--muted)">(${gb[0]}–${gb[1]})</small> ${fb[0]}–${fb[1]}`) : ''}
+            ${cr('Item level seen', la, lb2, up, la && la.toFixed(1), lb2 && lb2.toFixed(1))}
+            ${va != null ? cr('Crowd votes', va, vb, up, `${Math.round(100 * va / VOTE.total)}%`, `${Math.round(100 * vb / VOTE.total)}%`, [va / VOTE.total, vb / VOTE.total]) : ''}
+          </div>`;
+          let mup;
+          if (A[1] === B[1]) mup = `<b>Mirror match.</b> Two ${CN[A[1]].toLowerCase()}s, so it comes down to the players${A[9] !== B[9] && A[9] >= 0 && B[9] >= 0 ? ` and their specs: ${specName(A[1], A[9])} against ${specName(B[1], B[9])}` : ''}.`;
+          else {
+            const w = O.cells[A[1] + '>' + B[1]] || 0, l = O.cells[B[1] + '>' + A[1]] || 0;
+            mup = w + l ? `In the qualifiers, <b style="color:${CC[A[1]]}">${CN[A[1]].toLowerCase()}s</b> beat <b style="color:${CC[B[1]]}">${CN[B[1]].toLowerCase()}s</b> in <b>${Math.round(100 * w / (w + l))}%</b> of ${fmt(w + l)} matches.` : '';
+          }
+          if (A[9] >= 0 && B[9] >= 0 && !(A[1] === B[1] && A[9] === B[9])) {
+            const ka = `${A[1]}:${A[9]}`, kb = `${B[1]}:${B[9]}`, w = (O.scells || {})[ka + '>' + kb] || 0, l = (O.scells || {})[kb + '>' + ka] || 0;
+            if (w + l >= 5) mup += ` ${specName(A[1], A[9])} against ${specName(B[1], B[9])}: <b>${Math.round(100 * w / (w + l))}%</b> for ${esc(A[0])}'s side (${w}–${l}).`;
+          }
+          const tf = [...done, ...live].filter((x) => x !== m).flatMap((x) => x[7].map((g) => [P[g === 0 ? x[3] : x[4]], P[g === 0 ? x[4] : x[3]]])).filter(([w, l]) => w && l && w[1] !== l[1]);
+          const fw = tf.filter(([w, l]) => w[1] === A[1] && l[1] === B[1]).length, fl = tf.filter(([w, l]) => w[1] === B[1] && l[1] === A[1]).length;
+          if (fw + fl) mup += ` So far in the finals: ${fw}–${fl}.`;
+          if (mup) body += `<div class="mup">${mup}</div>`;
+
+          const road = (i) => {
+            const p = P[i];
+            const fin = M.filter((x) => x !== m && x[5] !== 'n' && (x[3] === i || x[4] === i)).sort((a, b) => (a[11] || '').localeCompare(b[11] || ''));
+            const finH = fin.map((x) => {
+              const me = x[3] === i ? 0 : 1, oi = x[4 - me], o = oi != null ? P[oi] : null, s2 = score(x);
+              const res = x[5] === 'p' ? ['p', 'Live'] : x[6] === me ? ['w', `Won ${s2[me]}–${s2[1 - me]}`] : ['l', `Lost ${s2[me]}–${s2[1 - me]}`];
+              return `<div class="g" data-h2h="${key(x)}" style="cursor:pointer"><span class="r">${rname(x[0], x[1])}</span><img src="${o ? cls(o[1]) : UI('inv_misc_questionmark')}" alt=""><span class="o" style="color:${o ? CC[o[1]] : ''}">${o ? esc(o[0]) : 'TBD'}</span><span class="res ${res[0]}">${res[1]}</span></div>`;
+            }).join('');
+            const q = O.games.filter((g) => g[1] === i || g[2] === i).sort((a, b) => a[0] - b[0]).map((g) => {
+              const me = g[1] === i ? 0 : 1, o = P[me ? g[1] : g[2]];
+              const res = g[3] === -1 ? ['p', 'Tie'] : g[3] === me ? ['w', 'Won'] : ['l', 'Lost'];
+              return `<div class="g"><span class="r">${g[0] > 10 ? 'Tiebreaker' : `Round ${g[0]}`}</span><img src="${cls(o[1])}" alt=""><span class="o" style="color:${CC[o[1]]}">${esc(o[0])} <small style="color:var(--muted)">${o[4]}–${o[5]}</small></span><span class="res ${res[0]}">${res[1]}</span></div>`;
+            }).join('');
+            return `<div class="road2">${finH ? `<div class="sep">Finals</div>${finH}` : ''}<div class="sep">Qualifiers · ${p[4]}–${p[5]}, rank ${p[11]} of ${fmt(P.filter((x) => x[1] === p[1]).length)} ${CN[p[1]].toLowerCase()}s</div>${q}</div>`;
+          };
+          body += `<h3>The road here</h3><div class="two">${road(ia)}${road(ib)}</div>`;
+          const tree = (p, i) => {
+            const tr = T[p[1]], r = (O.ftal || {})[i];
+            if (!tr || !r || p[9] < 0) return `<div class="mtree"><div class="optout">No talents listed.</div></div>`;
+            const t = p[9], nodes = tr.nodes.filter((nd) => nd.tab === t), byId = {};
+            nodes.forEach((nd) => byId[nd.id] = nd);
+            const CW = 44, CH = 46, cols = Math.max(4, ...nodes.map((nd) => nd.col + 1)), rows = Math.max(...nodes.map((nd) => nd.row)) + 1;
+            const lines = nodes.flatMap((nd) => nd.to.filter((id) => byId[id]).map((id) => { const to = byId[id]; const on = r[nd.id] && r[id]; return `<line x1="${nd.col * CW + 17}" y1="${nd.row * CH + 17}" x2="${to.col * CW + 17}" y2="${to.row * CH + 17}" stroke="${on ? '#3fd06a' : 'rgba(255,255,255,0.1)'}" stroke-width="2"/>`; })).join('');
+            const nh = nodes.map((nd) => { const k = r[nd.id] || 0; return `<div class="n ${k ? 'on' : ''} ${k && k < nd.max ? 'part' : ''}" style="left:${nd.col * CW}px;top:${nd.row * CH}px" data-tip="${esc(nd.name)}|${k} of ${nd.max} points${nd.desc ? '\n\n' + nd.desc : ''}"><img src="assets/icons/${nd.icon || 134400}.png" alt="">${k ? `<b>${k}</b>` : ''}</div>`; }).join('');
+            const pts = (p[10] || '').split('/');
+            return `<div class="mtree" style="--art:url('assets/game/talents/${p[1]}-${t}.jpg')"><div class="mt">${tr.icons && tr.icons[t] ? `<img src="assets/icons/${tr.icons[t]}.png" alt="">` : ''}<span style="color:${CC[p[1]]}">${specName(p[1], t)}</span><small>${p[10]}</small></div>
+              <div class="tb" style="width:${cols * CW - 10}px;height:${rows * CH - 12}px"><svg width="${cols * CW}" height="${rows * CH}">${lines}</svg>${nh}</div>
+              <div class="other">${tr.tabs.map((n, k) => k === t ? '' : `${n} ${pts[k] || 0}`).filter((x) => x).join(' · ')}</div></div>`;
+          };
+          body += `<h3>Talents they entered with</h3><div class="two">${tree(A, ia)}${tree(B, ib)}</div>`;
+          body += `<h3>Gear</h3><div class="two">${dollHtml(A)}${dollHtml(B)}</div>`;
+        }
+        return `<div class="h2hv"><div class="h2h"><div class="in" style="--art:url('assets/game/art-shamanrestoration.jpg')"><div class="top"><b>${rname(m[0], m[1])}</b><span>${m[0] === 'u' ? 'Upper bracket' : 'Lower bracket'} · ${bo(m[8])}</span><button class="x" aria-label="Close">✕</button></div>${body}</div></div></div>`;
+      }
+    }
     function dollHtml(p) {
-      if (!window.LI_GEAR) { loadGear().then(draw); return '<div class="nogear">Loading gear…</div>'; }
+      if (!window.LI_GEAR) { loadGear().then(() => { if (view === 'open') renderKeep(); }); return '<div class="nogear">Loading gear…</div>'; }
       const G = window.LI_GEAR, g = G.p[p[0].toLowerCase()];
       if (!g) return '<div class="nogear">I never inspected this player before the tournament, so there is no gear to show.</div>';
       const [t, lv, slots] = g;
@@ -1649,6 +2035,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       el.remove();
       const N = window.LI_OPEN;
       if (!N || !O || !(N.at > O.at)) { window.LI_OPEN = O; return; }
+      if (OS.h2h && document.querySelector('.h2hv')) { O = N; return; }
       const was = OS.open >= 0 && O.players[OS.open] ? O.players[OS.open][0] : null;
       O = N;
       OS.open = was ? O.players.findIndex((p) => p[0] === was) : -1;
@@ -1659,8 +2046,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   }
   if (O) {
     freshOpen();
-    setInterval(() => { if (view === 'open' && O.live && !document.hidden && document.activeElement?.id !== 'osearch') freshOpen(); }, 120000);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden && view === 'open' && O.live) freshOpen(); });
+    setInterval(() => { if (view === 'open' && (O.live || (O.fin && O.fin.live)) && !document.hidden && document.activeElement?.id !== 'osearch') freshOpen(); }, 120000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && view === 'open' && (O.live || (O.fin && O.fin.live))) freshOpen(); });
   }
 })();
 </script>

@@ -517,9 +517,8 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
   border-radius: 13px 0 0 13px; clip-path: polygon(0 0, 100% 0, calc(100% - 34px) 100%, 0 100%); margin-right: -17px; }
 .stagesw .sf { --tone: linear-gradient(260deg, rgba(30, 18, 4, 0.5), rgba(28, 16, 4, 0.92) 70%); --pic: url("assets/game/art-priestholy.jpg"); --hue: #ffd479; --glow: rgba(255, 200, 90, 0.55);
   border-radius: 0 13px 13px 0; clip-path: polygon(34px 0, 100% 0, 100% 100%, 0 100%); margin-left: -17px; flex-direction: row-reverse; text-align: right; padding: 16px 26px 16px 70px; }
-.stagesw .bar { position: absolute; z-index: 3; bottom: 3px; height: 4px; width: calc(50% - 3px); pointer-events: none; transition: left 0.25s, background 0.25s; }
-.stagesw .bar.q { left: 3px; border-radius: 0 0 0 13px; background: #8ff0e2; box-shadow: 0 0 18px rgba(63, 216, 200, 0.55); }
-.stagesw .bar.fin { left: 50%; border-radius: 0 0 13px 0; background: #ffd479; box-shadow: 0 0 18px rgba(255, 200, 90, 0.55); }
+.stagesw button::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--hue); box-shadow: 0 0 18px var(--glow); opacity: 0; transition: opacity 0.25s; }
+.stagesw button.on::after { opacity: 1; }
 .fan { margin: 14px 22px 0; padding: 12px 16px 14px; border-radius: 10px; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1px var(--soft); }
 .fan .fh { display: flex; align-items: baseline; justify-content: center; gap: 10px; margin-bottom: 8px; }
 .fan .fh b { font: 18px "Morpheus", serif; font-weight: normal; color: var(--title); }
@@ -861,9 +860,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018180620"></script>
-<script src="data-summary.js?v=20261018180620"></script>
-<script src="data-open.js?v=20261018180620"></script>
+<script src="data-multi.js?v=20261018181254"></script>
+<script src="data-summary.js?v=20261018181254"></script>
+<script src="data-open.js?v=20261018181254"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1449,7 +1448,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       const fDone = F.m.filter((m) => m[5] === 'd').length;
       h += `<div class="stagesw"><button class="sq ${stage === 'q' ? 'on' : ''}" data-stage="q"><div><span class="step">Stage one<span class="xs"> · The Swiss rounds</span></span><b>Qualifiers</b><small>Oct 17 · ${fmt(O.played)} matches</small></div><div class="big">${fmt(O.entrants)}<small>players</small></div></button>
         <div class="medal"><img src="assets/forever-open-logo.png" alt=""></div>
-        <i class="bar ${stage}"></i><button class="sf ${stage === 'fin' ? 'on' : ''}" data-stage="fin">${fLive ? '<span class="live"><i></i>LIVE</span>' : ''}<div><span class="step">Stage two<span class="xs"> · Oct 18</span></span><b>The Finals<i>♛</i></b><small>Double elimination · ${fDone ? `${fDone} of ${F.m.length} series played` : 'best of 3 and 5'}</small></div><div class="big">36<small>finalists</small></div></button></div>`;
+        <button class="sf ${stage === 'fin' ? 'on' : ''}" data-stage="fin">${fLive ? '<span class="live"><i></i>LIVE</span>' : ''}<div><span class="step">Stage two<span class="xs"> · Oct 18</span></span><b>The Finals<i>♛</i></b><small>Double elimination · ${fDone ? `${fDone} of ${F.m.length} series played` : 'best of 3 and 5'}</small></div><div class="big">36<small>finalists</small></div></button></div>`;
     }
     if (stage === 'fin') { renderFinals(h); return; }
     h += plaque(UI('ability_dualwield'), 'Matches', fmt(O.played), O.live ? (O.expected ? `of about ${fmt(Math.round(O.expected / 100) * 100)}` : 'decided so far') : 'in the qualifiers');

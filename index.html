@@ -517,8 +517,29 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
   border-radius: 13px 0 0 13px; clip-path: polygon(0 0, 100% 0, calc(100% - 34px) 100%, 0 100%); margin-right: -17px; }
 .stagesw .sf { --tone: linear-gradient(260deg, rgba(30, 18, 4, 0.5), rgba(28, 16, 4, 0.92) 70%); --pic: url("assets/game/art-priestholy.jpg"); --hue: #ffd479; --glow: rgba(255, 200, 90, 0.55);
   border-radius: 0 13px 13px 0; clip-path: polygon(34px 0, 100% 0, 100% 100%, 0 100%); margin-left: -17px; flex-direction: row-reverse; text-align: right; padding: 16px 26px 16px 70px; }
-.stagesw button::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--hue); box-shadow: 0 0 18px var(--glow); opacity: 0; transition: opacity 0.25s; }
-.stagesw button.on::after { opacity: 1; }
+.stagesw .bar { position: absolute; z-index: 3; bottom: 3px; height: 4px; width: calc(50% - 3px); pointer-events: none; transition: left 0.25s, background 0.25s; }
+.stagesw .bar.q { left: 3px; border-radius: 0 0 0 13px; background: #8ff0e2; box-shadow: 0 0 18px rgba(63, 216, 200, 0.55); }
+.stagesw .bar.fin { left: 50%; border-radius: 0 0 13px 0; background: #ffd479; box-shadow: 0 0 18px rgba(255, 200, 90, 0.55); }
+.fan { margin: 14px 22px 0; padding: 12px 16px 14px; border-radius: 10px; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1px var(--soft); }
+.fan .fh { display: flex; align-items: baseline; justify-content: center; gap: 10px; margin-bottom: 8px; }
+.fan .fh b { font: 18px "Morpheus", serif; font-weight: normal; color: var(--title); }
+.fan .fh small { font-size: 12px; color: var(--muted); }
+.fan .row3 { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+.fan .pct { font: 22px "Friz", serif; color: #fff2cf; min-width: 48px; text-align: center; }
+.fmeter { position: relative; display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: rgba(255, 255, 255, 0.06); box-shadow: inset 0 1px 3px #000; }
+.fmeter i { display: block; height: 100%; transition: width 0.5s; }
+.fmeter::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 2px; margin-left: -1px; background: rgba(0, 0, 0, 0.7); }
+.fan .btns { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; }
+.fan .cb { flex: 1; max-width: 46%; padding: 8px 10px; border-radius: 999px; border: 0; cursor: pointer; font: 14px "Friz", serif; color: var(--ink);
+  background: rgba(0, 0, 0, 0.45); box-shadow: inset 0 0 0 1px var(--cc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background 0.15s; }
+.fan .cb:hover:not(:disabled) { background: color-mix(in srgb, var(--cc) 25%, rgba(0, 0, 0, 0.45)); }
+.fan .cb.on { background: color-mix(in srgb, var(--cc) 45%, #000); color: #fff; box-shadow: inset 0 0 0 2px var(--cc), 0 0 14px color-mix(in srgb, var(--cc) 50%, transparent); }
+.fan .cb:disabled { cursor: default; opacity: 0.55; }
+.fan .cb.on:disabled { opacity: 1; }
+.fan .err { text-align: center; font-size: 12.5px; color: #ef7d6d; margin-top: 8px; }
+.mcard .fmeter { height: 4px; margin-top: 7px; border-radius: 2px; }
+.mcard .fmeter::after { display: none; }
+.mcard .fc { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); margin-top: 3px; }
 .stagesw button.on { box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.4); }
 .stagesw .step { font: 12px "Friz", serif; letter-spacing: 0.18em; text-transform: uppercase; color: var(--hue); opacity: 0.85; }
 .stagesw b { display: block; font: 40px/1 "Morpheus", serif; font-weight: normal; color: var(--hue); text-shadow: 0 2px 0 #000, 0 0 24px var(--glow); margin: 3px 0 4px; }
@@ -840,9 +861,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018180505"></script>
-<script src="data-summary.js?v=20261018180505"></script>
-<script src="data-open.js?v=20261018180505"></script>
+<script src="data-multi.js?v=20261018180620"></script>
+<script src="data-summary.js?v=20261018180620"></script>
+<script src="data-open.js?v=20261018180620"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -872,7 +893,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   };
   let O = window.LI_OPEN;
   const VOTE_API = 'https://forever-vote.sanredz.workers.dev';
-  let VOTE = null, voteErr = '';
+  let VOTE = null, voteErr = '', CHEER = null, cheerErr = '';
   if (!O) document.querySelectorAll('.tab[data-v="open"]').forEach((t) => t.remove());
   const hasWorld = !!(S && S.duels);
   if (!hasWorld) document.querySelectorAll('.tab[data-v="duels"], .tab[data-v="life"]').forEach((t) => t.remove());
@@ -1428,7 +1449,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       const fDone = F.m.filter((m) => m[5] === 'd').length;
       h += `<div class="stagesw"><button class="sq ${stage === 'q' ? 'on' : ''}" data-stage="q"><div><span class="step">Stage one<span class="xs"> · The Swiss rounds</span></span><b>Qualifiers</b><small>Oct 17 · ${fmt(O.played)} matches</small></div><div class="big">${fmt(O.entrants)}<small>players</small></div></button>
         <div class="medal"><img src="assets/forever-open-logo.png" alt=""></div>
-        <button class="sf ${stage === 'fin' ? 'on' : ''}" data-stage="fin">${fLive ? '<span class="live"><i></i>LIVE</span>' : ''}<div><span class="step">Stage two<span class="xs"> · Oct 18</span></span><b>The Finals<i>♛</i></b><small>Double elimination · ${fDone ? `${fDone} of ${F.m.length} series played` : 'best of 3 and 5'}</small></div><div class="big">36<small>finalists</small></div></button></div>`;
+        <i class="bar ${stage}"></i><button class="sf ${stage === 'fin' ? 'on' : ''}" data-stage="fin">${fLive ? '<span class="live"><i></i>LIVE</span>' : ''}<div><span class="step">Stage two<span class="xs"> · Oct 18</span></span><b>The Finals<i>♛</i></b><small>Double elimination · ${fDone ? `${fDone} of ${F.m.length} series played` : 'best of 3 and 5'}</small></div><div class="big">36<small>finalists</small></div></button></div>`;
     }
     if (stage === 'fin') { renderFinals(h); return; }
     h += plaque(UI('ability_dualwield'), 'Matches', fmt(O.played), O.live ? (O.expected ? `of about ${fmt(Math.round(O.expected / 100) * 100)}` : 'decided so far') : 'in the qualifiers');
@@ -1633,6 +1654,11 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         return `${x[1]}, ${rname(sg, r).replace(/s$/, '')}${many ? ` ${x[5]}` : ''}`;
       };
       const score = (m) => [m[7].filter((x) => x === 0).length, m[7].filter((x) => x === 1).length];
+      const cheersOf = (m) => (CHEER && CHEER.counts && CHEER.counts[key(m)]) || [0, 0];
+      const fanBar = (m, A, B) => {
+        const c = cheersOf(m), n = c[0] + c[1];
+        return `<div class="fmeter">${n ? `<i style="width:${100 * c[0] / n}%;background:linear-gradient(90deg, ${CC[A[1]]}88, ${CC[A[1]]})"></i><i style="flex:1;background:linear-gradient(90deg, ${CC[B[1]]}, ${CC[B[1]]}88)"></i>` : ''}</div>`;
+      };
       const loss = {}, lostIn = {}, alive = new Set(), entered = new Set();
       M.forEach((m) => { [m[3], m[4]].forEach((i) => { if (i != null) entered.add(i); }); });
       M.filter((m) => m[5] === 'd').forEach((m) => { const lo = m[6] === 0 ? m[4] : m[3]; if (lo == null) return; loss[lo] = (loss[lo] || 0) + 1; lostIn[lo] = m; });
@@ -1666,7 +1692,11 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         const pips = small || m[8] === 1 ? '' : `<span class="pips">${Array.from({ length: need }, (_, k) => `<i class="${k < sc[s] ? 'on' : ''}"></i>`).join('')}</span>`;
         return `<div class="mside ${st}" style="--cc:${CC[p[1]]}"><img src="${race(p[2] || 'Orc')}" alt=""><span class="nm" style="color:${st === 'l' ? '' : CC[p[1]]}">${esc(p[0])}${small ? '' : `<small>${seeds[i] ? `#${seeds[i]} · ` : ''}${p[4]}–${p[5]}</small>`}</span>${small ? '' : pips || '<span></span>'}<span class="sc">${m[5] === 'n' ? '' : sc[s]}</span></div>`;
       };
-      const card = (m) => `<div class="mcard ${m[5]}" data-h2h="${key(m)}"><div class="mh"><span>${rname(m[0], m[1])} · ${bo(m[8])}</span>${m[5] === 'p' ? '<span class="lv">● Live</span>' : m[5] === 'd' ? '<span>Final</span>' : '<span>Up next</span>'}</div>${sideHtml(m, 0)}${sideHtml(m, 1)}</div>`;
+      const card = (m) => {
+        const c = cheersOf(m), n = c[0] + c[1], A = P[m[3]], B = P[m[4]];
+        const fan = A && B ? `${fanBar(m, A, B)}<div class="fc"><span>${n ? `${Math.round(100 * c[0] / n)}%` : ''}</span><span>${n ? `${fmt(n)} ${n === 1 ? 'cheer' : 'cheers'}` : m[5] === 'd' ? '' : 'Tap to cheer'}</span><span>${n ? `${Math.round(100 * c[1] / n)}%` : ''}</span></div>` : '';
+        return `<div class="mcard ${m[5]}" data-h2h="${key(m)}"><div class="mh"><span>${rname(m[0], m[1])} · ${bo(m[8])}</span>${m[5] === 'p' ? '<span class="lv">● Live</span>' : m[5] === 'd' ? '<span>Final</span>' : '<span>Up next</span>'}</div>${sideHtml(m, 0)}${sideHtml(m, 1)}${fan}</div>`;
+      };
       const order = (m) => (m[0] === 'u' ? m[1] * 2 : m[1] + 1) * 100 + m[2];
       const next = M.filter((m) => m[5] === 'n' && m[3] != null && m[4] != null).sort((a, b) => order(a) - order(b)).slice(0, live.length ? 6 : 9);
       const recent = done.slice().sort((a, b) => (b[11] || '').localeCompare(a[11] || '')).slice(0, 6);
@@ -1760,7 +1790,10 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       h += panel('s6', "The crowd's pick", 'Who visitors voted to win it all, and whether their pick is still alive. One vote per connection.', crowd);
 
       if (OS.h2h) h += h2hHtml(M.find((m) => key(m) === OS.h2h));
+      const oldV = document.querySelector('.h2hv'), keepY = oldV && oldV.dataset.k === OS.h2h ? oldV.scrollTop : 0;
       document.getElementById('main').innerHTML = h;
+      const newV = document.querySelector('.h2hv');
+      if (newV) { newV.dataset.k = OS.h2h; newV.scrollTop = keepY; }
       document.body.classList.toggle('modal', !!OS.h2h);
       bindStage();
       const main = document.getElementById('main');
@@ -1777,6 +1810,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         const shut = () => { OS.h2h = ''; document.body.classList.remove('modal'); veilH.remove(); };
         veilH.addEventListener('click', (e) => { if (e.target === veilH || e.target.closest('.x')) shut(); });
         veilH.querySelectorAll('[data-h2h]').forEach((x) => x.onclick = () => { OS.h2h = x.dataset.h2h; renderKeep(); });
+        veilH.querySelectorAll('[data-cheer]').forEach((x) => x.onclick = () => { const k = x.dataset.cheer.split(':'); castCheer(k.slice(0, 3).join(':'), +k[3]); });
         document.onkeydown = (e) => { if (e.key === 'Escape' && OS.h2h) shut(); };
       }
 
@@ -1799,6 +1833,13 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         const mid = `<div class="mid"><div class="score${m[5] === 'n' ? ' vs' : ''}">${m[5] === 'n' ? 'vs' : `${sc[0]}<span class="d">–</span>${sc[1]}`}</div><small>${m[5] === 'p' ? '<span style="color:#ff8f7a">● Live</span> · ' : m[5] === 'd' ? 'Final · ' : ''}${bo(m[8])}</small>${pip ? `<div class="gpips" style="--ca:${A ? CC[A[1]] : '#fff'};--cb:${B ? CC[B[1]] : '#fff'}">${pip}</div>` : ''}</div>`;
         let body = `<div class="vsb">${pl(A, ia, 'l')}${mid}${pl(B, ib, 'r')}</div>`;
         if (A && B) {
+          const c = cheersOf(m), n = c[0] + c[1], mine = CHEER && CHEER.mine ? CHEER.mine[key(m)] : undefined, closed = m[5] === 'd';
+          const pa = n ? c[0] / n : 0.5;
+          body += `<div class="fan"><div class="fh"><b>${closed ? 'How the fans called it' : 'Fan meter'}</b><small>${n ? `${fmt(n)} ${n === 1 ? 'cheer' : 'cheers'}` : closed ? 'No cheers' : 'Be the first to cheer'}${!closed ? ' · one per connection, change it any time before the match ends' : ''}</small></div>
+            <div class="row3"><span class="pct" style="color:${CC[A[1]]}">${n ? Math.round(pa * 100) + '%' : '–'}</span>${fanBar(m, A, B)}<span class="pct" style="color:${CC[B[1]]}">${n ? Math.round((1 - pa) * 100) + '%' : '–'}</span></div>
+            <div class="btns">${[A, B].map((p, k) => `<button class="cb ${mine === k ? 'on' : ''}" style="--cc:${CC[p[1]]}" data-cheer="${key(m)}:${k}" ${closed ? 'disabled' : ''}>${mine === k ? '✓ ' : '📣 '}${closed ? esc(p[0]) : mine === k ? `Cheering ${esc(p[0])}` : `Cheer ${esc(p[0])}`}</button>`).join('')}</div>${cheerErr ? `<div class="err">${esc(cheerErr)}</div>` : ''}</div>`;
+        }
+        if (A && B) {
           const cr = (lb, a, b, better, da, db, bar) => {
             const ha = a != null && b != null && better(a, b) > 0, hb = a != null && b != null && better(a, b) < 0;
             const barH = bar ? `<div class="bar"><i style="width:${100 * bar[0]}%;background:${CC[A[1]]}"></i><i style="flex:1"></i><i style="width:${100 * bar[1]}%;background:${CC[B[1]]}"></i></div>` : '';
@@ -1815,7 +1856,6 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
             ${cr('Buchholz', A[7], B[7], up, A[7], B[7])}
             ${fa[0] + fa[1] + fb[0] + fb[1] ? cr('Finals series', fa[0] - fa[1], fb[0] - fb[1], up, `${fa[0]}–${fa[1]} <small style="color:var(--muted)">(${ga[0]}–${ga[1]})</small>`, `<small style="color:var(--muted)">(${gb[0]}–${gb[1]})</small> ${fb[0]}–${fb[1]}`) : ''}
             ${cr('Item level seen', la, lb2, up, la && la.toFixed(1), lb2 && lb2.toFixed(1))}
-            ${va != null ? cr('Crowd votes', va, vb, up, `${Math.round(100 * va / VOTE.total)}%`, `${Math.round(100 * vb / VOTE.total)}%`, [va / VOTE.total, vb / VOTE.total]) : ''}
           </div>`;
           let mup;
           if (A[1] === B[1]) mup = `<b>Mirror match.</b> Two ${CN[A[1]].toLowerCase()}s, so it comes down to the players${A[9] !== B[9] && A[9] >= 0 && B[9] >= 0 ? ` and their specs: ${specName(A[1], A[9])} against ${specName(B[1], B[9])}` : ''}.`;
@@ -2101,6 +2141,20 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       if (changed && view === 'open') renderKeep();
     }).catch(() => {});
   }
+  function loadCheers() {
+    fetch(VOTE_API + '/api/cheers').then((r) => r.json()).then((v) => {
+      if (!v || !v.counts) return;
+      const changed = JSON.stringify(v) !== JSON.stringify(CHEER);
+      CHEER = v;
+      if (changed && view === 'open' && O && O.fin) renderKeep();
+    }).catch(() => {});
+  }
+  function castCheer(match, side) {
+    cheerErr = '';
+    fetch(VOTE_API + '/api/cheer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ match, side }) })
+      .then((r) => r.json()).then((v) => { if (v.error) cheerErr = v.error; else CHEER = v; renderKeep(); })
+      .catch(() => { cheerErr = 'Could not reach the cheer box. Try again in a moment.'; renderKeep(); });
+  }
   function castVote(id) {
     voteErr = '';
     fetch(VOTE_API + '/api/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pick: id }) })
@@ -2109,6 +2163,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   }
   function freshOpen() {
     loadVotes();
+    if (O && O.fin) loadCheers();
     const el = document.createElement('script');
     el.src = 'data-open.js?t=' + Math.floor(Date.now() / 60000);
     el.onload = () => {

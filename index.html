@@ -512,7 +512,9 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 .sw:hover { color: var(--ink); }
 .sw.on { color: var(--title); border-bottom-color: var(--title2); }
 .swaph .dot { color: var(--muted); font-size: 16px; opacity: 0.6; }
-.swap[data-sr="spec"] .swb[data-k="race"], .swap[data-sr="race"] .swb[data-k="spec"] { display: none; }
+.swap[data-sr="spec"] .swb[data-k="race"], .swap[data-sr="race"] .swb[data-k="spec"], .swap[data-sr="cls"] .swb[data-k="spec"], .swap[data-sr="spec"] .swb[data-k="cls"] { display: none; }
+.fogrid .rh img.sp, .fogrid .ch img.sp { border-radius: 6px; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--cc); }
+.fogrid .ch img.sp { width: 24px; height: 24px; opacity: 1; }
 .vhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(90, 220, 200, 0.07); box-shadow: inset 0 0 0 1px var(--soft); font-size: 14px; color: var(--ink-2); }
 .vhead b { font: 18px "Morpheus", serif; font-weight: normal; color: var(--title); }
 .vhead .err { color: #ef7d6d; }
@@ -649,9 +651,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018092813"></script>
-<script src="data-summary.js?v=20261018092813"></script>
-<script src="data-open.js?v=20261018092813"></script>
+<script src="data-multi.js?v=20261018120341"></script>
+<script src="data-summary.js?v=20261018120341"></script>
+<script src="data-open.js?v=20261018120341"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1248,9 +1250,30 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       g += `<div></div><div class="tot" style="box-shadow:inset 0 0 0 1px ${edge},inset 4px 0 0 ${edge}" data-tip="${CN[a]}|${w} won, ${l} lost against other classes">${Math.round(p * 100)}%<small>${w}–${l}</small></div>`;
     });
     g += '</div>';
-    const hero = `<div class="fo-hero"><img src="assets/forever-open-logo.png" alt="The Forever Open"><div><p>Swiss qualifiers · ${O.live && O.expected ? `${fmt(O.played)} of about ${fmt(Math.round(O.expected / 100) * 100)} matches so far` : `${fmt(O.played)} matches, all 6 rounds`}</p><span class="tag">Read across: the class on the left vs the class on top</span></div></div>`;
-    const key = `<div class="optout"><span class="fokey"><span style="background:rgba(224,102,47,0.85)"></span>left class usually wins</span><span class="fokey"><span style="background:rgba(93,132,180,0.85)"></span>usually loses</span>Small number: matches played.<span style="float:right">Results from Raider.IO · <b style="color:var(--ink-2);font-weight:normal">lifeonazeroth.com</b></span></div>`;
-    h += panel('s8', 'Class matchups', 'Every decided qualifier match between two different classes. Row class against column class; the last column is each class against everyone.', hero + g + key);
+    const hero = `<div class="fo-hero"><img src="assets/forever-open-logo.png" alt="The Forever Open"><div><p>Swiss qualifiers · ${O.live && O.expected ? `${fmt(O.played)} of about ${fmt(Math.round(O.expected / 100) * 100)} matches so far` : `${fmt(O.played)} matches, all 6 rounds`}</p><span class="tag">Read across: the row on the left vs the column on top</span></div></div>`;
+    const key = `<div class="optout"><span class="fokey"><span style="background:rgba(224,102,47,0.85)"></span>left side usually wins</span><span class="fokey"><span style="background:rgba(93,132,180,0.85)"></span>usually loses</span>Small number: matches played.<span style="float:right">Results from Raider.IO · <b style="color:var(--ink-2);font-weight:normal">lifeonazeroth.com</b></span></div>`;
+    const SR = O.srec || {}, SC = O.scells || {};
+    const sk = Object.keys(SR).filter((k) => SR[k][0] + SR[k][1] >= 200).sort((a, b) => SR[b][0] / (SR[b][0] + SR[b][1]) - SR[a][0] / (SR[a][0] + SR[a][1]));
+    const sName = (k) => { const [c, i] = k.split(':'); return `${specName(c, +i)} ${CN[c]}`; };
+    const sImg = (k, tip) => { const [c, i] = k.split(':'); return `<img class="sp" style="--cc:${CC[c]}" src="${specIcon(c, +i)}" alt="" title="">`; };
+    let sg = `<div class="grid fogrid" style="--n:${sk.length}"><div class="corner">wins vs</div>`;
+    sg += sk.map((k) => `<div class="ch" data-tip="${esc(sName(k))}">${sImg(k)}</div>`).join('') + '<div></div><div class="toth">Overall</div>';
+    sk.forEach((a) => {
+      sg += `<div class="rh" data-tip="${esc(sName(a))}">${sImg(a)}<i></i></div>`;
+      sk.forEach((b) => {
+        const w = SC[a + '>' + b] || 0, l = SC[b + '>' + a] || 0, n = w + l;
+        if (a === b || n < 5) { sg += `<div class="cell none"${a !== b && n ? ` data-tip="${esc(sName(a))} vs ${esc(sName(b))}|Only ${n} ${n === 1 ? 'match' : 'matches'}, too few to show"` : ''}></div>`; return; }
+        const p = w / n, t = Math.min(1, Math.abs(p - 0.5) * 2) * Math.min(1, n / 12);
+        sg += `<div class="cell" style="background:${shade(p, t)}" data-tip="${esc(sName(a))} vs ${esc(sName(b))}|${w} won, ${l} lost">${Math.round(p * 100)}%<small>${n}</small></div>`;
+      });
+      const [w, l] = SR[a], p = w / (w + l), edge = shade(p, 0.35 + 0.6 * Math.min(1, Math.abs(p - 0.5) * 2.5));
+      sg += `<div></div><div class="tot" style="box-shadow:inset 0 0 0 1px ${edge},inset 4px 0 0 ${edge}" data-tip="${esc(sName(a))}|${w} won, ${l} lost against other specs">${Math.round(p * 100)}%<small>${w}–${l}</small></div>`;
+    });
+    sg += '</div>';
+    const mx = OS.mx || 'cls';
+    const mxHelp = help('Matchups', 'Classes: every decided qualifier match between two different classes. Specs: the 12 specs with 200+ decided matches, from the talents each player entered with; same-spec matches are left out and cells with fewer than 5 matches stay empty. The last column is each row against everyone.');
+    h += `<section class="frame panel s8 swap" data-sr="${mx}" id="mxswap"><div class="in slab"><div class="head"><h2 class="swaph"><button class="sw ${mx === 'cls' ? 'on' : ''}" data-srk="cls">Class matchups</button><span class="dot">·</span><button class="sw ${mx === 'spec' ? 'on' : ''}" data-srk="spec">Spec matchups</button></h2><button class="snap" data-act="png">Save PNG</button>${mxHelp}</div>
+      <div class="body">${hero}<div class="swb" data-k="cls">${g}</div><div class="swb" data-k="spec">${sg}<div class="optout" style="margin-top:8px">The 12 specs with 200+ matches. Hover an icon for its name; empty cells had fewer than 5 matches.</div></div>${key}</div></div></section>`;
 
     const specRows = [];
     Object.entries(O.specs).forEach(([c, arr]) => {
@@ -1405,9 +1428,10 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.querySelectorAll('[data-ofind]').forEach((x) => x.onclick = (e) => { if (!e.target.closest('[data-vote]')) find(x.dataset.ofind); });
     document.querySelectorAll('[data-vote]').forEach((x) => x.onclick = () => castVote(+x.dataset.vote));
     document.querySelectorAll('[data-srk]').forEach((x) => x.onclick = () => {
-      OS.sr = x.dataset.srk;
-      document.getElementById('swap').dataset.sr = OS.sr;
-      document.querySelectorAll('[data-srk]').forEach((y) => y.classList.toggle('on', y === x));
+      const box = x.closest('.swap');
+      if (box.id === 'mxswap') OS.mx = x.dataset.srk; else OS.sr = x.dataset.srk;
+      box.dataset.sr = x.dataset.srk;
+      box.querySelectorAll('[data-srk]').forEach((y) => y.classList.toggle('on', y === x));
     });
     document.querySelectorAll('[data-otc]').forEach((x) => x.onclick = () => { OS.tc = x.dataset.otc; keepTcls(OS.tc); renderKeep(); });
     const listEl = document.getElementById('everyone');

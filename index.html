@@ -860,9 +860,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018193628"></script>
-<script src="data-summary.js?v=20261018193628"></script>
-<script src="data-open.js?v=20261018193628"></script>
+<script src="data-multi.js?v=20261018194325"></script>
+<script src="data-summary.js?v=20261018194325"></script>
+<script src="data-open.js?v=20261018194325"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1675,7 +1675,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       const startAt = new Date(F.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const upperN = [...alive].filter((i) => !loss[i]).length;
       document.getElementById('title').textContent = 'The Finals';
-      document.getElementById('note').textContent = champ != null ? `Finals over · ${P[champ][0]} wins` : started ? `Finals live · updated ${new Date(O.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : `Finals start at ${startAt}`;
+      document.getElementById('note').textContent = champ != null ? `Finals over · ${P[champ][0]} wins` : started ? `Finals live · updated ${new Date(F.liveAt || O.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : `Finals start at ${startAt}`;
 
       if (champ != null) h += plaque(race(P[champ][2] || 'Orc'), 'Champion', esc(P[champ][0]), `${specName(P[champ][1], P[champ][9])} ${CN[P[champ][1]]}`, true);
       else h += plaque(UI('inv_bannerpvp_02'), 'Still standing', `${alive.size}<small style="font-size:18px;color:var(--muted)"> of ${entered.size}</small>`, `${upperN} unbeaten · ${alive.size - upperN} on their last life`);
@@ -1764,7 +1764,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       };
       const bHelp = help('Bracket', 'Double elimination. Upper bracket series are best of 3, lower bracket games are single games until the lower final (best of 3), and the grand final is best of 5. Seeds 29 to 36 play in first. Scroll sideways for later rounds; click a match for the head to head.');
       h += `<section class="frame panel s12 swap" data-sr="${bseg}" id="fbrk"><div class="in slab"><div class="head"><h2 class="swaph"><button class="sw ${bseg === 'u' ? 'on' : ''}" data-bseg="u">Upper bracket</button><span class="dot">·</span><button class="sw ${bseg === 'l' ? 'on' : ''}" data-bseg="l">Lower bracket</button></h2>${bHelp}</div>
-        <div class="body">${brk(bseg)}<div class="optout">${bseg === 'l' ? '<span style="color:#ef9d6d">▼</span> dropped down from the upper bracket. The lower final winner meets the upper final winner in the grand final. ' : 'The grand final winner takes it all. '}Byes are left out. Results from Raider.IO, refreshed every few minutes.</div></div></div></section>`;
+        <div class="body">${brk(bseg)}<div class="optout">${bseg === 'l' ? '<span style="color:#ef9d6d">▼</span> dropped down from the upper bracket. The lower final winner meets the upper final winner in the grand final. ' : 'The grand final winner takes it all. '}Byes are left out. Results from Raider.IO, refreshed about every 30 seconds.</div></div></div></section>`;
 
       const crec = {};
       done.concat(live).forEach((m) => m[7].forEach((g) => {
@@ -1794,9 +1794,12 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 
       if (OS.h2h) h += h2hHtml(M.find((m) => key(m) === OS.h2h));
       const oldV = document.querySelector('.h2hv'), keepY = oldV && oldV.dataset.k === OS.h2h ? oldV.scrollTop : 0;
+      const oldB = document.querySelector('#fbrk .brk'), keepX = oldB ? oldB.scrollLeft : 0;
       document.getElementById('main').innerHTML = h;
       const newV = document.querySelector('.h2hv');
       if (newV) { newV.dataset.k = OS.h2h; newV.scrollTop = keepY; }
+      const newB = document.querySelector('#fbrk .brk');
+      if (newB && keepX) newB.scrollLeft = keepX;
       document.body.classList.toggle('modal', !!OS.h2h);
       bindStage();
       const main = document.getElementById('main');
@@ -2167,6 +2170,39 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       .then((r) => r.json()).then((v) => { if (v.error) voteErr = v.error; else VOTE = v; renderKeep(); })
       .catch(() => { voteErr = 'Could not reach the vote box. Try again in a moment.'; renderKeep(); });
   }
+  const FIN_CLASS = { 1: 'WARRIOR', 2: 'PALADIN', 3: 'HUNTER', 4: 'ROGUE', 5: 'PRIEST', 7: 'SHAMAN', 8: 'MAGE', 9: 'WARLOCK', 11: 'DRUID' };
+  let LIVEFIN = null;
+  function applyLive(target) {
+    if (!LIVEFIN || !target || !target.fin) return false;
+    if (target.fin.liveAt && target.fin.liveAt >= LIVEFIN.at) return false;
+    if (Date.parse(LIVEFIN.at) < Date.parse(target.at)) return false;
+    const before = JSON.stringify(target.fin.m);
+    target.fin.m = LIVEFIN.m;
+    target.fin.liveAt = LIVEFIN.at;
+    const uMax = Math.max(...LIVEFIN.m.filter((m) => m[0] === 'u').map((m) => m[1]));
+    const gf = LIVEFIN.m.find((m) => m[0] === 'u' && m[1] === uMax);
+    target.fin.live = !(gf && gf[5] === 'd');
+    return before !== JSON.stringify(target.fin.m);
+  }
+  function freshFin() {
+    if (!O || !O.fin) return;
+    fetch(VOTE_API + '/api/finals').then((r) => r.json()).then((d) => {
+      if (!d || !Array.isArray(d.m) || d.m.length !== O.fin.m.length) return;
+      const idx = {};
+      O.players.forEach((p, i) => { idx[p[0] + '|' + p[1]] = i; });
+      let bad = false;
+      const ix = (t) => {
+        if (!t) return null;
+        const i = idx[t[0] + '|' + FIN_CLASS[t[1]]];
+        if (i == null) bad = true;
+        return i == null ? null : i;
+      };
+      const m = d.m.map((x) => [x[0], x[1], x[2], ix(x[3]), ix(x[4]), x[5], x[6], x[7], x[8], x[9], x[10], x[11], x[12], x[13]]);
+      if (bad) return;
+      LIVEFIN = { m, at: d.at };
+      if (applyLive(O) && view === 'open') renderKeep();
+    }).catch(() => {});
+  }
   function freshOpen() {
     loadVotes();
     if (O && O.fin) loadCheers();
@@ -2176,6 +2212,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       el.remove();
       const N = window.LI_OPEN;
       if (!N || !O || !(N.at > O.at)) { window.LI_OPEN = O; return; }
+      applyLive(N);
       if (OS.h2h && document.querySelector('.h2hv')) { O = N; return; }
       const was = OS.open >= 0 && O.players[OS.open] ? O.players[OS.open][0] : null;
       O = N;
@@ -2187,6 +2224,11 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   }
   if (O) {
     freshOpen();
+    if (O.fin) {
+      freshFin();
+      setInterval(() => { if (view === 'open' && O.fin && O.fin.live && !document.hidden) freshFin(); }, 30000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && view === 'open' && O.fin && O.fin.live) freshFin(); });
+    }
     setInterval(() => { if (view === 'open' && (O.live || (O.fin && O.fin.live)) && !document.hidden && document.activeElement?.id !== 'osearch') freshOpen(); }, 120000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden && view === 'open' && (O.live || (O.fin && O.fin.live))) freshOpen(); });
   }

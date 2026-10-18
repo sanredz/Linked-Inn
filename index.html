@@ -815,9 +815,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018174819"></script>
-<script src="data-summary.js?v=20261018174819"></script>
-<script src="data-open.js?v=20261018174819"></script>
+<script src="data-multi.js?v=20261018174948"></script>
+<script src="data-summary.js?v=20261018174948"></script>
+<script src="data-open.js?v=20261018174948"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1589,11 +1589,18 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       const bo = (n) => n === 1 ? 'Single game' : `Best of ${n}`;
       const key = (m) => `${m[0]}:${m[1]}:${m[2]}`;
       const ALIAS = { QF: ['u', 5], SF: ['u', 6], LF: ['l', lMax], LS: ['l', lMax - 1] };
-      const slotName = (t) => {
-        const x = /^(Winner|Loser) of (?:(Upper|Lower) R(\d+)|(QF|SF|LF|LS))\/M(\d+)$/.exec(t || '');
-        if (!x) return t || 'To be decided';
+      const ref = (t) => {
+        const x = /^(Winner|Loser) of (?:(Upper|Lower|Loser) R(\d+)|(QF|SF|LF|LS))\/M(\d+)$/.exec(t || '');
+        if (!x) return null;
         const [sg, r] = x[4] ? ALIAS[x[4]] : [x[2] === 'Upper' ? 'u' : 'l', +x[3]];
-        const f = M.find((y) => y[0] === sg && y[1] === r && y[2] === +x[5]);
+        const n = +x[5], same = M.filter((y) => y[0] === sg && y[1] === r).sort((a, b) => a[2] - b[2]);
+        return { kind: x[1], sg, r, n, m: (x[1] === 'Loser' ? same[n - 1] : same.find((y) => y[2] === n) || same[n - 1]) || null };
+      };
+      const slotName = (t) => {
+        const x = ref(t);
+        if (!x) return t || 'To be decided';
+        const { sg, r } = x, f = x.m;
+        x[1] = x.kind; x[5] = x.n;
         if (f && f[3] != null && f[4] != null) return `${x[1]} of ${P[f[3]][0]} / ${P[f[4]][0]}`;
         const many = M.filter((y) => y[0] === sg && y[1] === r).length > 1;
         return `${x[1]}, ${rname(sg, r).replace(/s$/, '')}${many ? ` ${x[5]}` : ''}`;
@@ -1665,18 +1672,13 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         const H = rows * PITCH;
         const col = {};
         rounds.forEach((r, i) => col[r] = i);
-        const src = (t) => {
-          const x = /^Winner of (?:(Upper|Lower) R(\d+)|(QF|SF|LF|LS))\/M(\d+)$/.exec(t || '');
-          if (!x) return null;
-          const [g, r] = x[3] ? ALIAS[x[3]] : [x[1] === 'Upper' ? 'u' : 'l', +x[2]];
-          return g === sg ? M.find((y) => y[0] === g && y[1] === r && y[2] === +x[4]) : null;
-        };
+        const src = (t) => { const x = ref(t); return x && x.kind === 'Winner' && x.sg === sg ? x.m : null; };
         const feeds = new Map();
         M.filter((m) => m[0] === sg).forEach((m) => [m[12], m[13]].forEach((t, k) => { const f = src(t); if (f) feeds.set(f, [m, k]); }));
         const X = (m) => col[m[1]] * (W + GAP);
         const Y = (m) => {
           const to = feeds.get(m);
-          if (slots(m[1]) > rows && to && slots(to[0][1]) <= rows) return Y(to[0]) + (to[1] ? CH / 4 : -CH / 4);
+          if (slots(m[1]) > rows && to && slots(to[0][1]) <= rows) return Y(to[0]);
           return HEAD + (m[2] - 0.5) / slots(m[1]) * H;
         };
         let paths = '';

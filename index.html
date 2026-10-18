@@ -860,9 +860,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018220352"></script>
-<script src="data-summary.js?v=20261018220352"></script>
-<script src="data-open.js?v=20261018220352"></script>
+<script src="data-multi.js?v=20261018221202"></script>
+<script src="data-summary.js?v=20261018221202"></script>
+<script src="data-open.js?v=20261018221202"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1780,17 +1780,23 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         <div class="optout">Bar: lives left out of 8 per class (two per player). Hover for each class's finals games.</div>`;
       h += panel('s6', 'Class survival', 'How many lives each class has left. Every finalist starts with two; hover a row for that class\'s game record in the finals against other classes.', survHtml);
 
-      let crowd = '<div class="optout">Loading the crowd vote…</div>';
-      if (VOTE && VOTE.total) {
-        const ranked = [...entered].map((i) => [i, votes(i) || 0]).filter((x) => x[1]).sort((a, b) => b[1] - a[1]).slice(0, 8);
-        const top = ranked.length ? ranked[0][1] : 1;
+      const fans = {}, fanM = {};
+      M.forEach((m) => {
+        const c = cheersOf(m);
+        [[m[3], c[0]], [m[4], c[1]]].forEach(([i, n]) => { if (i != null && n) { fans[i] = (fans[i] || 0) + n; fanM[i] = (fanM[i] || 0) + 1; } });
+      });
+      const fanTotal = sum(Object.values(fans));
+      let crowd = '<div class="optout">Loading the cheers…</div>';
+      if (fanTotal) {
+        const ranked = Object.keys(fans).map((i) => [+i, fans[i]]).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        const top = ranked[0][1];
         crowd = `<div class="rows vs2">${ranked.map(([i, n]) => {
-          const p = P[i], l = lives(i), out = l === 0 && i !== champ;
-          return row(race(p[2] || 'Orc'), p[0], out ? 'var(--muted)' : CC[p[1]], n / top, `${Math.round(100 * n / VOTE.total)}%<small> ${i === champ ? '👑' : out ? 'out' : l === 1 ? 'last life' : 'alive'}</small>`,
-            `${p[0]}|${fmt(n)} of ${fmt(VOTE.total)} votes${out ? '\nKnocked out' : ''}`);
-        }).join('')}</div><div class="optout">${fmt(VOTE.total)} votes cast before the finals. ${VOTE.state === 'open' ? 'Voting is still open on the Qualifiers page.' : ''}</div>`;
-      } else if (VOTE) crowd = '<div class="optout">No votes yet.</div>';
-      h += panel('s6', "The crowd's pick", 'Who visitors voted to win it all, and whether their pick is still alive. One vote per connection.', crowd);
+          const p = P[i], l = lives(i), out = l === 0 && i !== champ, v = VOTE && VOTE.total ? votes(i) || 0 : 0;
+          return row(race(p[2] || 'Orc'), p[0], out ? 'var(--muted)' : CC[p[1]], n / top, `${fmt(n)}<small> ${i === champ ? '👑' : out ? 'out' : l === 1 ? 'last life' : 'alive'}</small>`,
+            `${p[0]}|${fmt(n)} cheers across ${fanM[i]} ${fanM[i] === 1 ? 'match' : 'matches'}${v ? `\nPicked to win by ${Math.round(100 * v / VOTE.total)}% of voters before the finals` : ''}${out ? '\nKnocked out' : ''}`);
+        }).join('')}</div><div class="optout">${fmt(fanTotal)} cheers so far. Open any match to cheer for your player.</div>`;
+      } else if (CHEER) crowd = '<div class="optout">No cheers yet. Open any match to cheer for your player.</div>';
+      h += panel('s6', 'Fan favourites', 'Players ranked by the cheers they have received across all their finals matches. Hover a player to see how many voters picked them to win before the finals.', crowd);
 
       if (OS.h2h) h += h2hHtml(M.find((m) => key(m) === OS.h2h));
       const oldV = document.querySelector('.h2hv'), keepY = oldV && oldV.dataset.k === OS.h2h ? oldV.scrollTop : 0;

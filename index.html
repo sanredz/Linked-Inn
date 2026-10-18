@@ -507,18 +507,40 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 #tip .gd { color: var(--muted); margin-top: 4px; }
 @media (max-width: 900px) { .pexp { grid-template-columns: 1fr; margin-left: 10px; } .doll { max-width: 440px; } }
 @media (max-width: 400px) { .doll { grid-template-columns: 40px 1fr 40px; padding: 10px; gap: 6px; } .slot { width: 40px; height: 40px; } .doll .por, .doll .por > img { width: 84px; height: 84px; } }
-.stagesw { grid-column: span 12; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.stagesw button { position: relative; display: flex; align-items: center; gap: 16px; text-align: left; cursor: pointer; padding: 14px 20px; border-radius: 12px; border: 0; color: var(--ink-2);
-  background: linear-gradient(160deg, rgba(20, 40, 38, 0.85), rgba(6, 12, 12, 0.9)); box-shadow: inset 0 0 0 1px var(--soft), 0 4px 14px rgba(0, 0, 0, 0.5); transition: box-shadow 0.15s, transform 0.15s; }
-.stagesw button:hover { box-shadow: inset 0 0 0 1px var(--line), 0 6px 18px rgba(0, 0, 0, 0.6); }
-.stagesw button.on { color: var(--ink); background: linear-gradient(160deg, rgba(40, 110, 102, 0.9), rgba(10, 30, 28, 0.95)); box-shadow: inset 0 0 0 2px var(--accent), 0 0 26px rgba(63, 216, 200, 0.28), 0 6px 18px rgba(0, 0, 0, 0.6); }
-.stagesw .ic { width: 52px; height: 52px; border-radius: 10px; flex: none; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--fr1); }
-.stagesw button:not(.on) .ic { filter: grayscale(0.6) brightness(0.8); }
-.stagesw b { display: block; font: 30px/1.05 "Morpheus", serif; font-weight: normal; color: var(--title); text-shadow: 0 2px 0 #000; }
-.stagesw button:not(.on) b { color: var(--ink-2); }
-.stagesw small { display: block; font-size: 13px; color: var(--muted); margin-top: 3px; }
-.stagesw .live { position: absolute; top: 12px; right: 14px; display: flex; align-items: center; gap: 6px; font: 12px "Friz", serif; color: #ff8f7a; letter-spacing: 0.08em; }
-.stagesw .live i { width: 8px; height: 8px; border-radius: 50%; background: #ff5a44; box-shadow: 0 0 0 0 rgba(255, 90, 68, 0.6); animation: pulse 1.6s infinite; }
+.stagesw { grid-column: span 12; position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 3px; border-radius: 16px;
+  background: linear-gradient(90deg, #3fd8c8, #2a5f5a 35%, #6b5226 65%, #f2c25b); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 40px rgba(63, 216, 200, 0.08); }
+.stagesw button { position: relative; display: flex; align-items: center; gap: 18px; min-height: 118px; padding: 16px 70px 16px 26px; border: 0; cursor: pointer; text-align: left; color: var(--ink);
+  background: var(--tone), var(--pic) center / cover; filter: grayscale(0.75) brightness(0.55); transition: filter 0.25s; overflow: hidden; }
+.stagesw button:hover { filter: grayscale(0.35) brightness(0.8); }
+.stagesw button.on { filter: none; }
+.stagesw .sq { --tone: linear-gradient(100deg, rgba(4, 22, 24, 0.55), rgba(4, 22, 24, 0.92) 70%); --pic: url("assets/game/art-warriorarms.jpg"); --hue: #8ff0e2; --glow: rgba(63, 216, 200, 0.55);
+  border-radius: 13px 0 0 13px; clip-path: polygon(0 0, 100% 0, calc(100% - 34px) 100%, 0 100%); margin-right: -17px; }
+.stagesw .sf { --tone: linear-gradient(260deg, rgba(30, 18, 4, 0.5), rgba(28, 16, 4, 0.92) 70%); --pic: url("assets/game/art-priestholy.jpg"); --hue: #ffd479; --glow: rgba(255, 200, 90, 0.55);
+  border-radius: 0 13px 13px 0; clip-path: polygon(34px 0, 100% 0, 100% 100%, 0 100%); margin-left: -17px; flex-direction: row-reverse; text-align: right; padding: 16px 26px 16px 70px; }
+.stagesw button::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--hue); box-shadow: 0 0 18px var(--glow); opacity: 0; transition: opacity 0.25s; }
+.stagesw button.on::after { opacity: 1; }
+.stagesw button.on { box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.4); }
+.stagesw .step { font: 12px "Friz", serif; letter-spacing: 0.18em; text-transform: uppercase; color: var(--hue); opacity: 0.85; }
+.stagesw b { display: block; font: 40px/1 "Morpheus", serif; font-weight: normal; color: var(--hue); text-shadow: 0 2px 0 #000, 0 0 24px var(--glow); margin: 3px 0 4px; }
+.stagesw small { display: block; font-size: 13px; color: var(--ink-2); }
+.stagesw .big { flex: none; text-align: center; font: 46px/1 "Friz", serif; color: #fff; text-shadow: 0 3px 0 #000; }
+.stagesw .big small { font: 11px "Friz", serif; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+.stagesw .medal { position: absolute; left: 50%; top: 50%; z-index: 2; width: 92px; height: 92px; margin: -46px 0 0 -46px; border-radius: 50%; display: grid; place-items: center; pointer-events: none;
+  background: radial-gradient(circle, #13201f 55%, #070b0b); box-shadow: 0 0 0 3px #000, 0 0 0 5px #b8964a, 0 0 0 7px #000, 0 8px 24px rgba(0, 0, 0, 0.8); }
+.stagesw .medal img { width: 74px; filter: drop-shadow(0 2px 4px #000); }
+.stagesw .live { position: absolute; top: 12px; left: 64px; display: flex; align-items: center; gap: 6px; font: 12px "Friz", serif; color: #ffb3a5; letter-spacing: 0.12em; padding: 3px 9px; border-radius: 999px; background: rgba(120, 20, 10, 0.6); box-shadow: inset 0 0 0 1px rgba(255, 110, 90, 0.6); }
+.stagesw .live i { width: 8px; height: 8px; border-radius: 50%; background: #ff5a44; animation: pulse 1.6s infinite; }
+.stagesw button > * { position: relative; z-index: 1; }
+.stagesw .sq::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(143, 240, 226, 0.07) 0 1px, transparent 1px 26px), repeating-linear-gradient(0deg, rgba(143, 240, 226, 0.07) 0 1px, transparent 1px 26px);
+  -webkit-mask-image: linear-gradient(100deg, transparent 10%, #000 60%); mask-image: linear-gradient(100deg, transparent 10%, #000 60%); }
+.stagesw .sf::before { content: ""; position: absolute; right: -10%; top: 50%; width: 140%; aspect-ratio: 1; transform: translateY(-50%);
+  background: repeating-conic-gradient(from 0deg at 85% 50%, rgba(255, 214, 120, 0.13) 0 4deg, transparent 4deg 13deg); -webkit-mask-image: radial-gradient(circle at 85% 50%, #000, transparent 60%); mask-image: radial-gradient(circle at 85% 50%, #000, transparent 60%); }
+.stagesw .sf.on::before { animation: rays 40s linear infinite; }
+@keyframes rays { to { transform: translateY(-50%) rotate(360deg); } }
+.stagesw .sf b { background: linear-gradient(180deg, #fff3c4, #ffd479 45%, #c8902c); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 2px 0 #000) drop-shadow(0 0 14px rgba(255, 200, 90, 0.45)); }
+.stagesw .sf b i { font-style: normal; font-size: 0.62em; vertical-align: 0.28em; margin-left: 8px; }
+.stagesw .sq b { letter-spacing: 0.02em; }
+.stagesw .sf .big { color: #ffe39a; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 90, 68, 0.6); } 70% { box-shadow: 0 0 0 8px rgba(255, 90, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 90, 68, 0); } }
 .mcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
 .mcard { cursor: pointer; border-radius: 10px; padding: 10px 12px; background: rgba(0, 0, 0, 0.32); box-shadow: inset 0 0 0 1px var(--soft); transition: box-shadow 0.15s, background 0.15s; }
@@ -648,8 +670,11 @@ body.modal { overflow: hidden; }
 .tbk .tm .l { color: var(--muted); }
 .tbk .tm i { font-style: normal; text-align: center; color: var(--muted); font-size: 11px; }
 @media (max-width: 720px) {
-  .stagesw { gap: 8px; } .stagesw button { padding: 10px 12px; gap: 10px; } .stagesw .ic { width: 34px; height: 34px; } .stagesw b { font-size: 22px; } .stagesw small { font-size: 11px; }
-  .stagesw .live { top: 6px; right: 8px; font-size: 10px; } .stagesw .xs { display: none; }
+  .stagesw button { min-height: 92px; gap: 8px; padding: 12px 40px 12px 14px; } .stagesw .sf { padding: 12px 14px 12px 40px; }
+  .stagesw .sq { clip-path: polygon(0 0, 100% 0, calc(100% - 22px) 100%, 0 100%); margin-right: -11px; } .stagesw .sf { clip-path: polygon(22px 0, 100% 0, 100% 100%, 0 100%); margin-left: -11px; }
+  .stagesw b { font-size: 25px; } .stagesw .step { font-size: 9.5px; letter-spacing: 0.12em; } .stagesw small, .stagesw .big { display: none; }
+  .stagesw .medal { width: 54px; height: 54px; margin: -27px 0 0 -27px; } .stagesw .medal img { width: 44px; }
+  .stagesw .live { top: 7px; left: 36px; font-size: 9.5px; padding: 2px 7px; } .stagesw .xs { display: none; } .stagesw button > div { min-width: 0; } .stagesw b { white-space: nowrap; }
   .mcards { grid-template-columns: 1fr; }
   .f36 { grid-template-columns: 1fr 1fr; gap: 8px; } .f36 .cc { padding: 8px 6px; } .fp { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 6px; padding: 3px 2px; } .fp img { width: 24px; height: 24px; } .fp .nm { font-size: 13px; } .fp .lives i { width: 8px; height: 8px; }
   .h2hv { padding: 0; } .h2h { border-radius: 0; min-height: 100%; } .h2h > .in { border-radius: 0; min-height: 100%; }
@@ -815,9 +840,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261018174948"></script>
-<script src="data-summary.js?v=20261018174948"></script>
-<script src="data-open.js?v=20261018174948"></script>
+<script src="data-multi.js?v=20261018175512"></script>
+<script src="data-summary.js?v=20261018175512"></script>
+<script src="data-open.js?v=20261018175512"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1400,8 +1425,10 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const stage = F && OS.stage !== 'q' ? 'fin' : 'q';
     if (F) {
       const fLive = F.live && Date.parse(F.start) <= Date.now() + 5 * 60000;
-      h += `<div class="stagesw"><button class="${stage === 'q' ? 'on' : ''}" data-stage="q"><img class="ic" src="${UI('inv_bannerpvp_02')}" alt=""><div><b>Qualifiers</b><small>Oct 17 · ${fmt(O.entrants)} players<span class="xs"> · six Swiss rounds</span></small></div></button>
-        <button class="${stage === 'fin' ? 'on' : ''}" data-stage="fin">${fLive ? '<span class="live"><i></i>LIVE</span>' : ''}<img class="ic" src="${UI('achievement_arena_2v2_7')}" alt=""><div><b>Finals</b><small>Oct 18 · 36 players<span class="xs"> · double elimination</span></small></div></button></div>`;
+      const fDone = F.m.filter((m) => m[5] === 'd').length;
+      h += `<div class="stagesw"><button class="sq ${stage === 'q' ? 'on' : ''}" data-stage="q"><div><span class="step">Stage one<span class="xs"> · The Swiss rounds</span></span><b>Qualifiers</b><small>Oct 17 · ${fmt(O.played)} matches</small></div><div class="big">${fmt(O.entrants)}<small>players</small></div></button>
+        <div class="medal"><img src="assets/forever-open-logo.png" alt=""></div>
+        <button class="sf ${stage === 'fin' ? 'on' : ''}" data-stage="fin">${fLive ? '<span class="live"><i></i>LIVE</span>' : ''}<div><span class="step">Stage two<span class="xs"> · Oct 18</span></span><b>The Finals<i>♛</i></b><small>Double elimination · ${fDone ? `${fDone} of ${F.m.length} series played` : 'best of 3 and 5'}</small></div><div class="big">36<small>finalists</small></div></button></div>`;
     }
     if (stage === 'fin') { renderFinals(h); return; }
     h += plaque(UI('ability_dualwield'), 'Matches', fmt(O.played), O.live ? (O.expected ? `of about ${fmt(Math.round(O.expected / 100) * 100)}` : 'decided so far') : 'in the qualifiers');

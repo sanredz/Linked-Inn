@@ -1010,7 +1010,7 @@ local function RefreshFind()
 	local results = LI.Search(filter.search, opts)
 	local list = {}
 	local collapsed = LI.settings.collapsed or {}
-	for _, group in ipairs(LI.Group(results)) do
+	for _, group in ipairs(LI.Group(results, opts.tick)) do
 		list[#list + 1] = { header = true, group = group }
 		if not collapsed[group.key] then
 			for i, data in ipairs(group.rows) do

@@ -1214,6 +1214,7 @@ function LI.Search(query, opts)
 					status = status,
 					seenAt = seenAt,
 					sure = sure,
+					rank = LI.StatusRank(status, sure),
 					favorite = LI.IsFavorite(key),
 					top = top,
 					groups = groups,
@@ -1225,15 +1226,21 @@ function LI.Search(query, opts)
 			end
 		end
 	end
+	if tick then
+		tick()
+	end
+	for _, e in ipairs(out) do
+		e.seenSort = e.seenAt or 0
+	end
 	table.sort(out, function(a, b)
-		local ra, rb = LI.StatusRank(a.status, a.sure), LI.StatusRank(b.status, b.sure)
+		local ra, rb = a.rank, b.rank
 		if ra ~= rb then
 			return ra < rb
 		end
 		if a.confidence ~= b.confidence then
 			return a.confidence > b.confidence
 		end
-		local sa, sb = a.seenAt or 0, b.seenAt or 0
+		local sa, sb = a.seenSort, b.seenSort
 		if sa ~= sb then
 			return sa > sb
 		end
@@ -1251,36 +1258,46 @@ local function OrderIndex(key)
 	return #LI.PROFESSION_ORDER + 1
 end
 
-local function RowOrder(a, b)
-	local ra, rb = LI.StatusRank(a.entry.status, a.entry.sure), LI.StatusRank(b.entry.status, b.entry.sure)
-	if ra ~= rb then
-		return ra < rb
-	end
-	if a.match.confidence ~= b.match.confidence then
-		return a.match.confidence > b.match.confidence
-	end
-	local pa, pb = a.entry.crafter.profs[a.prof] or {}, b.entry.crafter.profs[b.prof] or {}
-	local ka, kb = pa.rank or 0, pb.rank or 0
-	if ka ~= kb then
-		return ka > kb
-	end
-	local sa, sb = a.entry.seenAt or 0, b.entry.seenAt or 0
-	if sa ~= sb then
-		return sa > sb
-	end
-	local na, nb = pa.count or 0, pb.count or 0
-	if na ~= nb then
-		return na > nb
-	end
-	return a.entry.key < b.entry.key
+local function SortKeys(row)
+	local e = row.entry
+	local p = e.crafter.profs[row.prof] or {}
+	row.sr = e.rank or LI.StatusRank(e.status, e.sure)
+	row.sc = row.match.confidence
+	row.sk = p.rank or 0
+	row.ss = e.seenAt or 0
+	row.sn = p.count or 0
+	row.sy = e.key
+	return row
 end
 
-function LI.Group(results)
+local function RowOrder(a, b)
+	if a.sr ~= b.sr then
+		return a.sr < b.sr
+	end
+	if a.sc ~= b.sc then
+		return a.sc > b.sc
+	end
+	if a.sk ~= b.sk then
+		return a.sk > b.sk
+	end
+	if a.ss ~= b.ss then
+		return a.ss > b.ss
+	end
+	if a.sn ~= b.sn then
+		return a.sn > b.sn
+	end
+	return a.sy < b.sy
+end
+
+function LI.Group(results, tick)
 	local byKey, groups = {}, {}
 	local favorites = { key = "favorites", name = "Favorites", favorites = true, rows = {}, online = 0, best = 0 }
 	for _, entry in ipairs(results) do
+		if tick then
+			tick()
+		end
 		if entry.favorite and entry.top then
-			favorites.rows[#favorites.rows + 1] = { entry = entry, prof = entry.top.key, match = entry.top }
+			favorites.rows[#favorites.rows + 1] = SortKeys({ entry = entry, prof = entry.top.key, match = entry.top })
 			if entry.status == "online" then
 				favorites.online = favorites.online + 1
 			end
@@ -1293,7 +1310,7 @@ function LI.Group(results)
 				byKey[g.key] = group
 				groups[#groups + 1] = group
 			end
-			group.rows[#group.rows + 1] = { entry = entry, prof = g.key, match = g }
+			group.rows[#group.rows + 1] = SortKeys({ entry = entry, prof = g.key, match = g })
 			group.best = math.max(group.best, g.confidence)
 			if entry.status == "online" then
 				group.online = group.online + 1
@@ -1301,6 +1318,9 @@ function LI.Group(results)
 		end
 	end
 	for _, group in ipairs(groups) do
+		if tick then
+			tick()
+		end
 		table.sort(group.rows, RowOrder)
 	end
 	table.sort(groups, function(a, b)

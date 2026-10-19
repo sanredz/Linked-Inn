@@ -1708,6 +1708,16 @@ SlashCmdList.LINKEDINN = function(msg)
 		LI.Print(string.format("Rebuilds, total work (ms): %s", List(perf.full)))
 		LI.Print(string.format("Rebuilds, longest single frame (ms): %s", List(perf.slice)))
 		LI.Print(string.format("Row redraws (ms): %s", List(perf.redraw)))
+		local prof, M = C_AddOnProfiler, Enum and Enum.AddOnProfilerMetric
+		if prof and prof.GetAddOnMetric and M then
+			for _, name in ipairs({ "LinkedInn", "LinkedInnCensus", "Almanac" }) do
+				local function G(m)
+					return M[m] and LI.Safe(LI.Try(prof.GetAddOnMetric, name, M[m])) or 0
+				end
+				LI.Print(string.format("%s: peak %.0f ms, recent avg %.2f ms, frames over 5/10/50/100 ms: %d/%d/%d/%d", name,
+					G("PeakTime"), G("RecentAverageTime"), G("CountTimeOver5Ms"), G("CountTimeOver10Ms"), G("CountTimeOver50Ms"), G("CountTimeOver100Ms")))
+			end
+		end
 	elseif cmd == "test" then
 		UI.Open(TAB.test)
 	elseif cmd == "ping" then

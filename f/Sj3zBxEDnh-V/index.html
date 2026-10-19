@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Linked Inn</title>
+<link rel="icon" href="/assets/favicon.png">
+<style>
+:root { --bg: #0d0b08; --ink: #f3e6c4; --muted: #a8977a; --gold: #f8d36b; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--ink); font: 16px Georgia, serif; }
+form { display: grid; gap: 12px; width: min(320px, calc(100vw - 32px)); }
+input, button { font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid #5a4a2e; background: #1a150e; color: var(--ink); }
+button { background: var(--gold); color: #1a1206; border: 0; cursor: pointer; }
+p { margin: 0; color: var(--muted); font-size: 14px; min-height: 1.2em; }
+</style>
+</head>
+<body>
+<form id="f"><input id="pw" type="password" placeholder="Password" autocomplete="current-password" autofocus><button>Enter</button><p id="msg"></p></form>
+<script>
+(() => {
+  const ROOT = location.pathname.replace(/[^/]*$/, '');
+  const SALT = Uint8Array.from(atob('oIXwsRN7N9gAl1kqmRwLqg=='), (c) => c.charCodeAt(0));
+  const ITER = 250000;
+  let key;
+  const derive = async (pw) => {
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: SALT, iterations: ITER, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  };
+  const realFetch = window.fetch.bind(window);
+  const open = async (rel) => {
+    const r = await realFetch(ROOT + rel);
+    if (!r.ok) throw new Error('missing');
+    const buf = new Uint8Array(await r.arrayBuffer());
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12));
+    const stream = new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'));
+    return new Response(stream).text();
+  };
+  const start = async (pw) => {
+    key = await derive(pw);
+    const html = await open('site.bin');
+    try { sessionStorage.setItem('li-friend', pw); } catch (e) {}
+    window.fetch = (url, opts) => {
+      if (typeof url === 'string' && url.startsWith('p/')) {
+        return open(url + '.bin').then((t) => new Response(t, { headers: { 'Content-Type': 'application/json' } }), () => new Response('null', { status: 404 }));
+      }
+      return realFetch(url, opts);
+    };
+    document.open();
+    document.write(html);
+    document.close();
+  };
+  const form = document.getElementById('f'), msg = document.getElementById('msg');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    msg.textContent = 'Opening...';
+    start(document.getElementById('pw').value).catch(() => { msg.textContent = 'Wrong password.'; });
+  });
+  let saved = null;
+  try { saved = sessionStorage.getItem('li-friend'); } catch (e) {}
+  if (saved) start(saved).catch(() => {});
+})();
+</script>
+</body>
+</html>

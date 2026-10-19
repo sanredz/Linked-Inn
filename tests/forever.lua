@@ -519,7 +519,7 @@ if not LI.IsFavorite("Cora Vale-TestRealm") then LI.ToggleFavorite("Cora Vale-Te
 Advance(1)
 
 local function Fake(key, rank, count, seen)
-	return { key = key, status = "offline", seenAt = seen, crafter = { profs = { tailoring = { name = "Tailoring", rank = rank, count = count } } }, groups = { { key = "tailoring", confidence = 2, makes = 0 } } }
+	return { key = key, status = "offline", seenAt = seen * 3600, crafter = { profs = { tailoring = { name = "Tailoring", rank = rank, count = count } } }, groups = { { key = "tailoring", confidence = 2, makes = 0 } } }
 end
 local order = {}
 for _, row in ipairs(LI.Group({ Fake("a", 100, 5, 1), Fake("b", 300, 2, 1), Fake("c", 300, 9, 1), Fake("d", 300, 9, 5) })[1].rows) do

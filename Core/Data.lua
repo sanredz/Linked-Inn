@@ -1076,6 +1076,8 @@ function LI.StatusRank(status, sure)
 	return rank
 end
 
+local SEEN_STEP = 600
+
 function LI.Search(query, opts)
 	opts = opts or {}
 	local out = {}
@@ -1230,7 +1232,7 @@ function LI.Search(query, opts)
 		tick()
 	end
 	for _, e in ipairs(out) do
-		e.seenSort = e.seenAt or 0
+		e.seenSort = math.floor((e.seenAt or 0) / SEEN_STEP)
 	end
 	table.sort(out, function(a, b)
 		local ra, rb = a.rank, b.rank
@@ -1264,7 +1266,7 @@ local function SortKeys(row)
 	row.sr = e.rank or LI.StatusRank(e.status, e.sure)
 	row.sc = row.match.confidence
 	row.sk = p.rank or 0
-	row.ss = e.seenAt or 0
+	row.ss = math.floor((e.seenAt or 0) / SEEN_STEP)
 	row.sn = p.count or 0
 	row.sy = e.key
 	return row

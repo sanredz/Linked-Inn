@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.0] - 2026-10-19
+
+- Smoother in busy cities: the window no longer hitches while you move around
+  with it open, and Linked Inn uses far less CPU in crowded places.
+- Item tooltips show who on your list can make that item, online first.
+  Recipe tooltips show how many crafters on your list already know it.
+- Settings link to the census site, lifeonazeroth.com, and explain how to help
+  it with your own data.
+
 ## [1.5.0] - 2026-10-09
 
 - Linked Inn now works in retail World of Warcraft too. One download covers

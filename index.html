@@ -780,6 +780,9 @@ body.modal { overflow: hidden; }
   .fogrid.many .tot { font-size: 11px; }
   .fogrid.many .corner { font-size: 9px; padding: 2px; }
 }
+.rsep { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; padding: 2px 0 4px 4px; font: 13px "Friz", serif; color: var(--fc); letter-spacing: 0.04em; border-bottom: 1px solid color-mix(in srgb, var(--fc) 45%, transparent); background: linear-gradient(90deg, color-mix(in srgb, var(--fc) 14%, transparent), transparent 55%); }
+.rsep.gap { margin-top: 12px; } .rsep img { width: 18px; height: 18px; filter: drop-shadow(0 1px 1px #000); }
+.grid .rax img.round { box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--fc); }
 .rax { position: relative; } .grid .ax img.rfx { position: absolute; right: 0; bottom: -2px; width: 16px; height: 16px; border-radius: 0; box-shadow: none; filter: drop-shadow(0 1px 1px #000); }
 </style>
 <script>
@@ -861,9 +864,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261019192232"></script>
-<script src="data-summary.js?v=20261019192232"></script>
-<script src="data-open.js?v=20261019192232"></script>
+<script src="data-multi.js?v=20261019192614"></script>
+<script src="data-summary.js?v=20261019192614"></script>
+<script src="data-open.js?v=20261019192614"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1048,13 +1051,19 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       const races = AC.races;
       let rg = `<div class="grid heat" style="grid-template-columns:44px repeat(${ALL_PROFS.length}, 1fr)"><div class="corner"></div>`;
       rg += ALL_PROFS.map((k) => `<div class="ax" data-tip="${PN[k]}"><img src="${prof(k)}" alt=""></div>`).join('');
-      races.forEach(({ r, f, n: total, cells }) => {
+      const RFAC = { Human: 'Alliance', Dwarf: 'Alliance', Gnome: 'Alliance', NightElf: 'Alliance', Orc: 'Horde', Scourge: 'Horde', Tauren: 'Horde', Troll: 'Horde' };
+      const facOf = (x) => x.f || RFAC[x.r];
+      const groups = ['Alliance', 'Horde'].map((fc) => [fc, races.filter((x) => facOf(x) === fc)]).filter(([, l]) => l.length);
+      groups.forEach(([fc, list], gi) => {
+        rg += `<div class="rsep${gi ? ' gap' : ''}" style="--fc:${fc === 'Alliance' ? '#4a8fe7' : '#d8443a'}"><img src="assets/game/${fc.toLowerCase()}-crest.png" alt="">${fc}</div>`;
+        list.forEach(({ r, f, n: total, cells }) => {
         const rn = f ? `${RN[r]} (${f})` : RN[r];
-        rg += `<div class="ax rax" data-tip="${rn}|${fmt(total)} players"><img class="round" src="${race(r)}" alt="">${f ? `<img class="rfx" src="assets/game/${f.toLowerCase()}-crest.png" alt="">` : ''}</div>`;
+        rg += `<div class="ax rax" style="--fc:${fc === 'Alliance' ? '#4a8fe7' : '#d8443a'}" data-tip="${rn}|${fmt(total)} players"><img class="round" src="${race(r)}" alt="">${f ? `<img class="rfx" src="assets/game/${f.toLowerCase()}-crest.png" alt="">` : ''}</div>`;
         ALL_PROFS.forEach((k) => {
           const n = cells[k] || 0, q = n / total;
           const bonus = BONUS[r + '|' + k];
           rg += `<div class="cell${bonus ? ' bonus' : ''}" style="background:rgba(248,211,107,${0.05 + 0.85 * Math.min(1, q / 0.55)});color:${q > 0.3 ? '#1a1206' : '#fff'};text-shadow:${q > 0.3 ? 'none' : '0 1px 2px #000'}" data-tip="${rn} · ${PN[k]}|${fmt(n)} of ${fmt(total)} players${bonus ? '\n' + bonus : ''}">${Math.round(q * 100)}%</div>`;
+        });
         });
       });
       rg += '</div>';

@@ -42,12 +42,13 @@ local MAYBE = { 0.85, 0.75, 0.50 }
 local main
 local filter = { search = "", prof = nil }
 local refreshQueued = false
-local REFRESH_GAP, STATUS_GAP, REFRESH_SHARE, SLICE_MS = 0, 5, 0.04, 4
-local perf = { full = {}, redraw = {}, slice = {} }
-local job, sliceStart, jobWork, jobSlice = nil, 0, 0, 0
+local REFRESH_GAP, STATUS_GAP, REFRESH_SHARE, SLICE_MS, CLICK_MS = 0, 5, 0.04, 4, 12
+local perf = { full = {}, redraw = {}, slice = {}, setlist = {}, skipped = 0 }
+local job, sliceStart, jobWork, jobSlice, jobBudget = nil, 0, 0, 0, SLICE_MS
+local lastSig
 
 local function Tick()
-	if job and coroutine.running() == job and debugprofilestop() - sliceStart > SLICE_MS then
+	if job and coroutine.running() == job and debugprofilestop() - sliceStart > jobBudget then
 		coroutine.yield()
 	end
 end
@@ -1019,7 +1020,30 @@ local function RefreshFind()
 			end
 		end
 	end
-	main.list:SetList(list)
+	local parts = { tostring(LI.settings.compact) }
+	for i, d in ipairs(list) do
+		if opts.tick and i % 200 == 0 then
+			opts.tick()
+		end
+		if d.header then
+			parts[#parts + 1] = "#" .. d.group.key .. ":" .. #d.group.rows .. ":" .. d.group.online
+		else
+			local m = d.match
+			parts[#parts + 1] = d.entry.key .. "|" .. d.prof .. "|" .. m.confidence .. "|" .. m.makes .. "|" .. tostring(m.recipe) .. "|" .. tostring(d.entry.favorite)
+		end
+	end
+	local sig = table.concat(parts, "\n")
+	if sig == lastSig and main.list.Redraw and main.list.ForEachFrame then
+		perf.skipped = perf.skipped + 1
+		main.list:Redraw()
+	else
+		lastSig = sig
+		local t0 = debugprofilestop and debugprofilestop()
+		main.list:SetList(list)
+		if t0 then
+			Note(perf.setlist, debugprofilestop() - t0)
+		end
+	end
 	UpdateChips()
 	if shownKind ~= LI.settings.kind then
 		shownKind = LI.settings.kind
@@ -1230,11 +1254,11 @@ function UI.Refresh(background)
 	if not main or not main:IsShown() then
 		return
 	end
-	if background and debugprofilestop and coroutine and coroutine.create then
+	if debugprofilestop and coroutine and coroutine.create then
 		local co = coroutine.create(function()
 			UI.Draw()
 		end)
-		job, jobWork, jobSlice = co, 0, 0
+		job, jobWork, jobSlice, jobBudget = co, 0, 0, background and SLICE_MS or CLICK_MS
 		local function Step()
 			if job ~= co then
 				return
@@ -1685,11 +1709,11 @@ UI.TAB = TAB
 
 LI.Listen("CraftersChanged", QueueBackground)
 LI.Listen("StatusChanged", QueueStatus)
-LI.Listen("TestChanged", QueueRefresh)
-LI.Listen("WorkChanged", QueueRefresh)
+LI.Listen("TestChanged", QueueBackground)
+LI.Listen("WorkChanged", QueueBackground)
 LI.Listen("WorkSeen", QueueBackground)
 LI.Listen("ScanDone", QueueBackground)
-LI.Listen("BookChanged", QueueRefresh)
+LI.Listen("BookChanged", QueueBackground)
 
 SLASH_LINKEDINN1 = "/linkedinn"
 SLASH_LINKEDINN2 = "/li"
@@ -1708,6 +1732,7 @@ SlashCmdList.LINKEDINN = function(msg)
 		LI.Print(string.format("Rebuilds, total work (ms): %s", List(perf.full)))
 		LI.Print(string.format("Rebuilds, longest single frame (ms): %s", List(perf.slice)))
 		LI.Print(string.format("Row redraws (ms): %s", List(perf.redraw)))
+		LI.Print(string.format("Handing the list to the scroll box (ms): %s, skipped as unchanged: %d", List(perf.setlist), perf.skipped))
 		local prof, M = C_AddOnProfiler, Enum and Enum.AddOnProfilerMetric
 		if prof and prof.GetAddOnMetric and M then
 			for _, name in ipairs({ "LinkedInn", "LinkedInnCensus", "Almanac" }) do

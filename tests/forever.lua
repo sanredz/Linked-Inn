@@ -353,6 +353,10 @@ for _ = 1, 30 do
 end
 check(W.provided <= 1 and W.redraws >= 2, "a stream of online changes redraws the visible rows instead of rebuilding the list", W.provided .. " rebuilds, " .. W.redraws .. " redraws")
 Advance(6)
+local handed = W.provided
+LI.Fire("CraftersChanged")
+Advance(1)
+check(W.provided == handed and W.redraws >= 3, "a rebuild that changes nothing on screen leaves the scroll list alone", (W.provided - handed) .. " hand-overs")
 
 W.whoResults = {}
 LI.CheckOnline("Bob Stone-TestRealm")

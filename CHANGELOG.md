@@ -2,12 +2,27 @@
 
 ## [1.6.0] - 2026-10-19
 
-- Smoother in busy cities: the window no longer hitches while you move around
-  with it open, and Linked Inn uses far less CPU in crowded places.
-- Item tooltips show how many crafters on your list can make that item, and
-  how many of them are online. Recipe tooltips show how many already know it.
-- Settings link to the census site, lifeonazeroth.com, and explain how to help
-  it with your own data.
+- Smoother in busy cities. With the window open, Linked Inn no longer hitches
+  every second or two while people come and go around you. Updates to the list
+  are spread out over several frames instead of done all at once, the list is
+  only redrawn when something you can see actually changed, and online dots
+  and "last seen" times update in place. Sorting the list is also much faster.
+  Overall Linked Inn uses far less CPU in crowded places, with the window open
+  or closed.
+- Crafters seen within the same ten minutes keep their place in the list, so
+  it no longer shuffles around while you're reading it.
+- Item tooltips: hover any item and Linked Inn tells you how many crafters on
+  your list can make it, and how many of them were seen in the last half hour.
+  If only one person can, you get their name. You never count yourself.
+- Recipe and pattern tooltips: see how many crafters on your list already know
+  that recipe, out of everyone with the profession, and a "Rare" tag when
+  hardly anyone does. Handy before you buy or sell a pattern.
+- Both tooltips can be switched off in Settings under Item tooltips.
+- Help the Forever Crafting Census: on Forever, Settings now has a short
+  how-to and a link for uploading your list, and a link to the census site,
+  lifeonazeroth.com. /li census shows the same steps.
+- Fixed: after switching to a character without professions, other Linked Inn
+  users could still see your previous character's professions as yours.
 
 ## [1.5.0] - 2026-10-09
 

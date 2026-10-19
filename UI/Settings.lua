@@ -531,7 +531,7 @@ local function Create()
 	end)
 
 	local tips = Section(page, frame.wipe, "Item tooltips", 22)
-	frame.tooltips, frame.tooltipsLast = Option(page, tips, "Show who can make it",
+	frame.tooltips, frame.tooltipsLast = Option(page, tips, "Show how many can make it",
 		"Items show who on your list can make them. Recipes you could learn show how many crafters on your list already know them.",
 		function() return LI.settings.tooltips ~= false end,
 		function(on) LI.settings.tooltips = on end)

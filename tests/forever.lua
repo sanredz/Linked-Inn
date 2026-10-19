@@ -3658,6 +3658,14 @@ do
 	LI.Fire("CraftersChanged")
 	line = Hover(4343)
 	check(line and line:find("3 crafters can make this", 1, true) and not line:find("Needle", 1, true), "with more crafters it's just the count, kept short", line)
+	check(line:find("(3 seen recently)", 1, true), "and says how many were seen in the last half hour", line)
+	for _, n in ipairs({ "Needle Point", "Silk Purse", "Bolt Cloth" }) do
+		LI.crafters[n .. "-TestRealm"].seen = time() - 3600
+	end
+	LI.crafters["Silk Purse-TestRealm"].seen = time() - 600
+	LI.Fire("CraftersChanged")
+	line = Hover(4343)
+	check(line:find("(1 seen recently)", 1, true), "crafters seen over half an hour ago don't count as recent", line)
 	class[20001] = { 9, 2 }
 	W.itemNames = { [20001] = "Pattern: Brown Linen Pants", [20002] = "Pattern: Brown Linen Shirt" }
 	class[20002] = { 9, 2 }

@@ -8,6 +8,7 @@ local GOLD = { 0.95, 0.82, 0.45 }
 local GREEN = { 0.35, 0.95, 0.45 }
 local RARE = { 0.25, 0.6, 1 }
 local FRESH = 15
+local RECENT = 30 * 60
 local RARE_SHARE = 0.03
 local RARE_POOL = 20
 local RECIPE_CLASS = 9
@@ -71,13 +72,14 @@ end
 
 local function Makers(ids)
 	local seen, list, online = {}, {}, 0
+	local now = time()
 	for _, id in ipairs(ids) do
 		for _, entry in ipairs(LI.Orders and LI.Orders.Crafters(id) or {}) do
 			if not seen[entry.key] then
 				seen[entry.key] = true
 				entry.favorite = LI.IsFavorite(entry.key)
 				list[#list + 1] = entry
-				if entry.status == "online" then
+				if entry.status == "online" or now - (entry.seen or 0) <= RECENT then
 					online = online + 1
 				end
 			end
@@ -164,7 +166,7 @@ function Tooltips.MakerLine(info)
 		text = string.format("%d crafters can make this", #list)
 	end
 	if info.online > 0 then
-		text = text .. string.format(" |cff59f273(%d online)|r", info.online)
+		text = text .. string.format(" |cff59f273(%d seen recently)|r", info.online)
 	end
 	return text, nil
 end

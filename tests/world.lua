@@ -100,10 +100,17 @@ function methods:SetDataProvider(dp)
 	self.__rows = {}
 	for _, elem in ipairs(dp.list) do
 		local row = NewMock("row")
+		row.__elem = elem
 		view.__init(row, elem)
 		self.__rows[#self.__rows + 1] = row
 	end
 	self.__count = #dp.list
+	W.provided = (W.provided or 0) + 1
+end
+function methods:GetElementData() return self.__elem end
+function methods:ForEachFrame(fn)
+	W.redraws = (W.redraws or 0) + 1
+	for _, row in ipairs(self.__rows or {}) do fn(row) end
 end
 function methods:SetElementInitializer(_, fn) self.__init = fn end
 function methods:HookScript(k, fn)

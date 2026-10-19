@@ -346,6 +346,13 @@ end
 check(said, "the result is printed in chat")
 coraRow = CoraRow()
 check(coraRow.pill.text.__text == "online", "a confirmed online crafter's pill says online", coraRow.pill.text.__text)
+W.provided, W.redraws = 0, 0
+for _ = 1, 30 do
+	LI.Fire("StatusChanged")
+	Advance(0.1)
+end
+check(W.provided <= 1 and W.redraws >= 2, "a stream of online changes redraws the visible rows instead of rebuilding the list", W.provided .. " rebuilds, " .. W.redraws .. " redraws")
+Advance(6)
 
 W.whoResults = {}
 LI.CheckOnline("Bob Stone-TestRealm")

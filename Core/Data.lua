@@ -826,6 +826,7 @@ function LI.SetRecipes(key, info, recipes, via)
 			count = count + 1
 			local meta = LI.db.recipes[r.id] or {}
 			LI.db.recipes[r.id] = meta
+			LI.RecipesChanged()
 			meta.n = r.name or meta.n
 			meta.i = r.icon or meta.i
 			meta.item = r.item or meta.item
@@ -891,13 +892,25 @@ function LI.ToggleFavorite(key)
 	return LI.favorites[key] == true
 end
 
+local recipeTable, recipeVersion = nil, 0
+
+function LI.RecipesChanged()
+	recipeVersion = recipeVersion + 1
+end
+
+function LI.RecipesVersion()
+	local t = LI.db.recipes
+	if t ~= recipeTable then
+		recipeTable = t
+		recipeVersion = recipeVersion + 1
+	end
+	return recipeVersion
+end
+
 local itemIndex, itemIndexSize = nil, -1
 
 function LI.RecipeForItem(itemID)
-	local size = 0
-	for _ in pairs(LI.db.recipes) do
-		size = size + 1
-	end
+	local size = LI.RecipesVersion()
 	if not itemIndex or size ~= itemIndexSize then
 		itemIndex, itemIndexSize = {}, size
 		for id, meta in pairs(LI.db.recipes) do

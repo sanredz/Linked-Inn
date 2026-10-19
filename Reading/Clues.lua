@@ -96,10 +96,7 @@ end)
 local nameIndex, nameIndexSize
 
 local function RecipeByName(name)
-	local size = 0
-	for _ in pairs(LI.db.recipes) do
-		size = size + 1
-	end
+	local size = LI.RecipesVersion()
 	if not nameIndex or size ~= nameIndexSize then
 		nameIndex, nameIndexSize = {}, size
 		for id, meta in pairs(LI.db.recipes) do

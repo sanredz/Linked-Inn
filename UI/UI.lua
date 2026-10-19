@@ -42,6 +42,10 @@ local MAYBE = { 0.85, 0.75, 0.50 }
 local main
 local filter = { search = "", prof = nil }
 local refreshQueued = false
+local REFRESH_GAP, STATUS_GAP, REFRESH_SHARE = 0, 5, 0.04
+local redrawQueued = false
+local lastRefresh, refreshCost = -math.huge, 0
+local shownKind
 
 local function Text(parent, template, justify)
 	local fs = parent:CreateFontString(nil, "OVERLAY", template or "GameFontHighlight")
@@ -839,6 +843,18 @@ local function CreateList(parent)
 		local retain = ScrollBoxConstants and ScrollBoxConstants.RetainScrollPosition
 		self:SetDataProvider(CreateDataProvider(list), retain)
 	end
+	box.Redraw = function(self)
+		self:ForEachFrame(function(row)
+			local data = row.GetElementData and row:GetElementData()
+			local entry = type(data) == "table" and (data.entry or data)
+			if type(entry) == "table" and entry.key and entry.crafter then
+				entry.status, entry.seenAt, entry.sure = LI.Status(entry.key)
+			end
+			if data then
+				LI.SafeCall(InitRow, row, data)
+			end
+		end)
+	end
 	return box
 end
 
@@ -989,10 +1005,13 @@ local function RefreshFind()
 	end
 	main.list:SetList(list)
 	UpdateChips()
-	if main.kind.GenerateMenu then
-		main.kind:GenerateMenu()
-	else
-		main.kind:SetText(KindName(LI.settings.kind))
+	if shownKind ~= LI.settings.kind then
+		shownKind = LI.settings.kind
+		if main.kind.GenerateMenu then
+			main.kind:GenerateMenu()
+		else
+			main.kind:SetText(KindName(LI.settings.kind))
+		end
 	end
 	local total, reading = 0, LI.WaitingCount and LI.WaitingCount() or 0
 	for key, c in pairs(LI.crafters) do
@@ -1195,6 +1214,16 @@ function UI.Refresh()
 	if not main or not main:IsShown() then
 		return
 	end
+	local started = debugprofilestop and debugprofilestop()
+	UI.Draw()
+	lastRefresh = GetTime()
+	refreshQueued = false
+	if started then
+		refreshCost = (debugprofilestop() - started) / 1000
+	end
+end
+
+function UI.Draw()
 	local findShown = main.selectedTab == TAB.find
 	local workShown = main.selectedTab == TAB.work
 	main.findPage:SetShown(findShown)
@@ -1225,15 +1254,43 @@ function UI.Refresh()
 	end
 end
 
-local function QueueRefresh()
-	if refreshQueued or not main or not main:IsShown() then
+local function QueueRefresh(gap)
+	if not main or not main:IsShown() then
 		return
 	end
-	refreshQueued = true
-	LI.After(0.25, function()
+	local now = GetTime()
+	local due = math.max(now + 0.25, lastRefresh + math.max(gap or REFRESH_GAP, refreshCost * REFRESH_SHARE))
+	if refreshQueued and refreshQueued <= due then
+		return
+	end
+	refreshQueued = due
+	LI.After(due - now, function()
+		if refreshQueued ~= due then
+			return
+		end
 		refreshQueued = false
 		UI.Refresh()
 	end)
+end
+
+local function QueueStatus()
+	if not main or not main:IsShown() then
+		return
+	end
+	if not (main.selectedTab == TAB.find and main.list.Redraw and main.list.ForEachFrame) then
+		QueueRefresh()
+		return
+	end
+	if not redrawQueued then
+		redrawQueued = true
+		LI.After(0.5, function()
+			redrawQueued = false
+			if main:IsShown() and main.selectedTab == TAB.find then
+				main.list:Redraw()
+			end
+		end)
+	end
+	QueueRefresh(STATUS_GAP)
 end
 
 local sides = {}
@@ -1565,7 +1622,7 @@ end
 UI.TAB = TAB
 
 LI.Listen("CraftersChanged", QueueRefresh)
-LI.Listen("StatusChanged", QueueRefresh)
+LI.Listen("StatusChanged", QueueStatus)
 LI.Listen("TestChanged", QueueRefresh)
 LI.Listen("WorkChanged", QueueRefresh)
 LI.Listen("WorkSeen", QueueRefresh)

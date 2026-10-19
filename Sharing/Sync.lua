@@ -708,6 +708,7 @@ local function FillLater(ids, profKey)
 			if r.name or r.item then
 				local meta = LI.db.recipes[q.id] or {}
 				LI.db.recipes[q.id] = meta
+				LI.RecipesChanged()
 				meta.n = r.name or meta.n
 				meta.i = r.icon or meta.i
 				meta.item = r.item or meta.item

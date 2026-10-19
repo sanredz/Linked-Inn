@@ -69,6 +69,7 @@ local function Meta(id)
 	if not meta then
 		meta = {}
 		LI.db.recipes[id] = meta
+		LI.RecipesChanged()
 	end
 	if not meta.n and C_Spell and C_Spell.GetSpellName then
 		meta.n = LI.Safe(LI.Try(C_Spell.GetSpellName, id))

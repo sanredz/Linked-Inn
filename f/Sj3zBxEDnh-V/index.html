@@ -20,7 +20,7 @@ p { margin: 0; color: var(--muted); font-size: 14px; min-height: 1.2em; }
 <script>
 (() => {
   const ROOT = location.pathname.replace(/[^/]*$/, '');
-  const SALT = Uint8Array.from(atob('oIXwsRN7N9gAl1kqmRwLqg=='), (c) => c.charCodeAt(0));
+  const SALT = Uint8Array.from(atob('ecN7XmwF70aSCp4uh/j9Tg=='), (c) => c.charCodeAt(0));
   const ITER = 250000;
   let key;
   const derive = async (pw) => {

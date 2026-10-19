@@ -42,7 +42,22 @@ local MAYBE = { 0.85, 0.75, 0.50 }
 local main
 local filter = { search = "", prof = nil }
 local refreshQueued = false
-local REFRESH_GAP, STATUS_GAP, REFRESH_SHARE = 0, 5, 0.04
+local REFRESH_GAP, STATUS_GAP, REFRESH_SHARE, SLICE_MS = 0, 5, 0.04, 4
+local perf = { full = {}, redraw = {}, slice = {} }
+local job, sliceStart, jobWork, jobSlice = nil, 0, 0, 0
+
+local function Tick()
+	if job and coroutine.running() == job and debugprofilestop() - sliceStart > SLICE_MS then
+		coroutine.yield()
+	end
+end
+
+local function Note(list, v)
+	list[#list + 1] = v
+	if #list > 20 then
+		table.remove(list, 1)
+	end
+end
 local redrawQueued = false
 local lastRefresh, refreshCost = -math.huge, 0
 local shownKind
@@ -991,6 +1006,7 @@ local function RefreshFind()
 		LI.Theme.ProfessionArt(main.listArt, only or nil)
 	end
 	local opts = { profs = ProfsSelected(), secondary = LI.settings.secondary, kind = LI.settings.kind, maxOnly = LI.settings.maxOnly, minSkill = LI.settings.minSkill, liOnly = LI.settings.liOnly, guildOnly = LI.settings.guildOnly }
+	opts.tick = job and Tick or nil
 	local results = LI.Search(filter.search, opts)
 	local list = {}
 	local collapsed = LI.settings.collapsed or {}
@@ -1210,16 +1226,54 @@ local function BuildTestPage(page)
 	page.reset:SetPoint("BOTTOMRIGHT", -36, 10)
 end
 
-function UI.Refresh()
+function UI.Refresh(background)
 	if not main or not main:IsShown() then
 		return
 	end
+	if background and debugprofilestop and coroutine and coroutine.create then
+		local co = coroutine.create(function()
+			UI.Draw()
+		end)
+		job, jobWork, jobSlice = co, 0, 0
+		local function Step()
+			if job ~= co then
+				return
+			end
+			if not main:IsShown() then
+				job = nil
+				return
+			end
+			sliceStart = debugprofilestop()
+			local ok, err = coroutine.resume(co)
+			local spent = debugprofilestop() - sliceStart
+			jobWork, jobSlice = jobWork + spent, math.max(jobSlice, spent)
+			if not ok then
+				job = nil
+				LI.SafeCall(error, err, 0)
+				return
+			end
+			if coroutine.status(co) ~= "dead" then
+				LI.After(0, Step)
+				return
+			end
+			job = nil
+			lastRefresh = GetTime()
+			refreshCost = jobWork / 1000
+			Note(perf.full, jobWork)
+			Note(perf.slice, jobSlice)
+		end
+		Step()
+		return
+	end
+	job = nil
 	local started = debugprofilestop and debugprofilestop()
 	UI.Draw()
 	lastRefresh = GetTime()
 	refreshQueued = false
 	if started then
 		refreshCost = (debugprofilestop() - started) / 1000
+		Note(perf.full, refreshCost * 1000)
+		Note(perf.slice, refreshCost * 1000)
 	end
 end
 
@@ -1254,7 +1308,7 @@ function UI.Draw()
 	end
 end
 
-local function QueueRefresh(gap)
+local function QueueRefresh(gap, background)
 	if not main or not main:IsShown() then
 		return
 	end
@@ -1269,8 +1323,12 @@ local function QueueRefresh(gap)
 			return
 		end
 		refreshQueued = false
-		UI.Refresh()
+		UI.Refresh(background)
 	end)
+end
+
+local function QueueBackground()
+	QueueRefresh(nil, true)
 end
 
 local function QueueStatus()
@@ -1278,7 +1336,7 @@ local function QueueStatus()
 		return
 	end
 	if not (main.selectedTab == TAB.find and main.list.Redraw and main.list.ForEachFrame) then
-		QueueRefresh()
+		QueueBackground()
 		return
 	end
 	if not redrawQueued then
@@ -1286,11 +1344,15 @@ local function QueueStatus()
 		LI.After(0.5, function()
 			redrawQueued = false
 			if main:IsShown() and main.selectedTab == TAB.find then
+				local t0 = debugprofilestop and debugprofilestop()
 				main.list:Redraw()
+				if t0 then
+					Note(perf.redraw, debugprofilestop() - t0)
+				end
 			end
 		end)
 	end
-	QueueRefresh(STATUS_GAP)
+	QueueRefresh(STATUS_GAP, true)
 end
 
 local sides = {}
@@ -1621,12 +1683,12 @@ end
 
 UI.TAB = TAB
 
-LI.Listen("CraftersChanged", QueueRefresh)
+LI.Listen("CraftersChanged", QueueBackground)
 LI.Listen("StatusChanged", QueueStatus)
 LI.Listen("TestChanged", QueueRefresh)
 LI.Listen("WorkChanged", QueueRefresh)
-LI.Listen("WorkSeen", QueueRefresh)
-LI.Listen("ScanDone", QueueRefresh)
+LI.Listen("WorkSeen", QueueBackground)
+LI.Listen("ScanDone", QueueBackground)
 LI.Listen("BookChanged", QueueRefresh)
 
 SLASH_LINKEDINN1 = "/linkedinn"
@@ -1635,7 +1697,18 @@ SlashCmdList.LINKEDINN = function(msg)
 	local raw = LI.Trim(msg)
 	local cmd, rest = raw:match("^(%S*)%s*(.-)$")
 	cmd = (cmd or ""):lower()
-	if cmd == "test" then
+	if cmd == "perf" then
+		local function List(t)
+			local out = {}
+			for i = math.max(1, #t - 9), #t do
+				out[#out + 1] = string.format("%.0f", t[i])
+			end
+			return #out > 0 and table.concat(out, " ") or "none"
+		end
+		LI.Print(string.format("Rebuilds, total work (ms): %s", List(perf.full)))
+		LI.Print(string.format("Rebuilds, longest single frame (ms): %s", List(perf.slice)))
+		LI.Print(string.format("Row redraws (ms): %s", List(perf.redraw)))
+	elseif cmd == "test" then
 		UI.Open(TAB.test)
 	elseif cmd == "ping" then
 		LI.Sync.Ping(rest)

@@ -482,6 +482,19 @@ main.compactBox.__scripts.OnClick(main.compactBox)
 Advance(1)
 check(not main.list.__rows[2].compact and main.list.__rows[2].books[1].rank:IsShown(), "unticking brings the full rows back")
 
+local fakeClock, slices = 0, 0
+_G.debugprofilestop = function() fakeClock = fakeClock + 3 return fakeClock end
+local realYield = coroutine.yield
+coroutine.yield = function(...) slices = slices + 1 return realYield(...) end
+LI.SetRecipes("Eve Stitch-TestRealm", { name = "Tailoring", rank = 150 }, { { id = 3914, name = "Brown Linen Pants", item = 4343 } }, "click")
+Advance(1)
+check(Shape() == "#alchemy Cora #tailoring Anna Bob Eve", "a background rebuild split over many frames still lands the full list", Shape())
+check(slices >= 2, "and really is spread over several frames", slices)
+coroutine.yield = realYield
+_G.debugprofilestop = nil
+LI.crafters["Eve Stitch-TestRealm"] = nil
+LI.Fire("CraftersChanged")
+Advance(1)
 LI.SetRecipes("Dan Cook-TestRealm", { name = "Cooking", rank = 225 }, { { id = 818, name = "Spiced Wolf Meat", item = 2680 } }, "click")
 Advance(1)
 check(Shape() == "#alchemy Cora #tailoring Anna Bob", "secondary professions are hidden by default", Shape())

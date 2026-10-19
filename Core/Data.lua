@@ -1111,9 +1111,18 @@ function LI.Search(query, opts)
 	end
 	local recipeSearch = q ~= "" or kind ~= "all"
 	local hits, hitCount, hitsByProf, orphans = {}, 0, {}, false
+	local tick = opts.tick
 	if recipeSearch then
-		for id, meta in pairs(LI.db.recipes) do
-			if KindMatch(meta, kind) and (q == "" or Find(meta.n, q)) then
+		local ids = {}
+		for id in pairs(LI.db.recipes) do
+			ids[#ids + 1] = id
+		end
+		for _, id in ipairs(ids) do
+			if tick then
+				tick()
+			end
+			local meta = LI.db.recipes[id]
+			if type(meta) == "table" and KindMatch(meta, kind) and (q == "" or Find(meta.n, q)) then
 				hits[id] = meta
 				hitCount = hitCount + 1
 				if meta.p then
@@ -1126,9 +1135,17 @@ function LI.Search(query, opts)
 			end
 		end
 	end
-	for key, c in pairs(LI.crafters) do
+	local keys = {}
+	for key in pairs(LI.crafters) do
+		keys[#keys + 1] = key
+	end
+	for _, key in ipairs(keys) do
+		if tick then
+			tick()
+		end
+		local c = LI.crafters[key]
 		local status, seenAt, sure = LI.Status(key)
-		if key ~= LI.playerKey and (not opts.liOnly or c.li) and (not opts.guildOnly or LI.InCircle(key)) then
+		if type(c) == "table" and type(c.profs) == "table" and key ~= LI.playerKey and (not opts.liOnly or c.li) and (not opts.guildOnly or LI.InCircle(key)) then
 			local nameMatch = q ~= "" and kind == "all" and Find(LI.ShortName(key), q)
 			local groups, top = {}, nil
 			for profKey, p in pairs(c.profs) do

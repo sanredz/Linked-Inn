@@ -3657,7 +3657,7 @@ do
 	Tailor("Bolt Cloth", { [3914] = true })
 	LI.Fire("CraftersChanged")
 	line = Hover(4343)
-	check(line and line:find("and 2 others can make this", 1, true), "with more crafters it stays one short line", line)
+	check(line and line:find("3 crafters can make this", 1, true) and not line:find("Needle", 1, true), "with more crafters it's just the count, kept short", line)
 	class[20001] = { 9, 2 }
 	W.itemNames = { [20001] = "Pattern: Brown Linen Pants", [20002] = "Pattern: Brown Linen Shirt" }
 	class[20002] = { 9, 2 }

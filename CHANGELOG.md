@@ -4,8 +4,8 @@
 
 - Smoother in busy cities: the window no longer hitches while you move around
   with it open, and Linked Inn uses far less CPU in crowded places.
-- Item tooltips show who on your list can make that item, online first.
-  Recipe tooltips show how many crafters on your list already know it.
+- Item tooltips show how many crafters on your list can make that item, and
+  how many of them are online. Recipe tooltips show how many already know it.
 - Settings link to the census site, lifeonazeroth.com, and explain how to help
   it with your own data.
 

@@ -64,8 +64,8 @@ professions are read when you log in, so you never have to open them first.
   Compact at the bottom for bigger rows.
 - A small gold badge marks crafters who use Linked Inn themselves. Their lists
   come straight from their own game. The mug next to Secondary shows only them.
-- **Tooltips:** hover any item to see who on your list can make it, online
-  first. Recipe tooltips show how many crafters on your list already know it.
+- **Tooltips:** hover any item to see how many crafters on your list can make
+  it and how many are online. Recipe tooltips show how many already know it.
 - **Guild** and **Friend** tags show who's in your guild or on your friends
   list.
 - **One list per faction.** Your Alliance and Horde characters each see their

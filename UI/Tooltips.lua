@@ -157,17 +157,16 @@ function Tooltips.MakerLine(info)
 	if not list or #list == 0 then
 		return nil
 	end
-	local first = LI.ShortName(list[1].key)
 	local text
 	if #list == 1 then
-		text = first .. " can make this"
-	elseif #list == 2 then
-		text = first .. " and " .. LI.ShortName(list[2].key) .. " can make this"
+		text = LI.ShortName(list[1].key) .. " can make this"
 	else
-		text = string.format("%s and %d others can make this", first, #list - 1)
+		text = string.format("%d crafters can make this", #list)
 	end
-	local right = info.online > 0 and string.format("%d online", info.online) or nil
-	return text, right
+	if info.online > 0 then
+		text = text .. string.format(" |cff59f273(%d online)|r", info.online)
+	end
+	return text, nil
 end
 
 function Tooltips.RecipeLine(info, profKey)

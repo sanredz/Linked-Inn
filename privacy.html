@@ -55,6 +55,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   <p>When you vote for a tournament winner, the vote box keeps your pick together with a scrambled code made from your IP address, so each connection gets one vote. The IP address itself is never stored, and the code cannot be turned back into it. Once voting closes, those codes are wiped and only the totals are kept, so the site can show how the crowd's pick held up.</p>
   <p>Cheering for a player in a finals match works the same way: one cheer per connection per match, stored with that scrambled code, and wiped down to the totals after the finals.</p>
   <p>Raising a toast to a character works the same way too: one toast per connection per character, stored with that scrambled code so the same connection cannot toast twice, and capped at a few dozen toasts a day. Only the number of toasts is shown, never who gave them.</p>
+  <p>When you open a character's page, the site notes which character was looked up and when, with that same scrambled code so repeat visits from one connection count once a day. It is used to see which characters people look for, never who looked.</p>
 
   <h2>Where the numbers come from</h2>
   <p>Everything is read from World of Warcraft: Forever, as any player can see it in the game:</p>

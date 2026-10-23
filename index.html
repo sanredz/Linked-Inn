@@ -1507,11 +1507,11 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261023181358"></script>
-<script src="data-summary.js?v=20261023181358"></script>
-<script src="data-home.js?v=20261023181358"></script>
-<script src="data-life.js?v=20261023181358"></script>
-<script src="data-open.js?v=20261023181358"></script>
+<script src="data-multi.js?v=20261023182143"></script>
+<script src="data-summary.js?v=20261023182143"></script>
+<script src="data-home.js?v=20261023182143"></script>
+<script src="data-life.js?v=20261023182143"></script>
+<script src="data-open.js?v=20261023182143"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1524,7 +1524,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   const PROF_NAMES = { alchemy: 'Alchemy', blacksmithing: 'Blacksmithing', enchanting: 'Enchanting', engineering: 'Engineering', leatherworking: 'Leatherworking', tailoring: 'Tailoring' };
   const UI = (n) => `assets/game/ui/${n}.png`;
   const cls = (c) => `assets/classes/${c}.png`;
-  const race = (r) => `assets/game/races/${r}.png`;
+  const race = (r, x) => `assets/game/races/${r}${x === 3 ? '-f' : ''}.png`;
   const prof = (k) => `assets/profs/${k}.png`;
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = (n) => Math.round(n).toLocaleString('en-US');
@@ -2106,7 +2106,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       const best = label && L.records.find((x) => x.k === k);
       if (!best) return '';
       const who = named.find((x) => x.k === k) || {}, fac = best.f || RACE_FAC[best.r], what = `level ${best.lv} ${RN[best.r] || best.r} ${CN[best.c] || ''}`;
-      return `<div class="lrec"${who.nm ? ` data-plink="${esc(plink(who.nm, who.rs))}"` : ''} style="--bg:url('assets/game/${REC_ART[best.c] || 'art-warriorarms'}.jpg')" data-tip="${esc(label)}|${who.nm ? `${esc(who.nm)}, ` : 'A '}${what}"><div class="lt"><img src="${UI(icon)}" alt=""><b>${label}</b></div><div class="n">${(f || fmt)(best.v)}</div><div class="h">${icoR(best.r, fac, 28)}<span style="color:${CC[best.c]}">${who.nm ? esc(who.nm) : `A ${CN[best.c] || ''}`}</span></div><div class="who">Level ${best.lv} ${RN[best.r] || best.r}</div></div>`;
+      return `<div class="lrec"${who.nm ? ` data-plink="${esc(plink(who.nm, who.rs))}"` : ''} style="--bg:url('assets/game/${REC_ART[best.c] || 'art-warriorarms'}.jpg')" data-tip="${esc(label)}|${who.nm ? `${esc(who.nm)}, ` : 'A '}${what}"><div class="lt"><img src="${UI(icon)}" alt=""><b>${label}</b></div><div class="n">${(f || fmt)(best.v)}</div><div class="h">${icoR(best.r, fac, 28, best.x)}<span style="color:${CC[best.c]}">${who.nm ? esc(who.nm) : `A ${CN[best.c] || ''}`}</span></div><div class="who">Level ${best.lv} ${RN[best.r] || best.r}</div></div>`;
     };
     const groups = LIFE_GROUPS.map(([g, keys]) => { const t = keys.split(' ').map(tile).join(''); return t ? `<div class="lgrp"><h4>${g}</h4><div class="lrecs">${t}</div></div>` : ''; }).join('');
     h += panel('s12', 'Hall of records', 'The single highest number we have seen for each. Click one to see that character.', groups);
@@ -2745,7 +2745,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   const FCOL = { Alliance: '#4a8fe7', Horde: '#d8443a' };
   const RACE_FAC = { Human: 'Alliance', Dwarf: 'Alliance', Gnome: 'Alliance', NightElf: 'Alliance', Orc: 'Horde', Scourge: 'Horde', Tauren: 'Horde', Troll: 'Horde' };
   const icoC = (c, size) => `<span class="ico" style="--rc:${CC[c]}${size ? `;--s:${size}px` : ''}"><span><img src="${cls(c)}" alt=""></span></span>`;
-  const icoR = (r, fac, size) => `<span class="ico race" style="--rc:${FCOL[fac] || '#888'}${size ? `;--s:${size}px` : ''}"><span><img src="${race(r)}" alt=""></span>${fac ? `<img class="fx" src="assets/game/${fac.toLowerCase()}-crest.png" alt="">` : ''}</span>`;
+  const icoR = (r, fac, size, x) => `<span class="ico race" style="--rc:${FCOL[fac] || '#888'}${size ? `;--s:${size}px` : ''}"><span><img src="${race(r, x)}" alt=""></span>${fac ? `<img class="fx" src="assets/game/${fac.toLowerCase()}-crest.png" alt="">` : ''}</span>`;
   const REC = { deaths: 'deaths', fall: 'falls to their death', drown: 'drownings', hogger: 'Hogger kills', critters: 'critters killed', kills: 'kills', quests: 'quests done', abandoned: 'quests abandoned',
     hearth: 'hearthstone trips', flights: 'flights taken', food: 'meals eaten', drink: 'drinks', hpots: 'healing potions', bandages: 'bandages used', fish: 'fish caught', hugs: '/hugs given', facepalm: '/facepalms', hk: 'honorable kills', dungeons: 'dungeon runs', vancleef: 'VanCleef kills', duelsw: 'duels won', kb: 'killing blows', bgwon: 'battlegrounds won', pvpdeaths: 'deaths to other players' };
   const REC_ART = { WARRIOR: 'art-warriorarms', PALADIN: 'art-priestholy', HUNTER: 'art-hunterbeastmastery', ROGUE: 'art-roguecombat', PRIEST: 'art-priestshadow', SHAMAN: 'art-shamanrestoration', MAGE: 'art-magefire', WARLOCK: 'art-priestshadow', DRUID: 'art-druidferalcombat' };
@@ -2795,7 +2795,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         if (!list.length) { show(`<div class="hint">Nobody called “${esc(q)}” yet. We only know characters someone has run into.</div>`); return; }
         show(list.map((e, i) => {
           const n = esc(e[0]), k = [...q].length;
-          return `<div class="po${e[6] ? ' fel' : ''}" data-i="${i}"${e[6] ? ' data-tip="Chaos ladder only|First seen during the Burning Legion invasion, so they only have a Chaos ladder profile."' : ''}>${icoR(e[5] || 'Human', e[2], 38)}<div><b style="color:${CC[e[1]]}"><mark>${esc([...e[0]].slice(0, k).join(''))}</mark>${esc([...e[0]].slice(k).join(''))}</b><small>Level ${e[3] || '?'} ${RN[e[5]] || e[5] || ''} ${CN[e[1]] || ''}</small></div><span class="tag">${e[6] ? '<img src="' + UI('spell_shadow_summoninfernal') + '" alt="">Chaos · ' : ''}${e[4]}</span></div>`;
+          return `<div class="po${e[6] ? ' fel' : ''}" data-i="${i}"${e[6] ? ' data-tip="Chaos ladder only|First seen during the Burning Legion invasion, so they only have a Chaos ladder profile."' : ''}>${icoR(e[5] || 'Human', e[2], 38, e[7])}<div><b style="color:${CC[e[1]]}"><mark>${esc([...e[0]].slice(0, k).join(''))}</mark>${esc([...e[0]].slice(k).join(''))}</b><small>Level ${e[3] || '?'} ${RN[e[5]] || e[5] || ''} ${CN[e[1]] || ''}</small></div><span class="tag">${e[6] ? '<img src="' + UI('spell_shadow_summoninfernal') + '" alt="">Chaos · ' : ''}${e[4]}</span></div>`;
         }).join(''));
         paint();
       });
@@ -2940,7 +2940,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const cell = (k, icon, label) => { const x = val(k); return x ? `<div class="wr-cell ${H.tier(x)}"><img src="${UI(icon)}" alt=""><b>${H.shown(k, x)}</b><span>${label}</span>${H.tier(x) ? `<em>${H.solo(x) ? '#1' : H.topTxt(x)}</em>` : ''}</div>` : ''; };
     const who = `${RN[P.r] || P.r} ${H.specName}${CN[P.c]}`;
     const slides = [];
-    slides.push(`<div class="wr-k wr-in">Your beta on Forever</div><div class="wr-por wr-in" style="--fc:${FCOL[P.f] || '#888'};--d:.15s;margin-top:26px"><span class="pi"><img src="${race(P.r)}" alt=""></span><span class="cl"><img src="${cls(P.c)}" alt=""></span></div>
+    slides.push(`<div class="wr-k wr-in">Your beta on Forever</div><div class="wr-por wr-in" style="--fc:${FCOL[P.f] || '#888'};--d:.15s;margin-top:26px"><span class="pi"><img src="${race(P.r, P.x)}" alt=""></span><span class="cl"><img src="${cls(P.c)}" alt=""></span></div>
       <div class="wr-h wr-in" style="--d:.3s;color:${CC[P.c]}">${esc(P.n)}</div><p class="wr-p wr-in" style="--d:.5s">Level ${P.lv} ${who}${P.g ? ` of <b>&lt;${esc(P.g)}&gt;</b>` : ''}.${P.fs ? ` First seen on ${new Date(P.fs).toLocaleDateString([], { month: 'long', day: 'numeric' })}.` : ''}</p><p class="wr-p wr-in" style="--d:.8s;color:#a8977a">Here is how the beta went.</p>`);
 
     const firsts = Object.entries(P.v).filter(([, x]) => Array.isArray(x) && x[2] >= 30 && H.solo(x)).sort((a, b) => (H.joint(a[1]) - H.joint(b[1])) || (!WR_HEAD.includes(a[0]) - !WR_HEAD.includes(b[0])) || (H.base(b[1]) - H.base(a[1])));
@@ -3070,7 +3070,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const card = `<div class="wcard ${rc}${chaos ? ' chaos' : ''}" style="--art:url('${art}');--h:${seed % 360};--ac:${arch.ac};--cc:${CC[P.c]};--fc:${FCOL[P.f] || '#888'}" data-snap-title="${esc(P.n)} card">
       ${chaos ? '<i class="wc-lava"></i><i class="wc-crk"></i>' : ''}<i class="gem a"></i><i class="gem b"></i><i class="gem c"></i><i class="gem d"></i>
       <div class="wc-in"><div class="wc-top"><span class="wc-name">${esc(P.n)}${LEG ? `<small>${LEG.sub}</small>` : first ? `<small>${wrTitle(first[0], P, H)}</small>` : P.cc ? `<small>${CN[P.c]} Duel Champion</small>` : ''}</span><span class="wc-lv">${P.lv}</span></div>
-      <div class="wc-art">${chaos ? '<i class="wc-artf"></i>' : ''}${crest ? `<img class="wc-crest" src="${crest}" alt="">` : ''}${mainP.length ? `<div class="wc-pv">${mainP.map(pIcon).join('')}</div>` : ''}${sideP.length ? `<div class="wc-ph">${sideP.map(pIcon).join('')}</div>` : ''}${op ? `<div class="wc-trny${op.champ ? ' crowned' : ''}"><img src="assets/forever-open-logo.png" alt=""><span>${op.label}</span></div>` : ''}<div class="wc-emb"><img src="${UI(arch.ic)}" alt=""></div><div class="wc-por"><span class="pi"><img src="${race(P.r)}" alt=""></span><span class="cl"><img src="${cls(P.c)}" alt=""></span></div>
+      <div class="wc-art">${chaos ? '<i class="wc-artf"></i>' : ''}${crest ? `<img class="wc-crest" src="${crest}" alt="">` : ''}${mainP.length ? `<div class="wc-pv">${mainP.map(pIcon).join('')}</div>` : ''}${sideP.length ? `<div class="wc-ph">${sideP.map(pIcon).join('')}</div>` : ''}${op ? `<div class="wc-trny${op.champ ? ' crowned' : ''}"><img src="assets/forever-open-logo.png" alt=""><span>${op.label}</span></div>` : ''}<div class="wc-emb"><img src="${UI(arch.ic)}" alt=""></div><div class="wc-por"><span class="pi"><img src="${race(P.r, P.x)}" alt=""></span><span class="cl"><img src="${cls(P.c)}" alt=""></span></div>
         ${items.length ? `<div class="wc-gear">${items.map((it) => `<img src="assets/icons/${it[10]}.png" alt="${esc(it[0])}" data-gi="${it.gi}" style="--qc:${QC[it[1]] || '#fff'}" onerror="this.onerror=null;this.src='assets/icons/134400.png'">`).join('')}</div>` : ''}</div>
       <div class="wc-type"><span>${who}</span>${P.pts ? `<b class="wc-tal">${P.pts.join('/')}</b>` : ''}</div>
       <div class="wc-text ${abTier}"><div class="wc-at"><span class="wc-ic"><span class="wc-ii"><img src="${UI(arch.ic)}" alt=""></span>${abTier ? `<img class="wc-fr" src="assets/game/ui/frame-${abTier.slice(2)}.png" alt="">` : ''}</span><span class="wc-atx">${atitle}</span>${abTier ? `<span class="wc-tag">${abSeal}</span>` : ''}</div><div class="wc-ab">${ability}</div><div class="wc-fl">“${wrFlavour(arch, ak, ax, P, H, seed)}”</div></div>
@@ -3609,7 +3609,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const fameHtml = fame.length ? `<div class="fame"><div class="fmh">Best at</div>${fame.map(([k, x]) => `<div class="fm ${tier(x)}" data-tip="${rankTip(nice(k), x, shown(k, x))}"><div class="pc">${solo(x) ? '#1' : Math.max(1, Math.ceil(100 * frac(x))) + '%'}<small>${solo(x) ? (joint(x) ? 'joint' : x.fx || 'of all') : 'top'}</small></div><div><b>${nice(k)}<i>${shown(k, x)}</i></b><span>${tie(x) > x[1] ? `#${fmt(x[1])}–${fmt(tie(x))}` : `#${fmt(x[1])}`} of ${pool(x)}${P.cc && P.cc[0] === k ? ` · ${P.cc[1] > 1 ? 'joint ' : ''}${CN[P.c]} champion` : ''}</span></div></div>`).join('')}<div class="tierkey"><span class="t-unc"><i></i>Top 30%</span><span class="t-rare"><i></i>15%</span><span class="t-epic"><i></i>5%</span><span class="t-leg"><i></i>1%</span><span class="t-art"><i></i>#1</span></div></div>` : '<div></div>';
     const legHtml = legs.length ? `<div class="pleg">${legs.map((e) => `<span class="lg" data-gi="${e[0]}:${e[1] || 0}"><img src="assets/icons/${LG.i[e[0]][10]}.png" alt="" onerror="this.onerror=null;this.src='assets/icons/134400.png'"><b>${esc(LG.i[e[0]][0])}</b></span>`).join('')}</div>` : '';
     let h = searchBox('psq2') + eraSwitch(P0, era);
-    h += `<section class="frame phero"><div class="in slab" style="--bg:url('${bg}')"><div style="position:relative">${icoR(P.r, P.f)}<span class="cl"><img src="${cls(P.c)}" alt=""></span></div>
+    h += `<section class="frame phero"><div class="in slab" style="--bg:url('${bg}')"><div style="position:relative">${icoR(P.r, P.f, 0, P.x)}<span class="cl"><img src="${cls(P.c)}" alt=""></span></div>
       <div><h2 style="color:${CC[P.c]}">${esc(P.n)}</h2><div class="sub">Level ${P.lv} ${RN[P.r] || P.r} ${specName}${CN[P.c]}${P.g ? ` · <span class="g">&lt;${esc(P.g)}&gt;</span>` : ''}</div>${legHtml}
       <div class="chips2"><span style="color:${FCOL[P.f]}">${P.f}</span><span>${P.rs} realm</span>${P.fs ? `<span>First seen ${new Date(P.fs).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>` : ''}${P.pts ? `<span>Talents ${P.pts.join('/')}</span>` : ''}${P.ov ? `<span class="${wrOvTier(P.ov)}" style="${wrOvTier(P.ov) ? 'color:var(--tc)' : ''}" data-tip="${era === 'chaos' ? CHAOS_TIP : RENOWN_TIP}">${era === 'chaos' ? 'Chaos renown' : 'Renown'} #${fmt(P.ov[0])} of ${fmt(P.ov[1])}</span>` : era === 'chaos' ? '<span data-tip="Chaos renown|Needs a statistics read from during the invasion. They will get one the next time someone with the addon passes them.">Chaos renown pending</span>' : ''}</div><button class="wr-open" id="wropen"><img src="${UI(era === 'chaos' ? 'spell_shadow_summoninfernal' : 'inv_misc_ticket_tarot_stack_01')}" alt="">${era === 'chaos' ? 'Their invasion, wrapped' : 'Their beta, wrapped'}</button>${toastBtn(P)}</div>${fameHtml}</div></section>`;
     document.getElementById('title').textContent = P.n;
@@ -3649,7 +3649,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       const avg = lv.length ? (lv.reduce((a, b) => a + b, 0) / lv.length).toFixed(1) : '–';
       const when = P.gear[0] ? new Date(P.gear[0] * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
       gear = `<div class="doll" style="--art:url('${bg}');--cc:${CC[P.c]}"><div class="col">${[1, 2, 3, 15, 5, 4, 19, 9].map(slot).join('')}</div>
-        <div class="who"><div class="por"><img src="${race(P.r)}" alt=""><img class="ci" src="${cls(P.c)}" alt=""></div><b style="color:${CC[P.c]}">${esc(P.n)}</b><span class="il">${avg}<small>average item level</small></span></div>
+        <div class="who"><div class="por"><img src="${race(P.r, P.x)}" alt=""><img class="ci" src="${cls(P.c)}" alt=""></div><b style="color:${CC[P.c]}">${esc(P.n)}</b><span class="il">${avg}<small>average item level</small></span></div>
         <div class="col">${[10, 6, 7, 8, 11, 12, 13, 14].map(slot).join('')}</div><div class="wpn">${[16, 17, 18].map(slot).join('')}</div>
         <div class="note">As last seen${when ? ` on ${when}` : ''}. Hover an item for its tooltip.</div></div>`;
     }

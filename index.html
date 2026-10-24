@@ -1527,11 +1527,11 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261024223517"></script>
-<script src="data-summary.js?v=20261024223517"></script>
-<script src="data-home.js?v=20261024223517"></script>
-<script src="data-life.js?v=20261024223517"></script>
-<script src="data-open.js?v=20261024223517"></script>
+<script src="data-multi.js?v=20261024223823"></script>
+<script src="data-summary.js?v=20261024223823"></script>
+<script src="data-home.js?v=20261024223823"></script>
+<script src="data-life.js?v=20261024223823"></script>
+<script src="data-open.js?v=20261024223823"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1754,7 +1754,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       h += panel('s12', 'What each class picks', 'Each bar is every profession one class has, gathering included, from players’ Statistics panels.',
         stack(byClass, ALL_PROFS, (k) => PC[k], prof, (k) => PN[k], 'professions') + `<div class="legend3">${ALL_PROFS.map((k) => `<span><i style="background:${PC[k]}"></i>${PN[k]}</span>`).join('')}</div>`);
 
-      const BONUS = { 'Gnome|engineering': 'Gnomes get +15 Engineering', 'Tauren|herbalism': 'Tauren get +15 Herbalism' };
+      const BONUS = {};
       const races = AC.races;
       let rg = `<div class="grid heat" style="grid-template-columns:44px repeat(${ALL_PROFS.length}, 1fr)"><div class="corner"></div>`;
       rg += ALL_PROFS.map((k) => `<div class="ax" data-tip="${PN[k]}"><img src="${prof(k)}" alt=""></div>`).join('');
@@ -1774,7 +1774,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         });
       });
       rg += '</div>';
-      h += panel('s7', 'Racial edge', 'Share of each race that has the profession. Outlined: races with a bonus to that profession.', rg);
+      h += panel('s7', 'Racial edge', 'Share of each race that has the profession.', rg);
 
     }
 

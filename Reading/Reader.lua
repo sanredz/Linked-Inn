@@ -49,6 +49,13 @@ local lastDone = GetTime and GetTime() or -60
 local userClickAt = -60
 local LATE = 15
 local USER_CLICK = 5
+local OWN_TIMEOUT = 4
+local OWN_LATE = 60
+local INPUT_WINDOW = 1.5
+local QUIET_GIVE_UP = 25
+local ownAsked = {}
+local userInputAt = -60
+local lastSentAt = -60
 local PANELS = { "left", "center", "right", "doublewide", "fullscreen" }
 
 local function Now()
@@ -394,6 +401,10 @@ ShowOwnFrame = function()
 	if not frame or FrameShown() then
 		return
 	end
+	if InCombatLockdown and InCombatLockdown() then
+		LI.Log("Your profession window can't be opened for you in combat; open it again")
+		return
+	end
 	if ShowUIPanel then
 		LI.Try(ShowUIPanel, frame)
 	end
@@ -476,19 +487,18 @@ end
 
 local silenced
 local QUIET_EVENTS = { "TRADE_SKILL_SHOW" }
-local QUIET_HOLD = 8
+local QUIET_HOLD = 60
 local holdUntil = 0
 local quietTries, quietWorks, quietOff = 0, 0, false
 
-local function Silence()
+local function Silence(startup)
 	if quietOff or not GetFramesRegisteredForEvent then
 		return
 	end
-	quietTries = quietTries + 1
-	if silenced then
-		return
+	if not startup then
+		quietTries = quietTries + 1
 	end
-	silenced = {}
+	silenced = silenced or {}
 	for _, event in ipairs(QUIET_EVENTS) do
 		local frames = { LI.Try(GetFramesRegisteredForEvent, event) }
 		for _, frame in ipairs(frames) do
@@ -535,13 +545,19 @@ end
 local function Finish(job, outcome)
 	lastDone = Now()
 	MeterClose(outcome == "ok" and not job.own)
+	if job.own and job.prof and outcome == "ok" then
+		ownAsked[job.prof] = nil
+	end
 	if not job.own and (outcome == "ok" or outcome == "timeout") and type(job.link) == "string" then
 		LI.NoteServerRead(job.link:match("^trade:(Player%-[%w%-]+):"), outcome == "ok")
 	end
 	if silenced and outcome == "ok" then
 		quietWorks = quietWorks + 1
+		if LI.db then
+			LI.db.quietOk = true
+		end
 	end
-	if not quietOff and quietWorks == 0 and quietTries >= 8 then
+	if not quietOff and quietWorks == 0 and quietTries >= QUIET_GIVE_UP and not (LI.db and LI.db.quietOk) then
 		quietOff = true
 		LI.Log("Quiet reading got no answers; reading with the hidden window instead")
 	end
@@ -607,6 +623,38 @@ local function Finish(job, outcome)
 	LI.After(0.05, function()
 		Kick()
 	end)
+end
+
+local function ShownProf()
+	local api = C_TradeSkillUI
+	local base = api and api.GetBaseProfessionInfo and LI.Try(api.GetBaseProfessionInfo)
+	if type(base) ~= "table" then
+		return nil
+	end
+	return LI.ProfKeyForLine(LI.Safe(base.professionID)) or LI.ProfKey(LI.Safe(base.professionName))
+end
+
+local function UserActed()
+	return Now() - userInputAt <= INPUT_WINDOW or Now() - userClickAt <= USER_CLICK
+end
+
+local function LateOwn(consume)
+	if pending or UserActed() or (userShown and FrameVisible()) then
+		return false
+	end
+	local linked, mine = LinkState()
+	if linked == true and not mine then
+		return false
+	end
+	local prof = ShownProf()
+	local at = prof and ownAsked[prof]
+	if not at or Now() - at > OWN_LATE then
+		return false
+	end
+	if consume then
+		ownAsked[prof] = nil
+	end
+	return true
 end
 
 local function OwnShown()
@@ -709,7 +757,7 @@ local function Unasked()
 		return false
 	end
 	local linked, mine = LinkState()
-	return linked == true and not mine
+	return (linked == true and not mine) or LateOwn()
 end
 
 local function HideUnasked(frame)
@@ -733,7 +781,12 @@ local function HideUnasked(frame)
 end
 
 UserFrame = function(frame)
-	if ShownBy() == "event" and Unasked() then
+	local by = ShownBy()
+	if by ~= "user" and ours and Now() - lateAt <= 0.5 then
+		Conceal(frame)
+		return
+	end
+	if by == "event" and Unasked() then
 		HideUnasked(frame)
 		return
 	end
@@ -795,6 +848,10 @@ Start = function(job)
 	MeterOpen()
 	pending = job
 	job.started = Now()
+	lastSentAt = job.started
+	if job.own and job.prof then
+		ownAsked[job.prof] = job.started
+	end
 	local t = Tip()
 	LI.Try(t.SetOwner, t, WorldFrame or UIParent, "ANCHOR_NONE")
 	Silence()
@@ -805,7 +862,7 @@ Start = function(job)
 		Finish(job, "err")
 		return
 	end
-	LI.After(job.probe and Reader.ProbeTimeout() or TIMEOUT, function()
+	LI.After(job.own and OWN_TIMEOUT or job.probe and Reader.ProbeTimeout() or TIMEOUT, function()
 		if pending == job and not job.replied then
 			if job.probe and job.prof then
 				lateWatch = { key = job.key, prof = job.prof, started = job.started }
@@ -1451,10 +1508,38 @@ end
 
 LI.On("TRADE_SKILL_SHOW", function()
 	tradeOpen = true
-	if OwnShown() then
+	local keep = false
+	if LateOwn(true) then
+		ours = true
+		lateAt = Now()
+		LI.Log("A late reply to reading your own profession arrived; read it unseen")
+		LI.After(0, function()
+			if ours and not pending and FrameShown() then
+				Conceal(ProfessionsFrame)
+			end
+		end)
+		LI.After(SETTLE, function()
+			if ours and not pending then
+				CloseHidden()
+			end
+		end)
+	elseif OwnShown() then
 		UserOpened()
 	elseif Now() - userClickAt <= USER_CLICK then
 		ours = false
+	elseif userShown and FrameVisible() and not pending then
+		keep = true
+		ours = false
+		local back = ownProf
+		LI.Log("A late reply landed in your open profession window; switching it back to yours")
+		LI.After(SETTLE, function()
+			AfterCollect(function()
+				local api = C_TradeSkillUI
+				if back and api and api.OpenTradeSkill and tradeOpen and FrameVisible() then
+					LI.Try(api.OpenTradeSkill, back)
+				end
+			end)
+		end)
 	elseif pending then
 		ours = true
 	elseif silenced then
@@ -1491,7 +1576,7 @@ LI.On("TRADE_SKILL_SHOW", function()
 	else
 		ours = false
 	end
-	userShown = not ours
+	userShown = keep or not ours
 	Replied()
 	ScheduleRead()
 end)
@@ -1526,9 +1611,50 @@ local function OnInterface()
 	return focus ~= nil and not InWorld(focus)
 end
 
+local BOOKS = { "Profession", "SpellBook", "PlayerSpells" }
+
+local function OnBook()
+	local frame = MouseFocus()
+	for _ = 1, 8 do
+		if not frame then
+			return false
+		end
+		local name = frame.GetName and LI.Safe(LI.Try(frame.GetName, frame))
+		if type(name) == "string" then
+			for _, part in ipairs(BOOKS) do
+				if name:find(part, 1, true) then
+					return true
+				end
+			end
+		end
+		frame = frame.GetParent and LI.Try(frame.GetParent, frame)
+	end
+	return false
+end
+
+local function ProfessionSpell(spell)
+	if type(spell) ~= "number" then
+		return false
+	end
+	for _, nums in pairs(LI.ownLinks or {}) do
+		if nums.spell == spell then
+			return true
+		end
+	end
+	return false
+end
+
 LI.On("GLOBAL_MOUSE_DOWN", function()
 	if LI.ready and OnInterface() then
+		if OnBook() then
+			userInputAt = Now()
+		end
 		ClearForUser()
+	end
+end)
+LI.On("UNIT_SPELLCAST_SENT", function(unit, _, _, spell)
+	if LI.Safe(unit) == "player" and ProfessionSpell(LI.Safe(spell)) then
+		userInputAt = Now()
 	end
 end)
 LI.On("TRADE_SKILL_LIST_UPDATE", function()
@@ -1544,7 +1670,14 @@ LI.On("TRADE_SKILL_DATA_SOURCE_CHANGED", function()
 	end
 end)
 LI.On("PLAYER_REGEN_DISABLED", function()
-	Unsilence()
+	if not pending and Now() - lastSentAt > LATE then
+		Unsilence()
+	end
+end)
+
+LI.On("PLAYER_LOGIN", function()
+	Silence(true)
+	Hold()
 end)
 
 LI.On("PLAYER_LOGOUT", function()

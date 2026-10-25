@@ -694,6 +694,7 @@ Advance(200)
 LI.UI.Open(LI.UI.TAB.test)
 check(LinkedInnFrame.testPage.head.__text == "Links need a click", "the test page says links need a click", LinkedInnFrame.testPage.head.__text)
 LinkedInnFrame:Hide()
+GetFramesRegisteredForEvent = nil
 LI.Reader.Retry()
 W.autoWorks = true
 W.linkData["trade:Player-2-1:3908:197"] = { linkedName = "Mage1 Test", prof = TAILORING, recipes = TAILOR_RECIPES }
@@ -1863,7 +1864,7 @@ do
 	W.autoWorks = true
 	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = {} }
 	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
-	Advance(25)
+	Advance(75)
 	W.autoWorks = false
 	local listens = false
 	for _, f in ipairs({ GetFramesRegisteredForEvent("TRADE_SKILL_SHOW") }) do
@@ -2055,7 +2056,7 @@ do
 	check(not W.UIHears(), "a read that got no answer keeps the window muted for late replies")
 	SetItemRef("trade:Player-1-CCC:2259:171", "[Alchemy]", "LeftButton")
 	check(W.UIHears(), "clicking a profession link unmutes it at once")
-	Advance(20)
+	Advance(80)
 	check(W.UIHears(), "and with nothing being read it stays unmuted")
 end
 
@@ -2081,10 +2082,10 @@ do
 		end)
 	end)
 	W.autoWorks = true
-	W.replyDelay = 12
+	W.replyDelay = 70
 	W.linkData["trade:Player-1-SLW:2259:171"] = { linkedName = "Slow Poke", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
 	LI.Reader.Want("Slow Poke-TestRealm", "Alchemy", "trade:Player-1-SLW:2259:171", { built = true })
-	for _ = 1, 150 do
+	for _ = 1, 750 do
 		Advance(0.1)
 	end
 	local seen = false
@@ -3699,6 +3700,161 @@ do
 	LI.settings.tooltips = nil
 	Boot(SaveVars())
 	check(LI.settings.tooltips == true, "and an existing save without the setting gets it switched on")
+end
+
+do
+	Setup()
+	W.profs = { { name = "Alchemy", rank = 150, max = 225, offset = 10, line = 171 } }
+	W.spellbook = { [11] = 2259 }
+	W.playerGUID = "Player-1-ME"
+	W.linkData["trade:Player-1-ME:2259:171"] = { linkedName = "Brew Master", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	W.autoWorks = true
+	W.replyDelay = 9
+	Boot()
+	ProfessionsFrame_LoadUI()
+	W.blizzShown = 0
+	local seen = false
+	for _ = 1, 400 do
+		Advance(0.1)
+		if ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() > 0.05 then seen = true end
+	end
+	check(W.hyperlinks[#W.hyperlinks] == "trade:Player-1-ME:2259:171", "your own profession is read after login")
+	check(not seen and W.blizzShown == 0, "a slow answer to that read never opens the profession window", W.blizzShown)
+	check(not W.trade, "it is closed unseen")
+	check(LI.crafters[LI.playerKey].profs.alchemy.recipes, "and your recipes are still saved from it")
+	W.autoWorks, W.replyDelay = false, nil
+	W.trade = { linked = true, linkedName = "Brew Master", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	Advance(0.5)
+	check(ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() == 1, "opening your profession yourself right after still shows it")
+	C_TradeSkillUI.CloseTradeSkill()
+	W.profs, W.spellbook, W.playerGUID = nil, nil, nil
+end
+
+do
+	Setup()
+	W.profs = { { name = "Alchemy", rank = 150, max = 225, offset = 10, line = 171 } }
+	W.spellbook = { [11] = 2259 }
+	W.playerGUID = "Player-1-ME"
+	W.linkData["trade:Player-1-ME:2259:171"] = { linkedName = "Brew Master", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Boot()
+	ProfessionsFrame_LoadUI()
+	GetFramesRegisteredForEvent = nil
+	W.autoWorks = true
+	W.replyDelay = 9
+	local seen = false
+	for _ = 1, 400 do
+		Advance(0.1)
+		if ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() > 0.05 then seen = true end
+	end
+	check(not seen and not ProfessionsFrame:IsShown(), "even where the window can't be muted, a slow answer about your own profession is hidden and closed")
+	W.autoWorks, W.replyDelay = false, nil
+	W.trade = { linked = true, linkedName = "Brew Master", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("UNIT_SPELLCAST_SENT", "player", "", "cast-1", 2259)
+	Fire("TRADE_SKILL_SHOW")
+	ProfessionsFrame:Show()
+	Advance(2)
+	check(ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() == 1, "but casting your profession opens it normally")
+	C_TradeSkillUI.CloseTradeSkill()
+	W.profs, W.spellbook, W.playerGUID = nil, nil, nil
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	W.blizzShown = 0
+	W.autoWorks = true
+	W.replyDelay = 30
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	local seen = false
+	for _ = 1, 450 do
+		Advance(0.1)
+		if ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() > 0.05 then seen = true end
+	end
+	check(not seen and W.blizzShown == 0, "a reply half a minute late never reaches Blizzard's window, so nothing of yours gets pushed aside or closed", W.blizzShown)
+	check(LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes, "and it is still read")
+	W.autoWorks, W.replyDelay = false, nil
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	for i = 1, 12 do
+		W.guids["Player-3-" .. i] = { class = "MAGE", name = "Away" .. i .. " Guy", realm = "" }
+		Say("CHAT_MSG_CHANNEL", TradeLink("Player-3-" .. i, 3908, 197, "Tailoring"), "Away" .. i .. " Guy-TestRealm", "Player-3-" .. i, "Trade - City")
+	end
+	Advance(240)
+	check(LI.test.auto.timeout >= 10, "a dozen links from people who are offline get no answer", LI.test.auto.timeout)
+	check(not LI.Reader.QuietState(), "that alone never switches muting off")
+	W.blizzShown = 0
+	W.autoWorks = true
+	W.replyDelay = 1
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Advance(70)
+	check(LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes and W.blizzShown == 0, "so the next read still keeps Blizzard's window shut", W.blizzShown)
+	W.autoWorks, W.replyDelay = false, nil
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	W.autoWorks = true
+	W.replyDelay = 3
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	for _ = 1, 40 do
+		Advance(0.1)
+		if #W.hyperlinks > 0 then break end
+	end
+	Advance(0.5)
+	W.ownTrade = { linked = true, linkedName = "Brew Master", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	W.trade = W.ownTrade
+	Fire("TRADE_SKILL_SHOW")
+	Advance(0.2)
+	check(ProfessionsFrame:IsShown() and ProfessionsFrame:GetAlpha() == 1, "you open your own profession while a read is still waiting for its answer")
+	W.autoWorks = false
+	local closed = W.closed
+	local gone = false
+	for _ = 1, 60 do
+		Advance(0.1)
+		if not ProfessionsFrame:IsShown() or ProfessionsFrame:GetAlpha() < 1 then gone = true end
+	end
+	check(not gone and W.closed == closed, "the late answer never hides or closes your window", W.closed - closed)
+	check(W.openedLines and W.openedLines[#W.openedLines] == 171 and W.trade == W.ownTrade, "it is switched back to your own profession")
+	C_TradeSkillUI.CloseTradeSkill()
+	W.ownTrade, W.openedLines, W.replyDelay = nil, nil, nil
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	W.blizzShown = 0
+	W.autoWorks = true
+	W.replyDelay = 8
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	for _ = 1, 40 do
+		Advance(0.1)
+		if #W.hyperlinks > 0 then break end
+	end
+	Advance(3)
+	W.combat = true
+	Fire("PLAYER_REGEN_DISABLED")
+	Advance(10)
+	check(W.blizzShown == 0 and not ProfessionsFrame:IsShown(), "a late answer that lands in combat doesn't open the window", W.blizzShown)
+	W.combat = false
+	Fire("PLAYER_REGEN_ENABLED")
+	W.autoWorks, W.replyDelay = false, nil
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

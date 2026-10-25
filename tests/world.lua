@@ -145,7 +145,10 @@ function methods:SetHyperlink(link)
 			if data then
 				W.trade = { linked = true, linkedName = data.linkedName, prof = data.prof, recipes = data.recipes }
 				W.Fire("TRADE_SKILL_SHOW")
-				if ProfessionsFrame and not W.noFrame and W.UIHears() then ProfessionsFrame:Show() end
+				if ProfessionsFrame and not W.noFrame and W.UIHears() then
+					W.blizzShown = (W.blizzShown or 0) + 1
+					ProfessionsFrame:Show()
+				end
 				W.Fire("TRADE_SKILL_LIST_UPDATE")
 			elseif W.showEmpty and ProfessionsFrame then
 				ProfessionsFrame:Show()
@@ -487,6 +490,16 @@ local function InstallStubs()
 		end,
 		GetTradeSkillListLink = function()
 			if W.trade and not W.trade.linked then return "|cffffd000|Htrade:Player-1-ME:2259:171|h[Alchemy]|h|r" end
+		end,
+		OpenTradeSkill = function(line)
+			W.openedLines = W.openedLines or {}
+			table.insert(W.openedLines, line)
+			if W.ownTrade and W.ownTrade.prof.professionID == line then
+				W.trade = W.ownTrade
+				Fire("TRADE_SKILL_SHOW")
+				Fire("TRADE_SKILL_LIST_UPDATE")
+			end
+			return true
 		end,
 		CloseTradeSkill = function()
 			W.closed = W.closed + 1

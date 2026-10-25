@@ -1843,7 +1843,16 @@ do
 	for _, f in ipairs({ GetFramesRegisteredForEvent("TRADE_SKILL_SHOW") }) do
 		if f == ProfessionsFrame then back = true end
 	end
-	check(back, "the profession window hears profession events again", listens)
+	check(back or LI.Reader.Guarding(), "the profession window hears your own profession events again", listens)
+	C_TradeSkillUI.CloseTradeSkill()
+	back = false
+	for _, f in ipairs({ GetFramesRegisteredForEvent("TRADE_SKILL_SHOW") }) do
+		if f == ProfessionsFrame then back = true end
+	end
+	check(back and not LI.Reader.Guarding(), "and once you close it, it listens directly again")
+	W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	Advance(0.1)
 	Advance(6)
 	C_TradeSkillUI.CloseTradeSkill()
 	Advance(5)
@@ -2041,7 +2050,7 @@ do
 	check(not W.trade, "and it is closed unseen")
 	check(not W.UIHears(), "the window stays muted for a few seconds after a read")
 	ProfessionsFrame:Show()
-	check(W.UIHears(), "your hotkey or the micro button unmutes it at once")
+	check(W.UIHears() or LI.Reader.Guarding(), "your hotkey or the micro button unmutes it at once")
 	ProfessionsFrame:Hide()
 	Advance(20)
 	W.autoWorks = false
@@ -3855,6 +3864,79 @@ do
 	W.combat = false
 	Fire("PLAYER_REGEN_ENABLED")
 	W.autoWorks, W.replyDelay = false, nil
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	local saw = {}
+	ProfessionsFrame:RegisterEvent("TRADE_SKILL_SHOW")
+	ProfessionsFrame:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
+	ProfessionsFrame:SetScript("OnEvent", function(self, event)
+		local linked, name = C_TradeSkillUI.IsTradeSkillLinked()
+		saw[#saw + 1] = linked and name or "own"
+		if event == "TRADE_SKILL_SHOW" then self:Show() end
+	end)
+	W.autoWorks = true
+	W.replyDelay = 3
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	for _ = 1, 40 do
+		Advance(0.1)
+		if #W.hyperlinks > 0 then break end
+	end
+	Advance(0.5)
+	W.ownTrade = { linked = true, linkedName = "Brew Master", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	W.trade = W.ownTrade
+	Fire("TRADE_SKILL_SHOW")
+	Fire("TRADE_SKILL_LIST_UPDATE")
+	Advance(0.2)
+	check(ProfessionsFrame:IsShown() and #saw > 0 and (saw[#saw] == "own" or saw[#saw] == "Brew Master"), "your own profession opens and Blizzard's window gets your own data")
+	W.autoWorks = false
+	local closed = W.closed
+	local hidden = false
+	for _ = 1, 60 do
+		Advance(0.1)
+		if not ProfessionsFrame:IsShown() or ProfessionsFrame:GetAlpha() < 1 then hidden = true end
+	end
+	local foreign = 0
+	for _, who in ipairs(saw) do
+		if who ~= "own" and who ~= "Brew Master" then foreign = foreign + 1 end
+	end
+	check(foreign == 0, "a late answer about someone else never reaches your open window, not even for a moment", table.concat(saw, ","))
+	check(not hidden and W.closed == closed, "your window never blinks or closes")
+	check(W.trade == W.ownTrade, "and the game is back on your own profession")
+	local before = #saw
+	W.trade = W.ownTrade
+	Fire("TRADE_SKILL_LIST_UPDATE")
+	check(#saw == before + 1 and saw[#saw] ~= "Anna Smith", "updates to your own profession still reach the window, like after crafting")
+	W.clickWorks = true
+	W.linkData["trade:Player-1-CCC:2259:171"] = { linkedName = "Cora Vale", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	SetItemRef("trade:Player-1-CCC:2259:171", "[Alchemy]", "LeftButton")
+	Advance(1)
+	W.clickWorks = false
+	check(saw[#saw] == "Cora Vale", "a profession link you click still opens in the window", saw[#saw])
+	Advance(10)
+	W.trade = { linked = true, linkedName = "Cora Vale", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_LIST_UPDATE")
+	check(saw[#saw] == "Cora Vale", "and searching or filtering that book keeps working after the click")
+	local mark = #saw
+	W.trade = { linked = true, linkedName = "Bob Stone", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	Fire("TRADE_SKILL_LIST_UPDATE")
+	Advance(1)
+	check(#saw == mark, "while a third person's late answer stays out of it", saw[#saw])
+	C_TradeSkillUI.CloseTradeSkill()
+	local listens = false
+	for _, f in ipairs({ GetFramesRegisteredForEvent("TRADE_SKILL_LIST_UPDATE") }) do
+		if f == ProfessionsFrame then listens = true end
+	end
+	check(listens and not LI.Reader.Guarding(), "closing the window hands Blizzard its events back")
+	ProfessionsFrame:UnregisterEvent("TRADE_SKILL_SHOW")
+	ProfessionsFrame:UnregisterEvent("TRADE_SKILL_LIST_UPDATE")
+	W.ownTrade, W.openedLines, W.replyDelay = nil, nil, nil
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

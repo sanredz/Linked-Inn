@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gear Draft · Life on Azeroth</title>
+<title>Gear Draft · Linked Inn</title>
 <meta name="description" content="Draft a full set of Classic gear slot by slot, pick a Forever talent build, then see how high your DPS goes on the training dummy.">
 <link rel="canonical" href="https://lifeonazeroth.com/draft.html">
 <meta property="og:title" content="Gear Draft · Life on Azeroth">
@@ -37,8 +37,15 @@ a { color: inherit; }
 .brand b { font: 28px "Morpheus", serif; color: var(--gold); text-shadow: 0 2px 0 #000, 0 0 18px rgba(248, 211, 107, 0.25); white-space: nowrap; }
 .brand small { display: block; font-size: 12px; color: var(--muted); margin-top: -2px; }
 .tabs { display: flex; gap: 6px; margin-left: 14px; }
-.tab { display: flex; align-items: center; gap: 9px; padding: 7px 16px 7px 8px; border-radius: 8px; text-decoration: none; color: var(--ink-2); font: 15.5px "Friz", serif; border: 1px solid transparent; }
+.tab { display: flex; align-items: center; gap: 9px; padding: 7px 16px 7px 8px; border-radius: 8px; text-decoration: none; color: var(--ink-2); font: 19px "Morpheus", serif; border: 1px solid transparent; }
 .tab img { width: 32px; height: 32px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(248, 211, 107, 0.25); }
+.tab img.folg { object-fit: contain; padding: 2px; background: radial-gradient(circle at 50% 40%, #1f4440, #07110f 75%); }
+.right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.brand img { width: 46px; height: 46px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8)); }
+.hbtn { display: flex; align-items: center; gap: 8px; font: 16px "Morpheus", serif; color: var(--ink); text-decoration: none; padding: 7px 13px 7px 8px; border-radius: 8px; background: linear-gradient(rgba(40, 33, 22, 0.9), rgba(20, 16, 11, 0.95)); border: 1px solid #5a4620; box-shadow: inset 0 1px 0 rgba(255, 230, 160, 0.1); white-space: nowrap; }
+.hbtn img { width: 26px; height: 26px; border-radius: 5px; }
+.hbtn:hover { border-color: var(--gold-2); color: var(--gold); }
+.hbtn.get { color: #1a1206; background: linear-gradient(#ffe39a, #d5a548); border-color: #f3cf74; box-shadow: inset 0 1px 0 #fff3c4, 0 2px 8px rgba(0, 0, 0, 0.6); padding: 8px 14px; }
 .tab:hover { color: var(--ink); background: rgba(255, 255, 255, 0.04); }
 .tab.on { color: var(--gold); border-color: var(--line); background: linear-gradient(rgba(248, 211, 107, 0.14), rgba(248, 211, 107, 0.03)); }
 
@@ -233,6 +240,13 @@ body.arena #stage { cursor: default; }
   #rows { columns: 3; column-gap: 20px; }
   .grp { break-after: avoid; }
 }
+@media (max-width: 1320px) {
+  .hbtn span.t { display: none; }
+  .hbtn { padding: 6px; }
+  .tab { flex-direction: column; gap: 3px; padding: 5px 8px 4px; font-size: 13px; line-height: 1; }
+  .tab img { width: 30px; height: 30px; }
+  .tab span { white-space: nowrap; }
+}
 @media (max-width: 1100px) {
   .pick { grid-template-columns: minmax(0, 1fr); }
   .banner h1 { font-size: 50px; }
@@ -251,7 +265,8 @@ body.arena #stage { cursor: default; }
 @media (max-width: 760px) {
   .wrap { padding: 0 16px; }
   .top .wrap { height: auto; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; gap: 8px; }
-  .tabs { width: 100%; overflow-x: auto; }
+  .tabs { width: 100%; overflow-x: auto; order: 2; }
+  .hbtn.get { display: none; }
   .tab { flex-direction: column; gap: 3px; padding: 5px 8px 4px; font-size: 13px; }
   .banner { margin-top: 14px; }
   .banner .say { padding: 18px 20px; }
@@ -280,15 +295,20 @@ body.arena #stage { cursor: default; }
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="./#home"><span class="mark"><img src="assets/game/ui/inv_misc_book_09.png" alt=""></span><div><b>Life on Azeroth</b><small>The WoW: Forever census</small></div></a>
+    <a class="brand" href="./#home"><img src="assets/logo-small.png" alt=""><div><b>Linked Inn</b><small>Forever census</small></div></a>
     <nav class="tabs">
       <a class="tab" href="./#home"><img src="assets/game/ui/achievement_zone_elwynnforest.png" alt=""><span>Home</span></a>
       <a class="tab" href="./#crafting"><img src="assets/game/ui/inv_misc_bag_10.png" alt=""><span>Crafting</span></a>
       <a class="tab" href="./#duels"><img src="assets/game/ui/ability_parry.png" alt=""><span>Duels</span></a>
       <a class="tab" href="./#life"><img src="assets/game/ui/inv_misc_book_09.png" alt=""><span>Life</span></a>
       <a class="tab on" href="draft.html"><img src="assets/icons/132347.png" alt=""><span>Draft</span></a>
-      <a class="tab" href="./#archive"><img src="assets/game/ui/inv_misc_book_11.png" alt=""><span>Archive</span></a>
+      <a class="tab" href="./#open"><img class="folg" src="assets/forever-open-logo.png" alt=""><span>Forever Open</span></a>
     </nav>
+    <div class="right">
+      <a class="hbtn" href="./#home"><img src="assets/game/ui/inv_drink_04.png" alt=""><span class="t">Regulars</span></a>
+      <a class="hbtn" href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener"><img src="assets/game/ui/inv_misc_coin_02.png" alt=""><span class="t">Tip</span></a>
+      <a class="hbtn get" href="https://www.curseforge.com/wow/addons/linked-inn-profession-finder" target="_blank" rel="noopener">Get Linked Inn</a>
+    </div>
   </div>
 </header>
 <main class="wrap">

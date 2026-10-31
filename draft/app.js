@@ -1,5 +1,5 @@
-import * as C from './core.js';
-import { Stage } from './stage.js';
+import * as C from './core.js?v=20261101003147';
+import { Stage } from './stage.js?v=20261101003147';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -356,9 +356,9 @@ async function results() {
     last.id = out.id;
     last.token = out.token;
     $('rRank').innerHTML = `Rank <b>#${out.rank}</b> of ${out.of} overall · <b>#${out.classRank}</b> among ${C.CLASS_NAME[run.cls]}s`;
-  } catch {
+  } catch (e) {
     online = false;
-    $('rRank').textContent = 'The ranking is offline right now, so this run was not saved.';
+    $('rRank').textContent = /"error":"(build|run|seed)"/.test(e.message) ? 'This page is out of date, so the run was not saved. Press Ctrl+F5 and try again.' : 'The ranking is offline right now, so this run was not saved.';
     $('nameBox').hidden = true;
   }
   board(boardClass);
@@ -366,13 +366,15 @@ async function results() {
 
 async function saveName() {
   const name = $('nameIn').value.trim();
-  if (!last || !last.id || !name) return;
+  if (!last || !last.id || !name || last.named) return;
   try {
     await post('/name', { id: last.id, token: last.token, name });
+    last.named = true;
     $('saved').textContent = 'Saved.';
     board(boardClass);
-  } catch {
-    $('saved').textContent = 'That name did not save. Try another one.';
+  } catch (e) {
+    if (/"ok":false/.test(e.message)) { last.named = true; $('saved').textContent = 'Saved.'; return; }
+    $('saved').textContent = /"error":"name"/.test(e.message) ? 'Use 2 to 20 letters, numbers, spaces, or \' _ -. Some words are blocked.' : 'That name did not save. Try again.';
   }
 }
 
@@ -439,7 +441,7 @@ function restart() {
 }
 
 async function boot() {
-  [pool, gear, talents] = await Promise.all(['draft/pool.json', 'draft/gear.json', 'draft/talents.json'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents] = await Promise.all(['draft/pool.json?v=20261101003147', 'draft/gear.json?v=20261101003147', 'draft/talents.json?v=20261101003147'].map((f) => fetch(f).then((r) => r.json())));
   classGrid();
   $('mull').onclick = mulligan;
   $('again').onclick = restart;

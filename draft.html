@@ -229,12 +229,18 @@ body.arena #stage { cursor: default; }
 #hand { position: fixed; z-index: 35; display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: rgba(16, 13, 9, 0.98); border: 1px solid var(--gold); border-radius: 7px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7); font-size: 13px; color: var(--ink-2); }
 #hand button { min-height: 36px; padding: 4px 10px; color: #1a1206; background: linear-gradient(#ffe39a, #d5a548); border: 1px solid #f3cf74; border-radius: 6px; font-size: 13px; }
 #tip { position: fixed; left: 0; top: 0; z-index: 40; width: 300px; padding: 9px 11px; background: rgba(8, 10, 22, 0.96); border: 1px solid #5d6073; border-radius: 6px; font: 13px/1.3 "Segoe UI", system-ui, sans-serif; color: #fff; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6); }
-#tip b { display: block; font-size: 15px; font-weight: 600; }
-#tip .il { display: block; font-style: normal; color: #ffd100; }
-#tip .two { display: flex; justify-content: space-between; }
-#tip .eq { color: #1eff00; }
-#tip .off { color: #8a8a8a; }
-#tip .set { color: #ffd100; margin-top: 6px; }
+#sheet { position: fixed; inset: 0; z-index: 45; display: flex; flex-direction: column; justify-content: flex-end; background: rgba(4, 3, 2, 0.6); }
+#sheet .box { padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); background: rgba(8, 10, 22, 0.98); border-top: 2px solid var(--gold-2); border-radius: 12px 12px 0 0; }
+#sheetBody { max-height: 58vh; overflow-y: auto; font: 15px/1.35 "Segoe UI", system-ui, sans-serif; color: #fff; }
+#sheet .acts { display: flex; gap: 8px; margin-top: 12px; }
+#sheet .acts button { flex: 1; min-height: 48px; font-size: 16px; }
+#sheetClose { color: var(--ink-2); background: rgba(255, 255, 255, 0.06); border: 1px solid #5d6073; border-radius: 8px; }
+#tip b, #sheetBody b { display: block; font-size: 15px; font-weight: 600; }
+#tip .il, #sheetBody .il { display: block; font-style: normal; color: #ffd100; }
+#tip .two, #sheetBody .two { display: flex; justify-content: space-between; }
+#tip .eq, #sheetBody .eq { color: #1eff00; }
+#tip .off, #sheetBody .off { color: #8a8a8a; }
+#tip .set, #sheetBody .set { color: #ffd100; margin-top: 6px; }
 
 @media (max-width: 1280px) {
   .table { grid-template-columns: minmax(0, 1fr) 360px minmax(0, 1fr); }
@@ -258,8 +264,8 @@ body.arena #stage { cursor: default; }
 @media (max-width: 1040px) {
   .table { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 12px; }
   .mid { grid-column: 1 / -1; grid-row: 1; }
-  .stats { grid-row: 2; }
-  #left { grid-row: 3; } #right { grid-row: 3; }
+  #left { grid-row: 2; } #right { grid-row: 2; }
+  .stats { grid-row: 3; }
   .builds { grid-auto-flow: row; }
   .res { grid-template-columns: minmax(0, 1fr); }
   .res .left { border-right: 0; border-bottom: 1px solid var(--soft); }
@@ -424,6 +430,7 @@ body.arena #stage { cursor: default; }
 </main>
 <div id="hand" role="dialog" aria-label="Choose a hand" hidden></div>
 <div id="tip" hidden></div>
-<script type="module" src="draft/app.js?v=20261101003601"></script>
+<div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button id="sheetClose">Close</button></div></div></div>
+<script type="module" src="draft/app.js?v=20261101004153"></script>
 </body>
 </html>

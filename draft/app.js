@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261101003601';
-import { Stage } from './stage.js?v=20261101003601';
+import * as C from './core.js?v=20261101004153';
+import { Stage } from './stage.js?v=20261101004153';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -14,6 +14,7 @@ const PANE = [['head', 20, 76], ['neck', 20, 117], ['shoulder', 20, 158], ['back
   ['hands', 304, 76], ['waist', 304, 117], ['legs', 304, 158], ['feet', 304, 199], ['finger1', 304, 240], ['finger2', 304, 281], ['trinket1', 304, 322], ['trinket2', 304, 363],
   ['main', 120, 386], ['off', 162, 386], ['ranged', 204, 386]];
 const ART = { WARRIOR: 'art-warriorarms.jpg', PALADIN: 'art-priestholy.jpg', HUNTER: 'art-hunterbeastmastery.jpg', ROGUE: 'art-roguecombat.jpg', PRIEST: 'art-priestshadow.jpg', SHAMAN: 'art-shamanrestoration.jpg', MAGE: 'art-magefire.jpg', WARLOCK: 'art-magearcane.jpg', DRUID: 'art-druidferalcombat.jpg' };
+const touch = matchMedia('(hover: none)').matches;
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true;
@@ -76,6 +77,19 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('hand').hidden = true; });
 
+document.addEventListener('click', (e) => {
+  if (!touch || !e.target.closest) return;
+  const tal = e.target.closest('[data-tal]');
+  if (tal) {
+    e.stopPropagation();
+    e.preventDefault();
+    openSheet(taltip(tal.dataset.tal, tal.dataset.build));
+    return;
+  }
+  const worn = e.target.closest('.ps');
+  if (worn && +worn.dataset.item) openSheet(tooltip(worn.dataset.item));
+}, true);
+
 document.addEventListener('mousemove', (e) => {
   const t = $('tip');
   const tal = e.target.closest && e.target.closest('[data-tal]');
@@ -99,7 +113,7 @@ function buildDoll() {
   const cell = (s) => `<button class="slot" id="s_${s}" data-slot="${s}"><span class="ic"><img alt=""></span><span class="tx"><b></b><small>${name[s]}</small></span></button>`;
   $('left').innerHTML = left.map(cell).join('');
   $('right').innerHTML = right.map(cell).join('');
-  for (const b of document.querySelectorAll('.slot')) b.onclick = () => choose(b.dataset.slot);
+  for (const b of document.querySelectorAll('.slot')) b.onclick = () => (touch ? inspect(b.dataset.slot) : choose(b.dataset.slot));
   const art = (s) => ['finger1', 'finger2'].includes(s) ? 'finger' : ['trinket1', 'trinket2'].includes(s) ? 'trinket' : s;
   $('doll').innerHTML = PANE.map(([s, x, y]) => `<button class="ps" id="p_${s}" data-item="" style="left:calc(var(--u)*${x});top:calc(var(--u)*${y});background-image:url(assets/draft/ui/${art(s)}.png)" tabindex="-1"></button>`).join('');
   for (const s of ['shirt', 'tabard']) $('p_' + s).classList.add('dead');
@@ -214,6 +228,23 @@ function sheet() {
     ${s.bonuses.length ? `<div class="grp">Talent bonuses</div>${s.bonuses.map((x) => `<div class="bn">${esc(x)}</div>`).join('')}` : ''}`;
 }
 
+function openSheet(html, slot) {
+  $('sheetBody').innerHTML = html;
+  $('sheetKeep').hidden = !slot;
+  $('sheetKeep').onclick = () => { closeSheet(); choose(slot); };
+  $('sheet').hidden = false;
+}
+
+function closeSheet() {
+  $('sheet').hidden = true;
+}
+
+function inspect(slot) {
+  const id = +$('s_' + slot).dataset.item;
+  if (!id) return;
+  openSheet(tooltip(id), !spinning && run && offer[slot] === id && !(slot in run.picks) ? slot : null);
+}
+
 function askHand(slot) {
   const box = $('hand'), r = $('s_' + slot).getBoundingClientRect();
   box.innerHTML = `<span>Which hand?</span><button data-to="main">Main Hand</button><button data-to="off">Off Hand</button>`;
@@ -244,6 +275,7 @@ async function choose(slot, to) {
 
 function mulligan() {
   if (spinning || !run || !run.mulligan) return;
+  closeSheet();
   C.mulligan(pool, run);
   spin();
 }
@@ -441,9 +473,11 @@ function restart() {
 }
 
 async function boot() {
-  [pool, gear, talents] = await Promise.all(['draft/pool.json?v=20261101003601', 'draft/gear.json?v=20261101003601', 'draft/talents.json?v=20261101003601'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents] = await Promise.all(['draft/pool.json?v=20261101004153', 'draft/gear.json?v=20261101004153', 'draft/talents.json?v=20261101004153'].map((f) => fetch(f).then((r) => r.json())));
   classGrid();
   $('mull').onclick = mulligan;
+  $('sheetClose').onclick = closeSheet;
+  $('sheet').onclick = (e) => { if (e.target === $('sheet')) closeSheet(); };
   $('again').onclick = restart;
   $('nameGo').onclick = saveName;
   $('nameIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveName(); });

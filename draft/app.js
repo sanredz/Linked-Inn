@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261101003147';
-import { Stage } from './stage.js?v=20261101003147';
+import * as C from './core.js?v=20261101003601';
+import { Stage } from './stage.js?v=20261101003601';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -441,7 +441,7 @@ function restart() {
 }
 
 async function boot() {
-  [pool, gear, talents] = await Promise.all(['draft/pool.json?v=20261101003147', 'draft/gear.json?v=20261101003147', 'draft/talents.json?v=20261101003147'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents] = await Promise.all(['draft/pool.json?v=20261101003601', 'draft/gear.json?v=20261101003601', 'draft/talents.json?v=20261101003601'].map((f) => fetch(f).then((r) => r.json())));
   classGrid();
   $('mull').onclick = mulligan;
   $('again').onclick = restart;

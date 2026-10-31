@@ -19,6 +19,14 @@ const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true;
 
 const row = (id) => pool.items[id];
+const taltip = (id, build) => {
+  const n = talents.nodes[id], have = talents.builds[build][id] || 0;
+  return n ? `<b style="color:#ffd100">${esc(n[0])}</b><i class="il">Rank ${have}/${n[2]}</i><div>${esc(n[3][have] || n[3][n[2]] || '')}</div>` : '';
+};
+const talIcon = (id, build) => {
+  const n = talents.nodes[id];
+  return n ? `<img src="assets/icons/${n[1]}.png" alt="${esc(n[0])}" data-tal="${id}" data-build="${build}">` : '';
+};
 const icon = (id) => `assets/icons/${row(id)[4]}.png`;
 const wait = (ms) => new Promise((ok) => setTimeout(ok, calm ? Math.min(ms, 30) : ms));
 
@@ -69,8 +77,16 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('hand').hidden = true; });
 
 document.addEventListener('mousemove', (e) => {
-  const el = e.target.closest && e.target.closest('[data-item]');
   const t = $('tip');
+  const tal = e.target.closest && e.target.closest('[data-tal]');
+  if (tal) {
+    const key = 't' + tal.dataset.tal + tal.dataset.build;
+    if (t.dataset.id !== key) { t.innerHTML = taltip(tal.dataset.tal, tal.dataset.build); t.dataset.id = key; }
+    t.hidden = false;
+    positionTip(e);
+    return;
+  }
+  const el = e.target.closest && e.target.closest('[data-item]');
   if (!el || !+el.dataset.item) { t.hidden = true; return; }
   if (t.dataset.id !== el.dataset.item) { t.innerHTML = tooltip(el.dataset.item); t.dataset.id = el.dataset.item; }
   t.hidden = false;
@@ -190,7 +206,7 @@ function sheet() {
   const b = C.BUILDS[run.cls].find((x) => x.id === viewBuild);
   $('toggle').innerHTML = C.BUILDS[run.cls].map((x) => `<button role="radio" aria-checked="${x.id === viewBuild}" data-b="${x.id}">${esc(x.name)}<small>${x.split}</small></button>`).join('');
   for (const t of document.querySelectorAll('#toggle button')) t.onclick = () => { viewBuild = t.dataset.b; sheet(); };
-  $('tb').innerHTML = `${esc(b.blurb)}<div class="ti">${b.talents.map((t) => { const n = talents[t]; return n ? `<img src="assets/icons/${n[1]}.png" alt="${esc(n[0])}" title="${esc(n[0])}">` : ''; }).join('')}</div>`;
+  $('tb').innerHTML = `${esc(b.blurb)}<div class="ti">${b.talents.map((t) => talIcon(t, b.id)).join('')}</div>`;
   const school = s.school && s.schoolDmg !== s.now.sp ? `<div class="sr"><span>${s.school[0].toUpperCase() + s.school.slice(1)} Damage</span><b>${s.schoolDmg}</b></div>` : '';
   $('rows').innerHTML = `<div class="grp">Attributes</div>${statRow('Strength', 'str', s)}${statRow('Agility', 'agi', s)}${statRow('Stamina', 'sta', s)}${statRow('Intellect', 'int', s)}${statRow('Spirit', 'spi', s)}${statRow('Armor', 'armor', s)}
     <div class="grp">Melee and Ranged</div>${statRow('Attack Power', 'ap', s)}${statRow('Ranged Attack Power', 'rap', s)}${statRow('Crit', 'crit', s, '%')}${statRow('Hit', 'hit', s, '%')}${s.now.haste ? statRow('Attack Speed', 'haste', s, '%') : ''}
@@ -254,7 +270,7 @@ function talentsStep() {
     <button class="build" data-build="${b.id}">
       <span class="bh"><b>${esc(b.name)}</b><em>${b.split}</em></span>
       <span class="bl">${esc(b.blurb)}</span>
-      <span class="tl">${b.talents.map((t) => { const n = talents[t]; return n ? `<img src="assets/icons/${n[1]}.png" alt="${esc(n[0])}" title="${esc(n[0])}">` : ''; }).join('')}</span>
+      <span class="tl">${b.talents.map((t) => talIcon(t, b.id)).join('')}</span>
       ${key(b)}
       ${note(b) ? `<span class="nt">${note(b)}</span>` : ''}
     </button>`).join('');

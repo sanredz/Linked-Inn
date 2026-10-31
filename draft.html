@@ -147,7 +147,7 @@ h2 { margin: 0; flex: 1 0 auto; font: 26px "Morpheus", serif; color: var(--title
 .stats { border-radius: 8px; background: rgba(0, 0, 0, 0.42); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); padding: 10px 12px 12px; }
 .stats h3 { margin: 0; font: 21px "Morpheus", serif; color: var(--gold); text-shadow: 0 2px 0 #000; }
 .tgl-l { color: var(--ink-2); font-size: 12.5px; margin-top: 6px; }
-.toggle { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 5px; border: 1px solid var(--gold-2); border-radius: 7px; overflow: hidden; }
+.toggle { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); margin-top: 5px; border: 1px solid var(--gold-2); border-radius: 7px; overflow: hidden; }
 .toggle button { min-height: 46px; padding: 5px 4px; background: rgba(0, 0, 0, 0.45); border: 0; border-left: 1px solid var(--gold-dim); color: var(--ink-2); font-size: 12.5px; line-height: 1.1; }
 .toggle button:first-child { border-left: 0; }
 .toggle button small { display: block; color: var(--muted); font-size: 10.5px; margin-top: 2px; }
@@ -190,7 +190,7 @@ body.arena #stage { cursor: default; }
 .modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(6, 5, 3, 0.8); overflow: auto; }
 .modal > .frame { width: min(1060px, 100%); }
 .lead { margin: 0 0 12px; color: var(--ink-2); }
-.builds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.builds { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 12px; }
 .build { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 9px; padding: 14px; text-align: left; border: 0; border-radius: 9px; background: #120f0a; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); transition: transform .12s, box-shadow .12s; }
 .build::before { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(10, 8, 5, 0.45), rgba(10, 8, 5, 0.95) 55%), var(--art) center 25% / cover; }
 .build > * { position: relative; z-index: 1; }
@@ -258,7 +258,8 @@ body.arena #stage { cursor: default; }
   .mid { grid-column: 1 / -1; grid-row: 1; }
   .stats { grid-row: 2; }
   #left { grid-row: 3; } #right { grid-row: 3; }
-  .builds, .res { grid-template-columns: minmax(0, 1fr); }
+  .builds { grid-auto-flow: row; }
+  .res { grid-template-columns: minmax(0, 1fr); }
   .res .left { border-right: 0; border-bottom: 1px solid var(--soft); }
   .bl { min-height: 0; }
 }
@@ -336,8 +337,8 @@ body.arena #stage { cursor: default; }
         </ul>
         <details class="how">
           <summary>How the score works</summary>
-          <p>Your character fights a dummy for two minutes, 12 times over, with no raid buffs or consumables. The dummy has 2,000 armor and the hit, dodge, glancing and crit rules of a boss three levels above you. Gear stats, hit, crit, weapon skill, set bonuses, item procs and Use items all count.</p>
-          <p>Rotations are simplified and Forever talent values are estimates until the game launches. Items come from Classic Era for now. Forever's own items join once their data is public.</p>
+          <p>Your character fights a dummy for two minutes, 12 times over, with no raid buffs or consumables. The dummy has 3,731 armor and the hit, dodge, glancing and crit rules of a boss three levels above you. Casters can run out of mana, just like in game. Gear stats, hit, crit, weapon skill, set bonuses, item procs and Use items all count.</p>
+          <p>Builds come from Wowhead's Forever guides. Ability numbers are Classic Era, to match the Classic items, with Forever talents on top. Abilities new to Forever use estimated values, and rotations are simplified. Items come from Classic Era for now. Forever's own items join once their data is public.</p>
         </details>
       </div>
     </div></div>

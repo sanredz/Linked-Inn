@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261101025322';
-import { Stage } from './stage.js?v=20261101025322';
+import * as C from './core.js?v=20261101111246';
+import { Stage } from './stage.js?v=20261101111246';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -17,9 +17,31 @@ const ART = { WARRIOR: 'art-warriorarms.jpg', PALADIN: 'art-priestholy.jpg', HUN
 const touch = matchMedia('(hover: none)').matches;
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+const prettyKey = (key) => key.match(/.{4}/g).join('-');
+function saveKey(key) {
+  try { localStorage.setItem('draftKey', key); } catch {}
+  return key;
+}
+function loadKey() {
+  let key = null;
+  try { key = localStorage.getItem('draftKey'); } catch {}
+  return key || saveKey([...crypto.getRandomValues(new Uint32Array(16))].map((n) => ALPHABET[n % ALPHABET.length]).join(''));
+}
+
+function remember(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+function note(key) {
+  try { localStorage.setItem(key, '1'); } catch {}
+}
+const pageUrl = () => location.origin + location.pathname;
+
+let playerKey = loadKey(), histRows = [], histSort = 'new', histOpen = 0, openPicks = {}, shareId = '', retired = {};
+let sharedRows = [], sharedOpen = 0, replayRun = null, replayStep = 0, replayBack = 'pick', replayWorn = {}, dressed = {}, dressing = Promise.resolve(), everything;
 let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true;
 
-const row = (id) => pool.items[id];
+const row = (id) => pool.items[id] || retired[id];
 const taltip = (id, build) => {
   const n = talents.nodes[id], have = talents.builds[build][id] || 0;
   return n ? `<b style="color:#ffd100">${esc(n[0])}</b><i class="il">Rank ${have}/${n[2]}</i><div>${esc(n[3][have] || n[3][n[2]] || '')}</div>` : '';
@@ -52,7 +74,7 @@ function tooltip(id) {
   if (s.sp && !lines.some((l) => /damage/.test(l))) h += `<div class="eq">Equip: Increases damage and healing done by magical spells and effects by up to ${s.sp}.</div>`;
   const set = setId && pool.sets[setId];
   if (set) {
-    const have = set.i.filter((i) => Object.values(run ? run.picks : {}).includes(i)).length;
+    const have = set.i.filter((i) => Object.values(['pick', 'shared', 'replay'].includes(document.body.dataset.view) ? openPicks : run ? run.picks : {}).includes(i)).length;
     h += `<div class="set">${esc(set.n)} (${have}/${set.i.length})</div>`;
     for (const [need, , text] of set.b) if (text) h += `<div class="${have >= need ? 'eq' : 'off'}">(${need}) Set: ${esc(text)}</div>`;
   }
@@ -122,6 +144,7 @@ function buildDoll() {
 function fillPane(slot, id, from) {
   const el = $('p_' + slot), r = row(id);
   const finish = () => {
+    if (replayRun && replayWorn[slot] !== id) return;
     el.innerHTML = `<img src="${icon(id)}" alt="">`;
     el.dataset.item = id;
     el.style.setProperty('--q', QUALITY[r[1]]);
@@ -138,6 +161,13 @@ function fillPane(slot, id, from) {
     f.style.transform = `translate(${b.left - a.left - 4}px,${b.top - a.top - 4}px) scale(.8)`;
   }));
   setTimeout(() => { f.remove(); finish(); }, 390);
+}
+
+function emptyPane(slot) {
+  const el = $('p_' + slot);
+  el.innerHTML = '';
+  el.dataset.item = '';
+  el.classList.remove('on', 'land');
 }
 
 function paint(slot, id, state) {
@@ -157,8 +187,9 @@ function paint(slot, id, state) {
     b.textContent = state === 'blocked' ? 'Two-hand weapon' : '';
     el.style.removeProperty('--q');
   }
-  const hand = id && (slot === 'main' || slot === 'off') ? `${INV[row(id)[3]]} · ` : '';
-  el.querySelector('small').textContent = id ? `${hand}${C.TIER_NAME[tierOf(slot, id)] || ''}${state === 'kept' ? ' · kept' : ''}` : Object.fromEntries(C.SLOTS)[slot];
+  const hand = id && (slot === 'main' || slot === 'off') ? INV[row(id)[3]] : '';
+  const notes = [hand, id && C.TIER_NAME[tierOf(slot, id)], state === 'kept' ? 'kept' : state === 'took' ? 'kept this round' : ''];
+  el.querySelector('small').textContent = id ? notes.filter(Boolean).join(' · ') : Object.fromEntries(C.SLOTS)[slot];
 }
 
 function tierOf(slot, id) {
@@ -216,7 +247,7 @@ function statRow(label, key, s, unit = '') {
 }
 
 function sheet() {
-  const s = C.sheet(pool, run.cls, viewBuild, run.picks), hasMana = s.now.mana > 0;
+  const s = C.sheet(everything, run.cls, viewBuild, run.picks), hasMana = s.now.mana > 0;
   const b = C.BUILDS[run.cls].find((x) => x.id === viewBuild);
   $('toggle').innerHTML = C.BUILDS[run.cls].map((x) => `<button role="radio" aria-checked="${x.id === viewBuild}" data-b="${x.id}">${esc(x.name)}<small>${x.split}</small></button>`).join('');
   for (const t of document.querySelectorAll('#toggle button')) t.onclick = () => { viewBuild = t.dataset.b; sheet(); };
@@ -371,6 +402,11 @@ async function post(path, body) {
   return r.json();
 }
 
+function statSpans(s, build) {
+  const list = build.kit.kind === 'caster' ? [['Spell Damage', s.sp], ['Spell Crit', s.scrit + '%'], ['Spell Hit', s.shit + '%'], ['Intellect', s.int]] : [['Attack Power', build.kit.kind === 'ranged' ? s.rap : s.ap], ['Crit', s.crit + '%'], ['Hit', s.hit + '%'], ['Agility', s.agi]];
+  return list.map(([k, v]) => `<span><i>${k}</i>${v}</span>`).join('');
+}
+
 async function results() {
   show('result');
   const { res, build } = last;
@@ -380,26 +416,32 @@ async function results() {
   const top = Object.entries(res.by).sort((a, b) => b[1] - a[1]).slice(0, 7);
   $('rBy').innerHTML = top.map(([n, v]) => `<div class="br"><span>${esc(n)}</span><i style="width:${v}%"></i><b>${v}%</b></div>`).join('');
   $('rSets').innerHTML = res.sets.length ? res.sets.map(([n, c]) => `<div>${esc(n)} (${c})</div>`).join('') : '';
-  const s = res.sheet, magic = build.kit.kind === 'caster';
-  $('rSheet').innerHTML = (magic ? [['Spell Damage', s.sp], ['Spell Crit', s.scrit + '%'], ['Spell Hit', s.shit + '%'], ['Intellect', s.int]] : [['Attack Power', build.kit.kind === 'ranged' ? s.rap : s.ap], ['Crit', s.crit + '%'], ['Hit', s.hit + '%'], ['Agility', s.agi]]).map(([k, v]) => `<span><i>${k}</i>${v}</span>`).join('');
+  const s = res.sheet;
+  $('rSheet').innerHTML = statSpans(s, build);
   const auto = C.randomName(run.seed);
   $('nameIn').value = '';
   $('nameIn').placeholder = auto;
   $('saved').textContent = '';
+  $('rCode').hidden = true;
   $('rRank').textContent = 'Logging your run...';
   last.auto = auto;
   last.id = null;
   try {
-    const out = await post('/run', { cls: run.cls, seed: run.seed, sig, moves: run.moves, build: chosenBuild });
+    const out = await post('/run', { cls: run.cls, seed: run.seed, sig, moves: run.moves, build: chosenBuild, key: playerKey });
     last.id = out.id;
     last.token = out.token;
-    $('rRank').innerHTML = `Rank <b>#${out.rank}</b> of ${out.of} overall · <b>#${out.classRank}</b> among ${C.CLASS_NAME[run.cls]}s`;
+    if (!remember('draftCodeSaved')) {
+      $('rCodeText').textContent = prettyKey(playerKey);
+      $('rCode').hidden = false;
+    }
+    const spec = C.specOf(run.cls, chosenBuild);
+    $('rRank').innerHTML = `Rank <b>#${out.rank}</b> of ${out.of} overall · <b>#${out.classRank}</b> among ${C.CLASS_NAME[run.cls]}s${Object.keys(C.SPECS[run.cls]).length > 1 ? ` · <b>#${out.specRank}</b> in ${spec}` : ''}`;
   } catch (e) {
     online = false;
     $('rRank').textContent = /"error":"(build|run|seed)"/.test(e.message) ? 'This page is out of date, so the run was not saved. Press Ctrl+F5 and try again.' : 'The ranking is offline right now, so this run was not saved.';
     $('nameBox').hidden = true;
   }
-  board(boardClass);
+  board(run.cls, Object.keys(C.SPECS[run.cls]).length > 1 ? C.specOf(run.cls, chosenBuild) : '');
 }
 
 async function saveName() {
@@ -409,40 +451,275 @@ async function saveName() {
     await post('/name', { id: last.id, token: last.token, name });
     last.named = true;
     $('saved').textContent = 'Saved.';
-    board(boardClass);
+    board(boardClass, boardSpec);
   } catch (e) {
     if (/"ok":false/.test(e.message)) { last.named = true; $('saved').textContent = 'Saved.'; return; }
     $('saved').textContent = /"error":"name"/.test(e.message) ? 'Use 2 to 20 letters, numbers, spaces, or \' _ -. Some words are blocked.' : 'That name did not save. Try again.';
   }
 }
 
-let boardClass = 'ALL';
-async function board(cls) {
+function specRow(el, cls, classes) {
+  const names = Object.keys(C.SPECS[cls] || {});
+  const items = [...classes, ...(names.length > 1 ? names.map((s) => [cls, s, s]) : [])];
+  el.innerHTML = items.map(([c, s, label]) => `<button class="spec${c === boardClass && s === boardSpec ? ' on' : ''}" data-c="${c}" data-s="${esc(s)}">${esc(label)}</button>`).join('');
+  for (const b of el.children) b.onclick = () => board(b.dataset.c, b.dataset.s);
+}
+
+let boardClass = 'ALL', boardSpec = '', boardTicket = 0;
+async function board(cls, spec = '') {
   boardClass = cls;
+  boardSpec = spec;
+  const ticket = ++boardTicket, result = document.body.dataset.view === 'result';
   for (const b of document.querySelectorAll('#bFilter button')) b.classList.toggle('on', b.dataset.c === cls);
-  const el = $(document.body.dataset.view === 'result' ? 'boardResult' : 'board');
+  specRow($('bSpec'), cls, Object.keys(C.SPECS[cls] || {}).length > 1 ? [[cls, '', 'All specs']] : []);
+  if (result && run) specRow($('rSpec'), run.cls, [['ALL', '', 'All classes'], [run.cls, '', C.CLASS_NAME[run.cls]]]);
+  const el = $(result ? 'boardResult' : 'board');
   try {
-    const r = await fetch(`${API}/board?cls=${cls}`);
+    const r = await fetch(`${API}/board?cls=${cls}${spec ? `&spec=${encodeURIComponent(spec)}` : ''}`);
     if (!r.ok) throw 0;
     const d = await r.json();
+    if (ticket !== boardTicket) return;
     if (!d.rows.length) { el.innerHTML = '<div class="empty">No runs yet. Be the first on the board.</div>'; return; }
     el.innerHTML = d.rows.map((x, i) => {
       const b = (C.BUILDS[x.cls] || []).find((q) => q.id === x.build);
       return `<div class="rw${last && x.id === last.id ? ' me' : ''}"><span class="rk">${i + 1}</span><img src="assets/classes/${x.cls}.png" alt="${C.CLASS_NAME[x.cls]}"><span class="nm" style="color:${C.CLASS_COLOR[x.cls]}">${esc(x.name)}${x.auto ? '<em>random name</em>' : ''}</span><span class="bd">${b ? esc(b.name) : ''}</span><b>${(+x.dps).toFixed(1)}</b></div>`;
     }).join('');
   } catch {
-    el.innerHTML = '<div class="empty">The ranking could not be reached.</div>';
+    if (ticket === boardTicket) el.innerHTML = '<div class="empty">The ranking could not be reached.</div>';
   }
 }
 
-async function startClass(cls) {
-  show('draft');
+function runDetail(x) {
+  const build = C.BUILDS[x.cls].find((b) => b.id === x.build);
+  const res = C.simulate(pool, x.cls, x.build, x.picks, x.seed, 12);
+  const notes = x.swapped.map((s) => `${esc(s.from)} was removed from the draft, so this run now has ${s.to ? esc(row(s.to)[0]) : 'nothing'} in that slot.`);
+  if (x.orig_dps !== null && Math.abs(x.orig_dps - x.dps) >= .05) notes.unshift(`Scored ${(+x.orig_dps).toFixed(1)} under the old rules, rescored to ${(+x.dps).toFixed(1)}.`);
+  const names = Object.fromEntries(C.SLOTS);
+  const gear = C.SLOTS.filter(([s]) => x.picks[s]).map(([s]) => {
+    const id = x.picks[s];
+    return `<button class="hi" data-item="${id}"><img src="${icon(id)}" alt=""><span style="color:${QUALITY[row(id)[1]]}">${esc(row(id)[0])}<small>${names[s]}</small></span></button>`;
+  }).join('');
+  const top = Object.entries(res.by).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  return `<div class="hd">
+    <div class="hbuild">${esc(build.name)} · ${esc(build.split)}${x.auto ? '' : ` · ${esc(x.name)}`}<span class="hacts">${x.replay || x.draft ? `<button class="spec" data-watch="${x.id}">Watch the draft</button>` : ''}<button class="spec" data-link="${x.id}">Copy run link</button></span></div>
+    ${notes.length ? `<div class="hnotes">${notes.map((n) => `<div>${n}</div>`).join('')}</div>` : ''}
+    <div class="hgear">${gear}</div>
+    <div class="hside">
+      <div class="sheet" >${statSpans(res.sheet, build)}</div>
+      <div class="rc">${top.map(([n, v]) => `<div class="br"><span>${esc(n)}</span><i style="width:${v}%"></i><b>${v}%</b></div>`).join('')}</div>
+      ${res.sets.length ? `<div class="hsets">${res.sets.map(([n, c]) => `<div>${esc(n)} (${c})</div>`).join('')}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function wireDetail(el, back) {
+  for (const b of el.querySelectorAll('.hi')) b.onclick = () => { if (touch) openSheet(tooltip(+b.dataset.item)); };
+  for (const b of el.querySelectorAll('[data-watch]')) b.onclick = () => watch(+b.dataset.watch, back);
+  for (const b of el.querySelectorAll('[data-link]')) b.onclick = () => copyLink(b, `${pageUrl()}#run=${b.dataset.link}`, 'Copy run link');
+}
+
+async function copyLink(button, text, label) {
+  try { await navigator.clipboard.writeText(text); button.textContent = 'Copied'; } catch { button.textContent = 'Press and hold to copy'; }
+  setTimeout(() => { button.textContent = label; }, 1800);
+}
+
+function drawRows(el, rows, sort, openId, toggle, back) {
+  const open = rows.find((x) => x.id === openId);
+  openPicks = open ? open.picks : {};
+  const list = [...rows].sort(sort === 'best' ? (a, b) => b.dps - a.dps : (a, b) => b.id - a.id);
+  const when = (at) => new Date(at * 1000).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  el.innerHTML = list.map((x) => `<div class="hrow${x === open ? ' open' : ''}"><button class="hr" data-id="${x.id}" aria-expanded="${x === open}"><img src="assets/classes/${x.cls}.png" alt="${C.CLASS_NAME[x.cls]}"><span class="nm" style="color:${C.CLASS_COLOR[x.cls]}">${esc(C.specOf(x.cls, x.build) || C.CLASS_NAME[x.cls])} ${C.CLASS_NAME[x.cls]}<em>${when(x.at)}${x.auto ? '' : ` · ${esc(x.name)}`}</em></span>${x.swapped.length ? '<span class="tag">Item replaced</span>' : ''}<b>${(+x.dps).toFixed(1)}</b></button>${x === open ? runDetail(x) : ''}</div>`).join('');
+  for (const b of el.querySelectorAll('.hr')) b.onclick = () => toggle(+b.dataset.id);
+  wireDetail(el, back);
+}
+
+function drawHistory() {
+  const best = histRows.reduce((m, x) => Math.max(m, x.dps), 0);
+  $('hSum').textContent = histRows.length ? `${histRows.length} run${histRows.length === 1 ? '' : 's'} · best ${best.toFixed(1)}` : '';
+  for (const b of $('hSort').children) b.classList.toggle('on', b.dataset.o === histSort);
+  $('hSort').hidden = histRows.length < 2;
+  $('hShare').hidden = !histRows.length || !shareId;
+  if (!histRows.length) { $('hist').innerHTML = '<div class="empty">Your finished runs will show up here.</div>'; return; }
+  drawRows($('hist'), histRows, histSort, histOpen, (id) => { histOpen = histOpen === id ? 0 : id; drawHistory(); }, 'pick');
+}
+
+const readRun = (x) => ({ ...x, picks: JSON.parse(x.picks), swapped: x.swapped ? JSON.parse(x.swapped) : [], draft: x.draft ? JSON.parse(x.draft) : null });
+
+async function fetchRun(id) {
+  const r = await fetch(`${API}/one?id=${id}`);
+  if (!r.ok) throw new Error('missing');
+  return readRun((await r.json()).run);
+}
+
+async function watch(id, back) {
+  try {
+    replayRun = await fetchRun(id);
+  } catch { return; }
+  replayStep = 0;
+  replayBack = back;
+  replayWorn = {};
+  dressed = {};
+  offer = {};
+  const x = replayRun;
+  run = { cls: x.cls, picks: {} };
+  show('replay');
+  scrollTo(0, 0);
+  setTable(x.cls, x.build);
+  $('dTitle').textContent = `${x.auto ? '' : `${x.name}: `}${C.specOf(x.cls, x.build)} ${C.CLASS_NAME[x.cls]}`;
+  $('status').textContent = '';
+  drawReplay();
+  if (!stage) stage = new Stage($('stage'), gear);
+  stage.reset();
+  stage.resize();
+  await stage.setClass(x.cls);
+  if (replayRun === x) dress(replayWorn);
+}
+
+function dress(want) {
+  dressing = dressing.then(async () => {
+    if (want !== replayWorn) return;
+    if (Object.keys(dressed).some((s) => dressed[s] !== want[s])) {
+      dressed = {};
+      await stage.strip();
+    }
+    for (const [slot, id] of Object.entries(want)) {
+      if (want !== replayWorn) return;
+      if (dressed[slot] === id) continue;
+      dressed[slot] = id;
+      await stage.wear(slot, id, row(id));
+    }
+  }).catch(() => {});
+}
+
+function drawReplay() {
+  const x = replayRun, log = x.draft, step = log[replayStep], worn = {};
+  for (const [shown, move] of log.slice(0, replayStep + 1)) {
+    if (move === '!') continue;
+    const [slot, to = slot] = move.split('>');
+    worn[to] = shown[slot];
+  }
+  const [shown, move] = step || [{}, ''];
+  const [slot, to = slot] = move === '!' ? [] : move.split('>');
+  const taken = move && move !== '!' ? shown[slot] : 0;
+  const names = Object.fromEntries(C.SLOTS);
+  $('round').textContent = step ? `Round ${replayStep + 1} of ${log.length}` : `Finished at ${(+x.dps).toFixed(1)} DPS`;
+  $('rpSay').innerHTML = !step ? ['That is the whole draft.', ...x.swapped.map((c) => `${esc(c.from)} was later removed from the draft, so this run is now scored with ${c.to ? esc(row(c.to)[0]) : 'an empty slot'}.`)].join(' ') : move === '!' ? 'Used the mulligan, so every open slot rolled again.' : `Kept <span style="color:${QUALITY[row(taken)[1]]}">${esc(row(taken)[0])}</span>${to !== slot ? ` in the ${esc(names[to])} slot` : ''}.`;
+  replayWorn = worn;
+  openPicks = worn;
+  run.picks = worn;
+  for (const [s] of C.SLOTS) {
+    const id = s === slot ? taken : worn[s] || shown[s] || 0;
+    paint(s, id, !id ? 'blocked' : !step ? 'final' : s === slot ? 'took' : worn[s] ? 'kept' : move === '!' ? 'gone' : 'offer');
+    if (!worn[s]) { emptyPane(s); continue; }
+    if (+$('p_' + s).dataset.item !== worn[s]) fillPane(s, worn[s], s === to ? $('s_' + slot).querySelector('.ic') : null);
+  }
+  sheet();
+  $('tip').hidden = true;
+  $('rpPrev').disabled = replayStep === 0;
+  $('rpNext').disabled = replayStep === log.length;
+  if (stage && stage.rig) dress(worn);
+}
+
+function replayMove(by) {
+  replayStep = Math.max(0, Math.min(replayRun.draft.length, replayStep + by));
+  drawReplay();
+}
+
+function leaveReplay() {
+  replayRun = null;
+  run = null;
+  replayWorn = {};
+  $('dTitle').textContent = 'Gear Draft';
+  $('round').textContent = '';
+  document.body.style.removeProperty('--art');
+  show(replayBack);
+  if (replayBack === 'pick') drawHistory(); else if (sharedRows.length) drawShared(); else route();
+}
+
+function drawShared() {
+  drawRows($('shBody'), sharedRows, 'best', sharedOpen, (id) => { sharedOpen = sharedOpen === id ? 0 : id; drawShared(); }, 'shared');
+}
+
+async function showRun(id) {
+  sharedRows = [];
+  show('shared');
+  $('shTitle').textContent = 'Shared run';
+  $('shSum').textContent = '';
+  try {
+    const x = await fetchRun(id);
+    openPicks = x.picks;
+    $('shTitle').textContent = `${x.auto ? '' : `${x.name}: `}${C.specOf(x.cls, x.build)} ${C.CLASS_NAME[x.cls]}`;
+    $('shSum').textContent = `${(+x.dps).toFixed(1)} DPS`;
+    $('shBody').innerHTML = `<div class="hrow open">${runDetail(x)}</div>`;
+    wireDetail($('shBody'), 'shared');
+  } catch {
+    $('shBody').innerHTML = '<div class="empty">That run could not be found.</div>';
+  }
+}
+
+async function showShared(share) {
+  sharedRows = [];
+  sharedOpen = 0;
+  show('shared');
+  $('shTitle').textContent = 'Shared runs';
+  $('shSum').textContent = '';
+  try {
+    const r = await fetch(`${API}/shared?s=${share}`);
+    if (!r.ok) throw 0;
+    sharedRows = (await r.json()).rows.map(readRun);
+    $('shSum').textContent = `${sharedRows.length} run${sharedRows.length === 1 ? '' : 's'}`;
+    if (sharedRows.length) drawShared(); else $('shBody').innerHTML = '<div class="empty">No runs here yet.</div>';
+  } catch {
+    $('shBody').innerHTML = '<div class="empty">Those runs could not be found.</div>';
+  }
+}
+
+function route() {
+  const hash = location.hash, one = /^#run=(\d+)$/.exec(hash), many = /^#runs=([0-9a-f]{16})$/.exec(hash);
+  if (one) return showRun(+one[1]);
+  if (many) return showShared(many[1]);
+  show('pick');
+  board('ALL');
+  history();
+}
+
+async function history(from) {
+  $('hCode').textContent = prettyKey(playerKey);
+  try {
+    const d = await post('/history', { key: playerKey, from });
+    histRows = d.rows.map(readRun);
+    shareId = d.share;
+    drawHistory();
+  } catch {
+    $('hist').innerHTML = '<div class="empty">Your runs could not be reached.</div>';
+  }
+}
+
+function useCode() {
+  const key = $('hIn').value.replace(/[^0-9a-z]/gi, '').toUpperCase();
+  if (key.length !== 16 || [...key].some((c) => !ALPHABET.includes(c))) { $('hMsg').textContent = 'That is not a run code. It has 16 letters and numbers.'; return; }
+  const from = playerKey;
+  playerKey = saveKey(key);
+  $('hIn').value = '';
+  $('hMsg').textContent = 'Runs loaded.';
+  $('hUse').hidden = false;
+  $('hForm').hidden = true;
+  histOpen = 0;
+  history(from);
+}
+
+function setTable(cls, build) {
   document.body.style.setProperty('--cc', C.CLASS_COLOR[cls]);
   document.body.style.setProperty('--art', `url(assets/game/${ART[cls]})`);
   $('who').textContent = C.CLASS_NAME[cls];
   $('portrait').src = `assets/classes/${cls}.png`;
-  viewBuild = C.BUILDS[cls][0].id;
+  viewBuild = build;
   buildDoll();
+}
+
+async function startClass(cls) {
+  show('draft');
+  setTable(cls, C.BUILDS[cls][0].id);
   let seed = (Math.random() * 2 ** 32) >>> 0;
   sig = null;
   try {
@@ -474,21 +751,50 @@ function restart() {
   $('nameBox').hidden = false;
   document.body.classList.remove('arena');
   document.body.style.removeProperty('--art');
+  if (location.hash) clearHash();
   show('pick');
   board('ALL');
+  history();
+}
+
+function clearHash() {
+  window.history.replaceState(null, '', location.pathname);
 }
 
 async function boot() {
-  [pool, gear, talents] = await Promise.all(['draft/pool.json?v=20261101025322', 'draft/gear.json?v=20261101025322', 'draft/talents.json?v=20261101025322'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261101111246', 'draft/gear.json?v=20261101111246', 'draft/talents.json?v=20261101111246', 'draft/retired.json?v=20261101111246'].map((f) => fetch(f).then((r) => r.json())));
+  everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
+  $('noteLink').onclick = (e) => {
+    e.preventDefault();
+    $('notes').open = true;
+    $('notes').scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'center' });
+  };
   $('mull').onclick = mulligan;
   $('sheetClose').onclick = closeSheet;
   $('sheet').onclick = (e) => { if (e.target === $('sheet')) closeSheet(); };
   $('again').onclick = restart;
   $('nameGo').onclick = saveName;
   $('nameIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveName(); });
-  show('pick');
-  board('ALL');
+  for (const b of $('hSort').children) b.onclick = () => { histSort = b.dataset.o; drawHistory(); };
+  $('hUse').onclick = () => { $('hUse').hidden = true; $('hForm').hidden = false; $('hMsg').textContent = ''; $('hIn').focus(); };
+  $('hLoad').onclick = useCode;
+  $('hIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') useCode(); });
+  $('hCopy').onclick = () => { note('draftCodeSaved'); copyLink($('hCopy'), prettyKey(playerKey), 'Copy'); };
+  $('rCopy').onclick = () => { note('draftCodeSaved'); copyLink($('rCopy'), prettyKey(playerKey), 'Copy'); };
+  $('hShare').onclick = () => copyLink($('hShare'), `${pageUrl()}#runs=${shareId}`, 'Share my runs');
+  $('rpPrev').onclick = () => replayMove(-1);
+  $('rpNext').onclick = () => replayMove(1);
+  $('rpBack').onclick = leaveReplay;
+  $('shHome').onclick = restart;
+  addEventListener('hashchange', route);
+  document.addEventListener('keydown', (e) => {
+    if (!replayRun || document.body.dataset.view !== 'replay') return;
+    if (e.key === 'ArrowRight') replayMove(1);
+    if (e.key === 'ArrowLeft') replayMove(-1);
+  });
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  route();
 }
 
 boot();

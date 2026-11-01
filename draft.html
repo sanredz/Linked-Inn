@@ -67,6 +67,7 @@ h2 { margin: 0; flex: 1 0 auto; font: 26px "Morpheus", serif; color: var(--title
 
 .note { margin-top: 12px; padding: 8px 14px; border-radius: 8px; background: rgba(0, 0, 0, 0.45); border: 1px solid var(--gold-dim); color: var(--ink-2); font-size: 14px; }
 .note b { color: var(--gold); font-weight: normal; }
+.note a { color: var(--gold); }
 .pick { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; margin-top: 18px; align-items: start; }
 .classes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .cls { position: relative; overflow: hidden; display: flex; align-items: flex-end; gap: 10px; min-height: 116px; padding: 10px 12px; text-align: left; border: 0; border-radius: 9px; background: #120f0a; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.5); transition: transform .12s, box-shadow .12s; }
@@ -82,6 +83,10 @@ h2 { margin: 0; flex: 1 0 auto; font: 26px "Morpheus", serif; color: var(--title
 .steps b { display: block; font: 18px "Morpheus", serif; color: var(--gold); }
 .how { margin-top: 12px; color: var(--ink-2); font-size: 13.5px; }
 .how summary { cursor: pointer; color: var(--gold-2); padding: 3px 0; }
+.how.notes { margin-bottom: 4px; }
+.how.notes p { margin-bottom: 2px; }
+.how.notes ul { margin: 0 0 8px; padding-left: 18px; color: var(--ink-2); font-size: 14px; }
+.how.notes b { font-weight: normal; color: var(--gold); }
 .how p { margin: 6px 0 0; }
 
 .chips { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -89,6 +94,61 @@ h2 { margin: 0; flex: 1 0 auto; font: 26px "Morpheus", serif; color: var(--title
 .chip img { width: 100%; height: 100%; }
 .chip:hover { opacity: 1; border-color: var(--gold-dim); }
 .chip.on { opacity: 1; color: var(--gold); border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 0 8px rgba(248, 211, 107, 0.45); }
+.specs { display: flex; gap: 4px; flex-wrap: wrap; padding: 10px 14px 0; }
+.specs:empty { display: none; }
+.spec { height: 30px; padding: 0 10px; border-radius: 6px; font: 13px/28px "Friz", serif; color: var(--ink-2); background: rgba(0, 0, 0, 0.45); border: 1px solid #4a3a1c; opacity: .72; transition: opacity .1s; }
+.spec:hover { opacity: 1; border-color: var(--gold-dim); }
+.spec.on { opacity: 1; color: var(--gold); border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.pick > .wide { grid-column: 1 / -1; }
+.showcase { margin-top: 18px; }
+.showcase .acts { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.rpsay { padding: 12px 20px 0; color: var(--ink-2); font-size: 15.5px; }
+.rpacts { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+body[data-view="replay"] .slot { cursor: default; }
+body[data-view="replay"] .slot:hover { filter: none; box-shadow: none; }
+.slot.took, body[data-view="replay"] .slot.took:hover { border-color: var(--gold); background: rgba(248, 211, 107, 0.12); box-shadow: 0 0 10px rgba(248, 211, 107, 0.3); }
+.slot.gone { opacity: .5; }
+.hbuild { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.hacts { display: flex; gap: 6px; margin-left: auto; }
+#rCode { margin-top: 10px; padding: 8px 10px; border-left: 2px solid var(--gold-dim); background: rgba(0, 0, 0, 0.3); color: var(--ink-2); font-size: 13.5px; }
+#rCode[hidden] { display: none; }
+#rCode code { margin: 0 8px; font: 14.5px "Friz", serif; letter-spacing: .05em; color: var(--gold); }
+.hsum { color: var(--ink-2); font-size: 14px; }
+.hsort { margin-left: auto; display: flex; gap: 4px; }
+.hsort[hidden] { display: none; }
+.hist { padding: 10px 14px; max-height: 620px; overflow-y: auto; scrollbar-color: var(--gold-dim) transparent; }
+.hrow + .hrow { margin-top: 3px; }
+.hrow { border-radius: 7px; }
+.hrow:nth-child(odd) { background: rgba(255, 255, 255, 0.035); }
+.hrow.open { background: rgba(0, 0, 0, 0.35); box-shadow: inset 0 0 0 1px var(--gold-dim); }
+.hr { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 6px 12px; text-align: left; background: none; border: 0; border-radius: 7px; color: inherit; font: inherit; cursor: pointer; }
+.hr:hover { background: rgba(248, 211, 107, 0.08); }
+.hr img { width: 30px; height: 30px; border-radius: 6px; box-shadow: 0 0 0 1px #000; }
+.hr .nm { flex: 1; }
+.hr b { font-weight: normal; font-size: 17px; color: var(--gold); font-variant-numeric: tabular-nums; }
+.tag { padding: 1px 7px; border-radius: 5px; font-size: 12px; color: var(--gold-2); border: 1px solid var(--gold-dim); white-space: nowrap; }
+.hd { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 10px 22px; padding: 6px 14px 16px; }
+.hbuild, .hnotes { grid-column: 1 / -1; }
+.hbuild { color: var(--ink-2); font-size: 14px; }
+.hnotes { padding: 7px 10px; border-left: 2px solid var(--gold-dim); background: rgba(0, 0, 0, 0.3); color: var(--ink-2); font-size: 13.5px; }
+.hgear { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 10px; align-content: start; }
+.hi { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 40px; padding: 3px 6px; text-align: left; background: none; border: 0; border-radius: 6px; font: inherit; font-size: 14px; }
+.hi:hover { background: rgba(255, 255, 255, 0.05); }
+.hi img { width: 30px; height: 30px; border-radius: 5px; box-shadow: 0 0 0 1px #000; }
+.hi span { min-width: 0; line-height: 1.2; overflow-wrap: anywhere; }
+.hi small { display: block; color: var(--muted); font-size: 11.5px; }
+.hside { display: grid; gap: 12px; align-content: start; }
+.hside .sheet { display: flex; flex-wrap: wrap; gap: 4px 14px; color: #fff; font-size: 14px; }
+.hside .sheet i { margin-right: 5px; font-style: normal; color: var(--muted); }
+.hsets { color: #ffd100; font-size: 13px; }
+.hcode { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 11px 20px 14px; border-top: 1px solid var(--soft); color: var(--ink-2); font-size: 13.5px; }
+.hcode p { flex: 1 1 280px; margin: 0; }
+.hcode code { font: 15px "Friz", serif; letter-spacing: .05em; color: var(--gold); }
+.hform { display: flex; gap: 6px; flex: 1 1 100%; }
+.hform[hidden] { display: none; }
+.hform input { flex: 1; min-width: 0; min-height: 40px; padding: 0 10px; color: #fff; font: inherit; background: rgba(0, 0, 0, 0.45); border: 1px solid var(--gold-dim); border-radius: 8px; }
+#hMsg { flex: 1 1 100%; color: var(--gold-2); }
+#hMsg:empty { display: none; }
 .board { padding: 10px 14px 14px; max-height: 620px; overflow-y: auto; scrollbar-color: var(--gold-dim) transparent; }
 .rw { display: grid; grid-template-columns: 38px 30px minmax(0, 1fr) auto 76px; gap: 10px; align-items: center; min-height: 44px; padding: 5px 10px; border-radius: 7px; font-size: 15.5px; }
 .rw + .rw { margin-top: 3px; }
@@ -292,6 +352,14 @@ body.arena #stage { cursor: default; }
   #left .slot .ic { order: 0; }
   .rw { grid-template-columns: 28px 26px minmax(0, 1fr) 64px; gap: 8px; font-size: 14.5px; }
   .rw .bd { display: none; }
+  .hd { grid-template-columns: minmax(0, 1fr); padding: 6px 10px 14px; }
+  .hgear { grid-template-columns: minmax(0, 1fr); }
+  .hist { padding: 8px 8px 10px; }
+  .hcode { padding: 10px 14px 14px; }
+  .showcase h2, body[data-view="replay"] .draft h2 { min-width: 0; white-space: normal; overflow-wrap: anywhere; font-size: 24px; }
+  .rpacts { margin-left: 0; }
+  .rpsay { padding: 10px 14px 0; }
+  .hacts { margin-left: 0; }
   .rw img { width: 26px; height: 26px; }
   .br { grid-template-columns: 96px minmax(0, 1fr) 42px; }
   #dps, body.arena #dps { font-size: 48px; }
@@ -332,7 +400,7 @@ body.arena #stage { cursor: default; }
     </div>
   </section>
 
-  <div class="note" data-screen="pick" hidden><b>Note:</b> Holy Paladin may not be working properly right now. It's being looked into.</div>
+  <div class="note" data-screen="pick" hidden><b>Update:</b> The fight sim has changed to be more accurate, and all runs have been re-simmed. <a href="#notes" id="noteLink">More in the patch notes</a>.</div>
 
   <section class="pick" data-screen="pick" hidden>
     <div class="frame"><div class="in slab">
@@ -345,26 +413,71 @@ body.arena #stage { cursor: default; }
           <li><b>Talents</b>Pick one of three Forever builds.</li>
           <li><b>Hit the dummy</b>Your DPS goes on the board.</li>
         </ul>
+        <details class="how notes" id="notes">
+          <summary>Patch notes</summary>
+          <p><b>New</b></p>
+          <ul>
+            <li>Filter the board by spec.</li>
+            <li>Your Runs keeps every run you finish, with its gear and damage breakdown.</li>
+            <li>Watch the draft: step through a run and see each item go on the character.</li>
+            <li>Share a link to one run or to all of your runs.</li>
+          </ul>
+          <p><b>Fight changes</b></p>
+          <ul>
+            <li>Warrior rage now follows Forever: it comes from swing speed and crits, not damage. Slam and Overpower also match Forever.</li>
+            <li>Life Tap now costs health, so Warlocks can run out of mana.</li>
+            <li>Mages now use Evocation and a Mana Ruby.</li>
+            <li>Hunter pets now take armor reduction.</li>
+            <li>A queued Heroic Strike or Raptor Strike no longer cancels the dual-wield miss penalty.</li>
+          </ul>
+          <p><b>Items</b></p>
+          <ul>
+            <li>Andonisus, Reaper of Souls is gone. It only lasts 5 minutes in the game, so it was never real loot.</li>
+          </ul>
+          <p><b>Old runs</b></p>
+          <ul>
+            <li>Every run was re-scored with the new rules, so old and new runs compete fairly.</li>
+            <li>Runs that had a removed item got the next best item in that slot.</li>
+          </ul>
+        </details>
         <details class="how">
           <summary>How the score works</summary>
-          <p>Your character fights a dummy for two minutes, 12 times over, with no raid buffs or consumables. The dummy has 3,731 armor and the hit, dodge, glancing and crit rules of a boss three levels above you. Casters can run out of mana, just like in game. Gear stats, hit, crit, weapon skill, set bonuses, item procs and Use items all count.</p>
+          <p>Your character fights a dummy for two minutes, 12 times over, with no raid buffs or consumables. The dummy has 3,731 armor and the hit, dodge, glancing and crit rules of a boss three levels above you. Casters can run out of mana, just like in game. Life Tap costs health and nobody heals you, and Mages get one Evocation and one Mana Ruby. Warrior rage uses Forever's normalized rules: it comes from swing speed and crits, not damage. Gear stats, hit, crit, weapon skill, set bonuses, item procs and Use items all count.</p>
           <p>Builds come from Wowhead's Forever guides. Ability numbers are Classic Era, to match the Classic items, with Forever talents on top. Abilities new to Forever use estimated values, and rotations are simplified. Items come from Classic Era for now. Forever's own items join once their data is public.</p>
         </details>
       </div>
     </div></div>
     <div class="frame"><div class="in slab">
       <div class="head"><h2>The Board</h2><div class="chips" id="bFilter"></div></div>
+      <div class="specs" id="bSpec"></div>
       <div class="board" id="board"></div>
+    </div></div>
+    <div class="frame wide"><div class="in slab">
+      <div class="head"><h2>Your Runs</h2><span class="hsum" id="hSum"></span><div class="hsort" id="hSort" hidden><button class="spec on" data-o="new">Newest</button><button class="spec" data-o="best">Best</button></div></div>
+      <div class="hist" id="hist"></div>
+      <div class="hcode">
+        <p><b>Recovery code.</b> Keep this private. It brings your runs back after clearing your browser, or on another device. To show people your runs, send the share link instead.</p>
+        <code id="hCode"></code><button class="spec" id="hCopy">Copy</button><button class="spec" id="hUse">Load a code</button><button class="spec" id="hShare" hidden>Share my runs</button>
+        <div class="hform" id="hForm" hidden><input id="hIn" maxlength="24" aria-label="Run code" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off"><button class="go" id="hLoad">Load runs</button></div>
+        <div id="hMsg"></div>
+      </div>
     </div></div>
   </section>
 
-  <section class="frame draft" data-screen="draft talents fight result" hidden>
+  <section class="frame showcase" data-screen="shared" hidden><div class="in slab">
+    <div class="head"><h2 id="shTitle"></h2><span class="hsum" id="shSum"></span><div class="acts"><button class="spec" id="shHome">Draft your own</button></div></div>
+    <div class="hist" id="shBody"></div>
+  </div></section>
+
+  <section class="frame draft" data-screen="draft talents fight result replay" hidden>
     <div class="in slab">
       <div class="head">
-        <h2>Gear Draft</h2>
+        <h2 id="dTitle">Gear Draft</h2>
         <span class="hnote" id="round"></span>
         <button class="go" id="mull" data-screen="draft">Mulligan (1 left)</button>
+        <div class="rpacts" data-screen="replay" hidden><button class="spec" id="rpPrev">Previous</button><button class="spec" id="rpNext">Next</button><button class="spec" id="rpBack">Back</button></div>
       </div>
+      <div class="rpsay" id="rpSay" data-screen="replay" hidden></div>
       <div class="table">
         <div class="col" id="left"></div>
         <div class="mid">
@@ -415,6 +528,7 @@ body.arena #stage { cursor: default; }
         <div id="nameBox">
           <div class="namebox"><input id="nameIn" maxlength="20" aria-label="Name for the board"><button class="go" id="nameGo">Save name</button></div>
           <div id="saved"></div>
+          <div id="rCode" hidden>Save your recovery code to keep your runs:<code id="rCodeText"></code><button class="spec" id="rCopy">Copy</button></div>
         </div>
         <div class="sh" id="rSheet"></div>
         <div class="rc" id="rBy"></div>
@@ -423,6 +537,7 @@ body.arena #stage { cursor: default; }
       </div>
       <div>
         <div class="head"><h2>The Board</h2></div>
+        <div class="specs" id="rSpec"></div>
         <div class="board" id="boardResult"></div>
       </div>
     </div></div>
@@ -431,6 +546,6 @@ body.arena #stage { cursor: default; }
 <div id="hand" role="dialog" aria-label="Choose a hand" hidden></div>
 <div id="tip" hidden></div>
 <div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button class="go" id="sheetMain" hidden>Main Hand</button><button class="go" id="sheetOff" hidden>Off Hand</button><button id="sheetClose">Close</button></div></div></div>
-<script type="module" src="draft/app.js?v=20261101025322"></script>
+<script type="module" src="draft/app.js?v=20261101111246"></script>
 </body>
 </html>

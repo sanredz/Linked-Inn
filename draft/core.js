@@ -1,4 +1,4 @@
-export const VERSION = 1;
+export const VERSION = 2;
 export const FIGHT = 120;
 export const ROUNDS = 16;
 export const SLOTS = [
@@ -27,6 +27,8 @@ const BASE = {
 };
 
 const TARGET_ARMOR = 3731;
+const RAGE = 3.46, RAGE_TWO = 1.3, RAGE_OFF = .5, RAGE_CRIT = 2;
+const LOCK_HP = 1414, TAP = 424, EVOCATION = 8;
 const DW_MISS = 19, GLANCE = 40, CRIT_AURA = 3, SPELL_MISS = 17, SPELL_RESIST = .94, PROC_PPM = 1.5, BASE_SKILL = 300, BOSS_DEFENSE = 315;
 
 const WARRIOR_MASTERY = { crit: [0, 1, 6], pen: [4, 5, 10], extra: [7, 8] };
@@ -37,12 +39,12 @@ const caster = (o) => ({ kind: 'caster', ...o });
 
 export const BUILDS = {
   WARRIOR: [
-    { id: 'arms', name: 'Arms', split: '39/10/2', blurb: "Rend, Mortal Strike, Slam and Overpower with a two-hander.", talents: [105941, 105947, 105948, 105950, 105944, 105939], wants: '2H', kit: melee({ res: 'rage', crit: 5, critMult: .2, dmg: { two: 1.03 }, deep: .6, rageHit: .6, master: WARRIOR_MASTERY,
-      abilities: [{ n: 'Rend', dot: { ticks: 7, every: 3, dmg: 21 }, cost: 10, cd: 21, mult: 1.35 }, { n: 'Mortal Strike', weapon: 1, flat: 160, cost: 30, cd: 6 }, { n: 'Overpower', weapon: 1, flat: 35, cost: 5, cd: 12, crit: 50 }, { n: 'Slam', weapon: 1, flat: 87, cost: 15, cd: 6 }, { n: 'Heroic Strike', queue: 1, flat: 157, cost: 12, above: 40 }] }) },
-    { id: 'fury', name: 'Fury (Raid)', split: '19/32/0', blurb: "Bloodthirst, Whirlwind and Heroic Strike with two weapons.", talents: [105930, 105928, 105933, 105939, 105927], kit: melee({ res: 'rage', crit: 5, critMult: .2, deep: .6, rageHit: .6, flurry: .25, offMult: .75, ohHit: 10,
-      abilities: [{ n: 'Death Wish', buff: { dmg: .2 }, dur: 30, cd: 180, free: 1, cost: 10 }, { n: 'Bloodthirst', ap: .45, flat: 0, cost: 30, cd: 6, noWeapon: 1 }, { n: 'Whirlwind', weapon: 1, both: 1, cost: 25, cd: 10 }, { n: 'Heroic Strike', queue: 1, flat: 157, cost: 12, above: 65 }] }) },
-    { id: 'furyd', name: 'Fury (Dungeon)', split: '17/34/0', blurb: "Wowhead's dungeon Fury build, with more Fury tree points.", talents: [105930, 105928, 105933, 105939, 105927], kit: melee({ res: 'rage', crit: 5, critMult: .2, deep: .6, rageHit: .6, flurry: .25, offMult: .75, ohHit: 10,
-      abilities: [{ n: 'Death Wish', buff: { dmg: .2 }, dur: 30, cd: 180, free: 1, cost: 10 }, { n: 'Bloodthirst', ap: .45, flat: 0, cost: 30, cd: 6, noWeapon: 1 }, { n: 'Whirlwind', weapon: 1, both: 1, cost: 25, cd: 10 }, { n: 'Heroic Strike', queue: 1, flat: 157, cost: 12, above: 65 }] }) },
+    { id: 'arms', name: 'Arms', split: '39/10/2', blurb: "Rend, Mortal Strike, Slam and Overpower with a two-hander.", talents: [105941, 105947, 105948, 105950, 105944, 105939], wants: '2H', kit: melee({ res: 'rage', crit: 5, critMult: .2, dmg: { two: 1.03 }, deep: .6, rageHit: .6, anger: 1, charge: 21, bloodthrill: .2, master: WARRIOR_MASTERY,
+      abilities: [{ n: 'Bloodrage', gain: 30, cd: 60 }, { n: 'Rend', dot: { ticks: 7, every: 3, dmg: 21 }, cost: 10, cd: 21, mult: 1.35 }, { n: 'Mortal Strike', weapon: 1, flat: 160, cost: 30, cd: 6, hold: 1 }, { n: 'Overpower', weapon: 1, flat: 35, cost: 5, cd: 5, crit: 50, proc: 1 }, { n: 'Slam', weapon: 1, flat: 87, cost: 15, cd: 15 }, { n: 'Heroic Strike', queue: 1, flat: 157, cost: 12, above: 60 }] }) },
+    { id: 'fury', name: 'Fury (Raid)', split: '19/32/0', blurb: "Bloodthirst, Whirlwind and Heroic Strike with two weapons.", talents: [105930, 105928, 105933, 105939, 105927], kit: melee({ res: 'rage', crit: 5, critMult: .2, deep: .6, rageHit: .6, anger: 1, charge: 15, ohRage: 1.5, flurry: .25, offMult: .75, ohHit: 10,
+      abilities: [{ n: 'Bloodrage', gain: 20, cd: 60 }, { n: 'Berserker Rage', gain: 10, cd: 30 }, { n: 'Death Wish', buff: { dmg: .2 }, dur: 30, cd: 180, free: 1, cost: 10 }, { n: 'Bloodthirst', ap: .45, flat: 30, cost: 30, cd: 6, noWeapon: 1, hold: 1 }, { n: 'Whirlwind', weapon: 1, both: 1, cost: 22, cd: 10 }, { n: 'Heroic Strike', queue: 1, flat: 157, cost: 12, above: 65 }] }) },
+    { id: 'furyd', name: 'Fury (Dungeon)', split: '17/34/0', blurb: "Wowhead's dungeon Fury build, with more Fury tree points.", talents: [105930, 105928, 105933, 105939, 105927], kit: melee({ res: 'rage', crit: 5, critMult: .2, deep: .6, rageHit: .6, anger: 1, charge: 15, ohRage: 1.5, flurry: .25, offMult: .75, ohHit: 10,
+      abilities: [{ n: 'Bloodrage', gain: 20, cd: 60 }, { n: 'Berserker Rage', gain: 10, cd: 30 }, { n: 'Death Wish', buff: { dmg: .2 }, dur: 30, cd: 180, free: 1, cost: 10 }, { n: 'Bloodthirst', ap: .45, flat: 30, cost: 30, cd: 6, noWeapon: 1, hold: 1 }, { n: 'Whirlwind', weapon: 1, both: 1, cost: 22, cd: 10 }, { n: 'Heroic Strike', queue: 1, flat: 157, cost: 12, above: 65 }] }) },
   ],
   PALADIN: [
     { id: 'ret', name: 'Retribution', split: '10/5/36', blurb: "Seal of Command, Judgement, Holy Strike with a two-hander.", talents: [105696, 105700, 105697, 105693, 105703, 110882], wants: '2H', kit: melee({ res: 'mana', crit: 6, scrit: 6, statMult: { str: 1.1, int: 1.1 }, dmg: { two: 1.06, all: 1.09 }, spFromInt: .6, seal: { p: .28, weapon: .7 },
@@ -51,7 +53,7 @@ export const BUILDS = {
       abilities: [{ n: 'Holy Shock', base: [365, 395], sp: .429, cost: 325, cd: 10, school: 'holy' }, { n: 'Judgement', base: [194, 211], sp: .43, school: 'holy', cost: 76, cd: 8, mult: 1.15 }, { n: 'Consecration', dot: { ticks: 8, every: 1, dmg: 48, sp: .042 }, school: 'holy', cost: 339, cd: 8 }] }) },
   ],
   HUNTER: [
-    { id: 'bm', name: 'Beast Mastery', split: '31/16/4', blurb: "Serpent Sting, Summon Hawk, Aimed Shot and Arcane Shot with a strong pet.", talents: [104961, 104962, 104969, 104975, 104966], wants: 'ranged', kit: ranged({ res: 'mana', crit: 5, apFromInt: 1, dmg: { all: 1.02 }, pet: { dps: 48, rap: .055, mult: 1.17 }, haste: 15,
+    { id: 'bm', name: 'Beast Mastery', split: '31/16/4', blurb: "Serpent Sting, Summon Hawk, Aimed Shot and Arcane Shot with a strong pet.", talents: [104961, 104962, 104969, 104975, 104966], wants: 'ranged', kit: ranged({ res: 'mana', crit: 5, apFromInt: 1, dmg: { all: 1.02 }, pet: { dps: 48, rap: .055, mult: 1.17, phys: 1 }, haste: 15,
       abilities: [{ n: 'Bestial Wrath', buff: { pet: .5 }, dur: 18, cd: 120, free: 1, cost: 0 }, { n: 'Serpent Sting', dot: { ticks: 5, every: 3, dmg: 111, rap: .02 }, cost: 250, cd: 15, school: 'nature', mult: 1.2 }, { n: 'Summon Hawk', flat: 108, rap: .05, cost: 190, cd: 6, noWeapon: 1, ticks2: 3 }, { n: 'Aimed Shot', weapon: 1, flat: 600, cost: 310, cd: 6, cast: 3 }] }) },
     { id: 'mm', name: 'Marksmanship', split: '5/41/5', blurb: "Serpent Sting, Aimed Shot and Arcane Shot with no pet out.", talents: [104998, 105002, 105001, 105007, 105011], wants: 'ranged', kit: ranged({ res: 'mana', crit: 5, critMult: .3, apFromInt: 1, haste: 15, costMult: .85, dmg: { ranged: 1.05, all: 1.2 },
       abilities: [{ n: 'Serpent Sting', dot: { ticks: 5, every: 3, dmg: 111, rap: .02 }, cost: 250, cd: 15, mult: 1.2, school: 'nature' }, { n: 'Aimed Shot', weapon: 1, flat: 600, cost: 310, cd: 6, cast: 3, mult: 1.067 }, { n: 'Arcane Shot', flat: 183, rap: .15, cost: 190, cd: 4.5, noWeapon: 1 }] }) },
@@ -79,19 +81,19 @@ export const BUILDS = {
       abilities: [{ n: 'Stormstrike', weapon: 1, cost: 121, cd: 8 }, { n: 'Earth Shock', base: [517, 546], sp: .386, cost: 248, cd: 6, school: 'nature', mult: 1.26 }] }) },
   ],
   MAGE: [
-    { id: 'fire', name: 'Fire', split: '16/32/3', blurb: "Scorch stacks, Fire Blast and Fireball with Ignite and Combustion.", talents: [105781, 105794, 105782, 105784, 105790], kit: caster({ res: 'mana', school: 'fire', scrit: 6, shit: 6, castRegen: .17, dmg: { fire: 1.24 }, ignite: .4, clear: .1,
+    { id: 'fire', name: 'Fire', split: '16/32/3', blurb: "Scorch stacks, Fire Blast and Fireball with Ignite and Combustion.", talents: [105781, 105794, 105782, 105784, 105790], kit: caster({ res: 'mana', school: 'fire', scrit: 6, shit: 6, castRegen: .17, dmg: { fire: 1.24 }, ignite: .4, clear: .1, gem: 1100, evocation: 1,
       abilities: [{ n: 'Combustion', buff: { scrit: 40 }, dur: 12, cd: 180, free: 1, cost: 0 }, { n: 'Fire Blast', base: [449, 527], sp: .429, cost: 340, cd: 6, school: 'fire', crit: 10 }, { n: 'Fireball', base: [596, 760], sp: 1, cost: 410, cast: 3, school: 'fire' }] }) },
-    { id: 'frost', name: 'Frost', split: '18/0/33', blurb: "Frostbolt with Ice Lance and bonus crit damage.", talents: [105762, 105777, 105779, 105778, 105764], kit: caster({ res: 'mana', school: 'frost', shit: 6, critMult: .5, dmg: { frost: 1.2 }, clear: .1,
+    { id: 'frost', name: 'Frost', split: '18/0/33', blurb: "Frostbolt with Ice Lance and bonus crit damage.", talents: [105762, 105777, 105779, 105778, 105764], kit: caster({ res: 'mana', school: 'frost', shit: 6, critMult: .5, dmg: { frost: 1.2 }, clear: .1, gem: 1100, evocation: 1,
       abilities: [{ n: 'Frostbolt', base: [515, 556], sp: .814, cost: 290, cast: 2.5, school: 'frost' }] }) },
-    { id: 'arcane', name: 'Arcane', split: '29/19/3', blurb: "Arcane Blast stacks with Arcane Missiles and Fire Blast.", talents: [105800, 105806, 105801, 105799, 105794], kit: caster({ res: 'mana', school: 'arcane', scrit: 9, shit: 6, critMult: .5, castRegen: .33, statMult: { int: 1.1 }, spFromInt: .36, dmg: { all: 1.03 }, clear: .1, ignite: .4,
+    { id: 'arcane', name: 'Arcane', split: '29/19/3', blurb: "Arcane Blast stacks with Arcane Missiles and Fire Blast.", talents: [105800, 105806, 105801, 105799, 105794], kit: caster({ res: 'mana', school: 'arcane', scrit: 9, shit: 6, critMult: .5, castRegen: .33, statMult: { int: 1.1 }, spFromInt: .36, dmg: { all: 1.03 }, clear: .1, ignite: .4, gem: 1100, evocation: 1,
       abilities: [{ n: 'Fire Blast', base: [449, 527], sp: .429, cost: 340, cd: 6, school: 'fire', crit: 10 }, { n: 'Arcane Blast', base: [316, 366], sp: .714, cost: 380, cast: 1.5, school: 'arcane' }] }) },
   ],
   WARLOCK: [
-    { id: 'afflic', name: 'Affliction', split: '30/0/21', blurb: "Corruption, Bane of Agony and Shadow Bolt with Shadow Mastery.", talents: [105912, 105924, 110876, 105910, 105883], kit: caster({ res: 'mana', school: 'shadow', scrit: 5, critMult: .5, dmg: { shadow: 1.2 }, lifeTap: 1,
+    { id: 'afflic', name: 'Affliction', split: '30/0/21', blurb: "Corruption, Bane of Agony and Shadow Bolt with Shadow Mastery.", talents: [105912, 105924, 110876, 105910, 105883], kit: caster({ res: 'mana', school: 'shadow', scrit: 5, critMult: .5, dmg: { shadow: 1.2 }, lifeTap: 1.2,
       abilities: [{ n: 'Corruption', dot: { ticks: 6, every: 3, dmg: 137, sp: .167 }, cost: 340, cd: 18, school: 'shadow', mult: 1.1 }, { n: 'Bane of Agony', dot: { ticks: 12, every: 2, dmg: 87, sp: .083 }, cost: 215, cd: 24, school: 'shadow', mult: 1.02 }, { n: 'Siphon Life', dot: { ticks: 10, every: 3, dmg: 45, sp: .05 }, cost: 365, cd: 30, school: 'shadow' }, { n: 'Shadow Bolt', base: [482, 539], sp: .857, cost: 380, cast: 2.5, school: 'shadow' }] }) },
-    { id: 'demo', name: 'Demonology', split: '2/31/18', blurb: "Shadow Bolt with Demonic Knowledge and Master Demonologist.", talents: [105891, 105893, 105908, 105906, 105883], kit: caster({ res: 'mana', school: 'shadow', spFlat: 60, critMult: .5, dmg: { shadow: 1.1, fire: 1.1 }, pet: { dps: 42, sp: .08, mult: 1.43 }, lifeTap: 1,
+    { id: 'demo', name: 'Demonology', split: '2/31/18', blurb: "Shadow Bolt with Demonic Knowledge and Master Demonologist.", talents: [105891, 105893, 105908, 105906, 105883], kit: caster({ res: 'mana', school: 'shadow', spFlat: 60, critMult: .5, dmg: { fire: 1.1 }, pet: { dps: 42, sp: .08, mult: 1.43 }, lifeTap: 1, manaMult: 1.15,
       abilities: [{ n: 'Corruption', dot: { ticks: 6, every: 3, dmg: 137, sp: .167 }, cost: 340, cd: 18, school: 'shadow' }, { n: 'Shadow Bolt', base: [482, 539], sp: .857, cost: 380, cast: 2.5, school: 'shadow' }] }) },
-    { id: 'destro', name: 'Destruction', split: '14/4/33', blurb: "Immolate, Conflagrate, Shadowburn and Incinerate.", talents: [105874, 105880, 105883, 105888, 105879], kit: caster({ res: 'mana', school: 'fire', critMult: .5, dmg: { fire: 1.1, shadow: 1.2 }, lifeTap: 1, costMult: .9,
+    { id: 'destro', name: 'Destruction', split: '14/4/33', blurb: "Immolate, Conflagrate, Shadowburn and Incinerate.", talents: [105874, 105880, 105883, 105888, 105879], kit: caster({ res: 'mana', school: 'fire', critMult: .5, dmg: { fire: 1.1, shadow: 1.2 }, lifeTap: 1.2, costMult: .9,
       abilities: [{ n: 'Immolate', base: [279, 279], sp: .2, mult: 1.5, dot: { ticks: 5, every: 3, dmg: 102, sp: .13 }, cost: 380, cd: 15, cast: 1.5, school: 'fire' }, { n: 'Conflagrate', base: [447, 557], sp: .429, cost: 255, cd: 10, school: 'fire', crit: 25 }, { n: 'Shadowburn', base: [450, 503], sp: .429, cost: 365, cd: 15, school: 'shadow' }, { n: 'Incinerate', base: [392, 453], sp: .714, cost: 325, cast: 2.5, school: 'fire', mult: 1.25 }] }) },
   ],
   DRUID: [
@@ -103,6 +105,19 @@ export const BUILDS = {
       abilities: [{ n: 'Rip', finisher: 'rip', cost: 30 }, { n: 'Ferocious Bite', finisher: 'bite', cost: 35 }, { n: 'Shred', pct: 2.25, flat: 80, cost: 60, cp: 1, mult: 1.1 }] }) },
   ],
 };
+
+export const SPECS = {
+  WARRIOR: { Arms: ['arms'], Fury: ['fury', 'furyd'] },
+  PALADIN: { Holy: ['shock'], Retribution: ['ret'] },
+  HUNTER: { 'Beast Mastery': ['bm'], Marksmanship: ['mm'], Survival: ['surv'] },
+  ROGUE: { Assassination: ['mut'], Combat: ['combat'] },
+  PRIEST: { Shadow: ['shadow', 'shadowd'] },
+  SHAMAN: { Elemental: ['ele'], Enhancement: ['enh', 'enhd'] },
+  MAGE: { Arcane: ['arcane'], Fire: ['fire'], Frost: ['frost'] },
+  WARLOCK: { Affliction: ['afflic'], Demonology: ['demo'], Destruction: ['destro'] },
+  DRUID: { Balance: ['moon'], Feral: ['cat', 'catm'] },
+};
+export const specOf = (cls, build) => Object.keys(SPECS[cls] || {}).find((s) => SPECS[cls][s].includes(build));
 
 export function hash(...parts) {
   let h = 2166136261;
@@ -125,7 +140,7 @@ const isTwoHand = (it) => it && it[3] === 17;
 const isShield = (it) => it && it[5] === 4 && it[6] === 6;
 export const hasShield = (pool, picks) => !!(picks.off && isShield(item(pool, picks.off)));
 
-function candidates(pool, cls, slot, picks) {
+export function candidates(pool, cls, slot, picks) {
   const p = pool.pools[cls];
   const base = p[POOL_OF[slot] || slot] || {};
   const out = {};
@@ -207,7 +222,9 @@ export const finished = (run) => remaining(run).length === 0;
 export function replay(pool, seed, cls, moves) {
   if (!BUILDS[cls] || !Array.isArray(moves) || moves.length > 24) throw new Error('bad run');
   const run = newRun(seed, cls);
+  run.log = [];
   for (const m of moves) {
+    run.log.push([offers(pool, run), m]);
     if (m === '!') mulligan(pool, run);
     else {
       const [slot, to = slot] = String(m).split('>');
@@ -268,7 +285,7 @@ function character(pool, cls, build, picks) {
     scrit: (base.scrit || 0) + (base.spellCrit ? int / base.spellCrit : 0) + (s.scrit || 0) + (k.scrit || 0),
     hit: (s.hit || 0) + (k.hit || 0), shit: (s.shit || 0) + (k.shit || 0),
     haste: (s.haste || 0) + (k.haste || 0), shaste: s.shaste || 0,
-    mana: base.mana ? base.mana + int * 15 : 0, mp5: s.mp5 || 0, spiRegen: 12.5 + spi / 4,
+    mana: base.mana ? (base.mana + int * 15) * (k.manaMult || 1) : 0, mp5: s.mp5 || 0, spiRegen: 12.5 + spi / 4,
     sta: base.sta + (s.sta || 0), armor: s.armor || 0, skill: s.skill || 0,
   };
 }
@@ -348,9 +365,10 @@ function once(pool, cls, build, picks, c, r, log) {
   const master = (key, w) => !!(k.master && w && k.master[key].includes(w.sub));
   const ignored = 1 - (k.armorIgnore || 0) - (master('pen', main) ? .15 : 0);
   const armorMult = (1 - TARGET_ARMOR * ignored / (TARGET_ARMOR * ignored + 400 + 85 * 60));
-  let t = 0, total = 0, res = resource === 'mana' ? c.mana : resource === 'energy' ? 100 : 0;
+  let t = 0, total = 0, res = resource === 'mana' ? c.mana : resource === 'energy' ? 100 : k.charge || 0;
   let gcd = 0, busy = 0, mainAt = .1, offAt = .1 + (off ? off.speed / 2 : 0), rangedAt = .1, flurry = 0, cp = 0, queued = null, sndUntil = 0;
-  let channel = null, castAbility = null, nextTick = 0, regenAt = 0, petAt = 1, clear = 0;
+  let channel = null, castAbility = null, nextTick = 0, regenAt = 0, petAt = 1, clear = 0, procUntil = 0;
+  let hp = LOCK_HP + Math.min(c.sta, 20) + Math.max(0, c.sta - 20) * 10, gem = k.gem || 0, evocation = k.evocation || 0;
   const buff = (key) => { let v = 0; for (const b of buffs) if (b.until > t && b.fx[key]) v += b.fx[key]; return v; };
   const useStat = (key) => buff(key);
   const base = BASE[cls];
@@ -378,14 +396,19 @@ function once(pool, cls, build, picks, c, r, log) {
   const allMult = () => flatMult * (1 + buff('dmg'));
   const critDmg = (spell) => (spell ? 1.5 : 2) + (k.critMult || 0);
 
-  const onHit = (mh, crit, dmg, depth) => {
+  const onHit = (mh, crit, dmg, depth, white) => {
     if (k.flurry && crit) flurry = 3;
     if (k.deep && crit && main) {
       const per = (main.min + main.max) / 2 * k.deep / 4 * allMult(), open = dots.find((x) => x.n === 'Deep Wounds');
       const dot = { n: 'Deep Wounds', per, every: 3, left: 4, next: t + 3, school: 'phys' };
       if (open) Object.assign(open, dot); else dots.push(dot);
     }
-    if (resource === 'rage') res = Math.min(100, res + dmg / 230.6 * 7.5 + (k.rageHit || 0));
+    if (resource === 'rage') {
+      const w = mh ? main : off;
+      const swingRage = white ? RAGE * w.speed * (w.kind === 'two' ? RAGE_TWO : 1) * (mh ? 1 : RAGE_OFF * (k.ohRage || 1)) * (crit ? RAGE_CRIT : 1) : 0;
+      res = Math.min(100, res + swingRage + (k.rageHit || 0));
+    }
+    if (k.bloodthrill && mh && dots.some((d) => d.n === 'Rend') && r() < k.bloodthrill) procUntil = t + 6;
     if (k.seal && r() < k.seal.p) {
       const w = main;
       const v = k.seal.weapon ? (w.min + r() * (w.max - w.min) + curAp() / 14 * w.speed) * k.seal.weapon : k.seal.flat + curSp('holy') * (k.seal.sp || 0) * (w ? w.speed : 2);
@@ -412,14 +435,18 @@ function once(pool, cls, build, picks, c, r, log) {
   function swing(mh, depth, bonusAp, name) {
     const w = mh ? main : off;
     if (!w) return;
+    if (mh && queued && depth === 0 && res < queued.cost) queued = null;
     const isQueue = mh && queued && depth === 0;
     const tb = table(w), label0 = name || (mh ? 'Melee' : 'Off Hand');
-    const dw = !!off && !queued;
+    const dw = !!off;
     const missC = Math.max(0, tb.miss + (dw ? DW_MISS : 0) - curHit() - (!mh && k.ohHit ? k.ohHit : 0));
     let x = r() * 100;
     if (x < missC) return note(label0, 0);
     x -= missC;
-    if (x < tb.dodge) return note(label0, 0);
+    if (x < tb.dodge) {
+      if (k.bloodthrill) procUntil = t + 5;
+      return note(label0, 0);
+    }
     x -= tb.dodge;
     let dmg = w.min + r() * (w.max - w.min) + (curAp() + (bonusAp || 0)) / 14 * w.speed;
     if (!mh) dmg *= (k.offMult || .5);
@@ -438,7 +465,7 @@ function once(pool, cls, build, picks, c, r, log) {
     }
     dmg *= armorMult * allMult() * twoMult;
     note(label, dmg, crit, 'phys');
-    onHit(mh, crit, dmg, depth);
+    onHit(mh, crit, dmg, depth, !isQueue);
   }
 
   function ranged() {
@@ -526,19 +553,32 @@ function once(pool, cls, build, picks, c, r, log) {
 
   const cooled = (a) => (cds[a.n] || 0) <= t;
   function act() {
+    if (gem && c.mana - res >= gem) { res += gem; gem = 0; }
+    let reserve = 0;
     for (const a of k.abilities) {
       const school = a.school || (k.kind === 'caster' ? k.school : 'phys');
+      if (a.gain) {
+        if (cooled(a) && res + a.gain <= 100) { res += a.gain; cds[a.n] = t + a.cd; }
+        continue;
+      }
       if (a.queue) {
-        if (!queued && res >= (a.above || a.cost) && cooled(a)) { queued = a; if (a.cd) cds[a.n] = t + a.cd; }
+        if (!queued && res - reserve >= (a.above || a.cost) && cooled(a)) { queued = a; if (a.cd) cds[a.n] = t + a.cd; }
         continue;
       }
       if (a.needShield && !shield) continue;
-      if (!cooled(a)) continue;
+      if (!cooled(a)) {
+        if (a.hold && cds[a.n] - t < 2) reserve += a.cost;
+        continue;
+      }
       if (a.finisher === 'snd' && (cp < 2 || sndUntil > t + 2)) continue;
       if (a.finisher && a.finisher !== 'snd' && cp < 5) continue;
       if (a.finisher === 'rip' && dots.some((d) => d.n === a.n)) continue;
       const cost = (a.cost || 0) * (resource === 'mana' ? (k.costMult || 1) * (clear ? 0 : 1) : 1);
-      if (res < cost) continue;
+      if (a.proc && procUntil <= t) continue;
+      if (res - reserve < cost) {
+        if (a.hold) reserve += cost;
+        continue;
+      }
       if (a.buff) {
         res -= cost;
         buffs.push({ until: t + a.dur, fx: a.buff });
@@ -549,6 +589,7 @@ function once(pool, cls, build, picks, c, r, log) {
       if (gcd > t || busy > t) return;
       res -= cost;
       clear = 0;
+      if (a.proc) procUntil = 0;
       if (a.cd) cds[a.n] = t + a.cd;
       gcd = t + (k.res === 'energy' ? 1 : 1.5);
       if (a.finisher) return finish(a);
@@ -582,7 +623,8 @@ function once(pool, cls, build, picks, c, r, log) {
       if (a.cp) cp = Math.min(5, cp + a.cp);
       return;
     }
-    if (k.lifeTap && res < 424 && gcd <= t) { res += 424; gcd = t + 1.5; return; }
+    if (evocation && res < 500 && gcd <= t) { evocation = 0; res = Math.min(c.mana, res + c.spiRegen * 15 * EVOCATION / 2); busy = t + EVOCATION; gcd = busy; return; }
+    if (k.lifeTap && res < TAP && hp > TAP && gcd <= t) { hp -= TAP; res += TAP * k.lifeTap; gcd = t + 1.5; return; }
     if (wand && gcd <= t) { const v = wand.min + r() * (wand.max - wand.min); busy = t + wand.speed; gcd = busy; note('Wand', v * SPELL_RESIST * allMult(), false, 'arcane'); }
   }
 
@@ -601,6 +643,7 @@ function once(pool, cls, build, picks, c, r, log) {
       if (resource === 'mana') res = Math.min(c.mana, res + c.mp5 * .4 + c.spiRegen * (k.castRegen || 0));
       if (resource === 'energy') res = Math.min(100, res + 20 * (1 + buff('energy')));
       if (k.res === 'rage' && k.form) res = Math.min(100, res + 2);
+      if (k.anger) res = Math.min(100, res + 2 / 3);
     }
     if (castAbility && castAbility.at <= t) {
       const { a, school } = castAbility;
@@ -631,6 +674,7 @@ function once(pool, cls, build, picks, c, r, log) {
       if (d.left > 0 && d.next <= t) {
         d.left--; d.next = t + d.every;
         note(d.n, d.per, false, d.school);
+        if (d.n === 'Siphon Life') hp += d.per;
       }
     }
     for (let i = dots.length - 1; i >= 0; i--) if (dots[i].left <= 0) dots.splice(i, 1);
@@ -654,7 +698,7 @@ function once(pool, cls, build, picks, c, r, log) {
     if (k.pet && petAt <= t) {
       petAt = t + 2;
       const base = (k.pet.dps + curRap() * (k.pet.rap || 0) + curSp('shadow') * (k.pet.sp || 0)) * 2;
-      note('Pet', base * k.pet.mult * (1 + buff('pet')), r() < .1, 'phys');
+      note('Pet', base * k.pet.mult * (1 + buff('pet')) * (k.pet.phys ? armorMult : 1), r() < .1, 'phys');
     }
     if (busy <= t) act();
   }

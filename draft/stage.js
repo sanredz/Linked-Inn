@@ -218,6 +218,18 @@ export class Stage {
     this.pulse();
   }
 
+  async strip() {
+    for (const node of Object.values(this.attached)) node.removeFromParent();
+    this.attached = {};
+    this.worn = {};
+    this.groups = { ...NAKED };
+    this.hideHair = false;
+    this.rangedFile = null;
+    this.canvas2d.getContext('2d').clearRect(0, 0, this.canvas2d.width, this.canvas2d.height);
+    await this.repaint();
+    this.applyGeosets();
+  }
+
   pulse() {
     this.pulseAt = performance.now();
   }

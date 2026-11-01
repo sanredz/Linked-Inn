@@ -1,4 +1,4 @@
-export const VERSION = 3;
+export const VERSION = 4;
 export const FIGHT = 120;
 export const ROUNDS = 16;
 export const SLOTS = [
@@ -15,21 +15,83 @@ export const CLASS_NAME = { WARRIOR: 'Warrior', PALADIN: 'Paladin', HUNTER: 'Hun
 export const CLASS_COLOR = { WARRIOR: '#c79c6e', PALADIN: '#f58cba', HUNTER: '#abd473', ROGUE: '#fff569', PRIEST: '#ffffff', SHAMAN: '#0070de', MAGE: '#69ccf0', WARLOCK: '#9482c9', DRUID: '#ff7d0a' };
 
 const BASE = {
-  WARRIOR: { str: 120, agi: 80, sta: 110, int: 30, spi: 45, mana: 0, meleeCrit: 20, spellCrit: 0, ap: 160, str2: 2, agi2: 0, crit: 5, scrit: 0 },
-  PALADIN: { str: 105, agi: 65, sta: 100, int: 65, spi: 70, mana: 1512, meleeCrit: 20, spellCrit: 54, ap: 160, str2: 2, agi2: 0, crit: 5, scrit: 3.5 },
-  HUNTER: { str: 60, agi: 130, sta: 95, int: 60, spi: 65, mana: 1720, meleeCrit: 53, spellCrit: 60, ap: 100, str2: 1, agi2: 1, rap: 110, crit: 5, scrit: 0 },
-  ROGUE: { str: 85, agi: 130, sta: 75, int: 35, spi: 50, mana: 0, meleeCrit: 29, spellCrit: 0, ap: 100, str2: 1, agi2: 1, crit: 5, scrit: 0 },
-  PRIEST: { str: 35, agi: 40, sta: 50, int: 120, spi: 130, mana: 1376, meleeCrit: 20, spellCrit: 59, ap: 0, str2: 1, agi2: 0, crit: 3, scrit: .8 },
-  SHAMAN: { str: 85, agi: 50, sta: 95, int: 90, spi: 100, mana: 1520, meleeCrit: 20, spellCrit: 59, ap: 100, str2: 2, agi2: 0, crit: 5, scrit: 2.3 },
-  MAGE: { str: 30, agi: 35, sta: 45, int: 125, spi: 120, mana: 1273, meleeCrit: 20, spellCrit: 60, ap: 0, str2: 1, agi2: 0, crit: 3, scrit: .9 },
-  WARLOCK: { str: 45, agi: 50, sta: 70, int: 110, spi: 115, mana: 1373, meleeCrit: 20, spellCrit: 60, ap: 0, str2: 1, agi2: 0, crit: 3, scrit: 1.7 },
-  DRUID: { str: 70, agi: 55, sta: 70, int: 100, spi: 110, mana: 1244, meleeCrit: 20, spellCrit: 60, ap: 100, str2: 2, agi2: 0, crit: 5, scrit: 1.8 },
+  WARRIOR: { str: 120, agi: 80, sta: 110, int: 30, spi: 45, mana: 0, meleeCrit: 20, spellCrit: 0, ap: 160, str2: 2, agi2: 0, crit: 5, scrit: 0, regen: [15, 5] },
+  PALADIN: { str: 105, agi: 65, sta: 100, int: 70, spi: 75, mana: 1512, meleeCrit: 19.8, spellCrit: 59.9, ap: 160, str2: 2, agi2: 0, crit: 5, scrit: 3.5, regen: [15, 5] },
+  HUNTER: { str: 58, agi: 122, sta: 92, int: 62, spi: 73, mana: 1720, meleeCrit: 52.9, spellCrit: 60.6, ap: 100, str2: 1, agi2: 1, rap: 100, crit: 5, scrit: 0, regen: [15, 5] },
+  ROGUE: { str: 80, agi: 130, sta: 75, int: 35, spi: 50, mana: 0, meleeCrit: 29, spellCrit: 0, ap: 100, str2: 1, agi2: 1, crit: 5, scrit: 0, regen: [15, 5] },
+  PRIEST: { str: 35, agi: 40, sta: 50, int: 120, spi: 125, mana: 1376, meleeCrit: 20, spellCrit: 59.5, ap: -10, str2: 1, agi2: 0, crit: 3, scrit: .8, regen: [12.5, 4] },
+  SHAMAN: { str: 88, agi: 52, sta: 97, int: 87, spi: 103, mana: 1520, meleeCrit: 19.7, spellCrit: 59.2, ap: 100, str2: 2, agi2: 0, crit: 5, scrit: 2.3, regen: [17, 5] },
+  MAGE: { str: 30, agi: 35, sta: 45, int: 125, spi: 120, mana: 1213, meleeCrit: 19.5, spellCrit: 59.5, ap: -10, str2: 1, agi2: 0, crit: 3, scrit: .9, regen: [12.5, 4] },
+  WARLOCK: { str: 45, agi: 50, sta: 65, int: 110, spi: 115, mana: 1373, meleeCrit: 20, spellCrit: 60.6, ap: -10, str2: 1, agi2: 0, crit: 3, scrit: 1.7, regen: [15, 5] },
+  DRUID: { str: 62, agi: 65, sta: 69, int: 100, spi: 110, mana: 1244, meleeCrit: 20, spellCrit: 59.9, ap: 100, str2: 2, agi2: 0, crit: 5, scrit: 1.8, regen: [15, 5] },
 };
+
+const BINARY = new Set(['Frostbolt', 'Mind Flay']);
+const SET_FX = {
+  'Battlegear of Wrath|5': { wrath: 1 },
+  "Vindicator's Battlegear|5": { abil: { Whirlwind: { cost: -3 } } },
+  "Madcap's Outfit|5": { abil: { Eviscerate: { cost: -5 } } },
+  'Emblems of Veiled Shadows|3': { abil: { 'Slice and Dice': { cost: -10 } } },
+  "Deathdealer's Embrace|5": { abil: { Eviscerate: { dmg: .15 } } },
+  'Nightslayer Armor|5': { energy: 10 },
+  'Bloodfang Armor|3': { poison: .05 },
+  "Striker's Garb|3": { abil: { 'Arcane Shot': { costPct: -.1 } } },
+  "Predator's Armor|5": { abil: { 'Serpent Sting': { ticks: 1 } } },
+  'Cryptstalker Armor|8': { abil: { 'Aimed Shot': { cost: -20 } } },
+  "Demoniac's Threads|3": { abil: { Corruption: { dmg: .02 } } },
+  'Plagueheart Raiment|4': { abil: { Corruption: { dmg: .12 } } },
+  'Plagueheart Raiment|8': { tap: .12 },
+  "Doomcaller's Attire|3": { abil: { Immolate: { dmg: .05 } } },
+  "Doomcaller's Attire|5": { abil: { 'Shadow Bolt': { costPct: -.15 } } },
+  'Felheart Raiment|8': { shadowCost: .15 },
+  "Champion's Threads|4": { abil: { Immolate: { cast: -.2 } } },
+  "Lieutenant Commander's Threads|4": { abil: { Immolate: { cast: -.2 } } },
+  "Warlord's Threads|3": { abil: { Immolate: { cast: -.2 } } },
+  "Field Marshal's Threads|3": { abil: { Immolate: { cast: -.2 } } },
+  "Champion's Dreadgear|4": { abil: { Immolate: { cast: -.2 } } },
+  "Lieutenant Commander's Dreadgear|4": { abil: { Immolate: { cast: -.2 } } },
+  'Vestments of Transcendence|3': { regen: .15 },
+  'Stormrage Raiment|3': { regen: .15 },
+  'Green Dragon Mail|3': { regen: .15 },
+  "Champion's Earthshaker|4": { abil: { 'Earth Shock': { crit: 2 }, 'Flame Shock': { crit: 2 } } },
+  "Warlord's Earthshaker|3": { abil: { 'Earth Shock': { crit: 2 }, 'Flame Shock': { crit: 2 } } },
+  "Champion's Stormcaller|4": { abil: { 'Earth Shock': { crit: 2 }, 'Flame Shock': { crit: 2 } } },
+  "Lieutenant Commander's Stormcaller|4": { abil: { 'Earth Shock': { crit: 2 }, 'Flame Shock': { crit: 2 } } },
+  "Lieutenant Commander's Earthshaker|4": { abil: { 'Earth Shock': { crit: 2 }, 'Flame Shock': { crit: 2 } } },
+  "Field Marshal's Earthshaker|3": { abil: { 'Earth Shock': { crit: 2 }, 'Flame Shock': { crit: 2 } } },
+  'Judgement Armor|8': { abil: { Judgement: { flat: 63 } } },
+  'Netherwind Regalia|8': { nether: .1 },
+  'Implements of Unspoken Names|3': { pets: .05 },
+};
+const ITEM_FX = {
+  22395: { abil: { 'Earth Shock': { flat: 30 }, 'Flame Shock': { flat: 30 } } },
+  23199: { abil: { 'Lightning Bolt': { flat: 33 } } },
+  23197: { abil: { Moonfire: { flat: 33 } } },
+  16403: { abil: { 'Arcane Shot': { cost: -15 } } },
+  16530: { abil: { 'Arcane Shot': { cost: -15 } } },
+};
+
+function addFx(to, from) {
+  if (!from) return;
+  for (const [key, v] of Object.entries(from)) {
+    if (key !== 'abil') { to[key] = (to[key] || 0) + v; continue; }
+    for (const [name, mods] of Object.entries(v)) {
+      const m = (to.abil[name] ||= {});
+      for (const [mod, x] of Object.entries(mods)) m[mod] = (m[mod] || 0) + x;
+    }
+  }
+}
 
 const TARGET_ARMOR = 3731;
 const RAGE = 3.46, RAGE_TWO = 1.3, RAGE_OFF = .5, RAGE_CRIT = 2;
 const LOCK_HP = 1414, TAP = 424, EVOCATION = 8;
-const DW_MISS = 19, GLANCE = 40, CRIT_AURA = 3, SPELL_MISS = 17, SPELL_RESIST = .94, PROC_PPM = 1.5, BASE_SKILL = 300, BOSS_DEFENSE = 315;
+const DW_MISS = 19, GLANCE = 40, CRIT_AURA = 3, SPELL_MISS = 17, SPELL_RESIST = .94, BASE_SKILL = 300, BOSS_DEFENSE = 315;
+export const SUMMONS = {
+  whelp: { n: 'Emerald Dragon Whelp', level: 55, dmg: [67, 93], speed: 2, dur: 15, spit: { dmg: [64, 86], cast: 3, first: 1 } },
+  skeleton: { n: 'Summoned Skeleton', level: 60, dmg: [92, 108], speed: 2, dur: 60 },
+  eskhandar: { n: 'Eskhandar', level: 60, dmg: [50, 80], speed: 2, dur: 120, one: 1, exploit: { p: .5, flat: [19, 21], every: [10, 20] }, shred: { armor: 242, dur: 12, first: 6, every: [12, 18] } },
+  shahram: { n: 'Shahram', level: 63, dur: 5, flames: [90, 160], blessing: 50 / 3 * 5 },
+};
 
 const WARRIOR_MASTERY = { crit: [0, 1, 6], pen: [4, 5, 10], extra: [7, 8] };
 const ROGUE_MASTERY = { crit: [15, 13], pen: [4], extra: [0, 7] };
@@ -241,28 +303,27 @@ function addStats(to, from, k = 1) {
 }
 
 export function gearStats(pool, picks) {
-  const s = {}, counts = {};
-  let setPct = 0;
+  const s = {}, counts = {}, fx = { abil: {} }, setProcs = [];
   for (const id of Object.values(picks)) {
     if (!id) continue;
     const it = item(pool, id);
     addStats(s, it[7]);
+    addFx(fx, ITEM_FX[id]);
     if (it[9]) counts[it[9]] = (counts[it[9]] || 0) + 1;
   }
   const active = [];
   for (const [sid, n] of Object.entries(counts)) {
     const set = pool.sets[sid];
     if (!set) continue;
-    for (const [need, stats, text] of set.b) {
-      if (n >= need) {
-        addStats(s, stats);
-        if (!Object.keys(stats).length && /damage|critical|attack|spell|chance/i.test(text || '')) setPct += .015;
-        active.push([set.n, need, text]);
-      }
+    for (const [need, stats, text, proc] of set.b) {
+      if (n < need) continue;
+      addStats(s, stats);
+      addFx(fx, SET_FX[`${set.n}|${need}`]);
+      if (proc) setProcs.push({ ...proc, name: set.n });
+      active.push([set.n, need, text]);
     }
   }
-  s.setPct = setPct;
-  return { stats: s, active };
+  return { stats: s, active, fx, setProcs };
 }
 
 function character(pool, cls, build, picks) {
@@ -272,20 +333,20 @@ function character(pool, cls, build, picks) {
   const int = (base.int + (s.int || 0)) * mult('int'), spi = base.spi + (s.spi || 0);
   let ap = base.ap + str * base.str2 + agi * base.agi2 + (s.ap || 0);
   if (k.agiToAp) ap += agi;
-  if (k.feral) ap += k.feral * 1 + (s.fap || 0);
+  if (k.feral) ap += k.feral + (s.fap || 0) * 1.2 + (picks.main && item(pool, picks.main)[7].ap || 0) * .2;
   if (k.apFromInt) ap += int * k.apFromInt;
-  const rap = (base.rap || 0) + agi * 2 + (s.rap || 0) + (s.ap || 0) + int * (k.apFromInt || 0);
+  const rap = (base.rap || 0) + agi * 2 + (s.rap || 0) + int * (k.apFromInt || 0);
   let sp = (s.sp || 0) + (k.spFlat || 0);
   if (k.spFromInt) sp += int * k.spFromInt;
   if (k.spFromSpi) sp += spi * k.spFromSpi;
   const school = (x) => sp + (s['s' + x] || 0);
   return {
-    str, agi, int, spi, ap, rap, sp, school, active: g.active, setMult: 1 + (s.setPct || 0),
+    str, agi, int, spi, ap, rap, sp, school, active: g.active, fx: g.fx, setProcs: g.setProcs,
     crit: (base.crit || 0) + agi / base.meleeCrit + (s.crit || 0) + (k.crit || 0), skills: s,
     scrit: (base.scrit || 0) + (base.spellCrit ? int / base.spellCrit : 0) + (s.scrit || 0) + (k.scrit || 0),
     hit: (s.hit || 0) + (k.hit || 0), shit: (s.shit || 0) + (k.shit || 0),
-    haste: (s.haste || 0) + (k.haste || 0), shaste: s.shaste || 0,
-    mana: base.mana ? (base.mana + int * 15) * (k.manaMult || 1) : 0, mp5: s.mp5 || 0, spiRegen: 12.5 + spi / 4,
+    haste: (s.haste || 0) + (k.haste || 0), rhaste: s.rhaste || 0, shaste: s.shaste || 0,
+    mana: base.mana ? (base.mana + int * 15) * (k.manaMult || 1) : 0, mp5: s.mp5 || 0, spiRegen: base.regen[0] + spi / base.regen[1],
     sta: base.sta + (s.sta || 0), armor: s.armor || 0, skill: s.skill || 0,
   };
 }
@@ -329,14 +390,34 @@ function weaponOf(pool, id) {
   return { min: d.min, max: d.max, speed: d.delay / 1000, kind, sub: it[6], dagger: it[5] === 2 && it[6] === 15 };
 }
 
-function procsOf(pool, picks) {
+function procsOf(pool, picks, c) {
   const out = [];
   for (const [slot, id] of Object.entries(picks)) {
     if (!id) continue;
     const it = item(pool, id);
-    if (it[11]) out.push({ ...it[11], name: it[0], slot });
+    for (const p of [].concat(it[11] || [])) out.push({ ...p, name: it[0], slot });
   }
-  return out;
+  return [...out, ...c.setProcs].filter((p) => p.on);
+}
+
+function tuned(k, fx) {
+  return k.abilities.map((a) => {
+    const m = fx.abil[a.n], school = a.school || (k.kind === 'caster' ? k.school : 'phys');
+    const out = { ...a };
+    if (school === 'shadow' && fx.shadowCost && a.cost) out.cost = a.cost * (1 - fx.shadowCost);
+    if (!m) return out;
+    if (a.cost) out.cost = Math.max(0, (out.cost + (m.cost || 0)) * (1 + (m.costPct || 0)));
+    if (m.dmg) out.mult = (a.mult || 1) * (1 + m.dmg);
+    if (m.crit) out.crit = (a.crit || 0) + m.crit;
+    if (m.cast && a.cast) out.cast = a.cast + m.cast;
+    if (m.ticks && a.dot) out.dot = { ...a.dot, ticks: a.dot.ticks + m.ticks };
+    if (m.flat) {
+      if (a.base) out.base = [a.base[0] + m.flat, a.base[1] + m.flat];
+      else if (a.dot) out.dot = { ...a.dot, dmg: a.dot.dmg + m.flat / a.dot.ticks };
+      else out.flat = (a.flat || 0) + m.flat;
+    }
+    return out;
+  });
 }
 
 function usesOf(pool, picks) {
@@ -346,7 +427,7 @@ function usesOf(pool, picks) {
     const it = item(pool, id);
     if (it[10]) out.push({ n: it[0], ...it[10] });
   }
-  return out;
+  return out.sort((a, b) => !!a.summon - !!b.summon);
 }
 
 function once(pool, cls, build, picks, c, r, log) {
@@ -357,19 +438,43 @@ function once(pool, cls, build, picks, c, r, log) {
   const wand = k.kind === 'caster' ? weaponOf(pool, picks.ranged) : null;
   if (k.form) { main = { ...k.form, kind: 'form' }; off = null; }
   if (isRanged && !bow) main = main || null;
-  const procs = procsOf(pool, picks), uses = usesOf(pool, picks);
-  const by = {};
-  const buffs = [], cds = {}, dots = [];
-  const flatMult = (k.dmg && k.dmg.all || 1) * c.setMult * (shield && k.shieldDmg ? k.shieldDmg : 1);
+  const procs = procsOf(pool, picks, c), uses = usesOf(pool, picks), fx = c.fx, abilities = tuned(k, fx), energyCap = 100 + (fx.energy || 0);
+  const by = {}, rolled = new Map();
+  const buffs = [], cds = {}, dots = [], debuffs = [], summoned = [], marks = [];
+  const flatMult = (k.dmg && k.dmg.all || 1) * (shield && k.shieldDmg ? k.shieldDmg : 1);
   const twoMult = main && k.dmg ? (main.kind === 'two' ? k.dmg.two || 1 : main.kind === 'one' ? k.dmg.one || 1 : 1) : 1;
   const master = (key, w) => !!(k.master && w && k.master[key].includes(w.sub));
   const ignored = 1 - (k.armorIgnore || 0) - (master('pen', main) ? .15 : 0);
-  const armorMult = (1 - TARGET_ARMOR * ignored / (TARGET_ARMOR * ignored + 400 + 85 * 60));
-  let t = 0, total = 0, res = resource === 'mana' ? c.mana : resource === 'energy' ? 100 : k.charge || 0;
+  let armorMult = 1;
+  const refreshArmor = () => {
+    let armor = TARGET_ARMOR, pen = 0;
+    for (const d of debuffs) {
+      if (d.until <= t) continue;
+      armor -= (d.armor || 0) * d.n;
+      pen += (d.pen || 0) * d.n;
+    }
+    armor = Math.max(0, armor * ignored - pen);
+    armorMult = 1 - armor / (armor + 400 + 85 * 60);
+  };
+  let t = 0, total = 0, res = resource === 'mana' ? c.mana : resource === 'energy' ? energyCap : k.charge || 0;
+  let rageOff = 0, freeCast = false, swarmUntil = 0, swarmProc = null;
   let gcd = 0, busy = 0, mainAt = .1, offAt = .1 + (off ? off.speed / 2 : 0), rangedAt = .1, flurry = 0, cp = 0, queued = null, sndUntil = 0;
   let channel = null, castAbility = null, nextTick = 0, regenAt = 0, petAt = 1, clear = 0, procUntil = 0;
   let hp = LOCK_HP + Math.min(c.sta, 20) + Math.max(0, c.sta - 20) * 10, gem = k.gem || 0, evocation = k.evocation || 0;
-  const buff = (key) => { let v = 0; for (const b of buffs) if (b.until > t && b.fx[key]) v += b.fx[key]; return v; };
+  const buff = (key) => { let v = 0; for (const b of buffs) if (b.until > t && b.fx[key]) v += b.fx[key] * b.n; return v; };
+  const addBuff = (id, effect, dur, stack = 1, start = 1, decay = '') => {
+    const open = buffs.find((b) => b.id === id && b.until > t);
+    if (open) { open.until = t + dur; open.n = Math.min(stack, open.n + 1); return; }
+    buffs.push({ id, until: t + dur, fx: effect, n: start, decay });
+  };
+  const spent = (kind) => {
+    for (const b of buffs) {
+      if (b.until <= t) continue;
+      if (b.decay === kind && --b.n <= 0) b.until = 0;
+      if (b.build === kind) b.n = Math.min(b.max, b.n + 1);
+    }
+  };
+  const vuln = () => { let v = 1; for (const d of debuffs) if (d.until > t && d.vuln) v *= 1 + d.vuln; return v; };
   const useStat = (key) => buff(key);
   const base = BASE[cls];
   const skillOf = (w) => BASE_SKILL + ((w && c.skills['sk' + w.sub]) || 0);
@@ -382,12 +487,14 @@ function once(pool, cls, build, picks, c, r, log) {
   };
   const curHit = () => c.hit + buff('hit');
   const curCrit = (w) => c.crit + buff('crit') + buff('agi') / base.meleeCrit - table(w).crit + (master('crit', w) ? 5 : 0);
-  const curSpellCrit = () => c.scrit + buff('scrit') + (base.spellCrit ? buff('int') / base.spellCrit : 0);
+  const curSpellCrit = (school) => c.scrit + buff('scrit') + buff('scrit' + school) + (base.spellCrit ? buff('int') / base.spellCrit : 0);
   const spellMiss = () => Math.max(1, SPELL_MISS - c.shit - buff('shit'));
-  const curAp = () => c.ap + useStat('ap') + useStat('str') * base.str2 + useStat('agi') * base.agi2;
-  const curRap = () => c.rap + useStat('rap') + useStat('ap') + useStat('agi') * 2;
+  const curAp = () => c.ap + useStat('ap') + useStat('str') * base.str2 + useStat('agi') * (base.agi2 + (k.agiToAp ? 1 : 0));
+  const curRap = () => c.rap + useStat('rap') + useStat('agi') * 2;
   const curSp = (school) => c.school(school) + useStat('sp') + useStat('s' + school);
-  const speedMult = () => 1 + (c.haste + useStat('haste') + (sndUntil > t ? (k.snd || 0) * 100 : 0)) / 100 + (flurry > 0 ? (k.flurry || 0) : 0);
+  const hasteOf = (key) => { let v = 1; for (const b of buffs) if (b.until > t && b.fx[key]) v *= 1 + b.fx[key] * b.n / 100; return v; };
+  const speedMult = () => (1 + c.haste / 100) * hasteOf('haste') * (sndUntil > t ? 1 + (k.snd || 0) : 1) * (flurry > 0 ? 1 + (k.flurry || 0) : 1);
+  const rangedSpeed = () => (1 + c.rhaste / 100) * hasteOf('rhaste');
   const note = (n, dmg, crit, school) => {
     total += dmg; by[n] = (by[n] || 0) + dmg;
     if (log && dmg > 0) log.push([Math.round(t * 100) / 100, n, Math.round(dmg), crit ? 1 : 0, school || 'phys']);
@@ -414,23 +521,130 @@ function once(pool, cls, build, picks, c, r, log) {
       const v = k.seal.weapon ? (w.min + r() * (w.max - w.min) + curAp() / 14 * w.speed) * k.seal.weapon : k.seal.flat + curSp('holy') * (k.seal.sp || 0) * (w ? w.speed : 2);
       note('Seal', v * allMult() * (r() * 100 < curCrit(w) ? critDmg(false) : 1), false, 'holy');
     }
-    if (k.poison && r() < k.poison.p) note('Poison', k.poison.dmg * allMult() * SPELL_RESIST, false, 'nature');
+    if (k.poison && r() < k.poison.p + (fx.poison || 0)) note('Poison', k.poison.dmg * allMult() * SPELL_RESIST * vuln(), false, 'nature');
     if (k.wf && mh && depth === 0 && r() < k.wf.p) {
       swing(true, depth + 1, k.wf.ap * k.wf.mult, 'Windfury');
       swing(true, depth + 1, k.wf.ap * k.wf.mult, 'Windfury');
     }
-    if (depth === 0) {
-      const w = mh ? main : off;
-      for (const p of procs) {
-        if ((p.slot === 'main' && !mh) || (p.slot === 'off' && mh) || p.slot === 'ranged' || !w) continue;
-        if (r() >= (p.p ?? w.speed * PROC_PPM / 60)) continue;
-        if (p.extra) for (let n = 0; n < p.extra; n++) swing(true, depth + 1, 0, 'Extra Attack');
-        else if (p.dmg) note(p.name, p.dmg * allMult() * SPELL_RESIST, false, 'nature');
-        else if (p.buff) buffs.push({ until: t + (p.dur || 10), fx: p.buff });
-      }
-    }
+    trigger(white ? 'w' : 'y', mh ? main : off, mh, crit, depth);
+    spent('h');
     if (depth === 0 && master('extra', mh ? main : off) && r() < .05) swing(mh, depth + 1, 0, 'Extra Attack');
   };
+
+  function procDamage(p, low, high) {
+    const school = p.school || 'nature', value = low + r() * (high - low);
+    if (school === 'phys') {
+      const tb = table(main);
+      if (r() * 100 < Math.max(0, tb.miss - curHit()) + tb.dodge) return note(p.name, 0);
+      const crit = r() * 100 < curCrit(main);
+      return note(p.name, value * armorMult * allMult() * (crit ? critDmg(false) : 1), crit, 'phys');
+    }
+    if (r() * 100 < spellMiss()) return note(p.name, 0);
+    const crit = r() * 100 < curSpellCrit(school);
+    note(p.name, value * allMult() * schoolMult(school) * SPELL_RESIST * vuln() * (crit ? critDmg(true) : 1), crit, school);
+  }
+
+  function debuff(name, values, dur, stack = 1) {
+    const open = debuffs.find((d) => d.name === name && d.until > t);
+    if (open) { open.until = t + dur; open.n = Math.min(stack, open.n + 1); } else debuffs.push({ name, n: 1, until: t + dur, ...values });
+    refreshArmor();
+  }
+
+  const between = ([low, high]) => low + r() * (high - low);
+  const creatureArmor = (s) => {
+    let armor = TARGET_ARMOR;
+    for (const d of debuffs) if (d.until > t) armor -= (d.armor || 0) * d.n;
+    armor = Math.max(0, armor);
+    return 1 - armor / (armor + 400 + 85 * s.level);
+  };
+  const creatureAvoid = (s) => {
+    const d = Math.max(0, BOSS_DEFENSE - s.level * 5);
+    return (d > 10 ? 6 + d * .2 : 5 + d * .1) + 5 + d * .1;
+  };
+
+  function creatureHit(s, value) {
+    const d = Math.max(0, BOSS_DEFENSE - s.level * 5), avoid = creatureAvoid(s);
+    const x = r() * 100;
+    if (x < avoid) return note(s.n, 0);
+    const crit = x >= avoid + GLANCE && x < avoid + GLANCE + Math.max(0, 5 - d * .12);
+    note(s.n, value * (x < avoid + GLANCE ? .65 : crit ? 2 : 1) * creatureArmor(s), crit, 'phys');
+  }
+
+  function creatureSpell(s, value, school) {
+    const d = BOSS_DEFENSE / 5 - s.level, chance = Math.max(1, d < 3 ? 96 - d : 94 - (d - 2) * 11);
+    if (r() * 100 >= chance) return note(s.n, 0);
+    const crit = r() < .05;
+    note(s.n, value * SPELL_RESIST * vuln() * (crit ? 1.5 : 1), crit, school);
+  }
+
+  function shahram(s) {
+    const harm = Math.floor(r() * 3), help = Math.floor(r() * 4);
+    if (harm === 1) creatureSpell(s, between(s.flames), 'fire');
+    if (help === 0) addBuff('Blessing of Shahram', { mp5: s.blessing }, 20);
+    else if (help === 1) addBuff('Fist of Shahram', { haste: 30 }, 8);
+    else addBuff('Will of Shahram', { str: 50, agi: 50, int: 50 }, 20);
+  }
+
+  function summon(kind) {
+    const s = SUMMONS[kind], open = s.one && summoned.find((m) => m.s === s && m.until > t), ready = t + (isMelee ? 1 : 4);
+    marks.push([kind, Math.round(t * 100) / 100, Math.round((t + s.dur) * 100) / 100]);
+    if (kind === 'shahram') return shahram(s);
+    if (open) { open.until = t + s.dur; return; }
+    summoned.push({ s, until: t + s.dur, swing: ready, castEnd: 0, spit: ready + (s.spit ? s.spit.first : 0), landing: false, exploit: ready, shred: ready + (s.shred ? r() * s.shred.first : 0) });
+  }
+
+  function creatureTurn(m) {
+    const s = m.s;
+    if (s.spit) {
+      if (m.landing && m.castEnd <= t) { m.landing = false; creatureSpell(s, between(s.spit.dmg), 'nature'); }
+      if (m.spit <= t && m.castEnd <= t) { m.castEnd = t + s.spit.cast; m.spit = m.castEnd; m.landing = true; }
+    }
+    if (s.exploit && m.exploit <= t) {
+      m.exploit = t + between(s.exploit.every);
+      if (r() < s.exploit.p) creatureHit(s, between(s.dmg) + between(s.exploit.flat));
+    }
+    if (s.shred && m.shred <= t) {
+      m.shred = t + between(s.shred.every);
+      if (r() * 100 >= creatureAvoid(s)) debuff('Shred', { armor: s.shred.armor }, s.shred.dur);
+    }
+    if (m.swing <= t && m.castEnd <= t) {
+      m.swing = t + s.speed;
+      creatureHit(s, between(s.dmg));
+    }
+  }
+
+  function fire(p, depth) {
+    if (p.summon) summon(p.summon);
+    if (p.dmg) procDamage(p, p.dmg[0], p.dmg[1]);
+    if (p.dot) {
+      const school = p.school || 'nature', per = p.dot.per * allMult() * (school === 'phys' ? 1 : schoolMult(school) * SPELL_RESIST);
+      const open = dots.find((d) => d.n === p.name), dot = { n: p.name, per, every: p.dot.every, left: p.dot.ticks, next: t + p.dot.every, school };
+      if (open) Object.assign(open, dot); else dots.push(dot);
+    }
+    if (p.armor) debuff(p.name, { armor: p.armor }, p.dur, p.stack);
+    if (p.pen) debuff(p.name, { pen: p.pen }, p.dur, p.stack);
+    if (p.vuln) debuff(p.name, { vuln: p.vuln }, p.dur);
+    if (p.buff) addBuff(p.name, p.buff, p.dur || 10, p.stack || 1);
+    if (p.extra && depth === 0) for (let n = 0; n < p.extra; n++) swing(true, depth + 1, 0, 'Extra Attack');
+    if (p.gain) {
+      const gain = p.gain[resource];
+      if (gain) res = Math.min(resource === 'mana' ? c.mana : resource === 'energy' ? energyCap : 100, res + gain);
+    }
+  }
+
+  function trigger(kind, w, mh, crit, depth, name, speed) {
+    for (const p of swarmUntil > t ? [...procs, swarmProc] : procs) {
+      if (!p.on.includes(kind)) continue;
+      if ((kind === 'w' || kind === 'y') && ((p.slot === 'main' && !mh) || (p.slot === 'off' && mh) || p.slot === 'ranged')) continue;
+      if (kind === 'r' && (p.slot === 'main' || p.slot === 'off')) continue;
+      if (p.crit && !crit) continue;
+      if (p.of && p.of !== name) continue;
+      if (p.icd && (rolled.get(p) || 0) > t) continue;
+      if (r() >= (p.p ?? p.ppm * (w ? w.speed : speed || 2.5) / 60)) continue;
+      if (p.icd) rolled.set(p, t + p.icd);
+      fire(p, depth);
+    }
+  }
 
   function swing(mh, depth, bonusAp, name) {
     const w = mh ? main : off;
@@ -448,7 +662,7 @@ function once(pool, cls, build, picks, c, r, log) {
       return note(label0, 0);
     }
     x -= tb.dodge;
-    let dmg = w.min + r() * (w.max - w.min) + (curAp() + (bonusAp || 0)) / 14 * w.speed;
+    let dmg = w.min + r() * (w.max - w.min) + (curAp() + (bonusAp || 0)) / 14 * w.speed + buff('wflat');
     if (!mh) dmg *= (k.offMult || .5);
     let crit = false, label = label0;
     if (isQueue) {
@@ -476,7 +690,7 @@ function once(pool, cls, build, picks, c, r, log) {
     if (r() * 100 < curCrit(bow)) { dmg *= critDmg(false); crit = true; }
     dmg *= armorMult * allMult() * ((k.dmg && k.dmg.ranged) || 1);
     note('Auto Shot', dmg, crit, 'phys');
-    for (const p of procs) if (p.dmg && p.slot === 'ranged' && r() < bow.speed * PROC_PPM / 60) note(p.name, p.dmg * allMult(), false, 'nature');
+    trigger('r', bow, false, crit, 0);
   }
 
   function applyDot(a, school) {
@@ -488,15 +702,17 @@ function once(pool, cls, build, picks, c, r, log) {
   }
 
   function spellHit(a, school, value, label) {
+    spent('s');
     if (r() * 100 < spellMiss()) { note(label || a.n, 0); return 0; }
-    let dmg = value * (a.mult || 1) * allMult() * schoolMult(school) * SPELL_RESIST, crit = false;
-    if (r() * 100 < curSpellCrit() + (a.crit || 0)) {
+    let dmg = value * (a.mult || 1) * allMult() * schoolMult(school) * (BINARY.has(a.n) ? 1 : SPELL_RESIST) * vuln(), crit = false;
+    if (r() * 100 < curSpellCrit(school) + (a.crit || 0)) {
       dmg *= critDmg(true); crit = true;
       if (k.ignite) note('Ignite', dmg * k.ignite, false, 'fire');
     }
     note(label || a.n, dmg, crit, school);
     if (k.overload && a.n === 'Lightning Bolt' && r() < k.overload) note('Lightning Overload', dmg * .5, false, 'nature');
     if (k.clear && r() < k.clear) clear = 1;
+    trigger('s', null, false, crit, 0, a.n, a.cast);
     return dmg;
   }
 
@@ -527,7 +743,7 @@ function once(pool, cls, build, picks, c, r, log) {
       let dmg = v * (a.mult || 1) * allMult() * (school === 'phys' ? armorMult : 1), crit = false;
       if (r() * 100 < curCrit(w)) { dmg *= critDmg(false); crit = true; }
       note(a.n, dmg, crit, school);
-      onHit(true, crit, dmg, 1);
+      onHit(true, crit, dmg, 0);
       if (a.bleed) note(a.n + ' Bleed', dmg * a.bleed, false, 'phys');
       return;
     }
@@ -545,7 +761,7 @@ function once(pool, cls, build, picks, c, r, log) {
       if (r() * 100 < curCrit(wp) + (a.crit || 0) + (k.abilityCrit || 0)) { dmg *= critDmg(false); crit = true; }
       dmg *= (a.mult || 1) * allMult() * armorMult * twoMult;
       note(a.n, dmg, crit, 'phys');
-      onHit(mh, crit, dmg, 1);
+      onHit(mh, crit, dmg, 0);
     };
     hitW(w, true);
     if (a.both) hitW(off, false);
@@ -555,7 +771,7 @@ function once(pool, cls, build, picks, c, r, log) {
   function act() {
     if (gem && c.mana - res >= gem) { res += gem; gem = 0; }
     let reserve = 0;
-    for (const a of k.abilities) {
+    for (const a of abilities) {
       const school = a.school || (k.kind === 'caster' ? k.school : 'phys');
       if (a.gain) {
         if (cooled(a) && res + a.gain <= 100) { res += a.gain; cds[a.n] = t + a.cd; }
@@ -573,7 +789,7 @@ function once(pool, cls, build, picks, c, r, log) {
       if (a.finisher === 'snd' && (cp < 2 || sndUntil > t + 2)) continue;
       if (a.finisher && a.finisher !== 'snd' && cp < 5) continue;
       if (a.finisher === 'rip' && dots.some((d) => d.n === a.n)) continue;
-      const cost = (a.cost || 0) * (resource === 'mana' ? (k.costMult || 1) * (clear ? 0 : 1) : 1);
+      const cost = resource === 'mana' ? Math.max(0, (a.cost || 0) * (k.costMult || 1) * (clear ? 0 : 1) - buff('cheap')) : Math.max(0, (a.cost || 0) - (resource === 'rage' && a.cost ? rageOff : 0));
       if (a.proc && procUntil <= t) continue;
       if (res - reserve < cost) {
         if (a.hold) reserve += cost;
@@ -581,7 +797,7 @@ function once(pool, cls, build, picks, c, r, log) {
       }
       if (a.buff) {
         res -= cost;
-        buffs.push({ until: t + a.dur, fx: a.buff });
+        buffs.push({ until: t + a.dur, fx: a.buff, n: 1 });
         cds[a.n] = t + a.cd;
         if (!a.free) gcd = t + 1.5;
         continue;
@@ -589,6 +805,7 @@ function once(pool, cls, build, picks, c, r, log) {
       if (gcd > t || busy > t) return;
       res -= cost;
       clear = 0;
+      if (resource === 'rage' && a.cost) rageOff = fx.wrath && r() < .2 ? 5 : 0;
       if (a.proc) procUntil = 0;
       if (a.cd) cds[a.n] = t + a.cd;
       gcd = t + (k.res === 'energy' ? 1 : 1.5);
@@ -596,22 +813,26 @@ function once(pool, cls, build, picks, c, r, log) {
       if (a.channel) {
         const ch = a.channel, per = (ch.dmg + curSp(school) * (ch.sp || 0));
         const hits = r() * 100 >= spellMiss();
-        if (!hits) note(a.n, 0);
+        spent('s');
+        if (!hits) note(a.n, 0); else trigger('s', null, false, false, 0, a.n, ch.ticks * ch.every);
         channel = { a, school, per, hits, left: ch.ticks, every: ch.every / (1 + c.shaste / 100), next: t + ch.every };
         busy = t + ch.ticks * ch.every / (1 + c.shaste / 100);
         gcd = Math.max(gcd, busy);
         return;
       }
       if (a.cast) {
-        const dur = a.cast / (1 + (c.shaste + useStat('shaste')) / 100);
+        const dur = freeCast ? 0 : a.cast / (1 + (c.shaste + useStat('shaste')) / 100);
+        freeCast = false;
         castAbility = { a, school, at: t + dur };
         busy = t + dur;
         gcd = Math.max(gcd, busy);
         return;
       }
       if (a.dot && !a.base) {
+        spent('s');
         if (school !== 'phys' && r() * 100 < spellMiss()) { note(a.n, 0); return; }
         applyDot(a, school);
+        if (school !== 'phys') trigger('s', null, false, false, 0, a.n);
         return;
       }
       if (a.ticks) {
@@ -624,24 +845,39 @@ function once(pool, cls, build, picks, c, r, log) {
       return;
     }
     if (evocation && res < 500 && gcd <= t) { evocation = 0; res = Math.min(c.mana, res + c.spiRegen * 15 * EVOCATION / 2); busy = t + EVOCATION; gcd = busy; return; }
-    if (k.lifeTap && res < TAP && hp > TAP && gcd <= t) { hp -= TAP; res += TAP * k.lifeTap; gcd = t + 1.5; return; }
+    if (k.lifeTap && res < TAP && hp > TAP && gcd <= t) { hp -= TAP * (1 - (fx.tap || 0)); res += TAP * k.lifeTap; gcd = t + 1.5; return; }
     if (wand && gcd <= t) { const v = wand.min + r() * (wand.max - wand.min); busy = t + wand.speed; gcd = busy; note('Wand', v * SPELL_RESIST * allMult(), false, 'arcane'); }
   }
 
   const uses2 = uses.map((u) => ({ ...u, ready: 0 }));
   const step = .05;
+  refreshArmor();
   for (t = 0; t < FIGHT; t += step) {
+    if (debuffs.length) refreshArmor();
     for (const u of uses2) {
       if (u.ready > t) continue;
-      if (u.dmg) note(u.n, u.dmg * allMult() * SPELL_RESIST, false, 'fire');
-      else buffs.push({ until: t + u.dur, fx: u.buff });
+      if (u.mana && c.mana - res < u.mana) continue;
+      if (u.mana) res += u.mana;
+      if (u.summon) summon(u.summon);
+      if (u.dmg) procDamage({ name: u.n, school: u.school || 'fire' }, ...[].concat(u.dmg, u.dmg).slice(0, 2));
+      if (u.dot) fire({ name: u.n, school: u.school, dot: u.dot }, 1);
+      if (u.swarm) { swarmUntil = t + u.dur; swarmProc = { name: u.n, on: 'wyr', ppm: u.swarm.ppm, pen: u.swarm.pen, dur: u.dur, stack: u.swarm.stack }; }
+      if (u.build) buffs.push({ id: u.n, until: t + u.dur, fx: u.buff, n: 0, build: u.build, max: u.stack });
+      else if (u.ramp) u.rampAt = t;
+      else if (u.buff && Object.keys(u.buff).length) buffs.push({ id: u.n, until: t + u.dur, fx: u.buff, n: u.stack || 1, decay: u.decay || '' });
       u.ready = t + u.cd;
       for (const o of uses2) if (o !== u) o.ready = Math.max(o.ready, t + (u.lock || 0));
     }
+    for (const u of uses2) {
+      if (u.ramp && u.rampAt !== undefined && u.rampAt <= t && t < u.ready - u.cd + u.dur) {
+        addBuff(u.n, u.ramp, u.dur, u.stack);
+        u.rampAt = t + u.every;
+      }
+    }
     if (t >= regenAt) {
       regenAt = t + 2;
-      if (resource === 'mana') res = Math.min(c.mana, res + c.mp5 * .4 + c.spiRegen * (k.castRegen || 0));
-      if (resource === 'energy') res = Math.min(100, res + 20 * (1 + buff('energy')));
+      if (resource === 'mana') res = Math.min(c.mana, res + (c.mp5 + buff('mp5')) * .4 + c.spiRegen * Math.min(1, (k.castRegen || 0) + (fx.regen || 0)));
+      if (resource === 'energy') res = Math.min(energyCap, res + 20 * (1 + buff('energy')));
       if (k.res === 'rage' && k.form) res = Math.min(100, res + 2);
       if (k.anger) res = Math.min(100, res + 2 / 3);
     }
@@ -659,14 +895,16 @@ function once(pool, cls, build, picks, c, r, log) {
         const v = a.base[0] + r() * (a.base[1] - a.base[0]) + (a.sp || 0) * curSp(school);
         const landed = spellHit(a, school, v);
         if (a.dot && landed !== 0) applyDot(a, school);
+        if (fx.nether && (a.n === 'Fireball' || a.n === 'Frostbolt') && r() < fx.nether) freeCast = true;
       }
+      if (isRanged) trigger('r', bow, false, false, 0);
     }
     if (channel && channel.next <= t) {
       channel.next = t + channel.every;
       channel.left--;
       if (channel.hits) {
-        const a = channel.a, crit = a.tickCrit && r() * 100 < curSpellCrit();
-        note(a.n, channel.per * (a.mult || 1) * allMult() * schoolMult(channel.school) * SPELL_RESIST * (crit ? critDmg(true) : 1), crit, channel.school);
+        const a = channel.a, crit = a.tickCrit && r() * 100 < curSpellCrit(channel.school);
+        note(a.n, channel.per * (a.mult || 1) * allMult() * schoolMult(channel.school) * (BINARY.has(a.n) ? 1 : SPELL_RESIST) * vuln() * (crit ? critDmg(true) : 1), crit, channel.school);
       }
       if (channel.left <= 0) channel = null;
     }
@@ -692,36 +930,37 @@ function once(pool, cls, build, picks, c, r, log) {
       }
     }
     if (isRanged && bow && rangedAt <= t && !(busy > t)) {
-      rangedAt = t + bow.speed / speedMult();
+      rangedAt = t + bow.speed / (speedMult() * rangedSpeed());
       ranged();
     }
     if (k.pet && petAt <= t) {
       petAt = t + 2;
       const base = (k.pet.dps + curRap() * (k.pet.rap || 0) + curSp('shadow') * (k.pet.sp || 0)) * 2;
-      note('Pet', base * k.pet.mult * (1 + buff('pet')) * (k.pet.phys ? armorMult : 1), r() < .1, 'phys');
+      note('Pet', base * k.pet.mult * (1 + buff('pet')) * (1 + (fx.pets || 0)) * (k.pet.phys ? armorMult : 1), r() < .1, 'phys');
     }
+    for (const m of summoned) if (m.until > t) creatureTurn(m);
     if (busy <= t) act();
   }
-  return { total, by };
+  return { total, by, marks };
 }
 
 export function simulate(pool, cls, buildId, picks, seed, iterations = 12, wantLog = false) {
   const build = BUILDS[cls].find((b) => b.id === buildId);
   if (!build) throw new Error('bad build');
   const c = character(pool, cls, build, picks);
-  let sum = 0, by = {}, log = null, runs = [];
+  let sum = 0, by = {}, log = null, runs = [], summons = [];
   for (let i = 0; i < iterations; i++) {
     const l = wantLog && i === 0 ? [] : null;
     const res = once(pool, cls, build, picks, c, rng(hash(seed, cls, buildId, i)), l);
     sum += res.total;
     runs.push(res.total / FIGHT);
     for (const [k, v] of Object.entries(res.by)) by[k] = (by[k] || 0) + v;
-    if (l) log = l;
+    if (l) { log = l; summons = res.marks; }
   }
   const dps = sum / iterations / FIGHT;
   for (const k of Object.keys(by)) by[k] = Math.round(by[k] / sum * 1000) / 10;
   return {
-    dps: Math.round(dps * 10) / 10, by, log, sets: c.active,
+    dps: Math.round(dps * 10) / 10, by, log, summons, sets: c.active,
     sheet: view(c),
   };
 }

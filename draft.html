@@ -441,6 +441,14 @@ body.arena #stage { cursor: default; }
             <li>Mages now use Evocation and a Mana Ruby.</li>
             <li>Hunter pets now take armor reduction.</li>
             <li>Attack power that only works in Cat or Bear form now only counts for Feral Druids.</li>
+            <li>Item procs now use real proc rates. Thunderfury procs far more often, most items less.</li>
+            <li>Abilities can now trigger procs, not just white hits. Spells and shots trigger the items they should.</li>
+            <li>Armor reduction procs like Annihilator and Bonereaver's Edge now work.</li>
+            <li>Set bonuses now do what they say. The old flat bonus for sets is gone.</li>
+            <li>Stacking trinkets like Jom Gabbar and Zandalarian Hero Charm now stack and fade properly.</li>
+            <li>Hunters no longer get attack power from gear counted twice.</li>
+            <li>Summons now fight with you: Dragon's Call, Blackblade of Shahram, Book of the Dead, Ancient Cornerstone Grimoire and the Spirit of Eskhandar set. You can see them in the fight.</li>
+            <li>Base stats, race stats and mana regen now match each class.</li>
             <li>A queued Heroic Strike or Raptor Strike no longer cancels the dual-wield miss penalty.</li>
           </ul>
           <p><b>Items</b></p>
@@ -456,7 +464,7 @@ body.arena #stage { cursor: default; }
         </details>
         <details class="how">
           <summary>How the score works</summary>
-          <p>Your character fights a dummy for two minutes, 12 times over, with no raid buffs or consumables. The dummy has 3,731 armor and the hit, dodge, glancing and crit rules of a boss three levels above you. Casters can run out of mana, just like in game. Life Tap costs health and nobody heals you, and Mages get one Evocation and one Mana Ruby. Warrior rage uses Forever's normalized rules: it comes from swing speed and crits, not damage. Gear stats, hit, crit, weapon skill, set bonuses, item procs and Use items all count.</p>
+          <p>Your character fights a dummy for two minutes, 12 times over, with no raid buffs or consumables. The dummy has 3,731 armor and the hit, dodge, glancing and crit rules of a boss three levels above you. Casters can run out of mana, just like in game. Life Tap costs health and nobody heals you, and Mages get one Evocation and one Mana Ruby. Warrior rage uses Forever's normalized rules: it comes from swing speed and crits, not damage. Gear stats, hit, crit, weapon skill, set bonuses, item procs and Use items all count. Procs use each item's own rate and can trigger from white hits, abilities, shots or spells, depending on the item. Use items fire on cooldown, so a 45 second cooldown goes off three times in a fight.</p>
           <p>Builds come from Wowhead's Forever guides. Ability numbers are Classic Era, to match the Classic items, with Forever talents on top. Abilities new to Forever use estimated values, and rotations are simplified. Items come from Classic Era for now. Forever's own items join once their data is public.</p>
         </details>
       </div>
@@ -563,6 +571,6 @@ body.arena #stage { cursor: default; }
 <div id="peek" hidden><div class="pane"><img class="portrait" id="pkPortrait" alt=""><div class="frameart"></div><div class="viewport"><canvas id="pkStage" aria-label="Character for this run. Drag to turn."></canvas></div><div class="peekwho" id="pkWho"></div><div class="sub" id="pkSay"></div><div class="peekdoll" id="pkDoll"></div></div></div>
 <div id="tip" hidden></div>
 <div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button class="go" id="sheetMain" hidden>Main Hand</button><button class="go" id="sheetOff" hidden>Off Hand</button><button id="sheetClose">Close</button></div></div></div>
-<script type="module" src="draft/app.js?v=20261101125140"></script>
+<script type="module" src="draft/app.js?v=20261101182340"></script>
 </body>
 </html>

@@ -13,6 +13,13 @@ const HAIR = 6;
 const STOW = .62;
 const REST = { x: 0, y: 1.02, z: 5.7, tx: 0, ty: .98 };
 const DUMMY_HEIGHT = 2.15;
+const HOLD = 1500;
+const MINION = {
+  whelp: { melee: 1, x: -.75, y: .9, z: -1.4, scale: .7, clip: 'cast', speed: 1 },
+  skeleton: { melee: 1, x: -.8, z: .8, scale: .9, clip: 'attack', speed: 2.2 },
+  eskhandar: { melee: 1, x: -1, z: -.6, scale: .7, clip: 'attack', speed: 2.2, ghost: .6 },
+  shahram: { x: .5, z: -1.6, scale: .75, clip: 'cast', speed: 1 },
+};
 const NAKED = { 4: 1, 5: 1, 7: 2, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 15: 1 };
 
 const images = new Map();
@@ -62,6 +69,7 @@ export class Stage {
     this.ring.position.y = .01;
     this.scene.add(this.ring);
     this.bolts = [];
+    this.minions = {};
     this.view = { ...REST };
     this.want = { ...REST };
     this.mixer = null;
@@ -309,10 +317,65 @@ export class Stage {
   stopFight() {
     this.fightOn = false;
     this.pose(this.kind === 'melee' ? (this.two ? 'ready2h' : 'ready1h') : 'idle');
+    for (const m of Object.values(this.minions)) this.play(m, 'idle', 1);
+  }
+
+  async prepare(kinds) {
+    await Promise.all(kinds.map(async (kind) => {
+      if (this.minions[kind]) return;
+      const g = await this.loader.loadAsync(ROOT + 'gear/summon_' + kind + '.glb').catch(() => null);
+      if (!g || this.minions[kind]) return;
+      const place = MINION[kind], root = new THREE.Group(), mixer = new THREE.AnimationMixer(g.scene), clips = {};
+      for (const c of g.animations) clips[c.name] = mixer.clipAction(c);
+      g.scene.traverse((o) => {
+        if (!o.isMesh) return;
+        o.frustumCulled = false;
+        if (place.ghost) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = place.ghost; o.material.depthWrite = false; }
+      });
+      root.add(g.scene);
+      root.visible = false;
+      this.scene.add(root);
+      this.minions[kind] = { root, mixer, clips, place, size: 0, count: 0, hold: 0, current: null };
+    }));
+  }
+
+  play(m, name, speed) {
+    const a = m.clips[name] || m.clips.idle;
+    if (!a) return;
+    a.timeScale = speed;
+    if (m.current === a) return;
+    a.reset().fadeIn(.15).play();
+    if (m.current) m.current.fadeOut(.15);
+    m.current = a;
+  }
+
+  summon(kind) {
+    const m = this.minions[kind];
+    if (!m) return;
+    m.count++;
+    m.hold = performance.now() + HOLD;
+    if (m.root.visible) return;
+    const x = (m.place.melee ? this.dummy.position.x : this.rig.position.x) + m.place.x, z = m.place.z;
+    m.root.position.set(x, m.place.y || 0, z);
+    m.root.rotation.y = Math.atan2(this.dummy.position.x - x, -z);
+    m.root.scale.setScalar(.001);
+    m.root.visible = true;
+    m.size = 0;
+    this.play(m, m.place.clip, m.place.speed);
+  }
+
+  dismiss(kind) {
+    const m = this.minions[kind];
+    if (m) m.count = Math.max(0, m.count - 1);
+  }
+
+  clearMinions() {
+    for (const m of Object.values(this.minions)) { m.count = 0; m.hold = 0; m.size = 0; m.root.visible = false; }
   }
 
   reset() {
     this.fightOn = false;
+    this.clearMinions();
     if (this.dummy) this.dummy.visible = false;
     if (this.rig) { this.rig.position.set(0, 0, 0); this.rig.rotation.y = 0; }
     this.ring.visible = true;
@@ -320,9 +383,9 @@ export class Stage {
     this.pose('idle');
   }
 
-  hit(school) {
+  hit(school, minion) {
     if (this.dummy) this.shake = 1;
-    if (this.kind === 'melee' || !this.rig) return;
+    if (minion || this.kind === 'melee' || !this.rig) return;
     const color = SCHOOL[school] ?? 0xffffff;
     const m = new THREE.Mesh(new THREE.SphereGeometry(this.kind === 'ranged' ? .035 : .1, 10, 8), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .95 }));
     m.position.set(this.rig.position.x + .3, 1.35, 0);
@@ -341,6 +404,14 @@ export class Stage {
   frame() {
     const dt = Math.min(.05, this.clock.getDelta());
     if (this.mixer) this.mixer.update(dt);
+    for (const m of Object.values(this.minions)) {
+      if (!m.root.visible) continue;
+      m.mixer.update(dt);
+      const stay = !this.fightOn || m.count > 0 || performance.now() < m.hold;
+      m.size = Math.min(1, Math.max(0, m.size + (stay ? dt : -dt) * 5));
+      m.root.scale.setScalar(Math.max(.001, m.size * m.place.scale));
+      if (!stay && m.size === 0) m.root.visible = false;
+    }
     if (this.rig && !this.fightOn && this.rig.position.x === 0) this.rig.rotation.y = this.yaw + (this.drag != null ? 0 : Math.sin(performance.now() / 3200) * .12);
     const v = this.view, w = this.want;
     for (const k of Object.keys(v)) v[k] += (w[k] - v[k]) * Math.min(1, dt * 4);

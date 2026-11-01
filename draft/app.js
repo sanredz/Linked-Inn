@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261101125140';
-import { Stage } from './stage.js?v=20261101125140';
+import * as C from './core.js?v=20261101182340';
+import { Stage } from './stage.js?v=20261101182340';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -361,6 +361,9 @@ async function fight(buildId) {
   const kind = build.kit.kind;
   const main = run.picks.main ? row(run.picks.main) : null;
   await stage.fight(kind, !!main && main[3] === 17);
+  const marks = res.summons.map(([summon, from, to]) => ({ summon, from, to, on: false, off: false }));
+  await stage.prepare([...new Set(marks.map((m) => m.summon))]);
+  const minions = new Set(Object.values(C.SUMMONS).map((s) => s.n));
   const gauge = $('dps'), bar = $('fill'), fly = $('fly');
   const dur = calm ? 300 : 11500, start = performance.now();
   const log = res.log, shown = Math.min(log.length, 240), step = Math.max(1, Math.floor(log.length / shown));
@@ -373,10 +376,14 @@ async function fight(buildId) {
       const val = res.dps * Math.min(1.02, e + wobble);
       gauge.textContent = Math.max(0, val).toFixed(1);
       bar.style.width = Math.min(100, e * 100) + '%';
-      const until = e * events.length;
+      const until = e * events.length, clock = e * C.FIGHT;
+      for (const m of marks) {
+        if (!m.on && clock >= m.from) { m.on = true; stage.summon(m.summon); }
+        if (m.on && !m.off && clock >= m.to) { m.off = true; stage.dismiss(m.summon); }
+      }
       while (at < until && at < events.length) {
         const ev = events[at++];
-        stage.hit(ev[4]);
+        stage.hit(ev[4], minions.has(ev[1]));
         const a = stage.anchor(), n = document.createElement('span');
         n.className = 'ft ' + ev[4] + (ev[3] ? ' crit' : '');
         n.textContent = ev[2];
@@ -849,7 +856,7 @@ function clearHash() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261101125140', 'draft/gear.json?v=20261101125140', 'draft/talents.json?v=20261101125140', 'draft/retired.json?v=20261101125140'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261101182340', 'draft/gear.json?v=20261101182340', 'draft/talents.json?v=20261101182340', 'draft/retired.json?v=20261101182340'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {

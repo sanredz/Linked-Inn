@@ -8,7 +8,6 @@ const REGION = {
   leg_upper: [128, 96, 128, 64], leg_lower: [128, 160, 128, 64], foot: [128, 224, 128, 32],
 };
 const PAINT = ['legs', 'feet', 'chest', 'wrist', 'waist', 'hands'];
-const SCHOOL = { fire: 0xff7a2a, frost: 0x7fd4ff, arcane: 0xd27dff, shadow: 0x9a5cff, nature: 0x7dff8a, holy: 0xffe680, phys: 0xffffff };
 const HAIR = 6;
 const STOW = .62;
 const REST = { x: 0, y: 1.02, z: 5.7, tx: 0, ty: .98 };
@@ -19,7 +18,83 @@ const MINION = {
   skeleton: { melee: 1, x: -.8, z: .8, scale: .9, clip: 'attack', speed: 2.2 },
   eskhandar: { melee: 1, x: -1, z: -.6, scale: .7, clip: 'attack', speed: 2.2, ghost: .6 },
   shahram: { x: .5, z: -1.6, scale: .75, clip: 'cast', speed: 1 },
+  cat: { melee: 1, x: -1.25, z: .65, scale: .7, clip: 'attack', speed: 2 },
 };
+const LIMIT = 340;
+const PAL = {
+  fire: [0xff6a1a, 0xffe2a0], frost: [0x58b8ff, 0xe4f6ff], arcane: [0xc266ff, 0xf4dcff], shadow: [0x7a3cff, 0xd9c4ff], nature: [0x46e860, 0xdcffd8],
+  holy: [0xffc94a, 0xfff6cf], moon: [0x8fb4ff, 0xf0f5ff], fel: [0x5de08a, 0xe2ffe6], phys: [0xfff0d0, 0xffffff], arrow: [0xfff0c0, 0xffffff],
+};
+const LOOK = {
+  Fireball: { fx: 'bolt', pal: 'fire', size: .36, speed: 9, lift: .15, trail: 3, hit: 1 },
+  Incinerate: { fx: 'bolt', pal: 'fire', size: .22, speed: 15, trail: 2, hit: .7 },
+  'Lava Burst': { fx: 'bolt', pal: 'fire', size: .46, speed: 8, lift: .9, trail: 4, hit: 1.4 },
+  'Shadow Bolt': { fx: 'bolt', pal: 'shadow', size: .32, speed: 9, lift: .1, trail: 3, hit: 1 },
+  'Arcane Blast': { fx: 'bolt', pal: 'arcane', size: .3, speed: 13, trail: 2, hit: 1.1 },
+  'Arcane Shot': { fx: 'bolt', pal: 'arcane', size: .16, speed: 20, trail: 2, hit: .6 },
+  Wand: { fx: 'bolt', pal: 'arcane', size: .13, speed: 15, trail: 1, hit: .4 },
+  Frostbolt: { fx: 'shard', pal: 'frost', size: .36, speed: 11, trail: 3, hit: 1.1 },
+  'Auto Shot': { fx: 'arrow', pal: 'arrow', speed: 24, size: 1, hit: .3 },
+  'Aimed Shot': { fx: 'arrow', pal: 'holy', speed: 26, size: 1.5, trail: 3, hit: .9 },
+  'Lightning Bolt': { fx: 'lightning', pal: 'frost', width: .05, hit: .9 },
+  'Lightning Overload': { fx: 'lightning', pal: 'frost', width: .028, hit: .5 },
+  'Mind Flay': { fx: 'tether', pal: 'shadow', width: .09, hit: .4 },
+  Moonfire: { fx: 'beam', pal: 'moon', width: .55, hit: .8 },
+  Starfire: { fx: 'beam', pal: 'holy', width: 1, hit: 1.3 },
+  Judgement: { fx: 'beam', pal: 'holy', width: .6, hit: 1 },
+  'Fire Blast': { fx: 'blast', pal: 'fire', hit: 1.1 },
+  Conflagrate: { fx: 'blast', pal: 'fire', hit: 1.5 },
+  Shadowburn: { fx: 'blast', pal: 'shadow', hit: 1.3 },
+  'Mind Blast': { fx: 'blast', pal: 'shadow', hit: 1.2, ring: 1 },
+  'Holy Shock': { fx: 'blast', pal: 'holy', hit: 1.2 },
+  Consecration: { fx: 'ground', pal: 'holy' },
+  'Summon Hawk': { fx: 'dive', pal: 'holy', hit: .7 },
+  Corruption: { fx: 'wisp', pal: 'shadow' }, 'Bane of Agony': { fx: 'wisp', pal: 'shadow' }, 'Shadow Word: Pain': { fx: 'wisp', pal: 'shadow' },
+  'Siphon Life': { fx: 'wisp', pal: 'fel' }, 'Serpent Sting': { fx: 'wisp', pal: 'nature' }, Ignite: { fx: 'wisp', pal: 'fire' },
+  Immolate: { fx: 'wisp', pal: 'fire' }, 'Flame Shock': { fx: 'wisp', pal: 'fire' },
+};
+
+function glowTexture(draw) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  draw(c.getContext('2d'));
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const softGlow = (g) => {
+  const r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  r.addColorStop(0, 'rgba(255,255,255,1)');
+  r.addColorStop(.25, 'rgba(255,255,255,.75)');
+  r.addColorStop(.6, 'rgba(255,255,255,.18)');
+  r.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = r;
+  g.fillRect(0, 0, 64, 64);
+};
+const softColumn = (g) => {
+  const r = g.createLinearGradient(0, 0, 64, 0);
+  r.addColorStop(0, 'rgba(255,255,255,0)');
+  r.addColorStop(.5, 'rgba(255,255,255,1)');
+  r.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = r;
+  g.fillRect(0, 0, 64, 64);
+};
+const starGlow = (g) => {
+  g.fillStyle = '#fff';
+  g.translate(32, 32);
+  for (let i = 0; i < 4; i++) {
+    g.rotate(Math.PI / 2);
+    g.beginPath();
+    g.moveTo(-4, 0);
+    g.lineTo(0, 30);
+    g.lineTo(4, 0);
+    g.fill();
+  }
+  g.globalCompositeOperation = 'lighter';
+  g.translate(-32, -32);
+  softGlow(g);
+};
+const additive = (color, opacity = 1) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
 const NAKED = { 4: 1, 5: 1, 7: 2, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 15: 1 };
 
 const images = new Map();
@@ -68,7 +143,9 @@ export class Stage {
     this.ring.rotation.x = -Math.PI / 2;
     this.ring.position.y = .01;
     this.scene.add(this.ring);
-    this.bolts = [];
+    this.fx = [];
+    this.parts = [];
+    this.spares = [];
     this.minions = {};
     this.view = { ...REST };
     this.want = { ...REST };
@@ -373,8 +450,19 @@ export class Stage {
     for (const m of Object.values(this.minions)) { m.count = 0; m.hold = 0; m.size = 0; m.root.visible = false; }
   }
 
+  clearEffects() {
+    while (this.fx.length) {
+      const running = this.fx;
+      this.fx = [];
+      for (const step of running) step(99);
+    }
+    for (const p of this.parts) { this.scene.remove(p.s); this.spares.push(p.s); }
+    this.parts = [];
+  }
+
   reset() {
     this.fightOn = false;
+    this.clearEffects();
     this.clearMinions();
     if (this.dummy) this.dummy.visible = false;
     if (this.rig) { this.rig.position.set(0, 0, 0); this.rig.rotation.y = 0; }
@@ -383,16 +471,232 @@ export class Stage {
     this.pose('idle');
   }
 
-  hit(school, minion) {
-    if (this.dummy) this.shake = 1;
-    if (minion || this.kind === 'melee' || !this.rig) return;
-    const color = SCHOOL[school] ?? 0xffffff;
-    const m = new THREE.Mesh(new THREE.SphereGeometry(this.kind === 'ranged' ? .035 : .1, 10, 8), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .95 }));
-    m.position.set(this.rig.position.x + .3, 1.35, 0);
-    m.userData.to = this.dummy.position.x;
-    m.userData.v = this.kind === 'ranged' ? 16 : 9;
+  hit(school, minion, name, crit) {
+    if (!this.dummy) return;
+    if (minion || !this.rig) { this.shake = 1; return; }
+    const look = LOOK[name];
+    if (look && this.fx.length < 36) return this[look.fx](look, crit);
+    if (this.kind === 'melee') {
+      this.shake = 1;
+      if (school !== 'phys') this.impact(school, .7);
+      else if (crit) this.impact('phys', .6);
+      return;
+    }
+    if (this.fx.length < 36) this.bolt({ pal: school, size: .16, speed: 14, trail: 1, hit: .5 }, crit);
+    else this.shake = 1;
+  }
+
+  spark(x, y, z, o) {
+    if (this.parts.length >= LIMIT) return;
+    this.glow ||= glowTexture(softGlow);
+    this.star ||= glowTexture(starGlow);
+    const s = this.spares.pop() || new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    s.material.map = o.star ? this.star : this.glow;
+    s.material.color.setHex(o.color);
+    s.material.rotation = Math.random() * 6.28;
+    s.material.opacity = o.opacity ?? 1;
+    s.position.set(x, y, z);
+    s.scale.setScalar(o.size);
+    this.scene.add(s);
+    this.parts.push({ s, age: 0, life: o.life || .4, vx: o.vx || 0, vy: o.vy || 0, vz: o.vz || 0, fall: o.fall || 0, size: o.size, grow: o.grow ?? 1, opacity: o.opacity ?? 1 });
+  }
+
+  hand() {
+    return new THREE.Vector3(this.rig.position.x + .6, 1.45, 0);
+  }
+
+  target() {
+    return new THREE.Vector3(this.dummy.position.x, 1.35 + (Math.random() - .5) * .5, (Math.random() - .5) * .2);
+  }
+
+  impact(pal, power) {
+    const [outer, inner] = PAL[pal] || PAL.phys, t = this.target();
+    this.shake = 1;
+    this.spark(t.x, t.y, t.z + .1, { color: inner, size: .5 * power, life: .16, grow: 1.4 });
+    this.spark(t.x, t.y, t.z + .1, { color: outer, size: 1 * power, life: .28, grow: .7, opacity: .7 });
+    for (let i = 0, n = Math.round(9 * power); i < n; i++) {
+      const a = Math.random() * 6.28, v = (1 + Math.random() * 2.4) * power;
+      this.spark(t.x, t.y, t.z + .1, { color: i % 2 ? outer : inner, size: .1 + Math.random() * .12, life: .3 + Math.random() * .25, vx: Math.cos(a) * v, vy: Math.sin(a) * v + .5, vz: (Math.random() - .5) * v, fall: 3, star: i % 3 === 0, grow: -.6 });
+    }
+  }
+
+  flight(look, crit, body) {
+    const from = this.hand(), to = this.target(), span = Math.max(.3, to.x - from.x), [outer, inner] = PAL[look.pal];
+    let p = 0;
+    const size = look.size * (crit ? 1.25 : 1), pos = from.clone();
+    this.fx.push((dt) => {
+      p += dt * look.speed / span;
+      pos.lerpVectors(from, to, Math.min(1, p));
+      pos.y += Math.sin(Math.min(1, p) * Math.PI) * (look.lift || 0);
+      if (body) body(pos, Math.min(1, p));
+      for (let i = 0; i < (look.trail || 0); i++) {
+        this.spark(pos.x - Math.random() * .12, pos.y + (Math.random() - .5) * size * .5, pos.z + (Math.random() - .5) * size * .5, { color: Math.random() < .6 ? outer : inner, size: size * (.4 + Math.random() * .4), life: .2 + Math.random() * .2, vx: -.6 - Math.random(), vy: (Math.random() - .3) * .8, grow: -.5, opacity: .8 });
+      }
+      if (p < 1) return false;
+      this.impact(look.pal, look.hit * (crit ? 1.3 : 1));
+      return true;
+    });
+    return { size, outer, inner };
+  }
+
+  bolt(look, crit) {
+    const { size, outer, inner } = this.flight(look, crit, (pos) => {
+      this.spark(pos.x, pos.y, pos.z, { color: outer, size: size * 1.5, life: .05, grow: 0, opacity: .8 });
+      this.spark(pos.x, pos.y, pos.z, { color: inner, size: size * .7, life: .05, grow: 0 });
+    });
+  }
+
+  shard(look, crit) {
+    const m = new THREE.Mesh(new THREE.ConeGeometry(look.size * .3, look.size * 1.5, 6), additive(PAL.frost[1], .95));
+    m.rotation.z = -Math.PI / 2;
     this.scene.add(m);
-    this.bolts.push(m);
+    this.flight(look, crit, (pos, p) => {
+      m.position.copy(pos);
+      this.spark(pos.x - look.size * .4, pos.y, pos.z, { color: PAL.frost[0], size: look.size * 1.4, life: .05, grow: 0, opacity: .7 });
+      if (p >= 1) { this.scene.remove(m); m.geometry.dispose(); m.material.dispose(); }
+    });
+  }
+
+  arrow(look, crit) {
+    const scale = look.size, shaft = new THREE.Mesh(new THREE.CylinderGeometry(.008 * scale, .008 * scale, .62 * scale, 5), new THREE.MeshBasicMaterial({ color: 0x8a6a42 }));
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(.024 * scale, .09 * scale, 6), new THREE.MeshBasicMaterial({ color: 0xdfe4ea }));
+    const tail = new THREE.Mesh(new THREE.PlaneGeometry(.13 * scale, .05 * scale), new THREE.MeshBasicMaterial({ color: 0xf2efe4, side: THREE.DoubleSide }));
+    const group = new THREE.Group();
+    shaft.rotation.z = tip.rotation.z = -Math.PI / 2;
+    tip.position.x = .35 * scale;
+    tail.position.x = -.27 * scale;
+    group.add(shaft, tip, tail);
+    this.scene.add(group);
+    const [outer] = PAL[look.pal], start = this.hand();
+    let last = start.clone();
+    this.flight({ ...look, size: .12 * scale }, crit, (pos, p) => {
+      group.position.copy(pos);
+      if (look.pal !== 'arrow' || crit) this.spark(pos.x - .3, pos.y, pos.z, { color: outer, size: .3 * scale, life: .1, grow: 0, opacity: .6 });
+      if (pos.distanceTo(last) < .5) this.ribbonLine(last, pos, outer, .012 * scale, .08);
+      last = pos.clone();
+      if (p >= 1) {
+        this.scene.remove(group);
+        for (const c of group.children) { c.geometry.dispose(); c.material.dispose(); }
+      }
+    });
+  }
+
+  ribbon(points, width, color, life, opacity = 1) {
+    const verts = [], index = [];
+    points.forEach((p, i) => {
+      verts.push(p.x, p.y - width / 2, p.z, p.x, p.y + width / 2, p.z);
+      if (i) index.push(i * 2 - 2, i * 2 - 1, i * 2, i * 2 - 1, i * 2 + 1, i * 2);
+    });
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+    geo.setIndex(index);
+    const m = new THREE.Mesh(geo, additive(color, opacity));
+    m.frustumCulled = false;
+    this.scene.add(m);
+    let age = 0;
+    this.fx.push((dt) => {
+      age += dt;
+      m.material.opacity = opacity * Math.max(0, 1 - age / life);
+      if (age < life) return false;
+      this.scene.remove(m);
+      geo.dispose();
+      m.material.dispose();
+      return true;
+    });
+  }
+
+  ribbonLine(a, b, color, width, life) {
+    if (this.fx.length < 36) this.ribbon([a.clone(), b.clone()], width, color, life, .35);
+  }
+
+  jagged(from, to, parts, wobble) {
+    return Array.from({ length: parts + 1 }, (_, i) => {
+      const p = from.clone().lerp(to, i / parts);
+      if (i && i < parts) { p.y += (Math.random() - .5) * wobble; p.z += (Math.random() - .5) * wobble * .4; }
+      return p;
+    });
+  }
+
+  lightning(look, crit) {
+    const from = this.hand(), to = this.target(), width = look.width * (crit ? 1.4 : 1), [outer, inner] = PAL[look.pal];
+    for (let i = 0; i < 2; i++) {
+      const line = this.jagged(from, to, 10, .5);
+      this.ribbon(line, width * 2.4, outer, .2, .55);
+      this.ribbon(line, width * .7, inner, .16);
+    }
+    this.impact(look.pal, look.hit * (crit ? 1.3 : 1));
+  }
+
+  tether(look, crit) {
+    const from = this.hand(), to = this.target(), [outer, inner] = PAL[look.pal];
+    this.ribbon(this.jagged(from, to, 14, .22), look.width * 2, outer, .3, .55);
+    this.ribbon(this.jagged(from, to, 14, .12), look.width * .6, inner, .24);
+    this.impact(look.pal, look.hit * (crit ? 1.3 : 1));
+  }
+
+  beam(look, crit) {
+    const x = this.dummy.position.x, w = look.width * (crit ? 1.3 : 1), [outer, inner] = PAL[look.pal];
+    for (const [size, color, opacity] of [[w, outer, .5], [w * .35, inner, .95]]) {
+      this.column ||= glowTexture(softColumn);
+      const geo = new THREE.PlaneGeometry(size, 7), m = new THREE.Mesh(geo, additive(color, opacity));
+      m.material.map = this.column;
+      m.position.set(x, 3.5, .1);
+      this.scene.add(m);
+      let age = 0;
+      this.fx.push((dt) => {
+        age += dt;
+        m.scale.x = Math.max(.05, 1 - age / .36);
+        m.material.opacity = opacity * Math.max(0, 1 - age / .36);
+        if (age < .36) return false;
+        this.scene.remove(m);
+        geo.dispose();
+        m.material.dispose();
+        return true;
+      });
+    }
+    this.impact(look.pal, look.hit * (crit ? 1.3 : 1));
+  }
+
+  blast(look, crit) {
+    const power = look.hit * (crit ? 1.3 : 1);
+    this.impact(look.pal, power);
+    if (look.ring || crit) this.ground({ pal: look.pal, y: 1.35, flat: 1 });
+  }
+
+  ground(look) {
+    const color = PAL[look.pal][0], geo = new THREE.RingGeometry(.2, .36, 40), m = new THREE.Mesh(geo, additive(color, .9));
+    m.position.set(this.dummy.position.x, look.y || .05, .05);
+    if (!look.flat) m.rotation.x = -Math.PI / 2;
+    this.scene.add(m);
+    let age = 0;
+    this.shake = 1;
+    this.fx.push((dt) => {
+      age += dt;
+      m.scale.setScalar(1 + age * 5);
+      m.material.opacity = .9 * Math.max(0, 1 - age / .5);
+      if (age < .5) return false;
+      this.scene.remove(m);
+      geo.dispose();
+      m.material.dispose();
+      return true;
+    });
+  }
+
+  wisp(look) {
+    const [outer, inner] = PAL[look.pal];
+    this.shake = Math.max(this.shake || 0, .4);
+    for (let i = 0; i < 6; i++) {
+      const t = this.target();
+      this.spark(t.x + (Math.random() - .5) * .45, t.y - .5, .15, { color: i % 2 ? outer : inner, size: .12 + Math.random() * .16, life: .45 + Math.random() * .3, vy: 1 + Math.random() * .8, vx: (Math.random() - .5) * .4, grow: .4, opacity: .75 });
+    }
+  }
+
+  dive(look, crit) {
+    const to = this.target(), from = new THREE.Vector3(to.x - 1.8 - Math.random(), 4.2, -.4);
+    this.flight({ ...look, size: .14, speed: 13, trail: 3 }, crit, (pos, p) => {
+      pos.lerpVectors(from, to, p);
+      this.spark(pos.x, pos.y, pos.z, { color: PAL.holy[1], size: .3, life: .06, grow: 0, opacity: .9 });
+    });
   }
 
   anchor() {
@@ -426,10 +730,25 @@ export class Stage {
       this.shake = Math.max(0, this.shake - dt * 6);
       this.dummy.rotation.z = Math.sin(performance.now() / 22) * .05 * this.shake;
     }
-    for (let i = this.bolts.length - 1; i >= 0; i--) {
-      const b = this.bolts[i];
-      b.position.x += b.userData.v * dt;
-      if (b.position.x >= b.userData.to) { this.scene.remove(b); this.bolts.splice(i, 1); }
+    const running = this.fx;
+    this.fx = [];
+    this.fx = [...running.filter((step) => !step(dt)), ...this.fx];
+    for (let i = this.parts.length - 1; i >= 0; i--) {
+      const p = this.parts[i];
+      p.age += dt;
+      if (p.age >= p.life) {
+        this.scene.remove(p.s);
+        this.spares.push(p.s);
+        this.parts.splice(i, 1);
+        continue;
+      }
+      const a = p.age / p.life;
+      p.vy -= p.fall * dt;
+      p.s.position.x += p.vx * dt;
+      p.s.position.y += p.vy * dt;
+      p.s.position.z += p.vz * dt;
+      p.s.scale.setScalar(Math.max(.001, p.size * (1 + p.grow * a)));
+      p.s.material.opacity = p.opacity * (1 - a);
     }
     this.renderer.render(this.scene, this.camera);
   }

@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261101182340';
-import { Stage } from './stage.js?v=20261101182340';
+import * as C from './core.js?v=20261101193721';
+import { Stage } from './stage.js?v=20261101193721';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -19,6 +19,13 @@ const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 const prettyKey = (key) => key.match(/.{4}/g).join('-');
+const CODE_MASK = '****-****-****-****';
+const hideCode = (text, button) => { $(text).textContent = CODE_MASK; $(button).textContent = 'Show'; };
+const flipCode = (text, button) => {
+  if ($(button).textContent === 'Hide') return hideCode(text, button);
+  $(text).textContent = prettyKey(playerKey);
+  $(button).textContent = 'Hide';
+};
 function saveKey(key) {
   try { localStorage.setItem('draftKey', key); } catch {}
   return key;
@@ -38,6 +45,7 @@ function note(key) {
 const pageUrl = () => location.origin + location.pathname;
 
 let playerKey = loadKey(), histRows = [], histSort = 'new', histOpen = 0, openPicks = {}, shareId = '', retired = {};
+let cameFrom = null;
 let sharedRows = [], sharedOpen = 0, replayRun = null, replayStep = 0, replayBack = 'pick', replayWorn = {}, dressed = {}, dressing = Promise.resolve(), everything;
 let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true;
 
@@ -362,8 +370,10 @@ async function fight(buildId) {
   const main = run.picks.main ? row(run.picks.main) : null;
   await stage.fight(kind, !!main && main[3] === 17);
   const marks = res.summons.map(([summon, from, to]) => ({ summon, from, to, on: false, off: false }));
-  await stage.prepare([...new Set(marks.map((m) => m.summon))]);
-  const minions = new Set(Object.values(C.SUMMONS).map((s) => s.n));
+  const cat = run.cls === 'HUNTER' && !!build.kit.pet;
+  await stage.prepare([...new Set(marks.map((m) => m.summon)), ...(cat ? ['cat'] : [])]);
+  if (cat) stage.summon('cat');
+  const minions = new Set(['Pet', ...Object.values(C.SUMMONS).map((s) => s.n)]);
   const gauge = $('dps'), bar = $('fill'), fly = $('fly');
   const dur = calm ? 300 : 11500, start = performance.now();
   const log = res.log, shown = Math.min(log.length, 240), step = Math.max(1, Math.floor(log.length / shown));
@@ -383,7 +393,7 @@ async function fight(buildId) {
       }
       while (at < until && at < events.length) {
         const ev = events[at++];
-        stage.hit(ev[4], minions.has(ev[1]));
+        stage.hit(ev[4], minions.has(ev[1]), ev[1], ev[3]);
         const a = stage.anchor(), n = document.createElement('span');
         n.className = 'ft ' + ev[4] + (ev[3] ? ' crit' : '');
         n.textContent = ev[2];
@@ -438,7 +448,7 @@ async function results() {
     last.id = out.id;
     last.token = out.token;
     if (!remember('draftCodeSaved')) {
-      $('rCodeText').textContent = prettyKey(playerKey);
+      hideCode('rCodeText', 'rShow');
       $('rCode').hidden = false;
     }
     const spec = C.specOf(run.cls, chosenBuild);
@@ -492,7 +502,7 @@ async function board(cls, spec = '') {
     el.classList.toggle('ranks', !!find);
     el.innerHTML = (find ? '<p class="rw rh"><span>Overall</span><span>Class</span></p>' : '') + d.rows.map((x) => {
       const b = (C.BUILDS[x.cls] || []).find((q) => q.id === x.build);
-      return `<a class="rw${last && x.id === last.id ? ' me' : ''}" href="#run=${x.id}" data-run="${x.id}"${result ? ' target="_blank"' : ''}><span class="rk">${x.pos}</span>${find ? `<span class="rk">${x.classPos}</span>` : ''}<img src="assets/classes/${x.cls}.png" alt="${C.CLASS_NAME[x.cls]}"><span class="nm" style="color:${C.CLASS_COLOR[x.cls]}">${esc(x.name)}${x.auto ? '<em>random name</em>' : ''}</span><span class="bd">${b ? esc(b.name) : ''}</span><b>${(+x.dps).toFixed(1)}</b></a>`;
+      return `<a class="rw${last && x.id === last.id ? ' me' : ''}" href="#run=${x.id}" data-run="${x.id}"><span class="rk">${x.pos}</span>${find ? `<span class="rk">${x.classPos}</span>` : ''}<img src="assets/classes/${x.cls}.png" alt="${C.CLASS_NAME[x.cls]}"><span class="nm" style="color:${C.CLASS_COLOR[x.cls]}">${esc(x.name)}${x.auto ? '<em>random name</em>' : ''}</span><span class="bd">${b ? esc(b.name) : ''}</span><b>${(+x.dps).toFixed(1)}</b></a>`;
     }).join('');
   } catch {
     if (ticket !== boardTicket) return;
@@ -688,15 +698,25 @@ async function showShared(share) {
 
 function route() {
   const hash = location.hash, one = /^#run=(\d+)$/.exec(hash), many = /^#runs=([0-9a-f]{16})$/.exec(hash);
+  $('shBack').hidden = !cameFrom;
   if (one) return showRun(+one[1]);
   if (many) return showShared(many[1]);
+  if (cameFrom) {
+    const { view, y, picks, box, top } = cameFrom;
+    cameFrom = null;
+    openPicks = picks;
+    show(view);
+    if (box) box.scrollTop = top;
+    scrollTo(0, y);
+    return;
+  }
   show('pick');
   board('ALL');
   history();
 }
 
 async function history(from) {
-  $('hCode').textContent = prettyKey(playerKey);
+  hideCode('hCode', 'hShow');
   try {
     const d = await post('/history', { key: playerKey, from });
     histRows = d.rows.map(readRun);
@@ -856,7 +876,7 @@ function clearHash() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261101182340', 'draft/gear.json?v=20261101182340', 'draft/talents.json?v=20261101182340', 'draft/retired.json?v=20261101182340'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261101193721', 'draft/gear.json?v=20261101193721', 'draft/talents.json?v=20261101193721', 'draft/retired.json?v=20261101193721'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {
@@ -879,13 +899,24 @@ async function boot() {
   $('hUse').onclick = () => { $('hUse').hidden = true; $('hForm').hidden = false; $('hMsg').textContent = ''; $('hIn').focus(); };
   $('hLoad').onclick = useCode;
   $('hIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') useCode(); });
+  $('hShow').onclick = () => flipCode('hCode', 'hShow');
+  $('rShow').onclick = () => flipCode('rCodeText', 'rShow');
   $('hCopy').onclick = () => { note('draftCodeSaved'); copyLink($('hCopy'), prettyKey(playerKey), 'Copy'); };
   $('rCopy').onclick = () => { note('draftCodeSaved'); copyLink($('rCopy'), prettyKey(playerKey), 'Copy'); };
   $('hShare').onclick = () => copyLink($('hShare'), `${pageUrl()}#runs=${shareId}`, 'Share my runs');
   $('rpPrev').onclick = () => replayMove(-1);
   $('rpNext').onclick = () => replayMove(1);
   $('rpBack').onclick = leaveReplay;
-  $('shHome').onclick = restart;
+  $('shHome').onclick = () => { cameFrom = null; restart(); };
+  $('shBack').onclick = () => window.history.back();
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest && e.target.closest('a.rw[data-run]');
+    if (!link || e.button || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (cameFrom) return;
+    let box = link.parentElement;
+    while (box && box !== document.body && !(box.scrollHeight > box.clientHeight && /auto|scroll/.test(getComputedStyle(box).overflowY))) box = box.parentElement;
+    cameFrom = { view: document.body.dataset.view, y: scrollY, picks: openPicks, box, top: box ? box.scrollTop : 0 };
+  }, true);
   addEventListener('hashchange', route);
   document.addEventListener('keydown', (e) => {
     if (!replayRun || document.body.dataset.view !== 'replay') return;

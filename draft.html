@@ -247,9 +247,9 @@ a.rw:hover, a.rw:focus-visible { background: rgba(248, 211, 107, 0.1); outline: 
 .gauge { width: min(72%, 420px); height: 10px; margin: 8px auto 0; background: rgba(0, 0, 0, 0.6); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
 #fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
 body.arena .table { display: block; padding: 0; }
-body.arena #left, body.arena #right, body.arena #stats, body.arena .frameart, body.arena .portrait, body.arena #who, body.arena .sub, body.arena #doll { display: none; }
-body.arena .pane { width: 100%; height: min(68vh, 640px); min-height: 420px; filter: none; }
-body.arena .viewport { left: 0; top: 0; width: 100%; height: 100%; background: linear-gradient(rgba(14, 9, 5, 0.35), rgba(10, 6, 3, 0.82)), var(--art) center 30% / cover; }
+body.arena #left, body.arena #right, body.arena #stats, body.arena main .frameart, body.arena main .portrait, body.arena #who, body.arena main .sub, body.arena #doll { display: none; }
+body.arena #pane { width: 100%; height: min(68vh, 640px); min-height: 420px; filter: none; }
+body.arena #pane .viewport { left: 0; top: 0; width: 100%; height: 100%; background: linear-gradient(rgba(14, 9, 5, 0.35), rgba(10, 6, 3, 0.82)), var(--art) center 30% / cover; }
 body.arena .bigfight { top: 18px; }
 body.arena #dps { font-size: 76px; }
 body.arena .gauge { height: 12px; }
@@ -375,7 +375,7 @@ body.arena #stage { cursor: default; }
   .rw img { width: 26px; height: 26px; }
   .br { grid-template-columns: 96px minmax(0, 1fr) 42px; }
   #dps, body.arena #dps { font-size: 48px; }
-  body.arena .pane { height: 62vh; min-height: 360px; }
+  body.arena #pane { height: 62vh; min-height: 360px; }
   .score { font-size: 56px; }
 }
 @media (prefers-reduced-motion: reduce) { .ft, .slot.flash .ic, #dps.done { animation: none; } .cls, .build { transition: none; } }
@@ -448,6 +448,8 @@ body.arena #stage { cursor: default; }
             <li>Stacking trinkets like Jom Gabbar and Zandalarian Hero Charm now stack and fade properly.</li>
             <li>Hunters no longer get attack power from gear counted twice.</li>
             <li>Summons now fight with you: Dragon's Call, Blackblade of Shahram, Book of the Dead, Ancient Cornerstone Grimoire and the Spirit of Eskhandar set. You can see them in the fight.</li>
+            <li>Survival Hunters now have a pet, and you can see Hunter pets in the fight. Items that boost pet damage now work. Marksmanship stays petless for Lone Wolf.</li>
+            <li>The fight has new spell, arrow and impact effects for each spec.</li>
             <li>Base stats, race stats and mana regen now match each class.</li>
             <li>A queued Heroic Strike or Raptor Strike no longer cancels the dual-wield miss penalty.</li>
           </ul>
@@ -480,7 +482,7 @@ body.arena #stage { cursor: default; }
       <div class="hist" id="hist"></div>
       <div class="hcode">
         <p><b>Recovery code.</b> Keep this private. It brings your runs back after clearing your browser, or on another device. To show people your runs, send the share link instead.</p>
-        <code id="hCode"></code><button class="spec" id="hCopy">Copy</button><button class="spec" id="hUse">Load a code</button><button class="spec" id="hShare" hidden>Share my runs</button>
+        <code id="hCode"></code><button class="spec" id="hShow">Show</button><button class="spec" id="hCopy">Copy</button><button class="spec" id="hUse">Load a code</button><button class="spec" id="hShare" hidden>Share my runs</button>
         <div class="hform" id="hForm" hidden><input id="hIn" maxlength="24" aria-label="Run code" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off"><button class="go" id="hLoad">Load runs</button></div>
         <div id="hMsg"></div>
       </div>
@@ -488,7 +490,7 @@ body.arena #stage { cursor: default; }
   </section>
 
   <section class="frame showcase" data-screen="shared" hidden><div class="in slab">
-    <div class="head"><h2 id="shTitle"></h2><span class="hsum" id="shSum"></span><div class="acts"><button class="spec" id="shHome">Draft your own</button></div></div>
+    <div class="head"><h2 id="shTitle"></h2><span class="hsum" id="shSum"></span><div class="acts"><button class="spec" id="shBack" hidden>Back</button><button class="spec" id="shHome">Draft your own</button></div></div>
     <div class="hist" id="shBody"></div>
   </div></section>
 
@@ -551,7 +553,7 @@ body.arena #stage { cursor: default; }
         <div id="nameBox">
           <div class="namebox"><input id="nameIn" maxlength="20" aria-label="Name for the board"><button class="go" id="nameGo">Save name</button></div>
           <div id="saved"></div>
-          <div id="rCode" hidden>Save your recovery code to keep your runs:<code id="rCodeText"></code><button class="spec" id="rCopy">Copy</button></div>
+          <div id="rCode" hidden>Save your recovery code to keep your runs:<code id="rCodeText"></code><button class="spec" id="rShow">Show</button><button class="spec" id="rCopy">Copy</button></div>
         </div>
         <div class="sh" id="rSheet"></div>
         <div class="rc" id="rBy"></div>
@@ -571,6 +573,6 @@ body.arena #stage { cursor: default; }
 <div id="peek" hidden><div class="pane"><img class="portrait" id="pkPortrait" alt=""><div class="frameart"></div><div class="viewport"><canvas id="pkStage" aria-label="Character for this run. Drag to turn."></canvas></div><div class="peekwho" id="pkWho"></div><div class="sub" id="pkSay"></div><div class="peekdoll" id="pkDoll"></div></div></div>
 <div id="tip" hidden></div>
 <div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button class="go" id="sheetMain" hidden>Main Hand</button><button class="go" id="sheetOff" hidden>Off Hand</button><button id="sheetClose">Close</button></div></div></div>
-<script type="module" src="draft/app.js?v=20261101182340"></script>
+<script type="module" src="draft/app.js?v=20261101193721"></script>
 </body>
 </html>

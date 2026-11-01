@@ -1,4 +1,4 @@
-export const VERSION = 4;
+export const VERSION = 5;
 export const FIGHT = 120;
 export const ROUNDS = 16;
 export const SLOTS = [
@@ -62,6 +62,8 @@ const SET_FX = {
   'Judgement Armor|8': { abil: { Judgement: { flat: 63 } } },
   'Netherwind Regalia|8': { nether: .1 },
   'Implements of Unspoken Names|3': { pets: .05 },
+  'Trappings of the Unseen Path|3': { pets: .03 },
+  'Cryptstalker Armor|4': { petAp: 50 },
 };
 const ITEM_FX = {
   22395: { abil: { 'Earth Shock': { flat: 30 }, 'Flame Shock': { flat: 30 } } },
@@ -69,6 +71,8 @@ const ITEM_FX = {
   23197: { abil: { Moonfire: { flat: 33 } } },
   16403: { abil: { 'Arcane Shot': { cost: -15 } } },
   16530: { abil: { 'Arcane Shot': { cost: -15 } } },
+  22061: { pets: .03 },
+  22015: { pets: .02 },
 };
 
 function addFx(to, from) {
@@ -119,7 +123,7 @@ export const BUILDS = {
       abilities: [{ n: 'Bestial Wrath', buff: { pet: .5 }, dur: 18, cd: 120, free: 1, cost: 0 }, { n: 'Serpent Sting', dot: { ticks: 5, every: 3, dmg: 111, rap: .02 }, cost: 250, cd: 15, school: 'nature', mult: 1.2 }, { n: 'Summon Hawk', flat: 108, rap: .05, cost: 190, cd: 6, noWeapon: 1, ticks2: 3 }, { n: 'Aimed Shot', weapon: 1, flat: 600, cost: 310, cd: 6, cast: 3 }] }) },
     { id: 'mm', name: 'Marksmanship', split: '5/41/5', blurb: "Serpent Sting, Aimed Shot and Arcane Shot with no pet out.", talents: [104998, 105002, 105001, 105007, 105011], wants: 'ranged', kit: ranged({ res: 'mana', crit: 5, critMult: .3, apFromInt: 1, haste: 15, costMult: .85, dmg: { ranged: 1.05, all: 1.2 },
       abilities: [{ n: 'Serpent Sting', dot: { ticks: 5, every: 3, dmg: 111, rap: .02 }, cost: 250, cd: 15, mult: 1.2, school: 'nature' }, { n: 'Aimed Shot', weapon: 1, flat: 600, cost: 310, cd: 6, cast: 3, mult: 1.067 }, { n: 'Arcane Shot', flat: 183, rap: .15, cost: 190, cd: 4.5, noWeapon: 1 }] }) },
-    { id: 'surv', name: 'Survival', split: '16/8/27', blurb: "Melee hunter with Raptor Strike, Strider Kick and Mongoose Bite.", talents: [110861, 104993, 104981, 104985], kit: melee({ res: 'mana', crit: 5, abilityCrit: 4, apFromInt: .6, critMult: .3, offMult: 1, costMult: .4, dmg: {},
+    { id: 'surv', name: 'Survival', split: '16/8/27', blurb: "Melee hunter with Raptor Strike, Strider Kick and Mongoose Bite, with a pet at your side.", talents: [110861, 104993, 104981, 104985], kit: melee({ res: 'mana', crit: 5, abilityCrit: 4, apFromInt: .6, critMult: .3, offMult: 1, costMult: .4, dmg: {}, pet: { dps: 48, rap: .055, mult: 1, phys: 1 },
       abilities: [{ n: 'Strider Kick', weapon: 1, cost: 100, cd: 8 }, { n: 'Raptor Strike', queue: 1, flat: 140, cost: 100, cd: 6 }, { n: 'Mongoose Bite', flat: 115, ap: .2, cost: 65, cd: 25, noWeapon: 1 }] }) },
   ],
   ROGUE: [
@@ -935,7 +939,7 @@ function once(pool, cls, build, picks, c, r, log) {
     }
     if (k.pet && petAt <= t) {
       petAt = t + 2;
-      const base = (k.pet.dps + curRap() * (k.pet.rap || 0) + curSp('shadow') * (k.pet.sp || 0)) * 2;
+      const base = (k.pet.dps + curRap() * (k.pet.rap || 0) + curSp('shadow') * (k.pet.sp || 0) + (fx.petAp || 0) / 14) * 2;
       note('Pet', base * k.pet.mult * (1 + buff('pet')) * (1 + (fx.pets || 0)) * (k.pet.phys ? armorMult : 1), r() < .1, 'phys');
     }
     for (const m of summoned) if (m.until > t) creatureTurn(m);

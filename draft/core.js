@@ -1,4 +1,4 @@
-export const VERSION = 2;
+export const VERSION = 3;
 export const FIGHT = 120;
 export const ROUNDS = 16;
 export const SLOTS = [
@@ -272,7 +272,7 @@ function character(pool, cls, build, picks) {
   const int = (base.int + (s.int || 0)) * mult('int'), spi = base.spi + (s.spi || 0);
   let ap = base.ap + str * base.str2 + agi * base.agi2 + (s.ap || 0);
   if (k.agiToAp) ap += agi;
-  if (k.feral) ap += k.feral * 1;
+  if (k.feral) ap += k.feral * 1 + (s.fap || 0);
   if (k.apFromInt) ap += int * k.apFromInt;
   const rap = (base.rap || 0) + agi * 2 + (s.rap || 0) + (s.ap || 0) + int * (k.apFromInt || 0);
   let sp = (s.sp || 0) + (k.spFlat || 0);

@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gear Draft · Linked Inn</title>
 <meta name="description" content="Draft a full set of Classic gear slot by slot, pick a Forever talent build, then see how high your DPS goes on the training dummy.">
-<link rel="canonical" href="https://lifeonazeroth.com/draft.html">
+<link rel="canonical" href="https://lifeonazeroth.com/draft">
+<script>if (/\/draft\.html$/.test(location.pathname) && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) history.replaceState(null, '', location.pathname.slice(0, -5) + location.search + location.hash);</script>
 <meta property="og:title" content="Gear Draft · Life on Azeroth">
 <meta property="og:description" content="Draft your gear, pick your talents, top the board.">
 <link rel="icon" href="assets/favicon.png">
@@ -385,7 +386,7 @@ body.arena #stage { cursor: default; }
       <a class="tab" href="./#crafting"><img src="assets/game/ui/inv_misc_bag_10.png" alt=""><span>Crafting</span></a>
       <a class="tab" href="./#duels"><img src="assets/game/ui/ability_parry.png" alt=""><span>Duels</span></a>
       <a class="tab" href="./#life"><img src="assets/game/ui/inv_misc_book_09.png" alt=""><span>Life</span></a>
-      <a class="tab on" href="draft.html"><img src="assets/icons/132347.png" alt=""><span>Draft</span></a>
+      <a class="tab on" href="draft"><img src="assets/icons/132347.png" alt=""><span>Draft</span></a>
       <a class="tab" href="./#open"><img class="folg" src="assets/forever-open-logo.png" alt=""><span>Forever Open</span></a>
     </nav>
     <div class="right">
@@ -435,11 +436,13 @@ body.arena #stage { cursor: default; }
             <li>Life Tap now costs health, so Warlocks can run out of mana.</li>
             <li>Mages now use Evocation and a Mana Ruby.</li>
             <li>Hunter pets now take armor reduction.</li>
+            <li>Attack power that only works in Cat or Bear form now only counts for Feral Druids.</li>
             <li>A queued Heroic Strike or Raptor Strike no longer cancels the dual-wield miss penalty.</li>
           </ul>
           <p><b>Items</b></p>
           <ul>
             <li>Andonisus, Reaper of Souls is gone. It only lasts 5 minutes in the game, so it was never real loot.</li>
+            <li>Shard of the Defiler, Ashbringer and the two Talismans of Binding are gone. They were never obtainable in the game.</li>
           </ul>
           <p><b>Old runs</b></p>
           <ul>
@@ -555,6 +558,6 @@ body.arena #stage { cursor: default; }
 <div id="hand" role="dialog" aria-label="Choose a hand" hidden></div>
 <div id="tip" hidden></div>
 <div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button class="go" id="sheetMain" hidden>Main Hand</button><button class="go" id="sheetOff" hidden>Off Hand</button><button id="sheetClose">Close</button></div></div></div>
-<script type="module" src="draft/app.js?v=20261101113633"></script>
+<script type="module" src="draft/app.js?v=20261101122036"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261101113633';
-import { Stage } from './stage.js?v=20261101113633';
+import * as C from './core.js?v=20261101122036';
+import { Stage } from './stage.js?v=20261101122036';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -728,7 +728,7 @@ async function startClass(cls) {
   let seed = (Math.random() * 2 ** 32) >>> 0;
   sig = null;
   try {
-    const s = await post('/start', { cls });
+    const s = await post('/start', { cls, version: C.VERSION });
     seed = s.seed;
     sig = s.sig;
   } catch { online = false; }
@@ -767,7 +767,7 @@ function clearHash() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261101113633', 'draft/gear.json?v=20261101113633', 'draft/talents.json?v=20261101113633', 'draft/retired.json?v=20261101113633'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261101122036', 'draft/gear.json?v=20261101122036', 'draft/talents.json?v=20261101122036', 'draft/retired.json?v=20261101122036'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {

@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261101122036';
-import { Stage } from './stage.js?v=20261101122036';
+import * as C from './core.js?v=20261101125140';
+import { Stage } from './stage.js?v=20261101125140';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -485,7 +485,7 @@ async function board(cls, spec = '') {
     el.classList.toggle('ranks', !!find);
     el.innerHTML = (find ? '<p class="rw rh"><span>Overall</span><span>Class</span></p>' : '') + d.rows.map((x) => {
       const b = (C.BUILDS[x.cls] || []).find((q) => q.id === x.build);
-      return `<div class="rw${last && x.id === last.id ? ' me' : ''}"><span class="rk">${x.pos}</span>${find ? `<span class="rk">${x.classPos}</span>` : ''}<img src="assets/classes/${x.cls}.png" alt="${C.CLASS_NAME[x.cls]}"><span class="nm" style="color:${C.CLASS_COLOR[x.cls]}">${esc(x.name)}${x.auto ? '<em>random name</em>' : ''}</span><span class="bd">${b ? esc(b.name) : ''}</span><b>${(+x.dps).toFixed(1)}</b></div>`;
+      return `<a class="rw${last && x.id === last.id ? ' me' : ''}" href="#run=${x.id}" data-run="${x.id}"${result ? ' target="_blank"' : ''}><span class="rk">${x.pos}</span>${find ? `<span class="rk">${x.classPos}</span>` : ''}<img src="assets/classes/${x.cls}.png" alt="${C.CLASS_NAME[x.cls]}"><span class="nm" style="color:${C.CLASS_COLOR[x.cls]}">${esc(x.name)}${x.auto ? '<em>random name</em>' : ''}</span><span class="bd">${b ? esc(b.name) : ''}</span><b>${(+x.dps).toFixed(1)}</b></a>`;
     }).join('');
   } catch {
     if (ticket !== boardTicket) return;
@@ -713,6 +713,88 @@ function useCode() {
   history(from);
 }
 
+let peekStage, peekId = 0, peekX = 0, peekOpen = 0, peekHide = 0, peekChain = Promise.resolve(), peekPicks = {};
+const peekRuns = new Map();
+
+async function peekRun(id) {
+  if (!peekRuns.has(id)) peekRuns.set(id, await fetchRun(id));
+  return peekRuns.get(id);
+}
+
+function placePeek(el) {
+  const r = el.getBoundingClientRect(), w = 360, h = 440, gap = 36;
+  const x = peekX + gap + w <= innerWidth - 8 ? peekX + gap : peekX - gap - w;
+  const y = Math.max(8, Math.min(r.top + r.height / 2 - h / 2, innerHeight - h - 8));
+  $('peek').style.transform = `translate(${Math.max(8, x)}px,${y}px)`;
+}
+
+function fillPeek(x) {
+  const art = (s) => ['finger1', 'finger2'].includes(s) ? 'finger' : ['trinket1', 'trinket2'].includes(s) ? 'trinket' : s;
+  $('pkDoll').innerHTML = PANE.map(([s, left, top]) => {
+    const id = x.picks[s], on = id && row(id);
+    return `<button class="ps${on ? ' on' : ''}${['shirt', 'tabard'].includes(s) ? ' dead' : ''}" data-item="${on ? id : ''}" style="left:calc(var(--u)*${left});top:calc(var(--u)*${top});background-image:url(assets/draft/ui/${art(s)}.png)${on ? `;--q:${QUALITY[row(id)[1]]}` : ''}" tabindex="-1">${on ? `<img src="${icon(id)}" alt="">` : ''}</button>`;
+  }).join('');
+  $('peek').style.setProperty('--cc', C.CLASS_COLOR[x.cls]);
+  $('pkPortrait').src = `assets/classes/${x.cls}.png`;
+  $('pkWho').textContent = `${x.auto ? '' : `${x.name} · `}${C.specOf(x.cls, x.build) || C.CLASS_NAME[x.cls]}`;
+  $('pkSay').textContent = `${(+x.dps).toFixed(1)} DPS`;
+}
+
+async function openPeek(el) {
+  const id = +el.dataset.run;
+  if (peekId === id) return;
+  peekId = id;
+  let x;
+  try { x = await peekRun(id); } catch { return; }
+  if (peekId !== id) return;
+  if ($('peek').hidden) peekPicks = openPicks;
+  openPicks = x.picks;
+  fillPeek(x);
+  placePeek(el);
+  $('peek').hidden = false;
+  if (!peekStage) peekStage = new Stage($('pkStage'), gear);
+  peekStage.resume();
+  peekStage.resize();
+  peekChain = peekChain.then(async () => {
+    if (peekId !== id) return;
+    $('pkStage').style.opacity = 0;
+    await peekStage.setClass(x.cls);
+    if (peekId !== id) return;
+    await peekStage.outfit(C.SLOTS.filter(([s]) => x.picks[s] && row(x.picks[s])).map(([s]) => [s, x.picks[s], row(x.picks[s])]), () => { $('pkStage').style.opacity = 1; });
+  }).catch(() => {});
+}
+
+function closePeek() {
+  clearTimeout(peekOpen);
+  clearTimeout(peekHide);
+  if ($('peek').hidden) { peekId = 0; return; }
+  peekId = 0;
+  $('peek').hidden = true;
+  $('tip').hidden = true;
+  openPicks = peekPicks;
+  if (peekStage) peekStage.pause();
+}
+
+if (!touch) {
+  document.addEventListener('mousemove', (e) => { peekX = e.clientX; });
+  document.addEventListener('mouseover', (e) => {
+    const link = e.target.closest && e.target.closest('a.rw[data-run]'), inside = e.target.closest && e.target.closest('#peek');
+    if (!link && !inside) return;
+    clearTimeout(peekHide);
+    clearTimeout(peekOpen);
+    if (link) peekOpen = setTimeout(() => openPeek(link), 220);
+  });
+  document.addEventListener('mouseout', (e) => {
+    const from = e.target.closest && e.target.closest('a.rw[data-run], #peek');
+    const to = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('a.rw[data-run], #peek');
+    if (!from || to) return;
+    clearTimeout(peekOpen);
+    peekHide = setTimeout(closePeek, 350);
+  });
+  document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('a.rw[data-run]')) closePeek(); });
+  addEventListener('scroll', closePeek, { passive: true });
+}
+
 function setTable(cls, build) {
   document.body.style.setProperty('--cc', C.CLASS_COLOR[cls]);
   document.body.style.setProperty('--art', `url(assets/game/${ART[cls]})`);
@@ -767,7 +849,7 @@ function clearHash() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261101122036', 'draft/gear.json?v=20261101122036', 'draft/talents.json?v=20261101122036', 'draft/retired.json?v=20261101122036'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261101125140', 'draft/gear.json?v=20261101125140', 'draft/talents.json?v=20261101125140', 'draft/retired.json?v=20261101125140'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {

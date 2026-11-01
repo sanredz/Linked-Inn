@@ -213,9 +213,30 @@ export class Stage {
     if (slot === 'feet' && g[0]) this.groups[5] = 1 + g[0];
     if (slot === 'legs') { if (g[0]) this.groups[9] = 1 + g[0]; if (g[2]) this.groups[13] = 1 + g[2]; }
     if (slot === 'chest') { if (g[0]) this.groups[8] = 1 + g[0]; if (g[1]) this.groups[10] = 1 + g[1]; if (g[2]) this.groups[13] = 1 + g[2]; }
+    if (this.quiet) return;
     await this.repaint();
     this.applyGeosets();
     this.pulse();
+  }
+
+  async outfit(items, ready) {
+    this.quiet = true;
+    const jobs = items.map(([slot, id, row]) => this.wear(slot, id, row));
+    await this.repaint();
+    this.applyGeosets();
+    ready();
+    await Promise.all(jobs);
+    this.quiet = false;
+    this.applyGeosets();
+    this.skin.needsUpdate = true;
+  }
+
+  pause() {
+    this.renderer.setAnimationLoop(null);
+  }
+
+  resume() {
+    this.renderer.setAnimationLoop(() => this.frame());
   }
 
   async strip() {

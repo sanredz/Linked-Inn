@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261101004153';
-import { Stage } from './stage.js?v=20261101004153';
+import * as C from './core.js?v=20261101025322';
+import { Stage } from './stage.js?v=20261101025322';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -73,7 +73,7 @@ document.addEventListener('error', (e) => {
 }, true);
 
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('#hand') && !e.target.closest('.slot')) $('hand').hidden = true;
+  if (!e.target.closest('#hand') && !e.target.closest('.slot') && !e.target.closest('#sheet')) $('hand').hidden = true;
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('hand').hidden = true; });
 
@@ -228,10 +228,14 @@ function sheet() {
     ${s.bonuses.length ? `<div class="grp">Talent bonuses</div>${s.bonuses.map((x) => `<div class="bn">${esc(x)}</div>`).join('')}` : ''}`;
 }
 
-function openSheet(html, slot) {
+function openSheet(html, slot, hands = []) {
   $('sheetBody').innerHTML = html;
-  $('sheetKeep').hidden = !slot;
-  $('sheetKeep').onclick = () => { closeSheet(); choose(slot); };
+  $('sheetKeep').hidden = !slot || hands.length > 1;
+  $('sheetKeep').onclick = (e) => { e.stopPropagation(); closeSheet(); choose(slot); };
+  for (const [id, to] of [['sheetMain', 'main'], ['sheetOff', 'off']]) {
+    $(id).hidden = !hands.includes(to) || hands.length < 2;
+    $(id).onclick = (e) => { e.stopPropagation(); closeSheet(); choose(slot, to); };
+  }
   $('sheet').hidden = false;
 }
 
@@ -242,10 +246,12 @@ function closeSheet() {
 function inspect(slot) {
   const id = +$('s_' + slot).dataset.item;
   if (!id) return;
-  openSheet(tooltip(id), !spinning && run && offer[slot] === id && !(slot in run.picks) ? slot : null);
+  const open = !spinning && run && offer[slot] === id && !(slot in run.picks);
+  openSheet(tooltip(id), open ? slot : null, open ? C.hands(pool, run, slot, id) : []);
 }
 
 function askHand(slot) {
+  $('tip').hidden = true;
   const box = $('hand'), r = $('s_' + slot).getBoundingClientRect();
   box.innerHTML = `<span>Which hand?</span><button data-to="main">Main Hand</button><button data-to="off">Off Hand</button>`;
   box.hidden = false;
@@ -473,7 +479,7 @@ function restart() {
 }
 
 async function boot() {
-  [pool, gear, talents] = await Promise.all(['draft/pool.json?v=20261101004153', 'draft/gear.json?v=20261101004153', 'draft/talents.json?v=20261101004153'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents] = await Promise.all(['draft/pool.json?v=20261101025322', 'draft/gear.json?v=20261101025322', 'draft/talents.json?v=20261101025322'].map((f) => fetch(f).then((r) => r.json())));
   classGrid();
   $('mull').onclick = mulligan;
   $('sheetClose').onclick = closeSheet;

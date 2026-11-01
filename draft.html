@@ -226,7 +226,7 @@ body.arena #stage { cursor: default; }
 .after { margin-top: 14px; }
 .res .board { max-height: 520px; }
 
-#hand { position: fixed; z-index: 35; display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: rgba(16, 13, 9, 0.98); border: 1px solid var(--gold); border-radius: 7px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7); font-size: 13px; color: var(--ink-2); }
+#hand { position: fixed; z-index: 41; display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: rgba(16, 13, 9, 0.98); border: 1px solid var(--gold); border-radius: 7px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7); font-size: 13px; color: var(--ink-2); }
 #hand button { min-height: 36px; padding: 4px 10px; color: #1a1206; background: linear-gradient(#ffe39a, #d5a548); border: 1px solid #f3cf74; border-radius: 6px; font-size: 13px; }
 #tip { position: fixed; left: 0; top: 0; z-index: 40; width: 300px; padding: 9px 11px; background: rgba(8, 10, 22, 0.96); border: 1px solid #5d6073; border-radius: 6px; font: 13px/1.3 "Segoe UI", system-ui, sans-serif; color: #fff; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6); }
 #sheet { position: fixed; inset: 0; z-index: 45; display: flex; flex-direction: column; justify-content: flex-end; background: rgba(4, 3, 2, 0.6); }
@@ -430,7 +430,7 @@ body.arena #stage { cursor: default; }
 </main>
 <div id="hand" role="dialog" aria-label="Choose a hand" hidden></div>
 <div id="tip" hidden></div>
-<div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button id="sheetClose">Close</button></div></div></div>
-<script type="module" src="draft/app.js?v=20261101004153"></script>
+<div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button class="go" id="sheetMain" hidden>Main Hand</button><button class="go" id="sheetOff" hidden>Off Hand</button><button id="sheetClose">Close</button></div></div></div>
+<script type="module" src="draft/app.js?v=20261101025322"></script>
 </body>
 </html>

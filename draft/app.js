@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261101111246';
-import { Stage } from './stage.js?v=20261101111246';
+import * as C from './core.js?v=20261101113633';
+import { Stage } from './stage.js?v=20261101113633';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -465,7 +465,7 @@ function specRow(el, cls, classes) {
   for (const b of el.children) b.onclick = () => board(b.dataset.c, b.dataset.s);
 }
 
-let boardClass = 'ALL', boardSpec = '', boardTicket = 0;
+let boardClass = 'ALL', boardSpec = '', boardFind = '', boardTicket = 0, findTimer = 0;
 async function board(cls, spec = '') {
   boardClass = cls;
   boardSpec = spec;
@@ -473,19 +473,24 @@ async function board(cls, spec = '') {
   for (const b of document.querySelectorAll('#bFilter button')) b.classList.toggle('on', b.dataset.c === cls);
   specRow($('bSpec'), cls, Object.keys(C.SPECS[cls] || {}).length > 1 ? [[cls, '', 'All specs']] : []);
   if (result && run) specRow($('rSpec'), run.cls, [['ALL', '', 'All classes'], [run.cls, '', C.CLASS_NAME[run.cls]]]);
-  const el = $(result ? 'boardResult' : 'board');
+  const el = $(result ? 'boardResult' : 'board'), count = $(result ? 'rCount' : 'bCount'), find = boardFind.trim();
   try {
-    const r = await fetch(`${API}/board?cls=${cls}${spec ? `&spec=${encodeURIComponent(spec)}` : ''}`);
+    const r = await fetch(`${API}/board?cls=${cls}${spec ? `&spec=${encodeURIComponent(spec)}` : ''}${find ? `&q=${encodeURIComponent(find)}` : ''}`);
     if (!r.ok) throw 0;
     const d = await r.json();
     if (ticket !== boardTicket) return;
-    if (!d.rows.length) { el.innerHTML = '<div class="empty">No runs yet. Be the first on the board.</div>'; return; }
-    el.innerHTML = d.rows.map((x, i) => {
+    const plural = (n) => `${n.toLocaleString()} run${n === 1 ? '' : 's'}`;
+    count.textContent = find ? `${d.matched.toLocaleString()} of ${plural(d.total)}` : plural(d.total);
+    if (!d.rows.length) { el.innerHTML = `<div class="empty">${find ? 'Nobody with that name here.' : 'No runs yet. Be the first on the board.'}</div>`; return; }
+    el.classList.toggle('ranks', !!find);
+    el.innerHTML = (find ? '<p class="rw rh"><span>Overall</span><span>Class</span></p>' : '') + d.rows.map((x) => {
       const b = (C.BUILDS[x.cls] || []).find((q) => q.id === x.build);
-      return `<div class="rw${last && x.id === last.id ? ' me' : ''}"><span class="rk">${i + 1}</span><img src="assets/classes/${x.cls}.png" alt="${C.CLASS_NAME[x.cls]}"><span class="nm" style="color:${C.CLASS_COLOR[x.cls]}">${esc(x.name)}${x.auto ? '<em>random name</em>' : ''}</span><span class="bd">${b ? esc(b.name) : ''}</span><b>${(+x.dps).toFixed(1)}</b></div>`;
+      return `<div class="rw${last && x.id === last.id ? ' me' : ''}"><span class="rk">${x.pos}</span>${find ? `<span class="rk">${x.classPos}</span>` : ''}<img src="assets/classes/${x.cls}.png" alt="${C.CLASS_NAME[x.cls]}"><span class="nm" style="color:${C.CLASS_COLOR[x.cls]}">${esc(x.name)}${x.auto ? '<em>random name</em>' : ''}</span><span class="bd">${b ? esc(b.name) : ''}</span><b>${(+x.dps).toFixed(1)}</b></div>`;
     }).join('');
   } catch {
-    if (ticket === boardTicket) el.innerHTML = '<div class="empty">The ranking could not be reached.</div>';
+    if (ticket !== boardTicket) return;
+    count.textContent = '';
+    el.innerHTML = '<div class="empty">The ranking could not be reached.</div>';
   }
 }
 
@@ -762,9 +767,14 @@ function clearHash() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261101111246', 'draft/gear.json?v=20261101111246', 'draft/talents.json?v=20261101111246', 'draft/retired.json?v=20261101111246'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261101113633', 'draft/gear.json?v=20261101113633', 'draft/talents.json?v=20261101113633', 'draft/retired.json?v=20261101113633'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
+  for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {
+    boardFind = $('bFind').value = $('rFind').value = box.value;
+    clearTimeout(findTimer);
+    findTimer = setTimeout(() => board(boardClass, boardSpec), 120);
+  };
   $('noteLink').onclick = (e) => {
     e.preventDefault();
     $('notes').open = true;

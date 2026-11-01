@@ -173,6 +173,12 @@ export class Stage {
 
   async setClass(cls) {
     const race = RACE[cls], rig = this.gear.rigs[race];
+    if (this.rig && this.race === race) {
+      this.yaw = 0;
+      await this.strip();
+      this.pose('idle');
+      return;
+    }
     if (this.rig) this.scene.remove(this.rig);
     this.race = race;
     this.groups = { ...NAKED };
@@ -234,6 +240,7 @@ export class Stage {
 
   async repaint() {
     const ctx = this.canvas2d.getContext('2d'), k = this.canvas2d.width / 256;
+    await Promise.all(PAINT.flatMap((slot) => Object.values((this.worn[slot] && this.worn[slot].t) || {}).map((file) => image(ROOT + 'skin/' + file))));
     ctx.globalCompositeOperation = 'source-over';
     if (this.base) ctx.drawImage(this.base, 0, 0, this.canvas2d.width, this.canvas2d.height);
     for (const slot of PAINT) {
@@ -307,10 +314,11 @@ export class Stage {
   async outfit(items, ready) {
     this.quiet = true;
     const jobs = items.map(([slot, id, row]) => this.wear(slot, id, row));
-    await this.repaint();
+    const painted = this.repaint();
+    await Promise.race([painted, new Promise((done) => { setTimeout(done, 400); })]);
     this.applyGeosets();
     ready();
-    await Promise.all(jobs);
+    await Promise.all([painted, ...jobs]);
     this.quiet = false;
     this.applyGeosets();
     this.skin.needsUpdate = true;

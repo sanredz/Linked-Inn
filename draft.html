@@ -114,23 +114,26 @@ body[data-view="replay"] .slot:hover { filter: none; box-shadow: none; }
 .slot.gone { opacity: .5; }
 .hbuild { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .hacts { display: flex; gap: 6px; margin-left: auto; }
-.modepick { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1240px; margin: 26px auto 0; }
+.modepick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 1400px; margin: 26px auto 0; }
 .modepick[hidden] { display: none; }
-.modecard { position: relative; display: block; width: 100%; height: min(clamp(250px, calc(100vh - 120px), 660px), calc((100vw - 68px) * .6)); padding: 0; overflow: hidden; color: inherit; text-align: left; cursor: pointer; background: #0b0705; border: 0; border-radius: 12px; box-shadow: 0 0 0 2px var(--gold-dim), 0 16px 44px rgba(0, 0, 0, .7); transition: box-shadow .2s, transform .2s; }
+.modecard { position: relative; display: block; width: 100%; height: min(clamp(250px, calc(100vh - 120px), 660px), calc((100vw - 68px) * .46)); padding: 0; overflow: hidden; color: inherit; text-align: left; cursor: pointer; background: #0b0705; border: 0; border-radius: 12px; box-shadow: 0 0 0 2px var(--gold-dim), 0 16px 44px rgba(0, 0, 0, .7); transition: box-shadow .2s, transform .2s; }
 .modecard img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .45s ease; }
 .modecard::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 42%, rgba(8, 5, 3, .72) 68%, rgba(8, 5, 3, .96)); box-shadow: inset 0 0 60px rgba(0, 0, 0, .65); }
 .modecard:hover, .modecard:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--gold), 0 0 34px rgba(248, 211, 107, .4), 0 16px 44px rgba(0, 0, 0, .7); }
 .modecard:hover img, .modecard:focus-visible img { transform: scale(1.04); }
 .modecard:active { transform: scale(.99); }
 .modecard .say { position: absolute; z-index: 1; left: 34px; right: 34px; bottom: 28px; }
+@media (min-width: 761px) { .modecard .say span { display: block; min-height: 2.8em; } }
 .modecard b { display: block; font: clamp(40px, 4.6vw, 64px)/1 "Morpheus", serif; color: #ffe6a8; text-shadow: 0 3px 0 #000, 0 0 30px rgba(248, 211, 107, .35); }
 .modecard span { display: block; margin-top: 8px; font-size: 17px; line-height: 1.35; color: var(--ink); text-shadow: 0 1px 3px #000; }
-.modeback { display: inline-block; margin: 14px 0 0; padding: 4px 0; font: 14.5px "Friz", serif; color: var(--ink-2); background: none; border: 0; cursor: pointer; }
-.modeback:hover { color: var(--gold); }
-.modeback[hidden] { display: none; }
+.modetabs { display: flex; gap: 6px; margin: 12px 0 0; }
+.modetabs[hidden] { display: none; }
+.modetabs button { flex: 0 1 auto; padding: 7px 14px; font: 14.5px "Friz", serif; color: var(--ink-2); background: rgba(0, 0, 0, .4); border: 1px solid #5a4620; border-radius: 6px; cursor: pointer; }
+.modetabs button:hover { color: var(--gold); }
+.modetabs button.on { color: var(--gold); border-color: var(--gold); }
 @media (max-width: 760px) {
   .modepick { grid-template-columns: 1fr; gap: 12px; margin-top: 12px; }
-  .modecard { height: max(216px, calc((100svh - 170px) / 2)); }
+  .modecard { height: max(170px, calc((100svh - 190px) / 3)); }
   .modecard .say { left: 18px; right: 18px; bottom: 14px; }
   .modecard b { font-size: 36px; }
   .modecard span { margin-top: 4px; font-size: 15px; }
@@ -319,13 +322,19 @@ body.arena #stage { cursor: default; }
 
 #hand { position: fixed; z-index: 41; display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: rgba(16, 13, 9, 0.98); border: 1px solid var(--gold); border-radius: 7px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7); font-size: 13px; color: var(--ink-2); }
 #hand button { min-height: 36px; padding: 4px 10px; color: #1a1206; background: linear-gradient(#ffe39a, #d5a548); border: 1px solid #f3cf74; border-radius: 6px; font-size: 13px; }
-#tip { position: fixed; left: 0; top: 0; z-index: 40; width: 300px; padding: 9px 11px; background: rgba(8, 10, 22, 0.96); border: 1px solid #5d6073; border-radius: 6px; font: 13px/1.3 "Segoe UI", system-ui, sans-serif; color: #fff; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6); }
+#tip { position: fixed; left: 0; top: 0; z-index: 80; width: 300px; padding: 9px 11px; background: rgba(8, 10, 22, 0.96); border: 1px solid #5d6073; border-radius: 6px; font: 13px/1.3 "Segoe UI", system-ui, sans-serif; color: #fff; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6); }
 #sheet { position: fixed; inset: 0; z-index: 45; display: flex; flex-direction: column; justify-content: flex-end; background: rgba(4, 3, 2, 0.6); }
 #sheet .box { padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); background: rgba(8, 10, 22, 0.98); border-top: 2px solid var(--gold-2); border-radius: 12px 12px 0 0; }
 #sheetBody { max-height: 58vh; overflow-y: auto; font: 15px/1.35 "Segoe UI", system-ui, sans-serif; color: #fff; }
 #sheet .acts { display: flex; gap: 8px; margin-top: 12px; }
 #sheet .acts button { flex: 1; min-height: 48px; font-size: 16px; }
 #sheetClose { color: var(--ink-2); background: rgba(255, 255, 255, 0.06); border: 1px solid #5d6073; border-radius: 8px; }
+#tip.multi { display: flex; align-items: flex-start; gap: 12px; width: auto; max-width: calc(100vw - 16px); }
+#tip.multi[hidden] { display: none; }
+.ttcol { flex: 0 1 276px; min-width: 0; }
+.ttcol + .ttcol { padding-left: 12px; border-left: 1px solid #3c3f52; }
+.tiphead { display: block; margin-bottom: 3px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #9a9db0; }
+.ttcol small { display: block; margin-bottom: 2px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #9a9db0; }
 #tip b, #sheetBody b { display: block; font-size: 15px; font-weight: 600; }
 #tip .il, #sheetBody .il { display: block; font-style: normal; color: #ffd100; }
 #tip .two, #sheetBody .two { display: flex; justify-content: space-between; }
@@ -364,6 +373,9 @@ body.arena #stage { cursor: default; }
   .bl { min-height: 0; }
 }
 @media (max-width: 760px) {
+  #mull { position: fixed; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 30; min-height: 48px; }
+  #mull:disabled { display: none; }
+  body[data-view="draft"] .draft .in { padding-bottom: 76px; }
   .wrap { padding: 0 16px; }
   .top .wrap { height: auto; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; gap: 8px; }
   .tabs { width: 100%; overflow-x: auto; order: 2; }
@@ -423,6 +435,13 @@ body.arena #stage { cursor: default; }
   </div>
 </header>
 <main class="wrap">
+  <section class="modepick" id="home" data-screen="home" hidden>
+    <button class="modecard" id="modeDraft"><img src="assets/draft/arena/card-draft.jpg" alt=""><div class="say"><b>Gear Draft</b><span>Draft one hero and see how much damage they do.</span></div></button>
+    <button class="modecard" id="modeArena"><img src="assets/draft/arena/card-gauntlet.jpg" alt=""><div class="say"><b>Arena Draft</b><span>Buy gear between duels and fight your way to ten wins.</span></div></button>
+    <button class="modecard" id="modeRaid"><img src="assets/draft/arena/card-raid.jpg" alt=""><div class="say"><b>Raid Draft</b><span>Draft a party of three and see how far they get.</span></div></button>
+  </section>
+
+  <nav class="modetabs" id="modeTabs" data-screen="pick gauntlet raid" hidden><button data-mode="home">&lsaquo; Home</button><button data-mode="pick">Gear</button><button data-mode="gauntlet">Arena</button><button data-mode="raid">Raid</button></nav>
 
   <section class="frame banner" data-screen="pick" hidden>
     <div class="in">
@@ -436,6 +455,31 @@ body.arena #stage { cursor: default; }
   </section>
 
   <div class="note" data-screen="pick" hidden><b>Update:</b> The fight sim has changed to be more accurate, and all runs have been re-simmed. <a href="#notes" id="noteLink">More in the patch notes</a>.</div>
+
+  <section class="frame banner" data-screen="gauntlet" hidden>
+    <div class="in">
+      <div class="art" style="background-image:url(assets/draft/arena/card-gauntlet.jpg)"></div>
+      <div class="say">
+        <div class="kicker">Ten wins · Three lives</div>
+        <h1>Arena Draft</h1>
+        <p>Spend your gold between duels and fight your way to ten wins. Whatever you do not spend is gone next round.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="frame banner" data-screen="raid" hidden>
+    <div class="in">
+      <div class="art" style="background-image:url(assets/draft/arena/card-raid.jpg);background-position:center 14%"></div>
+      <div class="say">
+        <div class="kicker">Three heroes · One raid</div>
+        <h1>Raid Draft</h1>
+        <p>Draft a party and fight through the raid. The last boss never falls, so the only question is how hard you hit him.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="frame" data-screen="gauntlet" hidden style="margin-top:12px"><div class="in slab"><div id="gauntletRoot"></div></div></section>
+  <section class="frame" data-screen="raid" hidden style="margin-top:12px"><div class="in slab"><div id="raidRoot"></div></div></section>
 
   <section class="pick" data-screen="pick" hidden>
     <div class="frame"><div class="in slab">
@@ -596,6 +640,6 @@ body.arena #stage { cursor: default; }
 <div id="peek" hidden><div class="pane"><img class="portrait" id="pkPortrait" alt=""><div class="frameart"></div><div class="viewport"><canvas id="pkStage" aria-label="Character for this run. Drag to turn."></canvas></div><div class="peekwho" id="pkWho"></div><div class="sub" id="pkSay"></div><div class="peekdoll" id="pkDoll"></div></div></div>
 <div id="tip" hidden></div>
 <div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button class="go" id="sheetMain" hidden>Main Hand</button><button class="go" id="sheetOff" hidden>Off Hand</button><button id="sheetClose">Close</button></div></div></div>
-<script type="module" src="draft/app.js?v=20261102085927"></script>
+<script type="module" src="draft/app.js?v=20261102232626"></script>
 </body>
 </html>

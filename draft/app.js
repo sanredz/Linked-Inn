@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261102085927';
-import { Stage } from './stage.js?v=20261102085927';
+import * as C from './core.js?v=20261102232626';
+import { Stage } from './stage.js?v=20261102232626';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -66,7 +66,11 @@ function show(view) {
   document.body.dataset.view = view;
 }
 
+let gauntletOwned = null;
+let raidOwned = null;
 let mainView = 'pick';
+let gauntletOpen = false;
+let raidOpen = false;
 
 function tooltip(id, owned) {
   const r = row(id), [name, q, ilvl, inv, , cls, sub, s, d, setId, , , lines] = r;
@@ -84,7 +88,7 @@ function tooltip(id, owned) {
   if (s.sp && !lines.some((l) => /damage/.test(l))) h += `<div class="eq">Equip: Increases damage and healing done by magical spells and effects by up to ${s.sp}.</div>`;
   const set = setId && pool.sets[setId];
   if (set) {
-    const have = set.i.filter((i) => Object.values(owned || (['pick', 'shared', 'replay'].includes(document.body.dataset.view) ? openPicks : run ? run.picks : {})).includes(i)).length;
+    const have = set.i.filter((i) => Object.values(owned || (document.body.dataset.view === 'raid' && raidOwned ? raidOwned() : document.body.dataset.view === 'gauntlet' && gauntletOwned ? gauntletOwned() : ['pick', 'shared', 'replay'].includes(document.body.dataset.view) ? openPicks : run ? run.picks : {})).includes(i)).length;
     h += `<div class="set">${esc(set.n)} (${have}/${set.i.length})</div>`;
     for (const [need, , text] of set.b) if (text) h += `<div class="${have >= need ? 'eq' : 'off'}">(${need}) Set: ${esc(text)}</div>`;
   }
@@ -127,14 +131,19 @@ document.addEventListener('mousemove', (e) => {
   const tal = e.target.closest && e.target.closest('[data-tal]');
   if (tal) {
     const key = 't' + tal.dataset.tal + tal.dataset.build;
-    if (t.dataset.id !== key) { t.innerHTML = taltip(tal.dataset.tal, tal.dataset.build); t.dataset.id = key; }
+    if (t.dataset.id !== key) { t.innerHTML = taltip(tal.dataset.tal, tal.dataset.build); t.classList.remove('multi'); t.dataset.id = key; }
     t.hidden = false;
     positionTip(e);
     return;
   }
   const el = e.target.closest && e.target.closest('[data-item]');
   if (!el || !+el.dataset.item) { t.hidden = true; return; }
-  if (t.dataset.id !== el.dataset.item) { t.innerHTML = tooltip(el.dataset.item) + (el.dataset.extra ? `<div class="eq">${esc(el.dataset.extra)}</div>` : ''); t.dataset.id = el.dataset.item; }
+  const vs = (el.dataset.vs || '').split(',').filter(Boolean), key = [el.dataset.item, ...vs, el.dataset.head || ''].join();
+  if (t.dataset.id !== key) {
+    t.innerHTML = vs.length ? [el.dataset.item, ...vs].map((id, i) => `<div class="ttcol">${i ? '<small>Equipped</small>' : ''}${tooltip(id)}</div>`).join('') : (el.dataset.head ? `<small class="tiphead">${esc(el.dataset.head)}</small>` : '') + tooltip(el.dataset.item) + (el.dataset.extra ? `<div class="eq">${esc(el.dataset.extra)}</div>` : '');
+    t.classList.toggle('multi', vs.length > 0);
+    t.dataset.id = key;
+  }
   t.hidden = false;
   positionTip(e);
 });
@@ -878,7 +887,7 @@ function clearHash() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261102085927', 'draft/gear.json?v=20261102085927', 'draft/talents.json?v=20261102085927', 'draft/retired.json?v=20261102085927'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261102232626', 'draft/gear.json?v=20261102232626', 'draft/talents.json?v=20261102232626', 'draft/retired.json?v=20261102232626'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {
@@ -886,6 +895,42 @@ async function boot() {
     clearTimeout(findTimer);
     findTimer = setTimeout(() => board(boardClass, boardSpec), 120);
   };
+  for (const href of ['pvp/gauntlet.css', 'raid/raid.css']) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.append(link);
+  }
+  const go = (view) => {
+    mainView = view;
+    show(view);
+    for (const b of document.querySelectorAll('[data-mode]')) b.classList.toggle('on', b.dataset.mode === view);
+    scrollTo(0, 0);
+  };
+  const openArena = async () => {
+    go('gauntlet');
+    if (gauntletOpen) return dispatchEvent(new Event('resize'));
+    gauntletOpen = true;
+    $('gauntletRoot').innerHTML = '<div class="gload">Entering the arena</div>';
+    const { openGauntlet } = await import('../pvp/gauntlet.js');
+    await openGauntlet({ pool, gear, tooltip, PANE, QUALITY, ownedBy: (fn) => { gauntletOwned = fn; } }, $('gauntletRoot'));
+  };
+  const openRaid = async () => {
+    go('raid');
+    if (raidOpen) return dispatchEvent(new Event('resize'));
+    raidOpen = true;
+    $('raidRoot').innerHTML = '<div class="gload">Entering Raid Draft</div>';
+    const raid = await import('../raid/raid.js');
+    await raid.openRaid({ pool, gear, tooltip, PANE, QUALITY, ownedBy: (fn) => { raidOwned = fn; } }, $('raidRoot'));
+  };
+  const modes = { home: () => go('home'), pick: () => go('pick'), gauntlet: openArena, raid: openRaid };
+  mainView = 'home';
+  $('modeDraft').onclick = modes.pick;
+  $('modeArena').onclick = modes.gauntlet;
+  $('modeRaid').onclick = modes.raid;
+  for (const b of document.querySelectorAll('[data-mode]')) b.onclick = modes[b.dataset.mode];
+  if (location.search.includes('gauntlet')) openArena();
+  if (location.search.includes('raid')) openRaid();
   $('noteLink').onclick = (e) => {
     e.preventDefault();
     $('notes').open = true;

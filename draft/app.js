@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261102233756';
-import { Stage } from './stage.js?v=20261102233756';
+import * as C from './core.js?v=20261102234305';
+import { Stage } from './stage.js?v=20261102234305';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -887,7 +887,7 @@ function clearHash() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261102233756', 'draft/gear.json?v=20261102233756', 'draft/talents.json?v=20261102233756', 'draft/retired.json?v=20261102233756'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261102234305', 'draft/gear.json?v=20261102234305', 'draft/talents.json?v=20261102234305', 'draft/retired.json?v=20261102234305'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {

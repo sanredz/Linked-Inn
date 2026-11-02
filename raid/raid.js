@@ -310,7 +310,7 @@ function render() {
   const side = root.querySelector('.rside');
   const hidden = root.dataset.step === 'intro';
   root.dataset.step = run ? run.step : 'intro';
-  document.body.classList.toggle('raidrun', !!run && run.heroes.length > 0);
+  document.body.classList.toggle('raidrun', !!run);
   if (hidden && run) scene.stageA.resize();
   root.querySelector('.rtop').innerHTML = run ? `${ladderHtml()}<div class="rparty">${partyHtml()}</div>${bonusHtml()}${boonsHtml()}` : '';
   if (!run) side.innerHTML = introHtml();

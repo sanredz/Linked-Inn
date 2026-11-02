@@ -310,7 +310,7 @@ function render() {
   const side = root.querySelector('.rside');
   const hidden = root.dataset.step === 'intro';
   root.dataset.step = run ? run.step : 'intro';
-  document.body.classList.toggle('raidrun', !!run);
+  document.body.classList.toggle('raidrun', !!run && run.heroes.length > 0);
   if (hidden && run) scene.stageA.resize();
   root.querySelector('.rtop').innerHTML = run ? `${ladderHtml()}<div class="rparty">${partyHtml()}</div>${bonusHtml()}${boonsHtml()}` : '';
   if (!run) side.innerHTML = introHtml();
@@ -443,6 +443,10 @@ function action(a) {
   else if (a === 'heroic') pull(true);
   else if (a === 'skip') scene.skip();
   else if (a === 'again') { run = null; save(); render(); showHero(); }
+}
+
+export function backToRaids() {
+  if (run && !run.heroes.length) { run = null; save(); render(); showHero(); }
 }
 
 export async function openRaid(data, host) {

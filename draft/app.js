@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261101200938';
-import { Stage } from './stage.js?v=20261101200938';
+import * as C from './core.js?v=20261102085927';
+import { Stage } from './stage.js?v=20261102085927';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -66,7 +66,9 @@ function show(view) {
   document.body.dataset.view = view;
 }
 
-function tooltip(id) {
+let mainView = 'pick';
+
+function tooltip(id, owned) {
   const r = row(id), [name, q, ilvl, inv, , cls, sub, s, d, setId, , , lines] = r;
   const kind = cls === 2 ? WEAPON[sub] : ARMOR[sub] || '';
   let h = `<b style="color:${QUALITY[q]}">${esc(name)}</b><i class="il">Item Level ${ilvl}</i><div class="two"><span>${INV[inv] || ''}</span><span>${kind}</span></div>`;
@@ -82,7 +84,7 @@ function tooltip(id) {
   if (s.sp && !lines.some((l) => /damage/.test(l))) h += `<div class="eq">Equip: Increases damage and healing done by magical spells and effects by up to ${s.sp}.</div>`;
   const set = setId && pool.sets[setId];
   if (set) {
-    const have = set.i.filter((i) => Object.values(['pick', 'shared', 'replay'].includes(document.body.dataset.view) ? openPicks : run ? run.picks : {}).includes(i)).length;
+    const have = set.i.filter((i) => Object.values(owned || (['pick', 'shared', 'replay'].includes(document.body.dataset.view) ? openPicks : run ? run.picks : {})).includes(i)).length;
     h += `<div class="set">${esc(set.n)} (${have}/${set.i.length})</div>`;
     for (const [need, , text] of set.b) if (text) h += `<div class="${have >= need ? 'eq' : 'off'}">(${need}) Set: ${esc(text)}</div>`;
   }
@@ -132,7 +134,7 @@ document.addEventListener('mousemove', (e) => {
   }
   const el = e.target.closest && e.target.closest('[data-item]');
   if (!el || !+el.dataset.item) { t.hidden = true; return; }
-  if (t.dataset.id !== el.dataset.item) { t.innerHTML = tooltip(el.dataset.item); t.dataset.id = el.dataset.item; }
+  if (t.dataset.id !== el.dataset.item) { t.innerHTML = tooltip(el.dataset.item) + (el.dataset.extra ? `<div class="eq">${esc(el.dataset.extra)}</div>` : ''); t.dataset.id = el.dataset.item; }
   t.hidden = false;
   positionTip(e);
 });
@@ -710,7 +712,7 @@ function route() {
     scrollTo(0, y);
     return;
   }
-  show('pick');
+  show(mainView);
   board('ALL');
   history();
 }
@@ -876,7 +878,7 @@ function clearHash() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261101200938', 'draft/gear.json?v=20261101200938', 'draft/talents.json?v=20261101200938', 'draft/retired.json?v=20261101200938'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261102085927', 'draft/gear.json?v=20261102085927', 'draft/talents.json?v=20261102085927', 'draft/retired.json?v=20261102085927'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {

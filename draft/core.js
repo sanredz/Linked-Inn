@@ -1,4 +1,4 @@
-export const VERSION = 5;
+export const VERSION = 6;
 export const FIGHT = 120;
 export const ROUNDS = 16;
 export const SLOTS = [
@@ -226,9 +226,10 @@ export function candidates(pool, cls, slot, picks) {
 function roll(pool, cls, slot, picks, r, taken) {
   const c = candidates(pool, cls, slot, picks);
   const free = (i) => !taken.has(item(pool, i)[0]);
+  const legendary = slot === 'off' ? pool.offLegendary ?? 1 : 1;
   const open = TIERS.map(([t, w]) => {
     const ids = (c[t] || []).filter(free);
-    return [ids, t === 'l' ? w : w * Math.min(1, ids.length / TIER_FULL)];
+    return [ids, t === 'l' ? w * legendary : w * Math.min(1, ids.length / TIER_FULL)];
   }).filter(([ids]) => ids.length);
   if (!open.length) return 0;
   let x = r() * open.reduce((sum, o) => sum + o[1], 0);

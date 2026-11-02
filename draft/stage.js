@@ -136,7 +136,7 @@ export class Stage {
     grad.addColorStop(1, 'rgba(0,0,0,0)');
     sc.fillStyle = grad;
     sc.fillRect(0, 0, 256, 256);
-    const floor = new THREE.Mesh(new THREE.CircleGeometry(2.6, 48), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shade), transparent: true, depthWrite: false }));
+    const floor = this.shadow = new THREE.Mesh(new THREE.CircleGeometry(2.6, 48), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shade), transparent: true, depthWrite: false }));
     floor.rotation.x = -Math.PI / 2;
     this.scene.add(floor);
     this.ring = new THREE.Mesh(new THREE.RingGeometry(.72, .76, 64), new THREE.MeshBasicMaterial({ color: 0xf8d36b, transparent: true, opacity: .4, side: THREE.DoubleSide }));
@@ -263,7 +263,13 @@ export class Stage {
     if (!node) return;
     const g = await this.loader.loadAsync(ROOT + 'gear/' + file).catch(() => null);
     if (!g) return;
-    g.scene.traverse((o) => { if (o.isMesh) o.frustumCulled = false; });
+    g.scene.traverse((o) => {
+      if (!o.isMesh) return;
+      o.frustumCulled = false;
+      const blend = o.material.userData.blend;
+      if (blend === 3 || blend === 4) { o.material.blending = THREE.AdditiveBlending; o.material.depthWrite = false; }
+      if (blend === 5 || blend === 6) o.visible = false;
+    });
     if (att === 'att31') {
       g.scene.rotation.order = 'ZXY';
       g.scene.rotation.set(-Math.PI / 2, 0, STOW);
@@ -510,15 +516,15 @@ export class Stage {
   }
 
   hand() {
-    return new THREE.Vector3(this.rig.position.x + .6, 1.45, 0);
+    return new THREE.Vector3(this.rig.position.x + .6 * (this.face || 1), 1.45, 0);
   }
 
   target() {
     return new THREE.Vector3(this.dummy.position.x, 1.35 + (Math.random() - .5) * .5, (Math.random() - .5) * .2);
   }
 
-  impact(pal, power) {
-    const [outer, inner] = PAL[pal] || PAL.phys, t = this.target();
+  impact(pal, power, at) {
+    const [outer, inner] = PAL[pal] || PAL.phys, t = at || this.target();
     this.shake = 1;
     this.spark(t.x, t.y, t.z + .1, { color: inner, size: .5 * power, life: .16, grow: 1.4 });
     this.spark(t.x, t.y, t.z + .1, { color: outer, size: 1 * power, life: .28, grow: .7, opacity: .7 });
@@ -529,7 +535,7 @@ export class Stage {
   }
 
   flight(look, crit, body) {
-    const from = this.hand(), to = this.target(), span = Math.max(.3, to.x - from.x), [outer, inner] = PAL[look.pal];
+    const from = this.hand(), to = this.target(), span = Math.max(.3, Math.abs(to.x - from.x)), [outer, inner] = PAL[look.pal], way = this.face || 1;
     let p = 0;
     const size = look.size * (crit ? 1.25 : 1), pos = from.clone();
     this.fx.push((dt) => {
@@ -538,10 +544,10 @@ export class Stage {
       pos.y += Math.sin(Math.min(1, p) * Math.PI) * (look.lift || 0);
       if (body) body(pos, Math.min(1, p));
       for (let i = 0; i < (look.trail || 0); i++) {
-        this.spark(pos.x - Math.random() * .12, pos.y + (Math.random() - .5) * size * .5, pos.z + (Math.random() - .5) * size * .5, { color: Math.random() < .6 ? outer : inner, size: size * (.4 + Math.random() * .4), life: .2 + Math.random() * .2, vx: -.6 - Math.random(), vy: (Math.random() - .3) * .8, grow: -.5, opacity: .8 });
+        this.spark(pos.x - Math.random() * .12, pos.y + (Math.random() - .5) * size * .5, pos.z + (Math.random() - .5) * size * .5, { color: Math.random() < .6 ? outer : inner, size: size * (.4 + Math.random() * .4), life: .2 + Math.random() * .2, vx: (-.6 - Math.random()) * way, vy: (Math.random() - .3) * .8, grow: -.5, opacity: .8 });
       }
       if (p < 1) return false;
-      this.impact(look.pal, look.hit * (crit ? 1.3 : 1));
+      this.impact(look.pal, look.hit * (crit ? 1.3 : 1), to);
       return true;
     });
     return { size, outer, inner };
@@ -556,7 +562,7 @@ export class Stage {
 
   shard(look, crit) {
     const m = new THREE.Mesh(new THREE.ConeGeometry(look.size * .3, look.size * 1.5, 6), additive(PAL.frost[1], .95));
-    m.rotation.z = -Math.PI / 2;
+    m.rotation.z = -Math.PI / 2 * (this.face || 1);
     this.scene.add(m);
     this.flight(look, crit, (pos, p) => {
       m.position.copy(pos);
@@ -574,6 +580,7 @@ export class Stage {
     tip.position.x = .35 * scale;
     tail.position.x = -.27 * scale;
     group.add(shaft, tip, tail);
+    group.scale.x = this.face || 1;
     this.scene.add(group);
     const [outer] = PAL[look.pal], start = this.hand();
     let last = start.clone();

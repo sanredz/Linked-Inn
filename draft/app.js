@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261102235204';
-import { Stage } from './stage.js?v=20261102235204';
+import * as C from './core.js?v=20261103004349';
+import { Stage } from './stage.js?v=20261103004349';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -127,6 +127,7 @@ document.addEventListener('click', (e) => {
 }, true);
 
 document.addEventListener('mousemove', (e) => {
+  if (touch) return;
   const t = $('tip');
   const tal = e.target.closest && e.target.closest('[data-tal]');
   if (tal) {
@@ -887,7 +888,7 @@ function clearHash() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261102235204', 'draft/gear.json?v=20261102235204', 'draft/talents.json?v=20261102235204', 'draft/retired.json?v=20261102235204'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103004349', 'draft/gear.json?v=20261103004349', 'draft/talents.json?v=20261103004349', 'draft/retired.json?v=20261103004349'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {

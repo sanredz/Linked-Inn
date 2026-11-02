@@ -28,9 +28,9 @@ export const CONSUMES = [
   { id: 'grenade', name: 'Thorium Grenade', icon: 133716, text: '300 to 500 damage and a 3 sec stun', use: ALL, kit: 'grenade', price: 3 },
   { id: 'sapper', name: 'Goblin Sapper Charge', icon: 135826, text: '450 to 750 damage, but it hurts you too', use: ALL, kit: 'sapper', price: 1 },
   { id: 'dynamite', name: 'Dense Dynamite', icon: 133714, text: '340 to 460 damage', use: ALL, kit: 'dynamite', price: 1 },
-  { id: 'shadow', name: 'Greater Shadow Protection Potion', icon: 134803, text: 'Absorbs 1950 to 3250 Shadow damage', use: ALL, kit: 'shadow', price: 2, against: ['PRIEST', 'WARLOCK'] },
-  { id: 'frost', name: 'Greater Frost Protection Potion', icon: 134800, text: 'Absorbs 1950 to 3250 Frost damage', use: ALL, kit: 'frost', price: 1, against: ['MAGE'] },
-  { id: 'nature', name: 'Greater Nature Protection Potion', icon: 134802, text: 'Absorbs 1950 to 3250 Nature damage', use: ALL, kit: 'nature', price: 2, against: ['SHAMAN', 'HUNTER'] },
+  { id: 'shadow', name: 'Greater Shadow Protection Potion', icon: 134803, text: 'Absorbs 800 to 1300 Shadow damage', use: ALL, kit: 'shadow', price: 3, against: ['PRIEST', 'WARLOCK'] },
+  { id: 'frost', name: 'Greater Frost Protection Potion', icon: 134800, text: 'Absorbs 800 to 1300 Frost damage', use: ALL, kit: 'frost', price: 3, against: ['MAGE'] },
+  { id: 'nature', name: 'Greater Nature Protection Potion', icon: 134802, text: 'Absorbs 800 to 1300 Nature damage', use: ALL, kit: 'nature', price: 3, against: ['SHAMAN', 'HUNTER'] },
   { id: 'stonesharp', name: 'Elemental Sharpening Stone', icon: 135228, text: '+2% crit', use: MELEE, stats: { crit: 2 }, price: 1 },
   { id: 'wizard', name: 'Brilliant Wizard Oil', icon: 134727, text: '+36 spell damage and +1% spell crit', use: CASTER, stats: { sp: 36, scrit: 1 }, price: 1 },
 ];

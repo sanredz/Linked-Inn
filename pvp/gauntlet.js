@@ -80,7 +80,7 @@ function doll() {
   }).join('');
 }
 
-const boonRow = (ids = []) => (ids.length ? `<span class="gboonrow">${boonsOf(ids).map((b) => `<img src="${boonIcon(b.id)}" alt="${esc(b.title)}" title="${esc(b.hero)}: ${esc(b.title)}. ${esc(b.text)}">`).join('')}</span>` : '');
+const boonRow = (ids = []) => (ids.length ? `<span class="gboonrow">${boonsOf(ids).map((b) => `<button data-boonid="${b.id}" aria-label="${esc(b.hero)}: ${esc(b.title)}" title="${esc(b.hero)}: ${esc(b.title)}. ${esc(b.text)}"><img src="${boonIcon(b.id)}" alt=""></button>`).join('')}</span>` : '');
 const coin = (n, off) => `<span class="gtag ${off ? 'short' : ''}"><i></i>${n}</span>`;
 
 function shopHtml() {
@@ -95,7 +95,7 @@ function shopHtml() {
   const ench = s.enchants.filter((id) => !spent(id)).map((id, i) => { const e = ENCHANT[id]; return shelf('data-ench', id, e.icon, e.name, `${slotName(e.slot)}: ${e.text}`, e.price, i + 5); }).join('');
   const plans = planNames(run.cls).map((k) => `<button class="gplan ${k === run.plan ? 'on' : ''}" data-plan="${k}" aria-pressed="${k === run.plan}"><b>${PLANS[run.cls][k].label}</b><small>${PLANS[run.cls][k].tip}</small></button>`).join('');
   const rival = foe ? `<div class="gduelside foe"><img src="assets/classes/${foe.cls}.png" alt=""><b>${esc(foe.name)}</b><small>${className(foe.cls)} · ${run.wins} ${run.wins === 1 ? 'win' : 'wins'}</small>${boonRow(foe.boons)}</div>` : '<div class="gduelside foe"><em></em><b>Finding an opponent</b></div>';
-  return `<div class="gduel"><div class="gduelside"><img src="assets/classes/${run.cls}.png" alt=""><b>${esc(heroName())}</b><small>${className(run.cls)} · ${run.wins} ${run.wins === 1 ? 'win' : 'wins'}</small>${boonRow(run.boons)}</div><span class="gvs">VS</span>${rival}<div class="gacts"><button class="rforge" data-act="fight" ${foe ? '' : 'disabled'}><span>Fight</span></button></div></div>
+  return `<div class="gduel"><div class="gduelside"><img src="assets/classes/${run.cls}.png" alt=""><b>${esc(heroName())}</b><small>${className(run.cls)} · ${run.wins} ${run.wins === 1 ? 'win' : 'wins'}</small>${boonRow(run.boons)}</div><span class="gvs">VS</span>${rival}<div class="gacts"><span class="ggold gpurse ${shownGold !== null && shownGold !== run.gold ? 'bump' : ''}" title="Gold this round"><em></em><b>${run.gold}</b></span><button class="rforge" data-act="fight" ${foe ? '' : 'disabled'}><span>Fight</span></button></div></div>
       <section class="gstall armor ${enter ? 'enter' : ''}"><header><div><h3>Armorer</h3><em>Pay, then pick 1 of ${itemCount(run)} items. The color shows the lowest rarity you can get.</em></div><button class="greroll" data-act="reroll" ${run.gold < rerollPrice(run) ? 'disabled' : ''}>Reroll ${coin(rerollPrice(run) || 'Free', run.gold < rerollPrice(run))}</button></header><div class="gplinths">${items || '<p class="gsold">Sold out</p>'}</div></section>
       <div class="gcols ${enter ? 'enter' : ''}"><section class="gstall alch"><header><div><h3>Alchemist</h3><em>Next fight only</em></div></header>${cons || '<p class="gsold">Sold out</p>'}</section><section class="gstall ench"><header><div><h3>Enchanter</h3><em>Lasts the whole run</em></div></header>${ench || '<p class="gsold">Nothing to enchant</p>'}</section></div>
       <section class="gstall plan"><header><div><h3>Battle plan</h3><em>How your hero fights</em></div></header><div class="gplans">${plans}</div></section>`;
@@ -190,6 +190,7 @@ function postResult() {
 function wire() {
   ui = root;
   bindName(root);
+  for (const el of ui.querySelectorAll('[data-boonid]')) el.onclick = () => showBoon(el.dataset.boonid);
   for (const el of ui.querySelectorAll('[data-c]')) el.onclick = () => { pickCls = el.dataset.c; render(); };
   for (const el of ui.querySelectorAll('[data-act]')) el.onclick = () => action(el.dataset.act);
   for (const el of ui.querySelectorAll('[data-slot]')) el.onclick = () => chooseItem(el.dataset.slot);
@@ -224,6 +225,14 @@ function showChoices() {
   };
   for (const b of box.querySelectorAll('[data-id]')) b.onclick = () => done(+b.dataset.id);
   box.querySelector('[data-skip]').onclick = () => done(0);
+}
+
+function showBoon(id) {
+  const b = BOON[id], box = document.createElement('div');
+  box.className = 'gmodal';
+  box.innerHTML = `<div class="gmodalbox gboonbox"><img src="${boonIcon(id)}" alt=""><small>${esc(b.hero)}</small><h2>${esc(b.title)}</h2><p>${esc(b.text)}</p><button class="gmini" data-close="1">Close</button></div>`;
+  document.body.append(box);
+  box.onclick = (e) => { if (e.target === box || e.target.dataset.close) box.remove(); };
 }
 
 function showBoons() {

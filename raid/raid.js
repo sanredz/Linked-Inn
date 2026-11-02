@@ -21,7 +21,7 @@ const ROLE_STATS = { tank: ['def', 'dodge', 'parry', 'block', 'sta', 'armor', 'b
 const VERDICT = [[0, 'Deadly', 'bad'], [.4, 'Close', 'mid'], [.8, 'Comfortable', 'good']];
 
 let dressing = Promise.resolve();
-let root, scene, pool, gear, run, PANE, QUALITY, tooltip, viewing = 0, chosenCls = '', chosenSpec = '', board = [], boardRaid = 'mc', busy = false, offers = null, shownPick = '', shownRole = -1;
+let root, scene, pool, gear, run, PANE, QUALITY, tooltip, viewing = 0, chosenCls = '', chosenSpec = '', board = [], boardRaid = 'mc', boardRow = -1, busy = false, offers = null, shownPick = '', shownRole = -1;
 const cache = {};
 let aims = {};
 const dress = (step) => { dressing = dressing.then(step).catch(() => {}); return dressing; };
@@ -203,7 +203,7 @@ function offerHtml(o, withHero) {
   const name = (s) => { const id = hero.picks[s]; return id ? pool.items[id] : null; };
   const aim = list.length > 1 ? `<div class="raims">${list.map((s) => { const w = name(s); return `<button class="${s === to ? 'on' : ''}" data-aim="${key}|${s}"><small>${SLOT_NAME[s]}${/\d$/.test(s) ? ` ${s.slice(-1)}` : ''}</small><b style="color:${w ? QUALITY[w[1]] : 'inherit'}">${w ? esc(w[0]) : 'Empty'}</b></button>`; }).join('')}</div>` : `<p class="rold">${name(to) ? `Replaces <em style="color:${QUALITY[name(to)[1]]}">${esc(name(to)[0])}</em>` : 'Empty slot'}</p>`;
   const owner = withHero ? `<div class="rforhero"><img src="assets/classes/${hero.cls}.png" alt=""><b>${CLASS_NAME[hero.cls]}</b><span>${ROLE_NAME[hero.role]}</span></div>` : '';
-  return `<div class="roffer ${withHero ? `rfor role-${hero.role}` : ''}">${owner}<button class="rlook" data-look="${key}"><span class="rico" data-item="${o.id}" data-vs="${worn.join(',')}"><img src="${iconOf(o.id)}" alt=""></span><span class="rtxt"><b style="color:${QUALITY[it[1]]}">${esc(it[0])}</b><small>${meta}</small></span></button>${gainsHtml(hero, to, o)}${noteHtml(hero, to, o)}<div class="rfoot">${aim}<button class="gmini rtake" data-take="${key}|${to}">Take</button></div></div>`;
+  return `<div class="roffer ${withHero ? `rfor role-${hero.role}` : ''}" data-look="${key}">${owner}<button class="rlook"><span class="rico" data-item="${o.id}" data-vs="${worn.join(',')}"><img src="${iconOf(o.id)}" alt=""></span><span class="rtxt"><b style="color:${QUALITY[it[1]]}">${esc(it[0])}</b><small>${meta}</small></span></button>${gainsHtml(hero, to, o)}${noteHtml(hero, to, o)}<div class="rfoot">${aim}<button class="gmini rtake" data-take="${key}|${to}">Take</button></div></div>`;
 }
 
 function previewPicks() {
@@ -222,6 +222,7 @@ function dollHtml() {
 }
 
 function compare(o) {
+  document.getElementById('tip').hidden = true;
   const hero = run.heroes[o.hero], worn = slotsFor(o).filter((s) => hero.picks[s]), box = document.createElement('div');
   box.className = 'gmodal';
   box.innerHTML = `<div class="gmodalbox rcompare"><h2>${CLASS_NAME[hero.cls]}: ${SLOT_NAME[o.slot]}</h2><div class="rfull">${statRows(hero, aimOf(o), o)}${effectRows(hero, aimOf(o), o)}</div><div class="rsides ${worn.length > 1 ? 'three' : ''}"><div><h4>New</h4><div class="gtt">${tooltip(o.id, hero.picks)}</div></div>${worn.length ? worn.map((s) => `<div><h4>${worn.length > 1 ? SLOT_NAME[s] : 'Wearing'}</h4><div class="gtt">${tooltip(hero.picks[s], hero.picks)}</div></div>`).join('') : '<div><h4>Wearing</h4><p>Nothing in this slot.</p></div>'}</div><div class="rbuttons"><button class="gbtn" data-yes="1">Take this</button><button class="gmini" data-no="1">Back</button></div></div>`;
@@ -246,14 +247,14 @@ function classHtml() {
   const role = ROLES[run.at], classes = classesFor(role);
   if (!classes.includes(chosenCls)) chosenCls = classes[0];
   const specs = specsFor(role, chosenCls);
-  if (!specs.some((s) => s.id === chosenSpec)) chosenSpec = specs[0].id;
+  if (!specs.some((s) => s.id === chosenSpec)) chosenSpec = specs.length === 1 ? specs[0].id : '';
   const spec = specs.find((s) => s.id === chosenSpec), key = `${chosenCls}|${chosenSpec}`;
   const fresh = key !== shownPick, enter = run.at !== shownRole, bonus = BONUS[role][chosenCls];
   shownPick = key;
   shownRole = run.at;
   const banners = classes.map((c, i) => `<button class="rbanner ${c === chosenCls ? 'on' : ''} ${c === chosenCls && fresh ? 'fresh' : ''}" data-cls="${c}" style="--cc:${CLASS_COLOR[c]};--i:${i}"><span class="rbannerface"><i class="rbannerart" style="background-image:url(${artOf(role, c)})"></i><img src="assets/classes/${c}.png" alt=""><b>${CLASS_NAME[c]}</b></span></button>`).join('');
-  const tabs = specs.length > 1 ? `<div class="rpickspecs">${specs.map((s) => `<button class="${s.id === chosenSpec ? 'on' : ''}" data-spec="${s.id}">${esc(s.name)}</button>`).join('')}</div>` : `<small class="rpickspec">${esc(spec.name)}</small>`;
-  return `<div class="rpicker ${enter ? 'enter' : ''}" style="--cc:${CLASS_COLOR[chosenCls]}"><i class="rpickart" style="background-image:url(${artOf(role, chosenCls)})"></i><div class="rembers">${'<i></i>'.repeat(12)}</div><div class="rpickhead"><small>Hero ${run.at + 1} of ${ROLES.length}</small><h3>Choose your ${role === 'dps' ? 'damage dealer' : ROLE_NAME[role].toLowerCase()}</h3>${run.at ? '' : nameField()}</div><div class="rbanners ${classes.length > 3 ? 'many' : ''}">${banners}</div><div class="rpickinfo ${fresh ? 'fresh' : ''}"><h4>${CLASS_NAME[chosenCls]}</h4>${tabs}<p class="rblurb">${esc(spec.blurb)}</p>${chosenSpec === 'fire' ? '<p class="rwarn">Molten Core is a fire raid. Baron Geddon and Ragnaros are immune, and others resist fire.</p>' : ''}<div class="rseal"><i></i><div><small>Party bonus</small><b>${esc(bonus.n)}</b><span>${esc(bonus.text)}</span></div></div></div><button class="rforge" data-act="hero" ${run.at ? '' : `data-named ${nameOk() ? '' : 'disabled'}`}><span>Draft your ${CLASS_NAME[chosenCls]}</span></button></div>${routeHtml()}`;
+  const tabs = specs.length > 1 ? `<div class="rspecpick ${spec ? '' : 'need'}"><small>Choose a spec</small><div class="rpickspecs">${specs.map((s) => `<button class="${s.id === chosenSpec ? 'on' : ''}" data-spec="${s.id}" aria-pressed="${s.id === chosenSpec}">${esc(s.name)}</button>`).join('')}</div></div>` : `<small class="rpickspec">${esc(spec.name)}</small>`;
+  return `<div class="rpicker ${enter ? 'enter' : ''}" style="--cc:${CLASS_COLOR[chosenCls]}"><i class="rpickart" style="background-image:url(${artOf(role, chosenCls)})"></i><div class="rembers">${'<i></i>'.repeat(12)}</div><div class="rpickhead"><small>Hero ${run.at + 1} of ${ROLES.length}</small><h3>Choose your ${role === 'dps' ? 'damage dealer' : ROLE_NAME[role].toLowerCase()}</h3>${run.at ? '' : nameField()}</div><div class="rbanners ${classes.length > 3 ? 'many' : ''}">${banners}</div><div class="rpickinfo ${fresh ? 'fresh' : ''}"><h4>${CLASS_NAME[chosenCls]}</h4>${tabs}${spec ? `<p class="rblurb">${esc(spec.blurb)}</p>` : ''}${chosenSpec === 'fire' ? '<p class="rwarn">Molten Core is a fire raid. Baron Geddon and Ragnaros are immune, and others resist fire.</p>' : ''}<div class="rseal"><i></i><div><small>Party bonus</small><b>${esc(bonus.n)}</b><span>${esc(bonus.text)}</span></div></div></div><button class="rforge" data-act="hero" ${spec ? '' : 'data-nospec disabled'} ${run.at || !spec ? '' : `data-named ${nameOk() ? '' : 'disabled'}`}><span>${spec ? `Draft your ${CLASS_NAME[chosenCls]}` : 'Choose a spec first'}</span></button></div>${routeHtml()}`;
 }
 
 function draftHtml() {
@@ -298,12 +299,22 @@ function overHtml() {
     <button class="gbtn big" data-act="again">New raid</button></div>`;
 }
 
+function rowDetail(r) {
+  const art = (slot) => (slot.startsWith('finger') ? 'finger' : slot.startsWith('trinket') ? 'trinket' : slot);
+  const heroes = (r.heroes || []).map((h) => {
+    const spec = specsFor(h.role, h.cls).find((s) => s.id === h.build), items = PANE.filter(([slot]) => h.picks[slot] && pool.items[h.picks[slot]]).map(([slot]) => `<button class="ps on" data-item="${h.picks[slot]}" style="--q:${QUALITY[pool.items[h.picks[slot]][1]]};background-image:url(assets/draft/ui/${art(slot)}.png)" tabindex="-1"><img src="${iconOf(h.picks[slot])}" alt=""></button>`).join('');
+    return `<div class="rrunhero role-${h.role}"><div class="rrunwho"><img src="assets/classes/${h.cls}.png" alt=""><span><b>${CLASS_NAME[h.cls]}</b><small>${ROLE_NAME[h.role]}${spec ? ` · ${esc(spec.name)}` : ''}</small></span></div><div class="gbitems">${items}</div></div>`;
+  }).join('');
+  const boons = r.boons === null ? '<p class="rrunnote">Boons were not recorded for this run.</p>' : r.boons.length ? `<div class="rbonus rboons">${r.boons.map((id) => `<span title="${esc(boonById(id).text)}"><b>${esc(boonById(id).name)}</b> ${esc(boonById(id).text)}</span>`).join('')}</div>` : '<p class="rrunnote">This run took no boons.</p>';
+  return `<div class="rrundetail"><div class="rrunheroes">${heroes}</div>${boons}</div>`;
+}
+
 function boardHtml() {
   const last = RAIDS[boardRaid].bosses.at(-1).name.split(' ')[0];
   const head = `<div class="rboardhead"><h3>Leaderboard <em>highest damage to ${esc(last)}</em></h3><div class="rboardtabs">${[['mc', RAIDS.mc.name], ...SOON].map(([id, name]) => `<button class="gmini ${id === boardRaid ? 'on' : ''}" data-board="${id}"${RAIDS[id] ? '' : ' disabled'}>${name}</button>`).join('')}</div></div>`;
   if (!board) return `${head}<p>The board could not be reached.</p>`;
   if (!board.length) return `${head}<p>Nobody has reached ${esc(last)} yet.</p>`;
-  return head + board.map((r, i) => `<div class="rrow ${r.mine ? 'mine' : ''}"><span>${i + 1}</span><b>${esc(r.name)}</b><span class="rclassrow">${r.party.map((c) => `<img src="assets/classes/${c}.png" alt="${c}">`).join('')}</span><em>${num(r.score)}</em></div>`).join('');
+  return head + board.map((r, i) => `<div class="rrun ${i === boardRow ? 'open' : ''} ${r.mine ? 'mine' : ''}"><button class="rrow" data-row="${i}" aria-expanded="${i === boardRow}"><span>${i + 1}</span><b>${esc(r.name)}</b><span class="rclassrow">${r.party.map((c) => `<img src="assets/classes/${c}.png" alt="${c}">`).join('')}</span><em>${num(r.score)}</em><i class="rchev"></i></button>${i === boardRow ? rowDetail(r) : ''}</div>`).join('');
 }
 
 function render() {
@@ -335,7 +346,7 @@ function render() {
   for (const el of root.querySelectorAll('[data-take]')) el.onclick = () => { const [hero, slot, id, to] = el.dataset.take.split('|'); chooseItem({ hero: +hero, slot, id: +id, to }); };
   for (const el of root.querySelectorAll('[data-aim]')) el.onclick = () => { const [hero, slot, id, to] = el.dataset.aim.split('|'); aims[`${hero}|${slot}|${id}`] = to; render(); };
   for (const el of root.querySelectorAll('[data-boon]')) el.onclick = () => { takeBoon(run, el.dataset.boon); offers = null; save(); render(); showHero(); };
-  for (const el of root.querySelectorAll('[data-look]')) el.onclick = (e) => { const [hero, slot, id] = el.dataset.look.split('|'); compare({ hero: +hero, slot, id: +id }); };
+  for (const el of root.querySelectorAll('[data-look]')) el.onclick = (e) => { if (e.target.closest('button:not(.rlook)')) return; const [hero, slot, id] = el.dataset.look.split('|'); compare({ hero: +hero, slot, id: +id }); };
   for (const el of root.querySelectorAll('[data-view]')) el.onclick = () => { viewing = +el.dataset.view; render(); showHero(); };
   for (const el of root.querySelectorAll('[data-speed]')) el.onclick = () => { scene.speed = +el.dataset.speed; for (const b of root.querySelectorAll('.sp')) b.classList.toggle('on', b === el); };
 }
@@ -431,7 +442,7 @@ async function begin() {
 function action(a) {
   if (a === 'begin') begin();
   else if (a === 'resume') { run = load(); viewing = Math.min(run.at, 2); offers = null; render(); showHero(); }
-  else if (a === 'hero') { addHero(pool, run, chosenCls, chosenSpec); viewing = run.at; offers = null; save(); render(); showHero(); }
+  else if (a === 'hero') { if (!chosenSpec) return; addHero(pool, run, chosenCls, chosenSpec); viewing = run.at; offers = null; save(); render(); showHero(); }
   else if (a === 'pass') {
     if (run.step === 'spoils') skipSpoils(run); else passDraft(run);
     offers = null;
@@ -463,6 +474,8 @@ export async function openRaid(data, host) {
   root.id = 'raid';
   root.innerHTML = '<div class="rtop"></div><div class="rmain"><div class="rstage"><div class="pane gpane"><img class="portrait" alt=""><div class="frameart"></div><div class="viewport"><div class="rscene"></div></div><div class="peekwho"></div><div class="sub"></div><div class="peekdoll"></div><div class="rctl"></div></div></div><div class="rside"></div></div><section class="gpanel rboard"><div class="rboardlist"></div></section>';
   root.querySelector('.rboard').onclick = (e) => {
+    const row = e.target.closest('[data-row]');
+    if (row) { boardRow = +row.dataset.row === boardRow ? -1 : +row.dataset.row; root.querySelector('.rboardlist').innerHTML = boardHtml(); return; }
     const b = e.target.closest('[data-board]');
     if (b && !b.disabled) { boardRaid = b.dataset.board; loadBoard(); }
   };

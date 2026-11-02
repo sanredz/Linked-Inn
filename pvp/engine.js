@@ -322,9 +322,9 @@ export function fight(a, b, seed, rec) {
     use('invuln', e.p.kind !== 'caster' && d <= 8 && f.hp < f.max * .6, 'Limited Invulnerability Potion', () => { f.aura.stoneform = t + 6; });
     use('swift', f.p.kind === 'melee' ? d > 12 : melee && d < 10, 'Swiftness Potion', () => { f.aura.swift = t + 15; });
     use('rage', f.p.res === 'rage' && f.rage < 25 && d <= 8, 'Mighty Rage Potion', () => { f.rage = Math.min(100, f.rage + 45 + r() * 30); f.aura.mighty = t + 20; });
-    use('shadow', t > .1, 'Greater Shadow Protection Potion', () => { f.ward = { school: 'shadow', left: 1950 + r() * 1300 }; });
-    use('frost', t > .1, 'Greater Frost Protection Potion', () => { f.ward = { school: 'frost', left: 1950 + r() * 1300 }; });
-    use('nature', t > .1, 'Greater Nature Protection Potion', () => { f.ward = { school: 'nature', left: 1950 + r() * 1300 }; });
+    use('shadow', t > .1, 'Greater Shadow Protection Potion', () => { f.ward = { school: 'shadow', left: 800 + r() * 500 }; });
+    use('frost', t > .1, 'Greater Frost Protection Potion', () => { f.ward = { school: 'frost', left: 800 + r() * 500 }; });
+    use('nature', t > .1, 'Greater Nature Protection Potion', () => { f.ward = { school: 'nature', left: 800 + r() * 500 }; });
     if (f.gcd > t || !seen(e)) return;
     use('grenade', d <= 30 && !locked(e) && (!!e.cast || d <= 8), 'Thorium Grenade', () => { hurt(e, 300 + r() * 200, f, 'fire', 'Thorium Grenade'); control(e, 'stun', 'stun', 3); gcd(f, 1); });
     use('sapper', d <= 6, 'Goblin Sapper Charge', () => { hurt(e, 450 + r() * 300, f, 'fire', 'Goblin Sapper Charge'); f.hp -= 375 + r() * 250; gcd(f, 1); });

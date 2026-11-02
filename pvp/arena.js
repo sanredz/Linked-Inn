@@ -254,6 +254,7 @@ export class Arena {
       if (x.ally) x.ally.root.removeFromParent();
       const model = boonsOf(sides[i].boons).map((n) => n.boon && n.boon.ally).find(Boolean);
       x.ally = model ? await this.prop(model.model) : null;
+      x.allyBack = !!(model && model.ranged);
     }));
     a.scene.add(b.rig);
     this.showWorld(true);
@@ -364,12 +365,12 @@ export class Arena {
       const up = cls === owner && f.hp > 0 && foe.hp > 0 && !f.petSheep;
       pet.root.visible = up;
       if (up) {
-        const near = t >= 4, them = (i ? this.stageA : this.stageB).rig.position, goal = near ? them.x - dir * 1.1 : here.x + dir * .3, r = pet.root;
+        const near = t >= 4, them = (i ? this.stageA : this.stageB).rig.position, back = pet === x.ally && x.allyBack, goal = near && !back ? them.x - dir * 1.1 : here.x + dir * (back ? -.7 : .3), r = pet.root;
         r.position.x += (goal - r.position.x) * Math.min(1, dt * 3);
         r.position.z = -1;
         r.rotation.y = Math.atan2(them.x - r.position.x, 1);
         pet.mixer.update(dt);
-        this.act(pet, Math.abs(goal - r.position.x) > .25 ? 'run' : near ? 'attack' : 'idle', 1.4);
+        this.act(pet, Math.abs(goal - r.position.x) > .25 ? 'run' : near ? (back ? 'cast' : 'attack') : 'idle', 1.4);
       }
     }
   }

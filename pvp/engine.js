@@ -973,7 +973,11 @@ export function fight(a, b, seed, rec) {
     };
     if (!seen(e) || on(e, 'poly')) return;
     if (B.pulse && ready('pulse', B.pulse.every)) hurt(e, B.pulse.dmg + might * .1, f, B.pulse.school, B.pulse.name, false, true);
-    for (const a of B.allies || []) if (ready(a.name, 2)) hurt(e, (a.dmg + might * .03) * armorDr(e), f, 'phys', a.name, false, true);
+    for (const a of B.allies || []) {
+      if (!ready(a.name, a.every)) continue;
+      hurt(e, (a.dmg + might * a.scale) * (a.school ? 1 : armorDr(e)), f, a.school || 'phys', a.name, false, true);
+      if (a.slow) slow(e, a.name, a.slow, 2);
+    }
   }
 
   function kiting(f) {

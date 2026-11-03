@@ -257,7 +257,7 @@ function classHtml() {
   if (!classes.includes(chosenCls)) chosenCls = classes[0];
   const specs = specsFor(role, chosenCls);
   if (!specs.some((s) => s.id === chosenSpec)) chosenSpec = specs.length === 1 ? specs[0].id : '';
-  const spec = specs.find((s) => s.id === chosenSpec), key = `${chosenCls}|${chosenSpec}`;
+  const spec = specs.find((s) => s.id === chosenSpec), key = `${run.at}|${chosenCls}`;
   const fresh = key !== shownPick, enter = run.at !== shownRole, choice = choiceOf(role, chosenCls);
   if (choice && !choice.list.some((x) => x.id === chosenPick)) chosenPick = (choice.suggest && choice.suggest[run.raid]) || choice.list[0].id;
   const bonus = choice ? choice.list.find((x) => x.id === chosenPick) : BONUS[role][chosenCls], short = (n) => n.replace(/ (Aura|Totem)$/, '').replace(/ Resistance$/, '');

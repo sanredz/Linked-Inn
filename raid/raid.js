@@ -6,7 +6,7 @@ import { RaidScene } from './scene.js';
 import { resultHtml } from '../pvp/arena.js';
 import { CLASS_COLOR } from '../draft/core.js';
 import { bindName, heroName, nameField, nameOk } from '../pvp/name.js';
-import { CLASS_NAME, DRAFT_PICKS, INGOT, INGOTS, collect, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js';
+import { CLASS_NAME, DRAFT_PICKS, FORGE, INGOT, INGOTS, collect, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js';
 
 const KEY = 'raidRun', WHO = 'gauntletWho';
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
@@ -239,7 +239,8 @@ function compare(o) {
   box.querySelector('[data-yes]').onclick = () => { box.remove(); chooseItem({ ...o, to: aimOf(o) }); };
 }
 
-const mountHtml = (m, tag = 'Dropped this run') => `<div class="rmount"><img src="assets/icons/${m.icon}.png" alt=""><span><small>${tag}</small><b>${esc(m.name)}</b></span></div>`;
+const hintOf = (m) => (m.id === INGOT ? `Needed to forge Sulfuras, Hand of Ragnaros. Collect ${INGOTS} of them and the Eye of Sulfuras.` : FORGE[17182].needs.includes(m.id) ? `Needed to forge Sulfuras, Hand of Ragnaros, along with ${INGOTS} Sulfuron Ingots.` : FORGE[19019].needs.includes(m.id) ? `Needed to forge Thunderfury. Find both Bindings, then deal ${num(FORGE[19019].score)} damage to Ragnaros.` : '');
+const mountHtml = (m, tag = 'Dropped this run') => { const hint = hintOf(m); return `<div class="rmount" ${hint ? `tabindex="0" data-hint="${esc(hint)}"` : ''}><img src="assets/icons/${m.icon}.png" alt=""><span><small>${tag}</small><b>${esc(m.name)}</b></span></div>`; };
 
 const LIVE = ['mc', 'zg'], SOON = [['aq20', "Ruins of Ahn'Qiraj"]];
 

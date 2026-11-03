@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261103122648';
-import { Stage } from './stage.js?v=20261103122648';
+import * as C from './core.js?v=20261103123104';
+import { Stage } from './stage.js?v=20261103123104';
 import { askName, heroName, nameOk, onName, syncName } from '../pvp/name.js';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
@@ -753,7 +753,7 @@ function useCode(input = 'sIn', msg = 'sMsg') {
 let hearthLib = null;
 const hearthMod = async () => {
   if (!hearthLib) {
-    hearthLib = await import('./hearth.js?v=20261103122648');
+    hearthLib = await import('./hearth.js?v=20261103123104');
     hearthLib.setupHearth({ API, key: () => playerKey, Stage, gear, row: (id) => row(id), onChange: () => hearthLib.hearthBar($('hearthBar')) });
   }
   return hearthLib;
@@ -881,7 +881,7 @@ async function startClass(cls) {
 
 function classGrid() {
   $('classes').innerHTML = Object.keys(C.BUILDS).map((c) => `<button class="cls" data-c="${c}" style="--cc:${C.CLASS_COLOR[c]};--a:url(assets/game/${ART[c]})"><img src="assets/classes/${c}.png" alt=""><b>${C.CLASS_NAME[c]}</b></button>`).join('');
-  for (const b of document.querySelectorAll('.cls')) b.onclick = () => startClass(b.dataset.c);
+  for (const b of document.querySelectorAll('.cls')) b.onclick = async () => { if (nameOk() || (await askName())) startClass(b.dataset.c); };
   $('bFilter').innerHTML = ['ALL', ...Object.keys(C.BUILDS)].map((c) => `<button class="chip" data-c="${c}" aria-label="${c === 'ALL' ? 'All classes' : C.CLASS_NAME[c]}">${c === 'ALL' ? 'All' : `<img src="assets/classes/${c}.png" alt="" title="${C.CLASS_NAME[c]}">`}</button>`).join('');
   for (const b of document.querySelectorAll('#bFilter button')) b.onclick = () => board(b.dataset.c);
 }
@@ -920,7 +920,7 @@ async function loadTally() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103122648', 'draft/gear.json?v=20261103122648', 'draft/talents.json?v=20261103122648', 'draft/retired.json?v=20261103122648'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103123104', 'draft/gear.json?v=20261103123104', 'draft/talents.json?v=20261103123104', 'draft/retired.json?v=20261103123104'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {

@@ -6,6 +6,7 @@ const PHYS = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'SHAMAN', 'DRUID'];
 const ALL = [...new Set([...MANA, ...PHYS])];
 const MELEE = ['WARRIOR', 'PALADIN', 'ROGUE', 'SHAMAN', 'DRUID'];
 const STR = ['WARRIOR', 'PALADIN', 'SHAMAN', 'DRUID'];
+const AGILE = ['ROGUE', 'HUNTER', 'DRUID'];
 
 export const CONSUMES = [
   { id: 'mongoose', name: 'Elixir of the Mongoose', icon: 134812, text: '+25 Agility and +2% crit', use: ['HUNTER', 'ROGUE', 'DRUID', 'WARRIOR'], stats: { agi: 25, crit: 2 }, price: 1 },
@@ -33,6 +34,25 @@ export const CONSUMES = [
   { id: 'nature', name: 'Greater Nature Protection Potion', icon: 134802, text: 'Absorbs 800 to 1300 Nature damage', use: ALL, kit: 'nature', price: 3, against: ['SHAMAN', 'HUNTER'] },
   { id: 'stonesharp', name: 'Elemental Sharpening Stone', icon: 135228, text: '+2% crit', use: MELEE, stats: { crit: 2 }, price: 1 },
   { id: 'wizard', name: 'Brilliant Wizard Oil', icon: 134727, text: '+36 spell damage and +1% spell crit', use: CASTER, stats: { sp: 36, scrit: 1 }, price: 1 },
+  { id: 'roids', name: 'R.O.I.D.S.', icon: 135241, text: '+25 Strength', use: STR, stats: { str: 25 }, price: 1 },
+  { id: 'scorpok', name: 'Ground Scorpok Assay', icon: 133849, text: '+25 Agility', use: AGILE, stats: { agi: 25 }, price: 1 },
+  { id: 'firewater', name: 'Winterfall Firewater', icon: 134872, text: '+35 attack power', use: PHYS, stats: { ap: 35, rap: 35 }, price: 1 },
+  { id: 'lung', name: 'Lung Juice Cocktail', icon: 132799, text: '+25 Stamina', use: ALL, stats: { sta: 25 }, price: 1 },
+  { id: 'cortex', name: 'Cerebral Cortex Compound', icon: 134812, text: '+25 Intellect', use: MANA, stats: { int: 25 }, price: 1 },
+  { id: 'gint', name: 'Elixir of Greater Intellect', icon: 134721, text: '+25 Intellect', use: MANA, stats: { int: 25 }, price: 1 },
+  { id: 'shadowpow', name: 'Elixir of Shadow Power', icon: 134828, text: '+40 Shadow damage', use: ['PRIEST', 'WARLOCK'], stats: { sp: 40 }, price: 2 },
+  { id: 'frostpow', name: 'Elixir of Frost Power', icon: 134856, text: '+15 Frost damage', use: ['MAGE'], stats: { sp: 15 }, price: 1 },
+  { id: 'eagi', name: 'Elixir of Agility', icon: 134873, text: '+15 Agility', use: AGILE, stats: { agi: 15 }, price: 1 },
+  { id: 'scrollagi', name: 'Scroll of Agility IV', icon: 134938, text: '+17 Agility', use: AGILE, stats: { agi: 17 }, price: 1 },
+  { id: 'scrollstr', name: 'Scroll of Strength IV', icon: 134938, text: '+17 Strength', use: STR, stats: { str: 17 }, price: 1 },
+  { id: 'scrollarm', name: 'Scroll of Protection IV', icon: 134943, text: '+240 armor', use: ALL, stats: { armor: 240 }, price: 1 },
+  { id: 'rumsey', name: 'Rumsey Rum Black Label', icon: 132791, text: '+15 Stamina', use: ALL, stats: { sta: 15 }, price: 1 },
+  { id: 'zanza', name: 'Spirit of Zanza', icon: 134810, text: '+50 Stamina and +50 Spirit', use: ALL, stats: { sta: 50, spi: 50 }, price: 2 },
+  { id: 'dumplings', name: 'Smoked Desert Dumplings', icon: 134020, text: '+20 Strength', use: STR, stats: { str: 20 }, price: 1 },
+  { id: 'squid', name: 'Grilled Squid', icon: 133899, text: '+1% crit', use: PHYS, stats: { crit: 1 }, price: 1 },
+  { id: 'nightfin', name: 'Nightfin Soup', icon: 132804, text: '+22 spell damage', use: CASTER, stats: { sp: 22 }, price: 1 },
+  { id: 'sagefish', name: 'Sagefish Delight', icon: 133907, text: '+7 spell damage', use: CASTER, stats: { sp: 7 }, price: 1 },
+  { id: 'tuber', name: 'Runn Tum Tuber Surprise', icon: 134019, text: '+15 Intellect', use: MANA, stats: { int: 15 }, price: 1 },
 ];
 
 const ICON = 136244;
@@ -48,14 +68,34 @@ export const ENCHANTS = [
   { id: 'bstr', slot: 'wrist', name: 'Superior Strength', text: '+9 Strength', use: STR, stats: { str: 9 }, price: 1 },
   { id: 'bsta', slot: 'wrist', name: 'Superior Stamina', text: '+9 Stamina', use: ALL, stats: { sta: 9 }, price: 2 },
   { id: 'bint', slot: 'wrist', name: 'Greater Intellect', text: '+7 Intellect', use: MANA, stats: { int: 7 }, price: 1 },
-  { id: 'fagi', slot: 'feet', name: 'Greater Agility', text: '+7 Agility', use: ['ROGUE', 'HUNTER', 'DRUID'], stats: { agi: 7 }, price: 1 },
+  { id: 'fagi', slot: 'feet', name: 'Greater Agility', text: '+7 Agility', use: AGILE, stats: { agi: 7 }, price: 1 },
   { id: 'fsta', slot: 'feet', name: 'Greater Stamina', text: '+7 Stamina', use: ALL, stats: { sta: 7 }, price: 2 },
   { id: 'hstr', slot: 'hands', name: 'Greater Strength', text: '+7 Strength', use: STR, stats: { str: 7 }, price: 1 },
-  { id: 'hagi', slot: 'hands', name: 'Greater Agility', text: '+7 Agility', use: ['ROGUE', 'HUNTER', 'DRUID'], stats: { agi: 7 }, price: 1 },
+  { id: 'hagi', slot: 'hands', name: 'Greater Agility', text: '+7 Agility', use: AGILE, stats: { agi: 7 }, price: 1 },
   { id: 'hshadow', slot: 'hands', name: 'Shadow Power', text: '+20 Shadow damage', use: ['PRIEST', 'WARLOCK'], stats: { sp: 20 }, price: 2 },
   { id: 'hfrost', slot: 'hands', name: 'Frost Power', text: '+20 Frost damage', use: ['MAGE'], stats: { sp: 20 }, price: 2 },
-  { id: 'cagi', slot: 'back', name: 'Lesser Agility', text: '+3 Agility', use: ['ROGUE', 'HUNTER', 'DRUID'], stats: { agi: 3 }, price: 1 },
+  { id: 'cagi', slot: 'back', name: 'Lesser Agility', text: '+3 Agility', use: AGILE, stats: { agi: 3 }, price: 1 },
   { id: 'carm', slot: 'back', name: 'Superior Defense', text: '+70 armor', use: ALL, stats: { armor: 70 }, price: 1 },
+  { id: 'wstrike4', slot: 'main', name: 'Greater Striking', text: '+4 weapon damage', use: MELEE, weapon: 4, price: 1 },
+  { id: 'wint', slot: 'main', name: 'Mighty Intellect', text: '+22 Intellect', use: CASTER, stats: { int: 22 }, price: 2 },
+  { id: 'cstats3', slot: 'chest', name: 'Stats', text: '+3 to all stats', use: ALL, stats: { str: 3, agi: 3, sta: 3, int: 3, spi: 3 }, price: 1 },
+  { id: 'bstr7', slot: 'wrist', name: 'Greater Strength', text: '+7 Strength', use: STR, stats: { str: 7 }, price: 1 },
+  { id: 'bsta7', slot: 'wrist', name: 'Greater Stamina', text: '+7 Stamina', use: ALL, stats: { sta: 7 }, price: 1 },
+  { id: 'bmp5', slot: 'wrist', name: 'Mana Regeneration', text: '4 mana every 5 sec', use: MANA, stats: { mp5: 4 }, price: 1 },
+  { id: 'fagi5', slot: 'feet', name: 'Agility', text: '+5 Agility', use: AGILE, stats: { agi: 5 }, price: 1 },
+  { id: 'fsta5', slot: 'feet', name: 'Stamina', text: '+5 Stamina', use: ALL, stats: { sta: 5 }, price: 1 },
+  { id: 'hagi15', slot: 'hands', name: 'Superior Agility', text: '+15 Agility', use: AGILE, stats: { agi: 15 }, price: 2 },
+  { id: 'hagi5', slot: 'hands', name: 'Agility', text: '+5 Agility', use: AGILE, stats: { agi: 5 }, price: 1 },
+  { id: 'afocus', slot: 'head', name: 'Arcanum of Focus', text: '+8 spell damage', use: CASTER, stats: { sp: 8 }, price: 1 },
+  { id: 'aconst', slot: 'head', name: 'Arcanum of Constitution', text: '+100 health', use: ALL, hp: 100, price: 2 },
+  { id: 'avorstr', slot: 'head', name: 'Arcanum of Voracity', text: '+8 Strength', use: STR, stats: { str: 8 }, price: 1 },
+  { id: 'avoragi', slot: 'head', name: 'Arcanum of Voracity', text: '+8 Agility', use: AGILE, stats: { agi: 8 }, price: 1 },
+  { id: 'lvorsta', slot: 'legs', name: 'Arcanum of Voracity', text: '+8 Stamina', use: ALL, stats: { sta: 8 }, price: 1 },
+  { id: 'lvorint', slot: 'legs', name: 'Arcanum of Voracity', text: '+8 Intellect', use: MANA, stats: { int: 8 }, price: 1 },
+  { id: 'lrumin', slot: 'legs', name: 'Arcanum of Rumination', text: '+150 mana', use: MANA, mana: 150, price: 1 },
+  { id: 'smight', slot: 'shoulder', name: 'Zandalar Signet of Might', text: '+30 attack power', use: PHYS, stats: { ap: 30, rap: 30 }, price: 2 },
+  { id: 'smojo', slot: 'shoulder', name: 'Zandalar Signet of Mojo', text: '+18 spell damage', use: CASTER, stats: { sp: 18 }, price: 2 },
+  { id: 'sfort', slot: 'shoulder', name: 'Fortitude of the Scourge', text: '+16 Stamina and +100 armor', use: ALL, stats: { sta: 16, armor: 100 }, price: 2 },
 ].map((e) => ({ ...e, icon: ICON }));
 
 const STR_AP = { WARRIOR: 2, PALADIN: 2, SHAMAN: 2, DRUID: 2, HUNTER: 1, ROGUE: 1, PRIEST: 1, MAGE: 1, WARLOCK: 1 };

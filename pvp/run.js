@@ -11,7 +11,7 @@ const PAIRS = { finger1: 'finger2', trinket1: 'trinket2' };
 const DUAL_WIELD = new Set(['ROGUE']);
 export const itemCount = (run) => 3 + boonSum(run.boons, 'tinker');
 export const slotPrice = (cls, slot) => SLOT_PRICES[slot] || WEAPON_PRICES[cls][slot];
-const FLOOR = 50, PER_BUY = 6, PER_ROUND = 3, SPREAD = 8, TAIL = .015;
+const FLOOR = 50, PER_BUY = 6, PER_ROUND = 3, SPREAD = 8, TAIL = .015, EVEN_ROUNDS = 4, SHELF = 3;
 export const ALL_TIERS = ['g', 'c', 'b', 'e', 't', 'l'];
 const FIRST = ['Mar', 'Thal', 'Bren', 'Kor', 'Vel', 'Sar', 'Lor', 'Dra', 'Ny', 'Gar', 'Tor', 'Eli', 'Ash', 'Zul', 'Fen', 'Rho', 'Ka', 'Mor', 'Syl', 'Gri'];
 const LAST = ['dak', 'ric', 'wyn', 'ven', 'thas', 'gorn', 'ella', 'dris', 'mir', 'rok', 'lyn', 'zek', 'nor', 'ius', 'ara', 'dor', 'fang', 'sha', 'ten', 'bek'];
@@ -51,10 +51,21 @@ export function slotFloor(run, slot) {
   return FLOOR + PER_ROUND * (run.round - 1) + PER_BUY * (run.buys[slot] || 0) + boonSum(run.boons, 'forge');
 }
 
+const looks = (pool, id) => {
+  const it = pool.items[id];
+  return JSON.stringify([it[3], it[5], it[6], Object.entries(it[7]).sort(), it[8], it[12]]);
+};
+
+function oneOfEach(pool, run, ids) {
+  const groups = new Map();
+  for (const i of ids) groups.set(looks(pool, i), [...(groups.get(looks(pool, i)) || []), i]);
+  return [...groups.values()].map((g) => g[run.seed % g.length]);
+}
+
 function possible(pool, run, slot) {
-  const worn = run.picks[slot] && pool.items[run.picks[slot]][0], every = suited(pool, run.cls, offers(pool, run.cls, slot, ALL_TIERS, run.picks)).filter((i) => pool.items[i][0] !== worn);
-  let list = every.filter((i) => pool.items[i][2] >= slotFloor(run, slot));
-  if (list.length < 3) list = every.sort((a, b) => pool.items[b][2] - pool.items[a][2]).slice(0, 8);
+  const on = run.picks[slot], every = suited(pool, run.cls, offers(pool, run.cls, slot, ALL_TIERS, run.picks)).filter((i) => !on || (pool.items[i][0] !== pool.items[on][0] && looks(pool, i) !== looks(pool, on)));
+  let list = oneOfEach(pool, run, every.filter((i) => pool.items[i][2] >= slotFloor(run, slot)));
+  if (list.length < 3) list = oneOfEach(pool, run, every).sort((a, b) => pool.items[b][2] - pool.items[a][2]).slice(0, 8);
   const fit = (i) => worth(pool, run.cls, i) / pool.items[i][2], ranked = [...list].sort((a, b) => fit(b) - fit(a));
   return ranked.slice(0, Math.max(3, Math.ceil(ranked.length * .7)));
 }
@@ -67,11 +78,15 @@ function lagging(run, slots) {
   return slots.filter((s) => !skip.has(s));
 }
 
+const band = (pool, id) => Math.floor(pool.items[id][2] / 4);
+
 export function itemChoices(pool, run, slot, r = Math.random) {
   const floor = slotFloor(run, slot), list = possible(pool, run, slot);
-  const mean = floor + 3 + (run.round - 1) * .8, weight = (i) => {
+  const mean = floor + 3 + (run.round - 1) * .8, even = Math.max(0, 1 - (run.round - 1) / EVEN_ROUNDS), crowd = {};
+  for (const i of list) { const b = band(pool, i); crowd[b] = (crowd[b] || 0) + 1; }
+  const weight = (i) => {
     const it = pool.items[i], z = (it[2] - mean) / SPREAD;
-    return (Math.exp(-z * z / 2) + TAIL) * (it[1] >= 5 ? .15 : 1);
+    return (Math.exp(-z * z / 2) + TAIL) * (it[1] >= 5 ? .15 : 1) / crowd[band(pool, i)] ** even;
   };
   const out = [], bag = [...list];
   while (out.length < itemCount(run) && bag.length) {
@@ -88,7 +103,7 @@ export function rollShop(pool, run, r = Math.random) {
   for (const s of slots) if (items.length < ARMORER_SLOTS + boonSum(run.boons, 'tinker') && !items.includes(s)) items.push(s);
   const against = run.foe ? run.foe.cls : null, consumes = CONSUMES.filter((c) => c.use.includes(run.cls) && (!c.against || !against || c.against.includes(against)));
   const enchants = ENCHANTS.filter((e) => e.use.includes(run.cls) && !(run.enchants[e.slot] === e.id) && run.picks[e.slot]);
-  return { items: shuffle(items, r), consumes: shuffle(consumes, r).slice(0, 2).map((c) => c.id), enchants: shuffle(enchants, r).slice(0, 2).map((e) => e.id), sold: [] };
+  return { items: shuffle(items, r), consumes: shuffle(consumes, r).slice(0, SHELF).map((c) => c.id), enchants: shuffle(enchants, r).slice(0, SHELF).map((e) => e.id), sold: [] };
 }
 
 export function paySlot(pool, run, slot) {

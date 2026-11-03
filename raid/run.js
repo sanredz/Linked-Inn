@@ -65,7 +65,7 @@ export function worth(pool, hero, id) {
 }
 
 const DUAL_WIELD = /^(fury|furyd|mut|combat|enh|enhd)$/;
-const STARTER_ILVL = 60, STARTER_RANK = .35;
+const STARTER_ILVL = 60, STARTER_RANK = .35, HANDS = 1;
 const DUNGEON_SET = { MAGE: 181, PRIEST: 182, WARLOCK: 183, ROGUE: 184, DRUID: 185, HUNTER: 186, SHAMAN: 187, PALADIN: 188, WARRIOR: 189 };
 const SET_SLOT = { 1: 'head', 3: 'shoulder', 5: 'chest', 20: 'chest', 9: 'wrist', 10: 'hands', 6: 'waist', 7: 'legs', 8: 'feet' };
 
@@ -79,7 +79,7 @@ function modest(pool, hero, slot, count, keep = () => true) {
   return ranked.slice(at, at + count).concat(ranked.slice(0, at)).slice(0, count);
 }
 
-export function starterPicks(pool, role, cls, build) {
+export function starterPicks(pool, role, cls, build, hands = HANDS) {
   const hero = { role, cls, build }, picks = {}, dual = role === 'dps' && DUAL_WIELD.test(build), caster = role === 'heal' || (role === 'dps' && CASTERS.test(build));
   for (const slot of ['neck', 'back', 'ranged']) { const [id] = modest(pool, hero, slot, 1); if (id) picks[slot] = id; }
   for (const [id, row] of Object.entries(pool.items)) if (row[9] === DUNGEON_SET[cls] && SET_SLOT[row[3]]) picks[SET_SLOT[row[3]]] = +id;
@@ -87,9 +87,10 @@ export function starterPicks(pool, role, cls, build) {
   Object.assign(picks, ring1 && { finger1: ring1 }, ring2 && { finger2: ring2 }, trink1 && { trinket1: trink1 }, trink2 && { trinket2: trink2 });
   const oneHand = (i) => pool.items[i][3] === 13;
   const wantsOne = dual || (role === 'tank' && cls !== 'DRUID');
-  const [main, second] = modest(pool, hero, 'main', 2, wantsOne ? oneHand : undefined);
+  const speed = (i) => pool.items[i][8]?.delay || 0, [first, second] = modest(pool, hero, 'main', 2, wantsOne ? oneHand : undefined), flip = hands && dual && build !== 'mut' && second && speed(second) > speed(first);
+  const main = flip ? second : first;
   picks.main = main;
-  if (dual && second) picks.off = second;
+  if (dual && second) picks.off = flip ? first : second;
   else if (pool.items[main][3] !== 17 && (caster || role === 'tank')) {
     const shield = (i) => pool.items[i][5] === 4;
     const [off] = modest(pool, hero, 'off', 1, role === 'tank' ? shield : undefined);
@@ -102,15 +103,30 @@ export function newRun(raid = 'mc', seed = Math.floor(Math.random() * 1e9)) {
   return { raid, seed, step: 'party', at: 0, heroes: [], boss: 0, rerolls: REROLLS, rolled: 0, results: [], score: 0, over: false, moves: [], boons: [], spoilsLeft: 0 };
 }
 
-export function addHero(pool, run, cls, build) {
+export function addHero(pool, run, cls, build, hands = HANDS) {
   const role = ROLES[run.at];
-  const picks = starterPicks(pool, role, cls, build);
-  run.heroes[run.at] = { role, cls, build, picks, start: { ...picks }, left: DRAFT_PICKS };
+  const picks = starterPicks(pool, role, cls, build, hands);
+  run.heroes[run.at] = { role, cls, build, picks, start: { ...picks }, left: DRAFT_PICKS, ...(hands && { v: hands }) };
   run.step = 'draft';
-  run.moves.push(['h', cls, build]);
+  run.moves.push(hands ? ['h', cls, build, hands] : ['h', cls, build]);
 }
 
-const list = (pool, hero, slot, tier, wild = false) => (pool.pools[wild && hero.role === 'tank' ? 'dps' : hero.role][hero.cls][POOL_OF[slot] || slot]?.[tier] || []).concat(slot === 'off' && hero.role === 'dps' ? (pool.pools.dps[hero.cls].main?.[tier] || []).filter((i) => pool.items[i][3] === 13) : []).filter((i) => fits(pool, hero, i, wild));
+const ARMOR = new Set(['head', 'shoulder', 'chest', 'wrist', 'hands', 'waist', 'legs', 'feet']), CAT = { role: 'dps', cls: 'DRUID', build: 'cat' };
+const leather = (pool, i) => pool.items[i][5] === 4 && pool.items[i][6] === 2;
+function bearExtra(pool, hero, group, tier) {
+  if (!hero.v || hero.role !== 'tank' || hero.cls !== 'DRUID') return [];
+  const rogue = ARMOR.has(group) ? (pool.pools.dps.ROGUE[group]?.[tier] || []).filter((i) => leather(pool, i)) : [];
+  return [...(pool.pools.dps.DRUID[group]?.[tier] || []), ...rogue].filter((i) => fits(pool, CAT, i));
+}
+
+const withExtra = (base, more) => (more.length ? [...new Set(base.concat(more))] : base);
+const TANK_KEEP = .6;
+function curated(pool, hero, ids) {
+  if (!hero.v || hero.role !== 'tank' || ids.length <= 3) return ids;
+  const keep = new Set([...ids].sort((a, b) => worth(pool, hero, b) - worth(pool, hero, a) || a - b).slice(0, Math.max(3, Math.ceil(ids.length * TANK_KEEP))));
+  return ids.filter((i) => keep.has(i));
+}
+const list = (pool, hero, slot, tier, wild = false) => curated(pool, hero, withExtra(pool.pools[wild && hero.role === 'tank' ? 'dps' : hero.role][hero.cls][POOL_OF[slot] || slot]?.[tier] || [], bearExtra(pool, hero, POOL_OF[slot] || slot, tier)).concat(slot === 'off' && hero.role === 'dps' ? (pool.pools.dps[hero.cls].main?.[tier] || []).filter((i) => pool.items[i][3] === 13) : []).filter((i) => fits(pool, hero, i, wild)));
 
 function rollSlot(pool, hero, slot, r, tiers, taken, cap, luck = 1, floor = FLOORS[0]) {
   const names = new Set([...Object.values(hero.picks), ...taken].map((i) => pool.items[i][0]));
@@ -321,8 +337,8 @@ export function replayRun(pool, seed, moves) {
       fightBoss(pool, run, !!m[1]);
     } else if (m[0] === 'h') {
       const role = ROLES[run.at];
-      if (run.step !== 'party' || !classesFor(role).includes(m[1]) || !specsFor(role, m[1]).some((x) => x.id === m[2])) throw new Error('bad hero');
-      addHero(pool, run, m[1], m[2]);
+      if (run.step !== 'party' || !classesFor(role).includes(m[1]) || !specsFor(role, m[1]).some((x) => x.id === m[2]) || (m.length > 3 && m[3] !== HANDS)) throw new Error('bad hero');
+      addHero(pool, run, m[1], m[2], m[3] === HANDS ? HANDS : 0);
     } else if (m[0] === 't') {
       const offers = run.step === 'draft' ? draftOffers(pool, run) : run.step === 'spoils' ? spoilOffers(pool, run) : [];
       if (!offers.some((o) => same(o, m))) throw new Error('bad item');

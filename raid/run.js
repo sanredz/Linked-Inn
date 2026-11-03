@@ -328,8 +328,9 @@ export function fightBoss(pool, run, heroic = false, iterations = 1) {
   return resolveFight(run, makeParty(pool, run.heroes, iterations, partyStats(run)), heroic);
 }
 
-export function replayRun(pool, seed, moves) {
-  const run = newRun('mc', seed), same = (o, m) => o.hero === m[1] && o.slot === m[2] && o.id === m[3];
+export function replayRun(pool, seed, moves, raid = 'mc') {
+  if (!Object.hasOwn(RAIDS, raid)) throw new Error('bad raid');
+  const run = newRun(raid, seed), same = (o, m) => o.hero === m[1] && o.slot === m[2] && o.id === m[3];
   for (const m of moves) {
     if (run.over) throw new Error('moves after the end');
     if (m[0] === 'f') {
@@ -360,5 +361,7 @@ export function replayRun(pool, seed, moves) {
   return run;
 }
 
-export const currentBoss = (run) => RAIDS[run.raid].bosses[run.boss];
+export const bossAt = (run, i) => { const b = RAIDS[run.raid].bosses[i]; return b && b.variants ? b.variants[Math.floor(rng(hash(run.seed, 'variant', i))() * b.variants.length)] : b; };
+export const currentBoss = (run) => bossAt(run, run.boss);
 export const killed = (run) => run.results.filter((r) => r.won).length;
+export const dropsOf = (run) => run.results.map((r, i) => { const b = bossAt(run, i); return b && (r.won || b.endless) && b.drop; }).filter((m, i) => m && rng(hash(run.seed, 'mount', i))() < m.chance);

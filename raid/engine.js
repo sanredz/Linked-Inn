@@ -40,10 +40,11 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
     if (to === 'party') return live;
     if (to === 'melee') return live.filter((h) => h.role === 'tank' || h.melee);
     if (to === 'heal') return [healer].filter((h) => !h.dead);
+    if (to === 'dps') return [dps].filter((h) => !h.dead);
     const others = live.length > 1 ? live.filter((h) => h !== tank) : live;
     return [others[Math.floor(r() * others.length)]].filter(Boolean);
   };
-  const die = (h, by) => { h.dead = true; h.hp = 0; h.killedBy = by; h.dots = []; h.casting = null; say({ k: 'death', i: h.i, by }); if (h === tank) { fell = t; if (!dps.dead) say({ k: 'save', i: dps.i, n: 'Takes the boss' }); } };
+  const die = (h, by) => { h.dead = true; h.hp = 0; h.killedBy = by; h.dots = []; h.casting = null; say({ k: 'death', i: h.i, by }); if (boss.levelUp) { b.enraged.damage += boss.levelUp.damage; say({ k: 'boss', n: boss.levelUp.n }); } if (h === tank) { fell = t; if (!dps.dead) say({ k: 'save', i: dps.i, n: 'Takes the boss' }); } };
   const hurt = (h, raw, school, n, opts = {}) => {
     if (h.dead) return;
     let v = raw * (school === 'phys' ? SCALE.melee * (opts.spike ? SCALE.spike : 1) : SCALE.damage) * fury * ramp(SCALE.rampDamage) * (tw.damage || 1);
@@ -62,6 +63,7 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
     if (h.hp <= 0 && h === tank && m.undying && !h.used.undying) { h.used.undying = 1; h.hp = h.max * .3; say({ k: 'save', i: h.i, n: 'Undying Resolve' }); }
     if (h.hp <= 0) saves(h, n);
     if (h.hp <= 0) die(h, n);
+    return v;
   };
   const saves = (h, n) => {
     const k = h.k || {};
@@ -93,6 +95,7 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
     hurt(h, v, 'phys', tag === 'hit' ? name : `${name} (${tag})`, { spike: 1 });
   };
   const dealBoss = (v, school, n, h, crit) => {
+    if (hasBuff('vanish')) return;
     let amount = v * (h.power || 1) * mult(school) * (school === 'phys' ? (tw.physTaken || 1) * (h.melee ? fx.melee || 1 : 1) : tw.magicTaken || 1);
     if (school !== 'phys') amount = buff('magicTaken', amount);
     amount *= (m.damage || 1) * (m.opening && t < 20 ? m.opening : 1) * (m.execute && b.hp / b.max < .3 ? m.execute : 1) * (h === tank ? m.tankDamage || 1 : 1) * (h === dps && tank.dead ? STAND_DAMAGE : 1);
@@ -121,8 +124,10 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
   };
   const useAbility = (a) => {
     if (a.below && b.hp / b.max >= a.below) return;
-    if (a.curse) { curses.push({ fx: a.curse, until: t + a.dur }); say({ k: 'boss', n: a.n }); return; }
-    if (a.boss) { b.buffs.push({ fx: a.boss, until: t + a.dur }); say({ k: 'boss', n: a.n }); if (a.tick) b.ticks.push({ ...a.tick, next: t + a.tick.every, until: t + a.dur }); return; }
+    if (a.curse && !a.to) { curses.push({ fx: a.curse, until: t + a.dur }); say({ k: 'boss', n: a.n }); return; }
+    if (a.mend) { if (!boss.endless) b.hp = Math.min(b.max, b.hp + b.max * a.mend); say({ k: 'boss', n: a.n }); return; }
+    if (a.control) { const h = a.control === 'heal' ? healer : dps; if (!h.dead) { h.gone = Math.max(h.gone, t + a.dur); h.casting = null; } say({ k: 'boss', n: a.n }); return; }
+    if (a.boss && !a.to) { b.buffs.push({ fx: a.boss, until: t + a.dur }); say({ k: 'boss', n: a.n }); if (a.tick) b.ticks.push({ ...a.tick, next: t + a.tick.every, until: t + a.dur }); return; }
     if (a.tick) { b.ticks.push({ ...a.tick, next: t + a.tick.every, until: t + a.dur }); say({ k: 'boss', n: a.n }); return; }
     if (a.fear) { for (const h of party) if (h !== tank && !h.dead) h.gone = Math.max(h.gone, t + a.dur); say({ k: 'boss', n: a.n }); return; }
     if (a.silence) { const h = a.silence === 'heal' ? healer : dps; if (!h.dead) { h.silenced = t + a.dur; h.casting = null; } say({ k: 'boss', n: a.n }); return; }
@@ -132,9 +137,11 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
     if (a.shield) { b.hp = b.max; b.shield = a.shield * SCALE.health; say({ k: 'boss', n: a.n }); return; }
     if (a.wave) { b.ticks.push({ ...a.wave, school: 'phys', to: 'tank', next: t + a.wave.every, until: t + a.wave.every * a.wave.ticks }); say({ k: 'boss', n: a.n }); return; }
     say({ k: 'boss', n: a.n });
+    if (a.curse) curses.push({ fx: a.curse, until: t + a.dur });
+    if (a.boss) b.buffs.push({ fx: a.boss, until: t + a.dur });
     for (const h of pick(a.to)) {
       if (a.delay) delayed.push({ at: t + a.delay, a, h });
-      else if (a.dmg) hurt(h, between(a.dmg), a.school, a.n);
+      else if (a.dmg) { const v = hurt(h, between(a.dmg), a.school, a.n); if (a.drain && v && !boss.endless) b.hp = Math.min(b.max, b.hp + v * a.drain); }
       if (a.dot) h.dots.push({ ...a.dot, next: t + a.dot.every, left: a.dot.ticks });
       if (a.stun && !h.dead) h.stunned = t + a.stun;
       if (a.knock && h.melee) h.knocked = t + a.knock;
@@ -214,10 +221,11 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
     for (const x of delayed) if (x.at <= t && !x.done) { x.done = true; if (!x.h.dead) hurt(x.h, between(x.a.dmg), x.a.school, x.a.n); }
     for (const x of burns) if (x.next <= t && x.left > 0) { x.next = t + x.every; x.left--; healer.curMana = Math.max(0, healer.curMana - x.per * SCALE.damage); }
     burns = burns.filter((x) => x.left > 0);
-    if (b.swing <= t) { b.swing = t + boss.melee[2] * SCALE.spike / (buff('speed', 1) * (1 + b.enraged.speed) * (tw.speed || 1)); swingBoss(boss.melee, 'Melee'); }
+    if (b.swing <= t && hasBuff('vanish')) b.swing = t + .5;
+    else if (b.swing <= t) { b.swing = t + boss.melee[2] * SCALE.spike / (buff('speed', 1) * (1 + b.enraged.speed) * (tw.speed || 1)); swingBoss(boss.melee, 'Melee'); }
     for (const a of adds) {
       if (a.hp <= 0) continue;
-      if (a.swing <= t) { a.swing = t + boss.adds.melee[2] * SCALE.spike; swingBoss(boss.adds.melee, boss.adds.n); }
+      if (boss.adds.melee[0] && a.swing <= t) { a.swing = t + boss.adds.melee[2] * SCALE.spike; swingBoss(boss.adds.melee, boss.adds.n); }
       const heals = boss.adds.heals;
       if (heals && a.healAt <= t) { a.healAt = t + heals.every; b.hp = Math.min(b.max, b.hp + heals.amount * SCALE.health * 4); say({ k: 'boss', n: heals.n }); }
     }

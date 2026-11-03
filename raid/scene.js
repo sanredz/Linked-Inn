@@ -3,7 +3,7 @@ import { Arena } from '../pvp/arena.js';
 import { Stage } from '../draft/stage.js';
 import { MILESTONES, tierOf } from './bosses.js';
 
-const SIZE = { lucifron: 5, magmadar: 4.6, gehennas: 5, garr: 5.4, geddon: 6.4, shazzrah: 5, sulfuron: 5.4, golemagg: 7.5, majordomo: 4.6, ragnaros: 11 };
+const SIZE = { jeklik: 4.6, venoxis: 5.6, marli: 3.8, mandokir: 5.4, grilek: 5.4, hazzarah: 5.4, renataki: 5.4, wushoolay: 5.4, gahzranka: 7.6, thekal: 4.2, arlokk: 4.2, jindo: 5, hakkar: 10.5, lucifron: 5, magmadar: 4.6, gehennas: 5, garr: 5.4, geddon: 6.4, shazzrah: 5, sulfuron: 5.4, golemagg: 7.5, majordomo: 4.6, ragnaros: 11 };
 const TONE = { fire: 0xff7a2a, frost: 0x7fd4ff, arcane: 0xd27dff, shadow: 0x9a5cff, nature: 0x7dff8a, holy: 0xffe680, phys: 0xffffff };
 const COLOR = { fire: '#ff8a3c', frost: '#8fd0ff', arcane: '#d59bff', shadow: '#b18cff', nature: '#7dff8a', holy: '#ffe680', phys: '#ffffff' };
 const TIME = 3, BOSS_Z = -6, CAST = /^(moon|ele|shadow|shadowd|shock|fire|frost|arcane|afflic|demo|destro)$/;
@@ -99,7 +99,7 @@ export class RaidScene extends Arena {
     return { root, mixer, clips, current: null };
   }
 
-  async stageRaid(heroes, boss) {
+  async stageRaid(heroes, boss, raid = {}) {
     this.leaveRaid();
     this.reset();
     this.mode = 'fight';
@@ -135,6 +135,8 @@ export class RaidScene extends Arena {
     a.view = { ...a.want };
     this.bossName = boss.name;
     this.endless = !!boss.endless;
+    this.finale = raid.finale || 'Ragnaros';
+    this.miles = raid.milestones || MILESTONES;
     this.shown = 0;
     this.tier = -1;
     this.size = (SIZE[boss.id] || 3.4) * .75;
@@ -144,7 +146,7 @@ export class RaidScene extends Arena {
   drawFrames(f) {
     const box = this.q('.rframes');
     if (!box.firstChild) {
-      box.innerHTML = `${this.endless ? '<div class="rfinal t-1"><span>Final Stand</span><b>0</b><em>Damage to Ragnaros</em></div><div class="rmiles"></div>' : '<div class="rboss"><span class="rbname"></span><div class="ubar hp"><i></i><b></b></div></div>'}<div class="rteam">${this.team.map((m, i) => `<div class="rmember" data-m="${i}"><img src="assets/classes/${m.hero.cls}.png" alt=""><div><div class="ubar hp"><i></i><b></b></div><div class="ubar res"><i></i></div></div></div>`).join('')}</div>`;
+      box.innerHTML = `${this.endless ? `<div class="rfinal t-1"><span>Final Stand</span><b>0</b><em>Damage to ${this.finale}</em></div><div class="rmiles"></div>` : '<div class="rboss"><span class="rbname"></span><div class="ubar hp"><i></i><b></b></div></div>'}<div class="rteam">${this.team.map((m, i) => `<div class="rmember" data-m="${i}"><img src="assets/classes/${m.hero.cls}.png" alt=""><div><div class="ubar hp"><i></i><b></b></div><div class="ubar res"><i></i></div></div></div>`).join('')}</div>`;
       if (!this.endless) box.querySelector('.rbname').textContent = this.bossName;
     }
     if (!f) return;
@@ -177,7 +179,7 @@ export class RaidScene extends Arena {
     box.className = `rfinal t${tier} hit`;
     setTimeout(() => box.classList.remove('hit'), 500);
     if (this.playing && this.playing.t >= 1e4) return;
-    const [at, name] = MILESTONES[tier], mile = document.createElement('div');
+    const [at, name] = this.miles[tier], mile = document.createElement('div');
     mile.className = `rmile t${tier}`;
     mile.innerHTML = `<b>${name}</b><span>${at.toLocaleString('en-US')} damage</span>`;
     this.q('.rmiles').append(mile);

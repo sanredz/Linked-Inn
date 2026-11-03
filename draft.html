@@ -139,9 +139,11 @@ body[data-view="replay"] .slot:hover { filter: none; box-shadow: none; }
 .modecount[hidden] { display: none; }
 .modecount small { margin-left: 4px; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: #c9b99a; }
 .modecard span { display: block; margin-top: 8px; font-size: 17px; line-height: 1.35; color: var(--ink); text-shadow: 0 1px 3px #000; }
-.modetabs { display: flex; gap: 6px; margin: 12px 0 0; }
+.modetabs { display: flex; gap: 6px; margin: 12px 0 0; overflow-x: auto; scrollbar-width: none; }
+.modetabs::-webkit-scrollbar { display: none; }
+.modetabs button { white-space: nowrap; }
 .modetabs[hidden] { display: none; }
-.modetabs button { flex: 0 1 auto; padding: 7px 14px; font: 14.5px "Friz", serif; color: var(--ink-2); background: rgba(0, 0, 0, .4); border: 1px solid #5a4620; border-radius: 6px; cursor: pointer; }
+.modetabs button { flex: none; padding: 7px 14px; font: 14.5px "Friz", serif; color: var(--ink-2); background: rgba(0, 0, 0, .4); border: 1px solid #5a4620; border-radius: 6px; cursor: pointer; }
 .modetabs button:hover { color: var(--gold); }
 .modetabs button.on { color: var(--gold); border-color: var(--gold); }
 @media (max-width: 760px) {
@@ -156,9 +158,6 @@ body[data-view="replay"] .slot:hover { filter: none; box-shadow: none; }
   .modecount { top: 10px; right: 10px; font-size: 12.5px; padding: 4px 9px 3px; }
   .modecard span { margin-top: 4px; font-size: 15px; }
 }
-#rCode { margin-top: 10px; padding: 8px 10px; border-left: 2px solid var(--gold-dim); background: rgba(0, 0, 0, 0.3); color: var(--ink-2); font-size: 13.5px; }
-#rCode[hidden] { display: none; }
-#rCode code { margin: 0 8px; font: 14.5px "Friz", serif; letter-spacing: .05em; color: var(--gold); }
 .hsum { color: var(--ink-2); font-size: 14px; }
 .hsort { margin-left: auto; display: flex; gap: 4px; }
 .hsort[hidden] { display: none; }
@@ -193,8 +192,6 @@ body[data-view="replay"] .slot:hover { filter: none; box-shadow: none; }
 .hform { display: flex; gap: 6px; flex: 1 1 100%; }
 .hform[hidden] { display: none; }
 .hform input { flex: 1; min-width: 0; min-height: 40px; padding: 0 10px; color: #fff; font: inherit; background: rgba(0, 0, 0, 0.45); border: 1px solid var(--gold-dim); border-radius: 8px; }
-#hMsg { flex: 1 1 100%; color: var(--gold-2); }
-#hMsg:empty { display: none; }
 .board { padding: 10px 14px 14px; max-height: 620px; overflow-y: auto; scrollbar-color: var(--gold-dim) transparent; }
 .rw { display: grid; grid-template-columns: 38px 30px minmax(0, 1fr) auto 76px; gap: 10px; align-items: center; min-height: 44px; padding: 5px 10px; border-radius: 7px; font-size: 15.5px; }
 .rw + .rw { margin-top: 3px; }
@@ -454,13 +451,23 @@ body.arena #stage { cursor: default; }
 </header>
 <main class="wrap">
   <section class="modepick" id="home" data-screen="home" hidden>
-    <div class="tally" id="tally" hidden><i></i><div><b id="tallyAll">0</b><span>runs played in total</span></div><i></i></div>
+    <div class="hearthbar" id="hearthBar" hidden></div>
+    <div class="tally" id="tally" hidden><i></i><div><b id="tallyAll">0</b><span>total runs by all players</span></div><i></i></div>
     <button class="modecard" id="modeDraft"><em class="modecount" data-count="gear" hidden></em><img src="assets/draft/arena/card-draft.jpg" alt=""><div class="say"><b>Gear Draft</b><span>Draft one hero and see how much damage they do.</span></div></button>
     <button class="modecard" id="modeArena"><em class="modecount" data-count="arena" hidden></em><img src="assets/draft/arena/card-gauntlet.jpg" alt=""><div class="say"><b>Arena Draft</b><span>Buy gear between duels and fight your way to ten wins.</span></div></button>
     <button class="modecard" id="modeRaid"><em class="modecount" data-count="raid" hidden></em><img src="assets/draft/arena/card-raid.jpg" alt=""><div class="say"><b>Raid Draft</b><span>Draft a party of three and see how far they get.</span></div></button>
+    <div class="stone" id="stone">
+      <div class="stonehead"><img src="assets/icons/134414.png" alt=""><div><b>Your Hearthstone</b><small>This one code keeps every run, badge, mount and your profile, on any device. Save it somewhere safe and never share it.</small></div></div>
+      <div class="stonecode"><code id="sCode">****-****-****-****</code><button class="spec" id="sShow">Show</button><button class="spec" id="sCopy">Copy</button><button class="spec" id="sUse">Use another code</button></div>
+      <div class="stoneform" id="sForm" hidden><input id="sIn" maxlength="24" aria-label="Hearthstone code" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off"><button class="go" id="sLoad">Load</button></div>
+      <p class="stonemsg" id="sMsg"></p>
+      <p class="stoneshare">Want to show your runs to a friend? <button class="spec" id="sShare" hidden>Copy share link</button><span id="sShareNone">Finish a Gear Draft to get a share link.</span> It never reveals your Hearthstone.</p>
+    </div>
   </section>
 
-  <nav class="modetabs" id="modeTabs" data-screen="pick gauntlet raid" hidden><button data-mode="home">&lsaquo; Home</button><button data-mode="pick">Gear</button><button data-mode="gauntlet">Arena</button><button data-mode="raid">Raid</button></nav>
+  <nav class="modetabs" id="modeTabs" data-screen="pick gauntlet raid hearth" hidden><button data-mode="home">&lsaquo; Home</button><button data-mode="pick">Gear</button><button data-mode="gauntlet">Arena</button><button data-mode="raid">Raid</button><button data-mode="hearth">Hearth</button></nav>
+
+  <section class="hearthpage" data-screen="hearth" hidden><div id="hearthRoot"></div></section>
 
   <section class="frame banner" data-screen="pick" hidden>
     <div class="in">
@@ -568,9 +575,7 @@ body.arena #stage { cursor: default; }
       <div class="hist" id="hist"></div>
       <div class="hcode">
         <p><b>Recovery code.</b> Keep this private. It brings your runs back after clearing your browser, or on another device. To show people your runs, send the share link instead.</p>
-        <code id="hCode"></code><button class="spec" id="hShow">Show</button><button class="spec" id="hCopy">Copy</button><button class="spec" id="hUse">Load a code</button><button class="spec" id="hShare" hidden>Share my runs</button>
-        <div class="hform" id="hForm" hidden><input id="hIn" maxlength="24" aria-label="Run code" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off"><button class="go" id="hLoad">Load runs</button></div>
-        <div id="hMsg"></div>
+        <button class="spec" id="hShare" hidden>Share my runs</button>
       </div>
     </div></div>
   </section>
@@ -639,7 +644,6 @@ body.arena #stage { cursor: default; }
         <div id="nameBox">
           <div class="namebox"><input id="nameIn" maxlength="20" aria-label="Name for the board"><button class="go" id="nameGo">Save name</button></div>
           <div id="saved"></div>
-          <div id="rCode" hidden>Save your recovery code to keep your runs:<code id="rCodeText"></code><button class="spec" id="rShow">Show</button><button class="spec" id="rCopy">Copy</button></div>
         </div>
         <div class="sh" id="rSheet"></div>
         <div class="rc" id="rBy"></div>
@@ -659,6 +663,6 @@ body.arena #stage { cursor: default; }
 <div id="peek" hidden><div class="pane"><img class="portrait" id="pkPortrait" alt=""><div class="frameart"></div><div class="viewport"><canvas id="pkStage" aria-label="Character for this run. Drag to turn."></canvas></div><div class="peekwho" id="pkWho"></div><div class="sub" id="pkSay"></div><div class="peekdoll" id="pkDoll"></div></div></div>
 <div id="tip" hidden></div>
 <div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button class="go" id="sheetMain" hidden>Main Hand</button><button class="go" id="sheetOff" hidden>Off Hand</button><button id="sheetClose">Close</button></div></div></div>
-<script type="module" src="draft/app.js?v=20261103085840"></script>
+<script type="module" src="draft/app.js?v=20261103104745"></script>
 </body>
 </html>

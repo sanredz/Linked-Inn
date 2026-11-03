@@ -6,7 +6,7 @@ import { RaidScene } from './scene.js';
 import { resultHtml } from '../pvp/arena.js';
 import { CLASS_COLOR } from '../draft/core.js';
 import { bindName, heroName, nameField, nameOk } from '../pvp/name.js';
-import { CLASS_NAME, DRAFT_PICKS, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js';
+import { CLASS_NAME, DRAFT_PICKS, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, dropsOf, modsFor, newRun, partyStats, passDraft, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js';
 
 const KEY = 'raidRun', WHO = 'gauntletWho';
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
@@ -29,7 +29,13 @@ const dress = (step) => { dressing = dressing.then(step).catch(() => {}); return
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const save = () => { try { if (run && !run.over) localStorage.setItem(KEY, JSON.stringify(run)); else localStorage.removeItem(KEY); } catch {} };
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { return null; } };
-const who = () => { try { return localStorage.getItem(WHO) || 'anon'; } catch { return 'anon'; } };
+const who = () => {
+  try {
+    let id = localStorage.getItem(WHO);
+    if (!id) { id = Math.random().toString(36).slice(2, 14); localStorage.setItem(WHO, id); }
+    return id;
+  } catch { return 'anon'; }
+};
 const iconOf = (id) => `assets/icons/${pool.items[id][4]}.png`;
 const num = (v) => Math.round(v).toLocaleString('en-US');
 
@@ -57,7 +63,7 @@ function partyHtml() {
 
 function routeHtml() {
   const bosses = RAIDS[run.raid].bosses;
-  return `<div class="rroute"><h3>The raid <em>each boss shows its twist when you reach it</em></h3><div class="rpath">${bosses.map((b, n) => `<span class="${n === bosses.length - 1 ? 'last' : ''}" style="--i:${n}"><i>${b.step + 1}</i><small>${esc(b.name.split(' ')[0])}</small></span>`).join('')}</div></div>`;
+  return `<div class="rroute"><h3>The raid <em>each boss shows its twist when you reach it</em></h3><div class="rpath">${bosses.map((b, n) => `<span class="${n === bosses.length - 1 ? 'last' : ''}" style="--i:${n}"><i>${b.step + 1}</i><small>${esc(b.short || b.name.split(' ')[0])}</small></span>`).join('')}</div></div>`;
 }
 
 function bonusHtml() {
@@ -232,11 +238,13 @@ function compare(o) {
   box.querySelector('[data-yes]').onclick = () => { box.remove(); chooseItem({ ...o, to: aimOf(o) }); };
 }
 
-const SOON = [['zg', "Zul'Gurub"], ['aq20', "Ruins of Ahn'Qiraj"]];
+const mountHtml = (m, tag = 'Dropped this run') => `<div class="rmount"><img src="assets/icons/${m.icon}.png" alt=""><span><small>${tag}</small><b>${esc(m.name)}</b></span></div>`;
+
+const LIVE = ['mc', 'zg'], SOON = [['aq20', "Ruins of Ahn'Qiraj"]];
 
 function introHtml() {
   const saved = load();
-  const open = `<button class="rraid live" data-act="begin"><i class="rraidart" style="background-image:url(assets/draft/arena/raid-mc.jpg)"></i><span class="rraidsay"><b class="rraidname">${RAIDS.mc.name}</b><span class="rraidtext">${RAIDS.mc.blurb}</span><span class="rraidgo">Begin the raid</span></span></button>`;
+  const open = LIVE.map((id) => `<button class="rraid live ${id}" data-act="begin" data-raid="${id}"><i class="rraidart" style="background-image:url(assets/draft/arena/raid-${id}.jpg)"></i><span class="rraidsay"><b class="rraidname">${RAIDS[id].name}</b><span class="rraidtext">${RAIDS[id].blurb}</span><span class="rraidgo">Begin the raid</span></span></button>`).join('');
   const soon = SOON.map(([id, name]) => `<div class="rraid soon" aria-disabled="true"><i class="rraidart" style="background-image:url(assets/draft/arena/raid-${id}.jpg)"></i><div class="rraidsay"><h3>${name}</h3><p>Coming soon</p></div></div>`).join('');
   return `<div class="rraids">${open}${soon}</div>${saved ? '<button class="gresume" data-act="resume">Continue your run</button>' : ''}<ul class="rrules"><li>Draft a tank, a healer and a damage dealer</li><li>Each hero starts in their class Dungeon Set and gets ${DRAFT_PICKS} picks</li><li>Every boss killed drops a choice of new gear</li><li>One wipe ends the run</li></ul>`;
 }
@@ -254,7 +262,7 @@ function classHtml() {
   shownRole = run.at;
   const banners = classes.map((c, i) => `<button class="rbanner ${c === chosenCls ? 'on' : ''} ${c === chosenCls && fresh ? 'fresh' : ''}" data-cls="${c}" style="--cc:${CLASS_COLOR[c]};--i:${i}"><span class="rbannerface"><i class="rbannerart" style="background-image:url(${artOf(role, c)})"></i><img src="assets/classes/${c}.png" alt=""><b>${CLASS_NAME[c]}</b></span></button>`).join('');
   const tabs = specs.length > 1 ? `<div class="rspecpick ${spec ? '' : 'need'}"><small>Choose a spec</small><div class="rpickspecs">${specs.map((s) => `<button class="${s.id === chosenSpec ? 'on' : ''}" data-spec="${s.id}" aria-pressed="${s.id === chosenSpec}">${esc(s.name)}</button>`).join('')}</div></div>` : `<small class="rpickspec">${esc(spec.name)}</small>`;
-  return `<div class="rpicker ${enter ? 'enter' : ''}" style="--cc:${CLASS_COLOR[chosenCls]}"><i class="rpickart" style="background-image:url(${artOf(role, chosenCls)})"></i><div class="rembers">${'<i></i>'.repeat(12)}</div><div class="rpickhead"><small>Hero ${run.at + 1} of ${ROLES.length}</small><h3>Choose your ${role === 'dps' ? 'damage dealer' : ROLE_NAME[role].toLowerCase()}</h3>${run.at ? '' : nameField()}</div><div class="rbanners ${classes.length > 3 ? 'many' : ''}">${banners}</div><div class="rpickinfo ${fresh ? 'fresh' : ''}"><h4>${CLASS_NAME[chosenCls]}</h4>${tabs}${spec ? `<p class="rblurb">${esc(spec.blurb)}</p>` : ''}${chosenSpec === 'fire' ? '<p class="rwarn">Molten Core is a fire raid. Baron Geddon and Ragnaros are immune, and others resist fire.</p>' : ''}<div class="rseal"><i></i><div><small>Party bonus</small><b>${esc(bonus.n)}</b><span>${esc(bonus.text)}</span></div></div></div><button class="rforge" data-act="hero" ${spec ? '' : 'data-nospec disabled'} ${run.at || !spec ? '' : `data-named ${nameOk() ? '' : 'disabled'}`}><span>${spec ? `Draft your ${CLASS_NAME[chosenCls]}` : 'Choose a spec first'}</span></button></div>${routeHtml()}`;
+  return `<div class="rpicker ${enter ? 'enter' : ''}" style="--cc:${CLASS_COLOR[chosenCls]}"><i class="rpickart" style="background-image:url(${artOf(role, chosenCls)})"></i><div class="rembers">${'<i></i>'.repeat(12)}</div><div class="rpickhead"><small>Hero ${run.at + 1} of ${ROLES.length}</small><h3>Choose your ${role === 'dps' ? 'damage dealer' : ROLE_NAME[role].toLowerCase()}</h3>${run.at ? '' : nameField()}</div><div class="rbanners ${classes.length > 3 ? 'many' : ''}">${banners}</div><div class="rpickinfo ${fresh ? 'fresh' : ''}"><h4>${CLASS_NAME[chosenCls]}</h4>${tabs}${spec ? `<p class="rblurb">${esc(spec.blurb)}</p>` : ''}${chosenSpec === 'fire' && run.raid === 'mc' ? '<p class="rwarn">Molten Core is a fire raid. Baron Geddon and Ragnaros are immune, and others resist fire.</p>' : ''}<div class="rseal"><i></i><div><small>Party bonus</small><b>${esc(bonus.n)}</b><span>${esc(bonus.text)}</span></div></div></div><button class="rforge" data-act="hero" ${spec ? '' : 'data-nospec disabled'} ${run.at || !spec ? '' : `data-named ${nameOk() ? '' : 'disabled'}`}><span>${spec ? `Draft your ${CLASS_NAME[chosenCls]}` : 'Choose a spec first'}</span></button></div>${routeHtml()}`;
 }
 
 function draftHtml() {
@@ -291,8 +299,9 @@ function overHtml() {
   const trail = bosses.map((b, i) => { const r = run.results[i]; return `<i class="${r ? (b.endless ? 'final' : r.won ? 'won' : 'lost') : ''} ${r && r.heroic ? 'heroic' : ''}" title="${esc(b.name)}${r ? ` ${Math.round(r.time)}s` : ''}">${i + 1}</i>`; }).join('');
   const heroics = run.results.filter((r) => r.heroic && r.won).length;
   const rank = run.rank ? `<div class="rrank"><b>#${num(run.rank.place)}</b><span>of ${num(run.rank.total)} ${run.rank.total === 1 ? 'run' : 'runs'} on the leaderboard</span></div>` : '';
-  return `<div class="gpanel rsummary ${finale ? 'finale' : ''}"><small>${esc(RAIDS[run.raid].name)}</small>${finale ? `<h2>${tier >= 0 ? esc(MILESTONES[tier][1]) : 'Final Stand'}</h2><div class="rbig">${num(run.score)}</div><p class="rlabel">damage to Ragnaros</p>${rank}` : `<h2>Fell to ${esc(bosses[run.boss].name)}</h2><p class="rlabel">Reach Ragnaros to earn a place on the leaderboard.</p>`}
+  return `<div class="gpanel rsummary ${finale ? 'finale' : ''}"><small>${esc(RAIDS[run.raid].name)}</small>${finale ? `<h2>${tier >= 0 ? esc((RAIDS[run.raid].milestones || MILESTONES)[tier][1]) : 'Final Stand'}</h2><div class="rbig">${num(run.score)}</div><p class="rlabel">damage to ${esc(RAIDS[run.raid].finale || 'Ragnaros')}</p>${rank}` : `<h2>Fell to ${esc(bossAt(run, run.boss).name)}</h2><p class="rlabel">Reach ${esc(RAIDS[run.raid].finale || 'Ragnaros')} to earn a place on the leaderboard.</p>`}
     <div class="rtrail">${trail}</div>
+    ${dropsOf(run).map((m) => mountHtml(m)).join('')}
     <p>${k} of ${bosses.length - 1} bosses killed${heroics ? `, ${heroics} on Heroic` : ''}. ${esc(last.why || '')}</p>
     <div class="rsumparty">${run.heroes.map((h) => `<div class="rsumhero"><img src="assets/classes/${h.cls}.png" alt=""><span><small>${ROLE_NAME[h.role]}</small><b>${CLASS_NAME[h.cls]}</b></span></div>`).join('')}</div>
     ${run.boons.length ? `<div class="rbonus rboons">${run.boons.map((id) => `<span><b>${esc(boonById(id).name)}</b></span>`).join('')}</div>` : ''}
@@ -311,11 +320,11 @@ function rowDetail(r) {
 
 function boardHtml() {
   const last = RAIDS[boardRaid].bosses.at(-1).name.split(' ')[0];
-  const head = `<div class="rboardhead"><h3>Leaderboard <em>highest damage to ${esc(last)}</em></h3><div class="rboardtabs">${[['mc', RAIDS.mc.name], ...SOON].map(([id, name]) => `<button class="gmini ${id === boardRaid ? 'on' : ''}" data-board="${id}"${RAIDS[id] ? '' : ' disabled'}>${name}</button>`).join('')}</div></div>`;
+  const head = `<div class="rboardhead"><h3>Leaderboard <em>highest damage to ${esc(last)}</em></h3><div class="rboardtabs">${[...LIVE.map((id) => [id, RAIDS[id].name]), ...SOON].map(([id, name]) => `<button class="gmini ${id === boardRaid ? 'on' : ''}" data-board="${id}"${RAIDS[id] ? '' : ' disabled'}>${name}</button>`).join('')}</div></div>`;
   if (!board) return `${head}<p>The board could not be reached.</p>`;
   const filtered = boardFind.trim() || ROLES.some((r) => boardPick[r]), count = boardCount ? `<p class="rboardcount">${filtered ? `${num(boardCount.matched)} of ${num(boardCount.total)}` : num(boardCount.total)} ${boardCount.total === 1 ? 'run' : 'runs'}</p>` : '';
   if (!board.length) return `${head}${count}<p>${filtered ? 'No runs match these filters.' : `Nobody has reached ${esc(last)} yet.`}</p>`;
-  return head + count + board.map((r, i) => `<div class="rrun ${i === boardRow ? 'open' : ''} ${r.mine ? 'mine' : ''}"><button class="rrow" data-row="${i}" aria-expanded="${i === boardRow}"><span>${r.pos || i + 1}</span><b>${esc(r.name)}</b><span class="rclassrow">${r.party.map((c) => `<img src="assets/classes/${c}.png" alt="${c}">`).join('')}</span><em>${num(r.score)}</em><i class="rchev"></i></button>${i === boardRow ? rowDetail(r) : ''}</div>`).join('');
+  return head + count + board.map((r, i) => `<div class="rrun ${i === boardRow ? 'open' : ''} ${r.mine ? 'mine' : ''}"><button class="rrow" data-row="${i}" aria-expanded="${i === boardRow}"><span>${r.pos || i + 1}</span><b>${esc(r.name)}${(r.mounts || []).map((m) => `<img class="rmicon" src="assets/icons/${m.icon}.png" alt="${esc(m.name)}" title="${esc(m.name)}">`).join('')}</b><span class="rclassrow">${r.party.map((c) => `<img src="assets/classes/${c}.png" alt="${c}">`).join('')}</span><em>${num(r.score)}</em><i class="rchev"></i></button>${i === boardRow ? rowDetail(r) : ''}</div>`).join('');
 }
 
 function render() {
@@ -335,13 +344,13 @@ function render() {
   const shown = run && run.heroes[viewing];
   root.querySelector('.portrait').src = `assets/classes/${shown ? shown.cls : run && run.step === 'party' ? chosenCls || 'WARRIOR' : 'WARRIOR'}.png`;
   root.querySelector('.peekwho').textContent = shown ? CLASS_NAME[shown.cls] : run && run.step === 'party' ? CLASS_NAME[chosenCls] : 'Your party';
-  root.querySelector('.rstage .sub').textContent = shown ? ROLE_NAME[shown.role] : run && run.step === 'party' ? ROLE_NAME[ROLES[run.at]] : 'Molten Core';
+  root.querySelector('.rstage .sub').textContent = shown ? ROLE_NAME[shown.role] : run && run.step === 'party' ? ROLE_NAME[ROLES[run.at]] : RAIDS[run ? run.raid : 'mc'].name;
   root.querySelector('.rstage').className = `rstage ${shown ? `role-${shown.role}` : run && run.step === 'party' ? `role-${ROLES[run.at]}` : ''}`;
   root.querySelector('.peekdoll').innerHTML = run && run.step === 'fight' ? '' : dollHtml();
   root.querySelector('.rctl').innerHTML = run && run.step === 'fight' ? `${[1, 2, 4].map((n) => `<button class="gmini sp ${scene.speed === n ? 'on' : ''}" data-speed="${n}">${n}x</button>`).join('')}<button class="gmini" data-act="skip">Skip</button>` : '';
   root.querySelector('.rboardlist').innerHTML = boardHtml();
   bindName(root);
-  for (const el of root.querySelectorAll('[data-act]')) el.onclick = () => action(el.dataset.act);
+  for (const el of root.querySelectorAll('[data-act]')) el.onclick = () => action(el.dataset.act, el.dataset.raid);
   for (const el of root.querySelectorAll('[data-cls]')) el.onclick = () => { chosenCls = el.dataset.cls; chosenSpec = ''; viewing = run.at; render(); showHero(); };
   for (const el of root.querySelectorAll('[data-spec]')) el.onclick = () => { chosenSpec = el.dataset.spec; viewing = run.at; render(); showHero(); };
   for (const el of root.querySelectorAll('[data-take]')) el.onclick = () => { const [hero, slot, id, to] = el.dataset.take.split('|'); chooseItem({ hero: +hero, slot, id: +id, to }); };
@@ -379,7 +388,7 @@ async function pull(heroic = false) {
   run.step = 'fight';
   render();
   root.querySelector('.rscene').scrollIntoView({ block: 'start', behavior: 'smooth' });
-  await dress(() => scene.stageRaid(run.heroes.map((h, i) => ({ ...h, ...heroes[i] })), boss));
+  await dress(() => scene.stageRaid(run.heroes.map((h, i) => ({ ...h, ...heroes[i] })), boss, RAIDS[run.raid]));
   run.results[run.results.length - 1].why = why;
   run.step = 'fight';
   const stored = { ...run, step: after };
@@ -393,7 +402,8 @@ async function pull(heroic = false) {
 function finished(result, why, after, boss) {
   const title = result.won ? 'Victory' : boss.endless ? num(result.score) : 'Wipe';
   const dealt = result.totals.reduce((n, h) => n + h.dealt, 0), share = (h) => Math.round(h).toLocaleString('en-US');
-  scene.banner(resultHtml({ title, stats: boss.endless ? [['Final Stand', 'Damage to Ragnaros'], [Math.round(result.time), 'Seconds survived']] : [[Math.round(result.time), 'Seconds'], [share(dealt), 'Damage dealt'], result.won ? [run.boss, `of ${RAIDS[run.raid].bosses.length} bosses`] : [`${Math.round(result.health * 100)}%`, 'Boss health left']], note: boss.endless ? '' : esc(why), action: result.won ? 'Claim spoils' : 'See your run' }), `result ${result.won || boss.endless ? 'win' : 'lose'}`);
+  const drop = (result.won || boss.endless) && boss.drop && dropsOf(run).includes(boss.drop);
+  scene.banner(resultHtml({ title, stats: boss.endless ? [['Final Stand', `Damage to ${RAIDS[run.raid].finale || 'Ragnaros'}`], [Math.round(result.time), 'Seconds survived']] : [[Math.round(result.time), 'Seconds'], [share(dealt), 'Damage dealt'], result.won ? [run.boss, `of ${RAIDS[run.raid].bosses.length} bosses`] : [`${Math.round(result.health * 100)}%`, 'Boss health left']], note: boss.endless ? '' : esc(why), extra: drop ? mountHtml(boss.drop, boss.drop.kind === 'mount' ? 'A rare mount dropped!' : 'A legendary relic dropped!') : '', action: result.won ? 'Claim spoils' : 'See your run' }), `result ${result.won || boss.endless ? 'win' : 'lose'}`);
   root.querySelector('[data-next]').onclick = () => {
     run.step = after;
     offers = null;
@@ -407,7 +417,7 @@ function finished(result, why, after, boss) {
 
 async function postResult() {
   if (!run.sig) return;
-  const body = { who: who(), name: heroName(), seed: run.seed, sig: run.sig, moves: run.moves };
+  const body = { who: who(), name: heroName(), raid: run.raid, seed: run.seed, sig: run.sig, moves: run.moves };
   try {
     const r = await fetch(`${API}/raid/finish`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const d = r.ok ? await r.json() : null;
@@ -434,13 +444,17 @@ async function loadBoard() {
   if (root) root.querySelector('.rboardlist').innerHTML = boardHtml();
 }
 
-async function begin() {
+async function begin(raid = 'mc') {
+  if (!LIVE.includes(raid)) return;
   let seed, sig = '';
   try {
     const r = await fetch(`${API}/raid/start`, { method: 'POST' });
     if (r.ok) ({ seed, sig } = await r.json());
   } catch {}
-  run = seed === undefined ? newRun() : newRun('mc', seed);
+  run = seed === undefined ? newRun(raid) : newRun(raid, seed);
+  boardRaid = raid;
+  applyTheme();
+  loadBoard();
   run.sig = sig;
   viewing = 0;
   offers = null;
@@ -450,9 +464,11 @@ async function begin() {
   showHero();
 }
 
-function action(a) {
-  if (a === 'begin') begin();
-  else if (a === 'resume') { run = load(); viewing = Math.min(run.at, 2); offers = null; render(); showHero(); }
+const applyTheme = () => { if (scene) scene.theme(RAIDS[run ? run.raid : 'mc'].theme); };
+
+function action(a, raid) {
+  if (a === 'begin') begin(raid);
+  else if (a === 'resume') { run = load(); viewing = Math.min(run.at, 2); offers = null; boardRaid = run.raid; applyTheme(); loadBoard(); render(); showHero(); }
   else if (a === 'hero') { if (!chosenSpec) return; addHero(pool, run, chosenCls, chosenSpec); viewing = run.at; offers = null; save(); render(); showHero(); }
   else if (a === 'pass') {
     if (run.step === 'spoils') skipSpoils(run); else passDraft(run);
@@ -464,7 +480,7 @@ function action(a) {
   else if (a === 'pull') pull();
   else if (a === 'heroic') pull(true);
   else if (a === 'skip') scene.skip();
-  else if (a === 'again') { run = null; save(); render(); showHero(); }
+  else if (a === 'again') { run = null; save(); applyTheme(); render(); showHero(); }
 }
 
 export function backToRaids() {
@@ -506,7 +522,7 @@ export async function openRaid(data, host) {
   };
   scene = new RaidScene(root.querySelector('.rscene'), gear, pool);
   await scene.init();
-  scene.theme({ floor: 'terrain_rock', wall: 'terrain_rock', fog: 0x2a0c04, light: 0xff6a2a });
+  applyTheme();
   render();
   showHero();
   loadBoard();

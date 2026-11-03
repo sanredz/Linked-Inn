@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261103085840';
-import { Stage } from './stage.js?v=20261103085840';
+import * as C from './core.js?v=20261103104745';
+import { Stage } from './stage.js?v=20261103104745';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -36,9 +36,6 @@ function loadKey() {
   return key || saveKey([...crypto.getRandomValues(new Uint32Array(16))].map((n) => ALPHABET[n % ALPHABET.length]).join(''));
 }
 
-function remember(key) {
-  try { return localStorage.getItem(key); } catch { return null; }
-}
 function note(key) {
   try { localStorage.setItem(key, '1'); } catch {}
 }
@@ -451,7 +448,6 @@ async function results() {
   $('nameIn').value = '';
   $('nameIn').placeholder = auto;
   $('saved').textContent = '';
-  $('rCode').hidden = true;
   $('rRank').textContent = 'Logging your run...';
   last.auto = auto;
   last.id = null;
@@ -459,10 +455,6 @@ async function results() {
     const out = await post('/run', { cls: run.cls, seed: run.seed, sig, moves: run.moves, build: chosenBuild, key: playerKey });
     last.id = out.id;
     last.token = out.token;
-    if (!remember('draftCodeSaved')) {
-      hideCode('rCodeText', 'rShow');
-      $('rCode').hidden = false;
-    }
     const spec = C.specOf(run.cls, chosenBuild);
     $('rRank').innerHTML = `Rank <b>#${out.rank}</b> of ${out.of} overall · <b>#${out.classRank}</b> among ${C.CLASS_NAME[run.cls]}s${Object.keys(C.SPECS[run.cls]).length > 1 ? ` · <b>#${out.specRank}</b> in ${spec}` : ''}`;
   } catch (e) {
@@ -728,7 +720,6 @@ function route() {
 }
 
 async function history(from) {
-  hideCode('hCode', 'hShow');
   try {
     const d = await post('/history', { key: playerKey, from });
     histRows = d.rows.map(readRun);
@@ -739,17 +730,37 @@ async function history(from) {
   }
 }
 
-function useCode() {
-  const key = $('hIn').value.replace(/[^0-9a-z]/gi, '').toUpperCase();
-  if (key.length !== 16 || [...key].some((c) => !ALPHABET.includes(c))) { $('hMsg').textContent = 'That is not a run code. It has 16 letters and numbers.'; return; }
+function useCode(input = 'sIn', msg = 'sMsg') {
+  const key = $(input).value.replace(/[^0-9a-z]/gi, '').toUpperCase();
+  if (key.length !== 16 || [...key].some((c) => !ALPHABET.includes(c))) { $(msg).textContent = 'That is not a Hearthstone code. It has 16 letters and numbers.'; return; }
   const from = playerKey;
   playerKey = saveKey(key);
-  $('hIn').value = '';
-  $('hMsg').textContent = 'Runs loaded.';
-  $('hUse').hidden = false;
-  $('hForm').hidden = true;
+  $(input).value = '';
+  $(msg).textContent = 'Code loaded. Your runs, badges and collection are here.';
+  $('sUse').hidden = false;
+  $('sForm').hidden = true;
+  hideCode('sCode', 'sShow');
   histOpen = 0;
   history(from);
+  refreshHearth(from);
+}
+
+let hearthLib = null;
+const hearthMod = async () => {
+  if (!hearthLib) {
+    hearthLib = await import('./hearth.js?v=20261103104745');
+    hearthLib.setupHearth({ API, key: () => playerKey, Stage, gear, row: (id) => row(id), onChange: () => hearthLib.hearthBar($('hearthBar')) });
+  }
+  return hearthLib;
+};
+async function refreshHearth(from) {
+  try {
+    const h = await hearthMod(), d = await h.loadHearth(from ? { from } : {});
+    h.hearthBar($('hearthBar'));
+    shareId = d.share || shareId;
+    $('sShare').hidden = !shareId;
+    $('sShareNone').hidden = !!shareId;
+  } catch {}
 }
 
 let peekStage, peekId = 0, peekX = 0, peekOpen = 0, peekHide = 0, peekChain = Promise.resolve(), peekPicks = {};
@@ -903,7 +914,7 @@ async function loadTally() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103085840', 'draft/gear.json?v=20261103085840', 'draft/talents.json?v=20261103085840', 'draft/retired.json?v=20261103085840'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103104745', 'draft/gear.json?v=20261103104745', 'draft/talents.json?v=20261103104745', 'draft/retired.json?v=20261103104745'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {
@@ -911,13 +922,14 @@ async function boot() {
     clearTimeout(findTimer);
     findTimer = setTimeout(() => board(boardClass, boardSpec), 120);
   };
-  for (const href of ['pvp/gauntlet.css', 'raid/raid.css']) {
+  for (const href of ['pvp/gauntlet.css', 'raid/raid.css', 'draft/hearth.css']) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = href;
     document.head.append(link);
   }
   const go = (view) => {
+    if (view !== 'hearth' && hearthLib) hearthLib.leaveHearth();
     mainView = view;
     show(view);
     for (const b of document.querySelectorAll('[data-mode]')) b.classList.toggle('on', b.dataset.mode === view);
@@ -942,9 +954,23 @@ async function boot() {
     const raid = await import('../raid/raid.js');
     await raid.openRaid({ pool, gear, tooltip, PANE, QUALITY, ownedBy: (fn) => { raidOwned = fn; } }, $('raidRoot'));
   };
-  const modes = { home: () => go('home'), pick: () => go('pick'), gauntlet: openArena, raid: openRaid };
+  const openHearth = async () => {
+    go('hearth');
+    const h = await hearthMod();
+    h.resumeHearth();
+    await h.openHearth($('hearthRoot'));
+  };
+  const modes = { home: () => go('home'), pick: () => go('pick'), gauntlet: openArena, raid: openRaid, hearth: openHearth };
   mainView = 'home';
   loadTally();
+  refreshHearth();
+  $('hearthBar').onclick = (e) => { if (e.target.closest('[data-hearth]')) openHearth(); };
+  $('sShow').onclick = () => flipCode('sCode', 'sShow');
+  $('sCopy').onclick = () => { note('draftCodeSaved'); copyLink($('sCopy'), prettyKey(playerKey), 'Copy'); };
+  $('sUse').onclick = () => { $('sUse').hidden = true; $('sForm').hidden = false; $('sMsg').textContent = ''; $('sIn').focus(); };
+  $('sLoad').onclick = () => useCode('sIn', 'sMsg');
+  $('sIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') useCode('sIn', 'sMsg'); });
+  $('sShare').onclick = () => copyLink($('sShare'), `${pageUrl()}#runs=${shareId}`, 'Copy share link');
   $('modeDraft').onclick = modes.pick;
   $('modeArena').onclick = modes.gauntlet;
   $('modeRaid').onclick = modes.raid;
@@ -963,13 +989,6 @@ async function boot() {
   $('nameGo').onclick = saveName;
   $('nameIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveName(); });
   for (const b of $('hSort').children) b.onclick = () => { histSort = b.dataset.o; drawHistory(); };
-  $('hUse').onclick = () => { $('hUse').hidden = true; $('hForm').hidden = false; $('hMsg').textContent = ''; $('hIn').focus(); };
-  $('hLoad').onclick = useCode;
-  $('hIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') useCode(); });
-  $('hShow').onclick = () => flipCode('hCode', 'hShow');
-  $('rShow').onclick = () => flipCode('rCodeText', 'rShow');
-  $('hCopy').onclick = () => { note('draftCodeSaved'); copyLink($('hCopy'), prettyKey(playerKey), 'Copy'); };
-  $('rCopy').onclick = () => { note('draftCodeSaved'); copyLink($('rCopy'), prettyKey(playerKey), 'Copy'); };
   $('hShare').onclick = () => copyLink($('hShare'), `${pageUrl()}#runs=${shareId}`, 'Share my runs');
   $('rpPrev').onclick = () => replayMove(-1);
   $('rpNext').onclick = () => replayMove(1);

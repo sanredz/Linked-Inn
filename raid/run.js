@@ -65,7 +65,7 @@ export function worth(pool, hero, id) {
 }
 
 const DUAL_WIELD = /^(fury|furyd|mut|combat|enh|enhd)$/;
-const STARTER_ILVL = 60, STARTER_RANK = .35, HANDS = 3;
+const STARTER_ILVL = 60, STARTER_RANK = .35, HANDS = 4;
 const DUNGEON_SET = { MAGE: 181, PRIEST: 182, WARLOCK: 183, ROGUE: 184, DRUID: 185, HUNTER: 186, SHAMAN: 187, PALADIN: 188, WARRIOR: 189 };
 const SET_SLOT = { 1: 'head', 3: 'shoulder', 5: 'chest', 20: 'chest', 9: 'wrist', 10: 'hands', 6: 'waist', 7: 'legs', 8: 'feet' };
 
@@ -338,7 +338,7 @@ export function replayRun(pool, seed, moves, raid = 'mc') {
       fightBoss(pool, run, !!m[1]);
     } else if (m[0] === 'h') {
       const role = ROLES[run.at];
-      if (run.step !== 'party' || !classesFor(role).includes(m[1]) || !specsFor(role, m[1]).some((x) => x.id === m[2]) || (m.length > 3 && ![1, 2, HANDS].includes(m[3])) || (m.length > 4 && (m[3] < 3 || !(choiceOf(role, m[1]) || { list: [] }).list.some((x) => x.id === m[4])))) throw new Error('bad hero');
+      if (run.step !== 'party' || !classesFor(role).includes(m[1]) || !specsFor(role, m[1]).some((x) => x.id === m[2]) || (m.length > 3 && !(Number.isInteger(m[3]) && m[3] >= 1 && m[3] <= HANDS)) || (m.length > 4 && (m[3] < 3 || !(choiceOf(role, m[1]) || { list: [] }).list.some((x) => x.id === m[4])))) throw new Error('bad hero');
       addHero(pool, run, m[1], m[2], m.length > 3 ? m[3] : 0, m[4]);
     } else if (m[0] === 't') {
       const offers = run.step === 'draft' ? draftOffers(pool, run) : run.step === 'spoils' ? spoilOffers(pool, run) : [];

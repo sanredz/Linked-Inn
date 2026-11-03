@@ -25,7 +25,8 @@ export const TUNE = {
   spec: { frost: 1.1, fire: 1.1, arcane: 1.1 },
 };
 export const TUNE3 = { tank: { WARRIOR: { taken: .8 }, PALADIN: { taken: .8 } } };
-const tuned = (table, role, h) => (h.v >= 2 ? { ...table[h.cls], ...TUNE[role][h.cls], ...(h.v >= 3 && TUNE3[role] && TUNE3[role][h.cls]) } : table[h.cls]);
+export const TUNE4 = { heal: { SHAMAN: { heal: 1.2 } } };
+const tuned = (table, role, h) => (h.v >= 2 ? { ...table[h.cls], ...TUNE[role][h.cls], ...(h.v >= 3 && TUNE3[role] && TUNE3[role][h.cls]), ...(h.v >= 4 && TUNE4[role] && TUNE4[role][h.cls]) } : table[h.cls]);
 
 const TARGET_DPS = 285, EVENNESS = .8;
 const SPEC_DPS = { shadow: 384, frost: 379, fire: 361, afflic: 360, arcane: 357, demo: 344, arms: 316, destro: 312, cat: 275, mut: 267, fury: 262, combat: 255, moon: 253, surv: 249, bm: 244, enh: 241, ret: 232, mm: 232, ele: 211, shock: 137 };

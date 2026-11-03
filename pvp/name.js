@@ -94,7 +94,10 @@ export async function notify(n) {
   await new Promise((done) => {
     const mask = document.createElement('div');
     mask.className = 'nmask';
-    mask.innerHTML = `<div class="nask nnote" role="dialog" aria-modal="true" aria-labelledby="nnoteT"><h3 id="nnoteT">${esc(n.title)}</h3>${String(n.text).split(/\n+/).map((t) => `<p>${esc(t)}</p>`).join('')}<button type="button" class="naskgo">Got it</button></div>`;
+    let badge = null;
+    try { badge = n.badge ? JSON.parse(n.badge) : null; } catch {}
+    const medal = badge ? `<div class="nmedal"><i class="nrays"></i><span style="background-image:url(${esc(badge.art)})"></span></div><small class="nnew">New badge</small><b class="nbname">${esc(badge.name)}</b><em class="nbtext">${esc(badge.text || '')}</em>` : '';
+    mask.innerHTML = `<div class="nask nnote ${badge ? 'nbadge' : ''}" role="dialog" aria-modal="true" aria-labelledby="nnoteT">${medal}<h3 id="nnoteT">${esc(n.title)}</h3>${String(n.text).split(/\n+/).map((t) => `<p>${esc(t)}</p>`).join('')}<button type="button" class="naskgo">${badge ? 'Thank you!' : 'Got it'}</button></div>`;
     document.body.append(mask);
     const go = mask.querySelector('.naskgo');
     const close = () => { mask.classList.add('out'); setTimeout(() => mask.remove(), 180); done(); };

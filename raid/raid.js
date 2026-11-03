@@ -364,7 +364,7 @@ function render() {
   for (const el of root.querySelectorAll('[data-aim]')) el.onclick = () => { const [hero, slot, id, to] = el.dataset.aim.split('|'); aims[`${hero}|${slot}|${id}`] = to; render(); };
   for (const el of root.querySelectorAll('[data-boon]')) el.onclick = () => { takeBoon(run, el.dataset.boon); offers = null; save(); render(); showHero(); };
   for (const el of root.querySelectorAll('[data-look]')) el.onclick = (e) => { if (e.target.closest('button:not(.rlook)')) return; const [hero, slot, id] = el.dataset.look.split('|'); compare({ hero: +hero, slot, id: +id }); };
-  for (const el of root.querySelectorAll('[data-view]')) el.onclick = () => { viewing = +el.dataset.view; render(); showHero(); };
+  for (const el of root.querySelectorAll('[data-view]')) el.onclick = () => { if (run && run.step === 'fight') return; viewing = +el.dataset.view; render(); showHero(); };
   for (const el of root.querySelectorAll('[data-speed]')) el.onclick = () => { scene.speed = +el.dataset.speed; for (const b of root.querySelectorAll('.sp')) b.classList.toggle('on', b === el); };
 }
 

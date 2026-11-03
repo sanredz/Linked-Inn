@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ANY, FEATS, LADDERS, MODES, MOUNTS, PORTRAIT, PORTRAITS, RELICS, TIERS, count, earned, forgeReady, forgeSteps, owned, portraitOpen, usedIn, valueOf } from './feats.js';
+import { ANY, FEATS, LADDERS, MODES, MOUNTS, PORTRAIT, PORTRAITS, RELICS, TIERS, count, earned, forgeReady, forgeSteps, owned, portraitOpen, badgeTotal, usedIn, valueOf } from './feats.js';
 import { askName, claimName, heroName, nameOk } from '../pvp/name.js';
 
 const WHO = 'gauntletWho', CLASSES = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];
@@ -43,7 +43,7 @@ export function held() {
 export function hearthBar(el) {
   if (!data) return;
   const p = portraitOf(), n = got.size;
-  el.innerHTML = `<button class="hb" data-hearth><span class="hbface"><img class="${sq(p)}" src="${p.src}" alt=""></span><span class="hbwho"><small>Your Hearth</small><b>${esc(heroName())}</b></span><span class="hbbadges"><i style="--p:${n / FEATS.length}"></i><b>${n}</b><small>of ${FEATS.length} badges</small></span>${RELICS.some((x) => forgeReady(data.stats, x)) ? '<span class="hbforge">Forge ready</span>' : ''}<span class="hbgo">Open</span></button>`;
+  el.innerHTML = `<button class="hb" data-hearth><span class="hbface"><img class="${sq(p)}" src="${p.src}" alt=""></span><span class="hbwho"><small>Your Hearth</small><b>${esc(heroName())}</b></span><span class="hbbadges"><i style="--p:${n / badgeTotal(got)}"></i><b>${n}</b><small>of ${badgeTotal(got)} badges</small></span>${RELICS.some((x) => forgeReady(data.stats, x)) ? '<span class="hbforge">Forge ready</span>' : ''}<span class="hbgo">Open</span></button>`;
   el.hidden = false;
 }
 
@@ -191,7 +191,7 @@ function tabHtml() {
     const mine = FEATS.filter((f) => got.has(f.id)).sort((a, b) => RANK[b.tier] - RANK[a.tier]), all = expanded.overview, shown = all ? mine : mine.slice(0, 12);
     return `<div class="hmodes">${MODES.map(modeCard).join('')}</div>
       <h3 class="hh3">Collection</h3>${collectionHtml('')}
-      <h3 class="hh3">Badges earned <em>${mine.length} of ${FEATS.length}</em></h3>${mine.length ? `<div class="hmedals">${shown.map(medal).join('')}</div>` : '<p class="hempty">Play any mode to earn your first badge.</p>'}<div class="hmore">${mine.length > 12 ? `<button class="gmini" data-more="overview">${all ? 'Show fewer' : `Show all ${mine.length}`}</button>` : ''}</div>`;
+      <h3 class="hh3">Badges earned <em>${mine.length} of ${badgeTotal(got)}</em></h3>${mine.length ? `<div class="hmedals">${shown.map(medal).join('')}</div>` : '<p class="hempty">Play any mode to earn your first badge.</p>'}<div class="hmore">${mine.length > 12 ? `<button class="gmini" data-more="overview">${all ? 'Show fewer' : `Show all ${mine.length}`}</button>` : ''}</div>`;
   }
   const feats = badgeBlock(tab, FEATS.filter((f) => f.mode === tab && !(f.art && inLadder.has(f.id)))) + classLadders(tab);
   if (tab === 'gear') {
@@ -209,7 +209,7 @@ function tabHtml() {
 
 const headHtml = () => {
   const p = portraitOf(), n = got.size;
-  return `<button class="hface" data-act="face" aria-label="Change portrait"><img class="${sq(p)}" src="${p.src}" alt=""><i>Change</i></button><div class="hwho"><small>Your Hearth</small><h2><button class="hname" data-act="name" title="Change your name">${esc(heroName())}<i>Edit</i></button></h2><span>${num(totalRuns(data.stats))} runs across every mode</span></div><div class="hring" style="--p:${n / FEATS.length}"><b>${n}</b><span>of ${FEATS.length}<br>badges</span></div>`;
+  return `<button class="hface" data-act="face" aria-label="Change portrait"><img class="${sq(p)}" src="${p.src}" alt=""><i>Change</i></button><div class="hwho"><small>Your Hearth</small><h2><button class="hname" data-act="name" title="Change your name">${esc(heroName())}<i>Edit</i></button></h2><span>${num(totalRuns(data.stats))} runs across every mode</span></div><div class="hring" style="--p:${n / badgeTotal(got)}"><b>${n}</b><span>of ${badgeTotal(got)}<br>badges</span></div>`;
 };
 const noteText = () => `${data.stats.gear.bestOf[showing] ? `Wearing your best ${CLASS_NAME[showing]} draft` : `Finish a ${CLASS_NAME[showing]} Gear Draft to dress them`}${data.profile.ride ? ` · Riding your ${(MOUNTS.find((m) => m.id === data.profile.ride) || {}).name || ''}` : ''}`;
 

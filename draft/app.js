@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261103212223';
-import { Stage } from './stage.js?v=20261103212223';
+import * as C from './core.js?v=20261103214254';
+import { Stage } from './stage.js?v=20261103214254';
 import { askFeedback, askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
@@ -753,7 +753,7 @@ function useCode(input = 'sIn', msg = 'sMsg') {
 let hearthLib = null;
 const hearthMod = async () => {
   if (!hearthLib) {
-    hearthLib = await import('./hearth.js?v=20261103212223');
+    hearthLib = await import('./hearth.js?v=20261103214254');
     hearthLib.setupHearth({ API, key: () => playerKey, Stage, gear, row: (id) => row(id), onChange: () => hearthLib.hearthBar($('hearthBar')) });
   }
   return hearthLib;
@@ -957,7 +957,7 @@ async function loadTally() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103212223', 'draft/gear.json?v=20261103212223', 'draft/talents.json?v=20261103212223', 'draft/retired.json?v=20261103212223'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103214254', 'draft/gear.json?v=20261103214254', 'draft/talents.json?v=20261103214254', 'draft/retired.json?v=20261103214254'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {

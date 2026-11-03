@@ -112,6 +112,9 @@ export const PORTRAITS = [
 ];
 export const PORTRAIT = Object.fromEntries(PORTRAITS.map((p) => [p.id, p]));
 
+FEATS.push({ id: 'x_heard', mode: 'any', tier: 'legend', hidden: 1, name: 'Voice of the Inn', text: 'Sent feedback that made it into the game.', icon: 134939, test: (s) => s.heard >= 1, value: (s) => (s.heard > 1 ? `${s.heard} ideas or fixes made it in` : '') });
+export const badgeTotal = (got) => FEATS.filter((f) => !f.hidden || got.has(f.id)).length;
+
 export const valueOf = (stats, feat) => { try { return feat.value ? feat.value(stats) : ''; } catch { return ''; } };
 export const has = (stats, feat) => { try { return !!feat.test(stats); } catch { return false; } };
 export const earned = (stats) => new Set(FEATS.filter((f) => has(stats, f)).map((f) => f.id));

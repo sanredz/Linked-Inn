@@ -28,11 +28,13 @@ export function rand(seed) {
 export const isTwoHand = (pool, id) => !!id && pool.items[id][3] === 17;
 export const worth = (pool, cls, id) => { const it = pool.items[id]; return WEIGHT[cls](it[7], it[8]); };
 
+export const wearable = (pool, cls, slot, tiers) => [...offers(pool, cls, slot, tiers), ...(slot === 'off' && DUAL[cls] ? tiers.flatMap((t) => (pool.pools[cls].main || {})[t] || []).filter((i) => pool.items[i][3] === 21) : [])];
+
 export function offers(pool, cls, slot, tiers, picks = {}) {
   const tree = pool.pools[cls][POOL_OF[slot] || slot] || {};
   if (slot === 'off' && TWO_HAND[cls]) return [];
   let ids = tiers.flatMap((t) => tree[t] || []);
-  if (slot === 'off' && DUAL[cls]) ids = [...ids, ...tiers.flatMap((t) => (pool.pools[cls].main || {})[t] || [])].filter((i) => pool.items[i][3] === 13 || pool.items[i][3] === 22 || pool.items[i][3] === 21);
+  if (slot === 'off' && DUAL[cls]) ids = [...ids, ...tiers.flatMap((t) => (pool.pools[cls].main || {})[t] || [])].filter((i) => pool.items[i][3] === 13 || pool.items[i][3] === 22);
   if (slot === 'main' && TWO_HAND[cls]) ids = ids.filter((i) => pool.items[i][3] === 17);
   if (slot === 'main' && DUAL[cls]) ids = ids.filter((i) => pool.items[i][3] !== 17);
   const names = new Set(Object.entries(picks).filter(([s, i]) => s !== slot && i).map(([, i]) => pool.items[i][0]));

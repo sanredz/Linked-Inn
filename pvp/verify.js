@@ -1,12 +1,12 @@
 import { PLANS, PRESETS } from './engine.js';
-import { SLOTS, offers } from './gear.js';
+import { SLOTS, wearable } from './gear.js';
 import { CONSUME, ENCHANT } from './shop.js';
 import { BOON, BOON_WINS, boonSum } from './boons.js';
 import { ALL_TIERS, GOLD, LIVES, MAX_WINS, slotPrice } from './run.js';
 
 const isName = (v) => typeof v === 'string' && v.length <= 20;
 const isClass = (v) => typeof v === 'string' && Object.hasOwn(PRESETS, v);
-const list = (pool, cls, slot, memo) => (memo[slot] ||= new Set(offers(pool, cls, slot, ALL_TIERS)));
+const list = (pool, cls, slot, memo) => (memo[slot] ||= new Set(wearable(pool, cls, slot, ALL_TIERS)));
 
 function wornFine(pool, cls, picks) {
   if (!picks || typeof picks !== 'object' || Array.isArray(picks)) return false;
@@ -36,7 +36,7 @@ function enchantCost(cls, picks, enchants) {
 const boonsFine = (boons, wins) => Array.isArray(boons) && boons.length <= 1 + BOON_WINS.filter((w) => w <= wins).length && new Set(boons).size === boons.length && boons.every((id) => Object.hasOwn(BOON, id));
 
 const bought = (pool, cls, picks) => {
-  const green = new Set(SLOTS.flatMap((s) => offers(pool, cls, s, ['g'])));
+  const green = new Set(SLOTS.flatMap((s) => wearable(pool, cls, s, ['g'])));
   return Object.entries(picks).reduce((sum, [slot, id]) => sum + (green.has(id) ? 0 : slotPrice(cls, slot)), 0);
 };
 

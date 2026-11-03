@@ -94,7 +94,7 @@ export const RAIDS = {
         ],
       },
       {
-        id: 'golemagg', name: 'Golemagg the Incinerator', loot: 'Golemagg the Incinerator', model: 11986, health: 826088, tune: .6, armor: 4691, resist: { fire: 186 }, melee: [1950, 2600, 2],
+        id: 'golemagg', name: 'Golemagg the Incinerator', loot: 'Golemagg the Incinerator', model: 11986, health: 826088, tune: .6, armor: 4691, resist: { fire: 186 }, melee: [1950, 2600, 2], drop: { id: 17203, kind: 'ingot', name: 'Sulfuron Ingot', icon: 135824, chance: .25 },
         tip: 'The hardest hitter before Ragnaros. A pure test of your tank.',
         adds: { n: 'Core Rager', count: 1, health: 80925, melee: [1511, 2003, 2], armor: 4391, unkillable: 1 },
         abilities: [

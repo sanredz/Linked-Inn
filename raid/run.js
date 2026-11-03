@@ -1,6 +1,6 @@
 import { hash, rng } from '../draft/core.js';
 import { RAIDS, SCALE, TWISTS } from './bosses.js';
-import { HEALERS, TANKS, damageBuilds, makeParty } from './roles.js';
+import { HEALERS, TANKS, choiceOf, damageBuilds, makeParty } from './roles.js';
 import { fight } from './engine.js';
 import { BOONS, boonById, modsOf } from './boons.js';
 
@@ -65,7 +65,7 @@ export function worth(pool, hero, id) {
 }
 
 const DUAL_WIELD = /^(fury|furyd|mut|combat|enh|enhd)$/;
-const STARTER_ILVL = 60, STARTER_RANK = .35, HANDS = 2;
+const STARTER_ILVL = 60, STARTER_RANK = .35, HANDS = 3;
 const DUNGEON_SET = { MAGE: 181, PRIEST: 182, WARLOCK: 183, ROGUE: 184, DRUID: 185, HUNTER: 186, SHAMAN: 187, PALADIN: 188, WARRIOR: 189 };
 const SET_SLOT = { 1: 'head', 3: 'shoulder', 5: 'chest', 20: 'chest', 9: 'wrist', 10: 'hands', 6: 'waist', 7: 'legs', 8: 'feet' };
 
@@ -103,12 +103,12 @@ export function newRun(raid = 'mc', seed = Math.floor(Math.random() * 1e9)) {
   return { raid, seed, step: 'party', at: 0, heroes: [], boss: 0, rerolls: REROLLS, rolled: 0, results: [], score: 0, over: false, moves: [], boons: [], spoilsLeft: 0 };
 }
 
-export function addHero(pool, run, cls, build, hands = HANDS) {
-  const role = ROLES[run.at];
-  const picks = starterPicks(pool, role, cls, build, hands);
-  run.heroes[run.at] = { role, cls, build, picks, start: { ...picks }, left: DRAFT_PICKS, ...(hands && { v: hands }) };
+export function addHero(pool, run, cls, build, hands = HANDS, pick) {
+  const role = ROLES[run.at], choice = hands >= 3 && choiceOf(role, cls);
+  const picks = starterPicks(pool, role, cls, build, hands), chosen = choice ? (choice.list.some((x) => x.id === pick) ? pick : choice.list[0].id) : null;
+  run.heroes[run.at] = { role, cls, build, picks, start: { ...picks }, left: DRAFT_PICKS, ...(hands && { v: hands }), ...(chosen && { pick: chosen }) };
   run.step = 'draft';
-  run.moves.push(hands ? ['h', cls, build, hands] : ['h', cls, build]);
+  run.moves.push(hands ? ['h', cls, build, hands, ...(chosen ? [chosen] : [])] : ['h', cls, build]);
 }
 
 const ARMOR = new Set(['head', 'shoulder', 'chest', 'wrist', 'hands', 'waist', 'legs', 'feet']), CAT = { role: 'dps', cls: 'DRUID', build: 'cat' };
@@ -338,8 +338,8 @@ export function replayRun(pool, seed, moves, raid = 'mc') {
       fightBoss(pool, run, !!m[1]);
     } else if (m[0] === 'h') {
       const role = ROLES[run.at];
-      if (run.step !== 'party' || !classesFor(role).includes(m[1]) || !specsFor(role, m[1]).some((x) => x.id === m[2]) || (m.length > 3 && ![1, HANDS].includes(m[3]))) throw new Error('bad hero');
-      addHero(pool, run, m[1], m[2], m.length > 3 ? m[3] : 0);
+      if (run.step !== 'party' || !classesFor(role).includes(m[1]) || !specsFor(role, m[1]).some((x) => x.id === m[2]) || (m.length > 3 && ![1, 2, HANDS].includes(m[3])) || (m.length > 4 && (m[3] < 3 || !(choiceOf(role, m[1]) || { list: [] }).list.some((x) => x.id === m[4])))) throw new Error('bad hero');
+      addHero(pool, run, m[1], m[2], m.length > 3 ? m[3] : 0, m[4]);
     } else if (m[0] === 't') {
       const offers = run.step === 'draft' ? draftOffers(pool, run) : run.step === 'spoils' ? spoilOffers(pool, run) : [];
       if (!offers.some((o) => same(o, m))) throw new Error('bad item');
@@ -365,3 +365,23 @@ export const bossAt = (run, i) => { const b = RAIDS[run.raid].bosses[i]; return 
 export const currentBoss = (run) => bossAt(run, run.boss);
 export const killed = (run) => run.results.filter((r) => r.won).length;
 export const dropsOf = (run) => run.results.map((r, i) => { const b = bossAt(run, i); return b && (r.won || b.endless) && b.drop; }).filter((m, i) => m && rng(hash(run.seed, 'mount', i))() < m.chance);
+export const INGOT = 17203, INGOTS = 8;
+export const FORGE = { 19019: { needs: [18563, 18564], trial: 'mc' }, 17182: { needs: [17204], ingots: INGOTS } };
+const reachedFinale = (run) => run.results.some((r, i) => { const b = bossAt(run, i); return b && b.endless; });
+
+export function collect(runs, base = {}) {
+  const have = { ...base }, kept = [];
+  let paired = !!(have[18563] && have[18564]), trial = false;
+  for (const run of runs) {
+    const got = [];
+    for (const d of dropsOf(run)) {
+      if ((have[d.id] || 0) >= (d.id === INGOT ? INGOTS : 1)) continue;
+      have[d.id] = (have[d.id] || 0) + 1;
+      got.push(d);
+    }
+    kept.push(got);
+    if (!paired && have[18563] && have[18564]) paired = true;
+    if (paired && run.raid === FORGE[19019].trial && reachedFinale(run)) trial = true;
+  }
+  return { have, kept, ready: { 19019: paired && trial, 17182: !!have[17204] && (have[INGOT] || 0) >= INGOTS }, paired };
+}

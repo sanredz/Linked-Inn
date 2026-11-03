@@ -321,8 +321,9 @@ body.arena #stage { cursor: default; }
 #rRank { margin: 6px 0 12px; color: var(--ink-2); }
 #rRank b { color: var(--gold); font-weight: normal; }
 .namebox { display: flex; gap: 8px; }
-.namebox input { flex: 1; min-width: 0; background: rgba(0, 0, 0, 0.5); color: var(--ink); border: 1px solid var(--gold-dim); border-radius: 8px; padding: 8px 12px; font: inherit; min-height: 40px; }
-.namebox input:focus { outline: none; border-color: var(--gold); }
+.nameshow { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 0 12px; min-height: 40px; background: rgba(0, 0, 0, 0.35); border: 1px solid var(--gold-dim); border-radius: 8px; }
+.nameshow small { color: var(--muted); font-size: 12.5px; }
+.nameshow b { color: #ffe6a8; font-weight: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #saved { color: var(--muted); font-size: 12.5px; min-height: 18px; margin-top: 4px; }
 .sh { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13.5px; margin: 8px 0; }
 .sh i { font-style: normal; color: var(--muted); margin-right: 4px; }
@@ -480,7 +481,7 @@ body.arena #stage { cursor: default; }
     </div>
   </section>
 
-  <div class="note" data-screen="pick" hidden><b>Update:</b> The fight sim has changed to be more accurate, and all runs have been re-simmed. <a href="#notes" id="noteLink">More in the patch notes</a>.</div>
+  <div class="note" data-screen="off" hidden><b>Update:</b> The fight sim has changed to be more accurate, and all runs have been re-simmed. <a href="#notes" id="noteLink">More in the patch notes</a>.</div>
 
   <section class="frame banner" data-screen="gauntlet" hidden>
     <div class="in">
@@ -642,7 +643,7 @@ body.arena #stage { cursor: default; }
         <div class="score"><span id="rDps"></span> <small>DPS</small></div>
         <div id="rRank"></div>
         <div id="nameBox">
-          <div class="namebox"><input id="nameIn" maxlength="20" aria-label="Name for the board"><button class="go" id="nameGo">Save name</button></div>
+          <div class="namebox"><div class="nameshow" id="nameShow"></div><button class="go" id="nameGo">Save name</button></div>
           <div id="saved"></div>
         </div>
         <div class="sh" id="rSheet"></div>
@@ -663,6 +664,6 @@ body.arena #stage { cursor: default; }
 <div id="peek" hidden><div class="pane"><img class="portrait" id="pkPortrait" alt=""><div class="frameart"></div><div class="viewport"><canvas id="pkStage" aria-label="Character for this run. Drag to turn."></canvas></div><div class="peekwho" id="pkWho"></div><div class="sub" id="pkSay"></div><div class="peekdoll" id="pkDoll"></div></div></div>
 <div id="tip" hidden></div>
 <div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button class="go" id="sheetMain" hidden>Main Hand</button><button class="go" id="sheetOff" hidden>Off Hand</button><button id="sheetClose">Close</button></div></div></div>
-<script type="module" src="draft/app.js?v=20261103105140"></script>
+<script type="module" src="draft/app.js?v=20261103122648"></script>
 </body>
 </html>

@@ -30,7 +30,7 @@ const BLURB = {
 };
 
 let dressNow = 0, shownPick = '', shownShop = '', shownGold = null;
-let boardCls = '', boardRows = [], boardOpen = 0, boardMine = false, viewed = null;
+let boardCls = '', boardRows = [], boardOpen = 0, boardMine = false, viewed = null, boardFind = '', findTimer = 0, findEl = null;
 let root, ui, arena, pool, gearData, REF, run, screen = 'pick', pickCls = 'WARRIOR', tip, busy = false, tooltip, PANE, QUALITY, dressing = Promise.resolve();
 const previews = {};
 
@@ -157,13 +157,23 @@ function runDetail(r) {
 
 function boardList() {
   if (!boardRows) return '<p>The board could not be reached.</p>';
+  if (!boardRows.length && boardFind.trim()) return '<p>Nobody with that name here.</p>';
   if (!boardRows.length) return `<p>${boardMine ? 'You have not' : 'Nobody has'} finished a ${boardCls ? `${boardCls[0]}${boardCls.slice(1).toLowerCase()} ` : ''}run yet.</p>`;
   return boardRows.map((r) => `<div class="gbrun ${r.id === boardOpen ? 'open' : ''} ${r.mine ? 'mine' : ''}" data-owner="${r.id}"><button class="gbrow" data-run="${r.id}" aria-expanded="${r.id === boardOpen}"><img src="assets/classes/${r.cls}.png" alt=""><span class="gbname"><b>${esc(r.name || 'Unknown')}${r.mine && !boardMine ? ' <em>you</em>' : ''}</b><small>${className(r.cls)}</small></span><span class="gbwins ${r.wins >= MAX_WINS ? 'full' : ''}"><b>${r.wins}</b>/${MAX_WINS}</span><span class="gbago">${ago(r.at)}</span></button>${r.id === boardOpen ? runDetail(r) : ''}</div>`).join('');
 }
 
 function drawBoard() {
   const box = root.querySelector('.gboard'), chip = (c) => `<button class="gbclass ${c === boardCls ? 'on' : ''}" data-board="${c}" title="${c ? `${c[0]}${c.slice(1).toLowerCase()}` : 'All classes'}">${c ? `<img src="assets/classes/${c}.png" alt="${c}">` : 'All'}</button>`;
-  box.innerHTML = `<div class="gbhead"><div><div class="gbtabs"><button class="${boardMine ? '' : 'on'}" data-mine="">Best recent runs</button><button class="${boardMine ? 'on' : ''}" data-mine="1">My runs</button></div><p>${boardMine ? 'Your last ten finished runs.' : 'The latest ten runs with the most wins.'}</p></div></div><div class="gbclasses">${['', ...CLASSES].map(chip).join('')}</div><div class="gblist">${boardList()}</div>`;
+  box.innerHTML = `<div class="gbhead"><div><div class="gbtabs"><button class="${boardMine ? '' : 'on'}" data-mine="">Best recent runs</button><button class="${boardMine ? 'on' : ''}" data-mine="1">My runs</button></div><p>${boardMine ? 'Your last ten finished runs.' : 'The latest ten runs with the most wins.'}</p></div></div><div class="gbclasses">${['', ...CLASSES].map(chip).join('')}</div><div class="gbfindslot"></div><div class="gblist">${boardList()}</div>`;
+  const typing = findEl && document.activeElement === findEl, at = typing ? findEl.selectionStart : 0;
+  if (!findEl) {
+    findEl = document.createElement('input');
+    Object.assign(findEl, { type: 'search', maxLength: 20, placeholder: 'Search by name', autocomplete: 'off', className: 'gbfind' });
+    findEl.setAttribute('aria-label', 'Search the board by name');
+    findEl.oninput = () => { boardFind = findEl.value; clearTimeout(findTimer); findTimer = setTimeout(() => loadBoard(), 150); };
+  }
+  box.querySelector('.gbfindslot').replaceWith(findEl);
+  if (typing) { findEl.focus(); findEl.setSelectionRange(at, at); }
   for (const b of box.querySelectorAll('[data-board]')) b.onclick = () => loadBoard(b.dataset.board);
   for (const b of box.querySelectorAll('[data-mine]')) b.onclick = () => { boardMine = !!b.dataset.mine; boardOpen = 0; loadBoard(); };
   for (const b of box.querySelectorAll('[data-run]')) b.onclick = () => { boardOpen = +b.dataset.run === boardOpen ? 0 : +b.dataset.run; drawBoard(); };
@@ -176,7 +186,7 @@ function drawBoard() {
 async function loadBoard(cls = boardCls) {
   boardCls = cls;
   try {
-    const r = await fetch(`${API}/gauntlet/board?cls=${cls}&who=${who()}&mine=${boardMine ? 1 : 0}`);
+    const find = boardFind.trim(), r = await fetch(`${API}/gauntlet/board?cls=${cls}&who=${who()}&mine=${boardMine ? 1 : 0}${find ? `&q=${encodeURIComponent(find)}` : ''}`);
     boardRows = r.ok ? (await r.json()).rows : null;
   } catch { boardRows = null; }
   if (cls === boardCls) drawBoard();

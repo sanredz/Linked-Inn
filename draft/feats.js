@@ -35,8 +35,9 @@ export const FEATS = [
   { id: 'mc_bane', mode: 'mc', tier: 'legend', name: "Firelord's Bane", text: 'Deal 150,000 damage to Ragnaros.', test: (s) => raid(s, 'mc').score >= 150000, value: (s) => (raid(s, 'mc').score ? `Your best: ${raid(s, 'mc').score.toLocaleString('en-US')} damage` : '') },
   { id: 'mc_left', mode: 'mc', tier: 'gold', name: 'Left Binding', text: 'Garr dropped the Left Binding of the Windseeker.', icon: 135988, test: (s) => drop(s, 'mc', 18563) >= 1 },
   { id: 'mc_right', mode: 'mc', tier: 'gold', name: 'Right Binding', text: 'Baron Geddon dropped the Right Binding of the Windseeker.', icon: 135988, test: (s) => drop(s, 'mc', 18564) >= 1 },
-  { id: 'mc_tf', mode: 'mc', tier: 'legend', name: 'Thunderfury', text: 'Collect both Bindings of the Windseeker.', icon: 135349, test: (s) => drop(s, 'mc', 18563) >= 1 && drop(s, 'mc', 18564) >= 1 },
-  { id: 'mc_eye', mode: 'mc', tier: 'legend', name: 'Eye of Sulfuras', text: 'Ragnaros dropped the Eye of Sulfuras.', icon: 133066, test: (s) => drop(s, 'mc', 17204) >= 1 },
+  { id: 'mc_tf', mode: 'mc', tier: 'legend', name: 'Thunderfury', text: 'Forge Thunderfury, Blessed Blade of the Windseeker.', icon: 135349, test: (s) => forged(s, 19019) },
+  { id: 'mc_eye', mode: 'mc', tier: 'legend', name: 'Eye of Sulfuras', text: 'Ragnaros dropped the Eye of Sulfuras.', icon: 134124, test: (s) => drop(s, 'mc', 17204) >= 1 },
+  { id: 'mc_hand', mode: 'mc', tier: 'legend', name: 'Hand of Ragnaros', text: 'Forge Sulfuras, Hand of Ragnaros.', icon: 133066, test: (s) => forged(s, 17182) },
   { id: 'zg_first', mode: 'zg', tier: 'bronze', name: 'Into the Jungle', text: "Start a Zul'Gurub run.", test: (s) => raid(s, 'zg').runs >= 1 },
   { id: 'zg_half', mode: 'zg', tier: 'silver', name: 'Edge of Madness', text: "Kill five Zul'Gurub bosses in one run.", test: (s) => raid(s, 'zg').best >= 5, value: (s) => `Your best: ${raid(s, 'zg').best || 0} bosses` },
   { id: 'zg_heroic', mode: 'zg', tier: 'silver', name: 'Blood Oath', text: "Kill five Zul'Gurub bosses on Heroic in one run.", test: (s) => raid(s, 'zg').heroics >= 5, value: (s) => `Your best: ${raid(s, 'zg').heroics || 0} Heroic kills in a run` },
@@ -80,9 +81,10 @@ export const MOUNTS = [
 export const RELICS = [
   { id: 18563, name: 'Left Binding of the Windseeker', icon: 135988, raid: 'mc', from: 'Garr' },
   { id: 18564, name: 'Right Binding of the Windseeker', icon: 135988, raid: 'mc', from: 'Baron Geddon' },
-  { id: 19019, name: 'Thunderfury, Blessed Blade of the Windseeker', icon: 135349, raid: 'mc', from: 'Both Bindings', forged: [18563, 18564] },
+  { id: 19019, name: 'Thunderfury, Blessed Blade of the Windseeker', short: 'Thunderfury', icon: 135349, raid: 'mc', forged: [18563, 18564], theme: 'storm' },
   { id: 17204, name: 'Eye of Sulfuras', icon: 134124, raid: 'mc', from: 'Ragnaros' },
-  { id: 17182, name: 'Sulfuras, Hand of Ragnaros', icon: 133066, raid: 'mc', from: 'The Eye of Sulfuras', forged: [17204] },
+  { id: 17203, name: 'Sulfuron Ingot', icon: 135824, raid: 'mc', from: 'Golemagg the Incinerator', stack: 8 },
+  { id: 17182, name: 'Sulfuras, Hand of Ragnaros', short: 'Sulfuras', icon: 133066, raid: 'mc', forged: [17204, 17203], theme: 'fire' },
 ];
 
 const LOCKED = { ragnaros: 'mc_final', onyxia: 'mc_bane', kelthuzad: 'a_ten', arthas: 'a_flawless', illidan: 'g_classes', medivh: 'g_100', voljin: 'zg_final', grom: 'a_three', bolvar: 'mc_tf', gallywix: 'g_top100', moira: 'zg_bane', mekkatorque: 'mc_eye' };
@@ -96,5 +98,15 @@ export const PORTRAIT = Object.fromEntries(PORTRAITS.map((p) => [p.id, p]));
 export const valueOf = (stats, feat) => { try { return feat.value ? feat.value(stats) : ''; } catch { return ''; } };
 export const has = (stats, feat) => { try { return !!feat.test(stats); } catch { return false; } };
 export const earned = (stats) => new Set(FEATS.filter((f) => has(stats, f)).map((f) => f.id));
-export const owned = (stats, item) => item.forged ? item.forged.every((id) => owned(stats, { id })) : Object.values(stats.raids || {}).some((r) => (r.drops || {})[item.id] > 0);
+export const count = (stats, id) => Object.values(stats.raids || {}).reduce((n, r) => n + ((r.drops || {})[id] || 0), 0);
+export const forged = (stats, id) => !!(stats.forge && stats.forge[id] && stats.forge[id].done);
+export const forgeReady = (stats, item) => !!(item.forged && stats.forge && stats.forge[item.id] && stats.forge[item.id].ready && !stats.forge[item.id].done);
+export const owned = (stats, item) => (item.forged ? forged(stats, item.id) : count(stats, item.id) > 0);
+export const usedIn = (stats, item) => RELICS.find((r) => r.forged && r.forged.includes(item.id) && forged(stats, r.id));
+export function forgeSteps(stats, item) {
+  const n = (id) => count(stats, id);
+  if (item.id === 19019) return [['Left Binding of the Windseeker', n(18563) > 0], ['Right Binding of the Windseeker', n(18564) > 0], ['Reach Ragnaros with both Bindings', !!(stats.forge && stats.forge[19019] && stats.forge[19019].ready)]];
+  if (item.id === 17182) return [['Eye of Sulfuras', n(17204) > 0], [`Sulfuron Ingots ${Math.min(n(17203), 8)} of 8`, n(17203) >= 8]];
+  return [];
+}
 export const portraitOpen = (got, p) => !p.needs || got.has(p.needs);

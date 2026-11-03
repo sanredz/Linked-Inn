@@ -8,7 +8,7 @@ const CAST = /^(moon|ele|shadow|shadowd|shock)$/;
 
 export const TANKS = {
   WARRIOR: { name: 'Protection', blurb: 'The best against heavy hitters: blocks, parries and Shield Wall. Needs Defense, or crits and crushing blows will flatten him.', taken: .9, armor: 1.1, def: 10, block: 15, parry: 0, shield: 1, wall: { below: .25, taken: .5, dur: 10 }, threat: 1.35 },
-  PALADIN: { name: 'Protection', blurb: 'The fire specialist: Fire Resistance Aura for the party and one Lay on Hands to reset a bad fight. Needs Defense too.', taken: .84, armor: 1.1, flatArmor: 735, def: 10, block: 18, parry: 0, shield: 1, hands: { below: .2 }, threat: 1.5 },
+  PALADIN: { name: 'Protection', blurb: 'Picks the aura the raid needs, from Fire Resistance to Devotion, and has one Lay on Hands to reset a bad fight. Needs Defense too.', taken: .84, armor: 1.1, flatArmor: 735, def: 10, block: 18, parry: 0, shield: 1, hands: { below: .2 }, threat: 1.5 },
   DRUID: { name: 'Feral (Bear)', blurb: 'A mountain of health that shrugs off magic. Agility replaces Defense, but with no block or parry, big hits always crush.', taken: .85, armor: 5, sta: 1.6, def: 0, dodge: 3, critTaken: -3, regen: { below: .3, hp: .3, dur: 10 }, threat: 2 },
 };
 
@@ -24,7 +24,8 @@ export const TUNE = {
   heal: { PALADIN: { heal: 1.07 }, PRIEST: { heal: 1.17 }, SHAMAN: { heal: 1.27 }, DRUID: { heal: 1.44 } },
   spec: { frost: 1.1, fire: 1.1, arcane: 1.1 },
 };
-const tuned = (table, role, h) => (h.v >= 2 ? { ...table[h.cls], ...TUNE[role][h.cls] } : table[h.cls]);
+export const TUNE3 = { tank: { WARRIOR: { taken: .8 }, PALADIN: { taken: .8 } } };
+const tuned = (table, role, h) => (h.v >= 2 ? { ...table[h.cls], ...TUNE[role][h.cls], ...(h.v >= 3 && TUNE3[role] && TUNE3[role][h.cls]) } : table[h.cls]);
 
 const TARGET_DPS = 285, EVENNESS = .8;
 const SPEC_DPS = { shadow: 384, frost: 379, fire: 361, afflic: 360, arcane: 357, demo: 344, arms: 316, destro: 312, cat: 275, mut: 267, fury: 262, combat: 255, moon: 253, surv: 249, bm: 244, enh: 241, ret: 232, mm: 232, ele: 211, shock: 137 };
@@ -55,12 +56,36 @@ export const BONUS = {
     DRUID: { n: 'Moonkin or Leader of the Pack', text: '+3% crit for the party.', all: { crit: 3, scrit: 3 } },
   },
 };
+const TOTEMS = {
+  windfury: BONUS.heal.SHAMAN,
+  manaspring: { n: 'Mana Spring Totem', text: 'Your healer gains 25 mana per 5.', healer: { mp5: 25 } },
+  strength: { n: 'Strength of Earth Totem', text: '+77 Strength for the party.', all: { str: 77 } },
+  grace: { n: 'Grace of Air Totem', text: '+77 Agility for the party.', all: { agi: 77 } },
+  nature: { n: 'Nature Resistance Totem', text: '+60 Nature Resistance for the party.', all: { rnature: 60 } },
+  fireres: { n: 'Fire Resistance Totem', text: '+60 Fire Resistance for the party.', all: { rfire: 60 } },
+  frostres: { n: 'Frost Resistance Totem', text: '+60 Frost Resistance for the party.', all: { rfrost: 60 } },
+};
+const totems = (first) => [first, ...Object.keys(TOTEMS).filter((k) => k !== first)].map((id) => ({ id, ...TOTEMS[id] }));
+export const CHOICES = {
+  tank: {
+    PALADIN: { label: 'Choose your aura', suggest: { zg: 'devotion' }, list: [
+      { id: 'fire', ...BONUS.tank.PALADIN },
+      { id: 'devotion', n: 'Devotion Aura', text: '+735 armor for the party.', all: { armor: 735 } },
+      { id: 'frost', n: 'Frost Resistance Aura', text: '+60 Frost Resistance for the party.', all: { rfrost: 60 } },
+      { id: 'shadow', n: 'Shadow Resistance Aura', text: '+60 Shadow Resistance for the party.', all: { rshadow: 60 } },
+    ] },
+  },
+  heal: { SHAMAN: { label: 'Choose your totem', list: totems('windfury') } },
+  dps: { SHAMAN: { label: 'Choose your totem', list: totems('manaspring') } },
+};
+export const choiceOf = (role, cls) => (CHOICES[role] && CHOICES[role][cls]) || null;
+export const bonusOf = (h) => { const c = h.v >= 3 && choiceOf(h.role, h.cls); return c ? c.list.find((x) => x.id === h.pick) || c.list[0] : BONUS[h.role][h.cls]; };
 const BUFF_ID = 990100;
 export const DEFENSE_CAP = 440, CRIT_AT_ZERO = 20;
 const TOUGHNESS = .6;
 
 export function partyBonuses(heroes) {
-  return heroes.filter(Boolean).map((h) => ({ role: h.role, cls: h.cls, ...BONUS[h.role][h.cls] }));
+  return heroes.map((h) => h && { role: h.role, cls: h.cls, ...bonusOf(h) }).filter(Boolean);
 }
 
 function stamp(pool, i, h, bonuses) {

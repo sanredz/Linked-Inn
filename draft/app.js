@@ -1,5 +1,6 @@
-import * as C from './core.js?v=20261103105140';
-import { Stage } from './stage.js?v=20261103105140';
+import * as C from './core.js?v=20261103122648';
+import { Stage } from './stage.js?v=20261103122648';
+import { askName, heroName, nameOk, onName, syncName } from '../pvp/name.js';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -445,8 +446,7 @@ async function results() {
   const s = res.sheet;
   $('rSheet').innerHTML = statSpans(s, build);
   const auto = C.randomName(run.seed);
-  $('nameIn').value = '';
-  $('nameIn').placeholder = auto;
+  showName();
   $('saved').textContent = '';
   $('rRank').textContent = 'Logging your run...';
   last.auto = auto;
@@ -465,17 +465,22 @@ async function results() {
   board(run.cls, Object.keys(C.SPECS[run.cls]).length > 1 ? C.specOf(run.cls, chosenBuild) : '');
 }
 
+function showName() {
+  $('nameShow').innerHTML = nameOk() ? `<small>Sign as</small><b>${esc(heroName())}</b><i class="ninfo" tabindex="0" aria-label="You can change your name in your Hearth">i<em>You can change your name in your Hearth</em></i>` : '<small>Save it under your name</small>';
+}
+
 async function saveName() {
-  const name = $('nameIn').value.trim();
-  if (!last || !last.id || !name || last.named) return;
+  if (!last || !last.id || last.named) return;
+  if (!nameOk() && !(await askName())) return;
+  showName();
   try {
-    await post('/name', { id: last.id, token: last.token, name });
+    await post('/name', { id: last.id, token: last.token, name: heroName() });
     last.named = true;
     $('saved').textContent = 'Saved.';
     board(boardClass, boardSpec);
   } catch (e) {
     if (/"ok":false/.test(e.message)) { last.named = true; $('saved').textContent = 'Saved.'; return; }
-    $('saved').textContent = /"error":"name"/.test(e.message) ? 'Use 2 to 20 letters, numbers, spaces, or \' _ -. Some words are blocked.' : 'That name did not save. Try again.';
+    $('saved').textContent = /"error":"(name|taken)"/.test(e.message) ? 'That name belongs to someone else. Change yours in your Hearth.' : 'That name did not save. Try again.';
   }
 }
 
@@ -748,7 +753,7 @@ function useCode(input = 'sIn', msg = 'sMsg') {
 let hearthLib = null;
 const hearthMod = async () => {
   if (!hearthLib) {
-    hearthLib = await import('./hearth.js?v=20261103105140');
+    hearthLib = await import('./hearth.js?v=20261103122648');
     hearthLib.setupHearth({ API, key: () => playerKey, Stage, gear, row: (id) => row(id), onChange: () => hearthLib.hearthBar($('hearthBar')) });
   }
   return hearthLib;
@@ -756,6 +761,7 @@ const hearthMod = async () => {
 async function refreshHearth(from) {
   try {
     const h = await hearthMod(), d = await h.loadHearth(from ? { from } : {});
+    await syncName(d.name);
     h.hearthBar($('hearthBar'));
     shareId = d.share || shareId;
     $('sShare').hidden = !shareId;
@@ -914,7 +920,7 @@ async function loadTally() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103105140', 'draft/gear.json?v=20261103105140', 'draft/talents.json?v=20261103105140', 'draft/retired.json?v=20261103105140'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103122648', 'draft/gear.json?v=20261103122648', 'draft/talents.json?v=20261103122648', 'draft/retired.json?v=20261103122648'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {
@@ -922,7 +928,7 @@ async function boot() {
     clearTimeout(findTimer);
     findTimer = setTimeout(() => board(boardClass, boardSpec), 120);
   };
-  for (const href of ['pvp/gauntlet.css', 'raid/raid.css', 'draft/hearth.css']) {
+  for (const href of ['pvp/gauntlet.css', 'raid/raid.css', 'draft/hearth.css', 'pvp/name.css']) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = href;
@@ -952,7 +958,7 @@ async function boot() {
     raidOpen = true;
     $('raidRoot').innerHTML = '<div class="gload">Entering Raid Draft</div>';
     const raid = await import('../raid/raid.js');
-    await raid.openRaid({ pool, gear, tooltip, PANE, QUALITY, ownedBy: (fn) => { raidOwned = fn; } }, $('raidRoot'));
+    await raid.openRaid({ pool, gear, tooltip, PANE, QUALITY, ownedBy: (fn) => { raidOwned = fn; }, held: () => (hearthLib ? hearthLib.held() : {}), after: () => refreshHearth() }, $('raidRoot'));
   };
   const openHearth = async () => {
     go('hearth');
@@ -987,7 +993,7 @@ async function boot() {
   $('sheet').onclick = (e) => { if (e.target === $('sheet')) closeSheet(); };
   $('again').onclick = restart;
   $('nameGo').onclick = saveName;
-  $('nameIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveName(); });
+  onName(() => { showName(); if (hearthLib) hearthLib.hearthBar($('hearthBar')); });
   for (const b of $('hSort').children) b.onclick = () => { histSort = b.dataset.o; drawHistory(); };
   $('hShare').onclick = () => copyLink($('hShare'), `${pageUrl()}#runs=${shareId}`, 'Share my runs');
   $('rpPrev').onclick = () => replayMove(-1);

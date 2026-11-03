@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261103084753';
-import { Stage } from './stage.js?v=20261103084753';
+import * as C from './core.js?v=20261103085840';
+import { Stage } from './stage.js?v=20261103085840';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -903,7 +903,7 @@ async function loadTally() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103084753', 'draft/gear.json?v=20261103084753', 'draft/talents.json?v=20261103084753', 'draft/retired.json?v=20261103084753'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103085840', 'draft/gear.json?v=20261103085840', 'draft/talents.json?v=20261103085840', 'draft/retired.json?v=20261103085840'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {

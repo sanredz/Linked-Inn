@@ -63,7 +63,8 @@ function oneOfEach(pool, run, ids) {
 }
 
 function possible(pool, run, slot) {
-  const on = run.picks[slot], every = suited(pool, run.cls, offers(pool, run.cls, slot, ALL_TIERS, run.picks)).filter((i) => !on || (pool.items[i][0] !== pool.items[on][0] && looks(pool, i) !== looks(pool, on)));
+  const on = run.picks[slot], open = suited(pool, run.cls, offers(pool, run.cls, slot, ALL_TIERS, run.picks)).filter((i) => !on || (pool.items[i][0] !== pool.items[on][0] && looks(pool, i) !== looks(pool, on)));
+  const rarity = on ? pool.items[on][1] : 0, kept = open.filter((i) => pool.items[i][1] >= rarity), every = kept.length >= 3 ? kept : open;
   let list = oneOfEach(pool, run, every.filter((i) => pool.items[i][2] >= slotFloor(run, slot)));
   if (list.length < 3) list = oneOfEach(pool, run, every).sort((a, b) => pool.items[b][2] - pool.items[a][2]).slice(0, 8);
   const fit = (i) => worth(pool, run.cls, i) / pool.items[i][2], ranked = [...list].sort((a, b) => fit(b) - fit(a));
@@ -71,6 +72,7 @@ function possible(pool, run, slot) {
 }
 
 export const lowestQuality = (pool, run, slot) => Math.min(...possible(pool, run, slot).map((i) => pool.items[i][1]));
+export const lowestLevel = (pool, run, slot) => Math.min(slotFloor(run, slot), ...possible(pool, run, slot).map((i) => pool.items[i][2]));
 
 function lagging(run, slots) {
   const pairs = DUAL_WIELD.has(run.cls) ? { ...PAIRS, main: 'off' } : PAIRS;

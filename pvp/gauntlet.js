@@ -5,7 +5,7 @@ import { PLANS, PRESETS, fight } from './engine.js';
 import { Arena, THEMES, resultHtml } from './arena.js';
 import { CLASSES, gear, references, statsOf } from './gear.js';
 import { CONSUME, ENCHANT } from './shop.js';
-import { LIVES, MAX_WINS, buyConsume, buyEnchant, className, fakeName, finishRound, itemCount, lowestQuality, makeBot, newRun, paySlot, pickBoon, planNames, rerollPrice, rerollShop, rollShop, sideOf, slotFloor, slotPrice, snapshot, takeItem } from './run.js';
+import { LIVES, MAX_WINS, buyConsume, buyEnchant, className, fakeName, finishRound, itemCount, lowestLevel, lowestQuality, makeBot, newRun, paySlot, pickBoon, planNames, rerollPrice, rerollShop, rollShop, sideOf, slotFloor, slotPrice, snapshot, takeItem } from './run.js';
 
 const KEY = 'gauntletRun', WHO = 'gauntletWho';
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
@@ -88,7 +88,7 @@ function shopHtml() {
   shownShop = key;
   const items = s.items.filter((slot) => !spent(slot)).map((slot, i) => {
     const cur = run.picks[slot], bought = run.buys[slot] || 0, price = slotPrice(run.cls, slot), off = run.gold < price, low = lowestQuality(pool, run, slot), tone = QUALITY[low];
-    return `<button class="gplinth" data-slot="${slot}" style="--q:${tone};--i:${i}" ${off ? 'disabled' : ''}><span class="gplinthicon"><img src="${cur ? iconOf(cur) : `assets/draft/ui/${SLOT_ART(slot)}.png`}" alt=""></span><b>${slotName(slot)}</b><em style="color:${tone}">${RARITY[low]}+</em><small>Item level ${slotFloor(run, slot)}+${bought ? ` · Bought ${bought}x` : ''}</small>${coin(price, off)}</button>`;
+    return `<button class="gplinth" data-slot="${slot}" style="--q:${tone};--i:${i}" ${off ? 'disabled' : ''}><span class="gplinthicon"><img src="${cur ? iconOf(cur) : `assets/draft/ui/${SLOT_ART(slot)}.png`}" alt=""></span><b>${slotName(slot)}</b><em style="color:${tone}">${RARITY[low]}+</em><small>Item level ${lowestLevel(pool, run, slot)}+${bought ? ` · Bought ${bought}x` : ''}</small>${coin(price, off)}</button>`;
   }).join('');
   const shelf = (attr, id, icon, name, text, price, i) => `<button class="gcard" ${attr}="${id}" style="--i:${i}" ${run.gold < price ? 'disabled' : ''}><span class="gico"><img src="assets/icons/${icon}.png" alt=""></span><span class="gtxt"><b>${name}</b><small>${text}</small></span>${coin(price, run.gold < price)}</button>`;
   const cons = s.consumes.filter((id) => !spent(id)).map((id, i) => { const c = CONSUME[id]; return shelf('data-con', id, c.icon, c.name, c.text, c.price, i + 3); }).join('');

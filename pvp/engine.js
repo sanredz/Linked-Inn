@@ -1,6 +1,6 @@
 export const MATCHUP = {
   WARRIOR: { PALADIN: 1.124, SHAMAN: .955, MAGE: 1.063 },
-  PALADIN: { WARRIOR: .89, HUNTER: .917, ROGUE: .854, PRIEST: 1.109, MAGE: 1.026, DRUID: 1.054 },
+  PALADIN: { WARRIOR: .86, HUNTER: 1.06, ROGUE: .81, PRIEST: 1.14, MAGE: 1.04, DRUID: 1.04, SHAMAN: 1.06 },
   SHAMAN: { WARRIOR: 1.048, ROGUE: 1.069, PRIEST: .925, MAGE: .933, WARLOCK: 1.08 },
   MAGE: { WARRIOR: .94, PALADIN: .975, PRIEST: .845, SHAMAN: 1.072, WARLOCK: 1.141 },
   HUNTER: { PALADIN: 1.091, PRIEST: .962, WARLOCK: 1.053, DRUID: .687 },
@@ -22,7 +22,7 @@ const SPELL_HIT = 96, BASE_MISS = 5, DW_MISS = 19;
 
 export const PRESETS = {
   WARRIOR: { power: .9, build: 'arms', name: 'Arms', kind: 'melee', res: 'rage', range: 5, crit2: .2, all: 1.03 },
-  PALADIN: { power: .95, build: 'ret', name: 'Retribution', kind: 'melee', res: 'mana', range: 5, crit2: 0, all: 1.15 },
+  PALADIN: { power: 1.02, build: 'ret', name: 'Retribution', kind: 'melee', res: 'mana', range: 5, crit2: 0, all: 1.15 },
   HUNTER: { power: .96, build: 'mm', name: 'Marksmanship', kind: 'ranged', res: 'mana', range: 35, crit2: .3, all: 1.2 },
   ROGUE: { power: .95, build: 'combat', name: 'Combat', kind: 'melee', res: 'energy', range: 5, crit2: .04, stealth: 1, offMult: .75 },
   PRIEST: { power: 1.03, build: 'shadow', name: 'Shadow', kind: 'caster', res: 'mana', range: 36, school: 'shadow', crit2: 0, spell: 1.2, form: 1.1, armor: 1395 },
@@ -410,7 +410,7 @@ export function fight(a, b, seed, rec) {
     if (f.hp < f.max * .2 && avail(f, 'bubble')) { f.aura.block = t + 12; f.cd.bubble = t + 300; for (const k of ['stun', 'fear', 'poly', 'root', 'silence']) f.aura[k] = 0; stopCast(f); say('buff', f, 'Divine Shield'); return; }
     if (breakOut(f)) return;
     if (f.cast) return;
-    if (f.hp < f.max * .12 && avail(f, 'loh') && !on(f, 'wound')) { f.cd.loh = t + 3600; heal(f, f.max, 'Lay on Hands'); return; }
+    if (f.hp < f.max * .12 && avail(f, 'loh') && !on(f, 'wound')) { f.cd.loh = t + 3600; heal(f, f.max, 'Lay on Hands'); f.mana = 0; return; }
     if (f.gcd > t) return;
     if ((rooted(f) || slowed(f)) && d > MELEE && avail(f, 'freedom') && f.mana > 60) {
       f.aura.free = t + 10; f.aura.root = 0; f.slows = {}; f.cd.freedom = t + 20;

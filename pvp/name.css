@@ -23,3 +23,6 @@
 .nasklater { font: 12px "Friz", serif; color: #8f8170; }
 .naskx { position: absolute; top: 6px; right: 8px; width: 32px; height: 32px; font-size: 22px; line-height: 1; color: #8f8170; background: none; border: 0; cursor: pointer; }
 .naskx:hover { color: #ffe6a8; }
+.nnote { width: min(440px, 100%); gap: 12px; }
+.nnote p { margin: 0; font-size: 14.5px; line-height: 1.45; color: #d9cbad; text-wrap: pretty; }
+.nnote .naskgo { margin-top: 6px; }

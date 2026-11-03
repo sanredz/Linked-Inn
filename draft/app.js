@@ -1,6 +1,6 @@
-import * as C from './core.js?v=20261103130241';
-import { Stage } from './stage.js?v=20261103130241';
-import { askName, heroName, nameField, nameOk, onName, syncName } from '../pvp/name.js';
+import * as C from './core.js?v=20261103142816';
+import { Stage } from './stage.js?v=20261103142816';
+import { askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -753,16 +753,20 @@ function useCode(input = 'sIn', msg = 'sMsg') {
 let hearthLib = null;
 const hearthMod = async () => {
   if (!hearthLib) {
-    hearthLib = await import('./hearth.js?v=20261103130241');
+    hearthLib = await import('./hearth.js?v=20261103142816');
     hearthLib.setupHearth({ API, key: () => playerKey, Stage, gear, row: (id) => row(id), onChange: () => hearthLib.hearthBar($('hearthBar')) });
   }
   return hearthLib;
 };
+let hearthAt = 0;
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Date.now() - hearthAt > 120000) refreshHearth(); });
 async function refreshHearth(from) {
+  hearthAt = Date.now();
   try {
     const h = await hearthMod(), d = await h.loadHearth(from ? { from } : {});
     await syncName(d.name);
     h.hearthBar($('hearthBar'));
+    for (const n of d.notices || []) await notify(n);
     shareId = d.share || shareId;
     $('sShare').hidden = !shareId;
     $('sShareNone').hidden = !!shareId;
@@ -931,7 +935,7 @@ async function loadTally() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103130241', 'draft/gear.json?v=20261103130241', 'draft/talents.json?v=20261103130241', 'draft/retired.json?v=20261103130241'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103142816', 'draft/gear.json?v=20261103142816', 'draft/talents.json?v=20261103142816', 'draft/retired.json?v=20261103142816'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {

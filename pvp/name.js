@@ -86,6 +86,24 @@ export function askName() {
   return asking;
 }
 
+const told = new Set();
+export async function notify(n) {
+  if (told.has(n.id)) return;
+  told.add(n.id);
+  await style();
+  await new Promise((done) => {
+    const mask = document.createElement('div');
+    mask.className = 'nmask';
+    mask.innerHTML = `<div class="nask nnote" role="dialog" aria-modal="true" aria-labelledby="nnoteT"><h3 id="nnoteT">${esc(n.title)}</h3>${String(n.text).split(/\n+/).map((t) => `<p>${esc(t)}</p>`).join('')}<button type="button" class="naskgo">Got it</button></div>`;
+    document.body.append(mask);
+    const go = mask.querySelector('.naskgo');
+    const close = () => { mask.classList.add('out'); setTimeout(() => mask.remove(), 180); done(); };
+    go.onclick = close;
+    go.focus({ preventScroll: true });
+  });
+  fetch(`${API}/notice/seen`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: read('draftKey'), id: n.id }) }).catch(() => {});
+}
+
 export const ensureName = async () => nameOk() || askName();
 
 export function nameField() {

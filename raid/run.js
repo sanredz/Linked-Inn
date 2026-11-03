@@ -366,8 +366,8 @@ export const currentBoss = (run) => bossAt(run, run.boss);
 export const killed = (run) => run.results.filter((r) => r.won).length;
 export const dropsOf = (run) => run.results.map((r, i) => { const b = bossAt(run, i); return b && (r.won || b.endless) && b.drop; }).filter((m, i) => m && rng(hash(run.seed, 'mount', i))() < m.chance);
 export const INGOT = 17203, INGOTS = 8;
-export const FORGE = { 19019: { needs: [18563, 18564], trial: 'mc' }, 17182: { needs: [17204], ingots: INGOTS } };
-const reachedFinale = (run) => run.results.some((r, i) => { const b = bossAt(run, i); return b && b.endless; });
+export const FORGE = { 19019: { needs: [18563, 18564], trial: 'mc', score: 120000 }, 17182: { needs: [17204], ingots: INGOTS } };
+const trialMet = (run, need) => run.results.some((r, i) => { const b = bossAt(run, i); return b && b.endless && (r.score || 0) >= need; });
 
 export function collect(runs, base = {}) {
   const have = { ...base }, kept = [];
@@ -381,7 +381,7 @@ export function collect(runs, base = {}) {
     }
     kept.push(got);
     if (!paired && have[18563] && have[18564]) paired = true;
-    if (paired && run.raid === FORGE[19019].trial && reachedFinale(run)) trial = true;
+    if (paired && run.raid === FORGE[19019].trial && trialMet(run, FORGE[19019].score)) trial = true;
   }
   return { have, kept, ready: { 19019: paired && trial, 17182: !!have[17204] && (have[INGOT] || 0) >= INGOTS }, paired };
 }

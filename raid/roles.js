@@ -35,14 +35,14 @@ export const specPower = (build) => (TARGET_DPS / (SPEC_DPS[build] || TARGET_DPS
 export const BONUS = {
   tank: {
     WARRIOR: { n: 'Sunder Armor', text: 'Boss armor -2,250, so physical damage hits harder.', fx: { armor: 2250 } },
-    PALADIN: { n: 'Fire Resistance Aura', text: '+60 Fire Resistance for the party.', all: { rfire: 60 } },
+    PALADIN: { n: 'Fire Resistance Aura', text: '+60 Fire Resistance for the party.', all: { rfire: 60 }, once: 'rfire' },
     DRUID: { n: 'Mark of the Wild', text: '+12 to all stats and +285 armor for the party.', all: { str: 12, agi: 12, sta: 12, int: 12, spi: 12, armor: 285 } },
   },
   heal: {
     PRIEST: { n: 'Power Word: Fortitude', text: '+54 Stamina for the party.', all: { sta: 54 } },
     PALADIN: { n: 'Blessing of Kings', text: '+22 to main stats for the party.', all: { str: 22, agi: 22, sta: 22, int: 22 } },
     DRUID: { n: 'Gift of the Wild', text: '+16 to all stats and +20 to all resistances for the party.', all: { str: 16, agi: 16, sta: 16, int: 16, spi: 16, rfire: 20, rshadow: 20, rarcane: 20 } },
-    SHAMAN: { n: 'Windfury Totem', text: 'Melee damage dealers hit 12% harder.', fx: { melee: 1.12 } },
+    SHAMAN: { n: 'Windfury Totem', text: 'Melee damage dealers hit 12% harder.', fx: { melee: 1.12 }, once: 'windfury' },
   },
   dps: {
     WARRIOR: { n: 'Battle Shout', text: '+230 Attack Power for melee.', phys: { ap: 230 } },
@@ -58,21 +58,21 @@ export const BONUS = {
 };
 const TOTEMS = {
   windfury: BONUS.heal.SHAMAN,
-  manaspring: { n: 'Mana Spring Totem', text: 'Your healer gains 25 mana per 5.', healer: { mp5: 25 } },
-  strength: { n: 'Strength of Earth Totem', text: '+77 Strength for the party.', all: { str: 77 } },
-  grace: { n: 'Grace of Air Totem', text: '+77 Agility for the party.', all: { agi: 77 } },
-  nature: { n: 'Nature Resistance Totem', text: '+60 Nature Resistance for the party.', all: { rnature: 60 } },
-  fireres: { n: 'Fire Resistance Totem', text: '+60 Fire Resistance for the party.', all: { rfire: 60 } },
-  frostres: { n: 'Frost Resistance Totem', text: '+60 Frost Resistance for the party.', all: { rfrost: 60 } },
+  manaspring: { n: 'Mana Spring Totem', text: 'Your healer gains 25 mana per 5.', healer: { mp5: 25 }, once: 'manaspring' },
+  strength: { n: 'Strength of Earth Totem', text: '+77 Strength for the party.', all: { str: 77 }, once: 'strength' },
+  grace: { n: 'Grace of Air Totem', text: '+77 Agility for the party.', all: { agi: 77 }, once: 'grace' },
+  nature: { n: 'Nature Resistance Totem', text: '+60 Nature Resistance for the party.', all: { rnature: 60 }, once: 'rnature' },
+  fireres: { n: 'Fire Resistance Totem', text: '+60 Fire Resistance for the party.', all: { rfire: 60 }, once: 'rfire' },
+  frostres: { n: 'Frost Resistance Totem', text: '+60 Frost Resistance for the party.', all: { rfrost: 60 }, once: 'rfrost' },
 };
 const totems = (first) => [first, ...Object.keys(TOTEMS).filter((k) => k !== first)].map((id) => ({ id, ...TOTEMS[id] }));
 export const CHOICES = {
   tank: {
     PALADIN: { label: 'Choose your aura', suggest: { zg: 'devotion' }, list: [
       { id: 'fire', ...BONUS.tank.PALADIN },
-      { id: 'devotion', n: 'Devotion Aura', text: '+735 armor for the party.', all: { armor: 735 } },
-      { id: 'frost', n: 'Frost Resistance Aura', text: '+60 Frost Resistance for the party.', all: { rfrost: 60 } },
-      { id: 'shadow', n: 'Shadow Resistance Aura', text: '+60 Shadow Resistance for the party.', all: { rshadow: 60 } },
+      { id: 'devotion', n: 'Devotion Aura', text: '+735 armor for the party.', all: { armor: 735 }, once: 'devotion' },
+      { id: 'frost', n: 'Frost Resistance Aura', text: '+60 Frost Resistance for the party.', all: { rfrost: 60 }, once: 'rfrost' },
+      { id: 'shadow', n: 'Shadow Resistance Aura', text: '+60 Shadow Resistance for the party.', all: { rshadow: 60 }, once: 'rshadow' },
     ] },
   },
   heal: { SHAMAN: { label: 'Choose your totem', list: totems('windfury') } },
@@ -84,8 +84,12 @@ const BUFF_ID = 990100;
 export const DEFENSE_CAP = 440, CRIT_AT_ZERO = 20;
 const TOUGHNESS = .6;
 
+export const stacks = (b, others) => !b.once || !others.some((o) => o.once === b.once);
+
 export function partyBonuses(heroes) {
-  return heroes.map((h) => h && { role: h.role, cls: h.cls, ...bonusOf(h) }).filter(Boolean);
+  const out = [];
+  for (const h of heroes) { if (!h) continue; const b = { role: h.role, cls: h.cls, ...bonusOf(h) }; if (stacks(b, out)) out.push(b); }
+  return out;
 }
 
 function stamp(pool, i, h, bonuses) {

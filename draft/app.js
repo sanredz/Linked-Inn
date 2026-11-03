@@ -1,6 +1,6 @@
-import * as C from './core.js?v=20261103123104';
-import { Stage } from './stage.js?v=20261103123104';
-import { askName, heroName, nameOk, onName, syncName } from '../pvp/name.js';
+import * as C from './core.js?v=20261103123916';
+import { Stage } from './stage.js?v=20261103123916';
+import { askName, heroName, nameField, nameOk, onName, syncName } from '../pvp/name.js';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -753,7 +753,7 @@ function useCode(input = 'sIn', msg = 'sMsg') {
 let hearthLib = null;
 const hearthMod = async () => {
   if (!hearthLib) {
-    hearthLib = await import('./hearth.js?v=20261103123104');
+    hearthLib = await import('./hearth.js?v=20261103123916');
     hearthLib.setupHearth({ API, key: () => playerKey, Stage, gear, row: (id) => row(id), onChange: () => hearthLib.hearthBar($('hearthBar')) });
   }
   return hearthLib;
@@ -879,9 +879,20 @@ async function startClass(cls) {
   spin();
 }
 
+const STEPS = [['Spin', 'Every open slot rolls an item for your class.'], ['Keep one', 'The rest roll again. You get one mulligan.'], ['Talents', 'Pick one of three Forever builds.'], ['Hit the dummy', 'Your DPS goes on the board.']];
+let gearCls = (() => { try { const c = localStorage.getItem('gearClass'); return C.BUILDS[c] ? c : 'WARRIOR'; } catch { return 'WARRIOR'; } })(), gearShown = '';
+
+function drawPick() {
+  const fresh = gearCls !== gearShown, enter = !gearShown, color = C.CLASS_COLOR[gearCls], specs = Object.keys(C.SPECS[gearCls] || {});
+  gearShown = gearCls;
+  const banners = Object.keys(C.BUILDS).map((c, i) => `<button class="rbanner ${c === gearCls ? 'on' : ''} ${c === gearCls && fresh ? 'fresh' : ''}" data-gc="${c}" style="--cc:${C.CLASS_COLOR[c]};--i:${i}"><span class="rbannerface"><i class="rbannerart" style="background-image:url(assets/game/${ART[c]})"></i><img src="assets/classes/${c}.png" alt=""><b>${C.CLASS_NAME[c]}</b></span></button>`).join('');
+  $('classes').innerHTML = `<div class="rpicker ${enter ? 'enter' : ''}" style="--cc:${color}"><i class="rpickart" style="background-image:url(assets/game/${ART[gearCls]})"></i><div class="rembers">${'<i></i>'.repeat(12)}</div><div class="rpickhead"><h3>Choose your class</h3>${nameField()}</div><div class="rbanners many">${banners}</div><div class="rpickinfo ${fresh ? 'fresh' : ''}"><h4>${C.CLASS_NAME[gearCls]}</h4>${specs.length ? `<small class="rpickspec">${specs.map(esc).join(' · ')}</small>` : ''}<ol class="gsteps">${STEPS.map(([b, t]) => `<li><b>${b}</b><span>${t}</span></li>`).join('')}</ol></div><button class="rforge" data-gstart><span>Draft a ${C.CLASS_NAME[gearCls]}</span></button></div>`;
+  for (const b of $('classes').querySelectorAll('[data-gc]')) b.onclick = () => { gearCls = b.dataset.gc; try { localStorage.setItem('gearClass', gearCls); } catch {} drawPick(); };
+  $('classes').querySelector('[data-gstart]').onclick = async () => { if (nameOk() || (await askName())) startClass(gearCls); };
+}
+
 function classGrid() {
-  $('classes').innerHTML = Object.keys(C.BUILDS).map((c) => `<button class="cls" data-c="${c}" style="--cc:${C.CLASS_COLOR[c]};--a:url(assets/game/${ART[c]})"><img src="assets/classes/${c}.png" alt=""><b>${C.CLASS_NAME[c]}</b></button>`).join('');
-  for (const b of document.querySelectorAll('.cls')) b.onclick = async () => { if (nameOk() || (await askName())) startClass(b.dataset.c); };
+  drawPick();
   $('bFilter').innerHTML = ['ALL', ...Object.keys(C.BUILDS)].map((c) => `<button class="chip" data-c="${c}" aria-label="${c === 'ALL' ? 'All classes' : C.CLASS_NAME[c]}">${c === 'ALL' ? 'All' : `<img src="assets/classes/${c}.png" alt="" title="${C.CLASS_NAME[c]}">`}</button>`).join('');
   for (const b of document.querySelectorAll('#bFilter button')) b.onclick = () => board(b.dataset.c);
 }
@@ -920,7 +931,7 @@ async function loadTally() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103123104', 'draft/gear.json?v=20261103123104', 'draft/talents.json?v=20261103123104', 'draft/retired.json?v=20261103123104'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103123916', 'draft/gear.json?v=20261103123916', 'draft/talents.json?v=20261103123916', 'draft/retired.json?v=20261103123916'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {
@@ -993,7 +1004,7 @@ async function boot() {
   $('sheet').onclick = (e) => { if (e.target === $('sheet')) closeSheet(); };
   $('again').onclick = restart;
   $('nameGo').onclick = saveName;
-  onName(() => { showName(); if (hearthLib) hearthLib.hearthBar($('hearthBar')); });
+  onName(() => { showName(); drawPick(); if (hearthLib) hearthLib.hearthBar($('hearthBar')); });
   for (const b of $('hSort').children) b.onclick = () => { histSort = b.dataset.o; drawHistory(); };
   $('hShare').onclick = () => copyLink($('hShare'), `${pageUrl()}#runs=${shareId}`, 'Share my runs');
   $('rpPrev').onclick = () => replayMove(-1);

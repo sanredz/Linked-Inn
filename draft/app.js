@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261103083534';
-import { Stage } from './stage.js?v=20261103083534';
+import * as C from './core.js?v=20261103084753';
+import { Stage } from './stage.js?v=20261103084753';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -887,8 +887,23 @@ function clearHash() {
   window.history.replaceState(null, '', location.pathname);
 }
 
+async function loadTally() {
+  try {
+    const r = await fetch(`${API}/counts`);
+    if (!r.ok) return;
+    const d = await r.json(), total = d.gear + d.arena + d.raid;
+    if (!Number.isFinite(total)) return;
+    for (const el of document.querySelectorAll('[data-count]')) { const n = d[el.dataset.count]; el.innerHTML = `${n.toLocaleString()}<small>${n === 1 ? 'run' : 'runs'}</small>`; el.hidden = false; }
+    const box = $('tallyAll'), start = performance.now(), still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    $('tally').hidden = false;
+    const step = (t) => { const p = still ? 1 : Math.min(1, (t - start) / 1400), e = 1 - (1 - p) ** 3; box.textContent = Math.round(total * e).toLocaleString(); if (p < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+    setTimeout(() => { box.textContent = total.toLocaleString(); }, 1600);
+  } catch {}
+}
+
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103083534', 'draft/gear.json?v=20261103083534', 'draft/talents.json?v=20261103083534', 'draft/retired.json?v=20261103083534'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103084753', 'draft/gear.json?v=20261103084753', 'draft/talents.json?v=20261103084753', 'draft/retired.json?v=20261103084753'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {
@@ -929,6 +944,7 @@ async function boot() {
   };
   const modes = { home: () => go('home'), pick: () => go('pick'), gauntlet: openArena, raid: openRaid };
   mainView = 'home';
+  loadTally();
   $('modeDraft').onclick = modes.pick;
   $('modeArena').onclick = modes.gauntlet;
   $('modeRaid').onclick = modes.raid;

@@ -19,6 +19,13 @@ export const HEALERS = {
   SHAMAN: { name: 'Restoration', blurb: 'Chain Heal hits the whole party, and totems keep the mana flowing.', mana: 1, heal: 1.15, crit: 3, regen: .2, cost: .9, flatRegen: 9, big: { n: 'Healing Wave', base: 1615, spread: .13, coef: .857, cast: 2.5, cost: 620 }, fast: { n: 'Lesser Healing Wave', base: 820, spread: .11, coef: .429, cast: 1.5, cost: 380 }, chain: { n: 'Chain Heal', base: 490, spread: .13, coef: .714, cast: 2.5, cost: 405, jumps: [1, .5, .25] } },
 };
 
+export const TUNE = {
+  tank: { WARRIOR: { taken: .865 }, PALADIN: { taken: .835 }, DRUID: { taken: .915 } },
+  heal: { PALADIN: { heal: 1.07 }, PRIEST: { heal: 1.17 }, SHAMAN: { heal: 1.27 }, DRUID: { heal: 1.44 } },
+  spec: { frost: 1.1, fire: 1.1, arcane: 1.1 },
+};
+const tuned = (table, role, h) => (h.v >= 2 ? { ...table[h.cls], ...TUNE[role][h.cls] } : table[h.cls]);
+
 const TARGET_DPS = 285, EVENNESS = .8;
 const SPEC_DPS = { shadow: 384, frost: 379, fire: 361, afflic: 360, arcane: 357, demo: 344, arms: 316, destro: 312, cat: 275, mut: 267, fury: 262, combat: 255, moon: 253, surv: 249, bm: 244, enh: 241, ret: 232, mm: 232, ele: 211, shock: 137 };
 const SPEC_TUNE = { arms: 1.22, cat: 1.2, moon: 1.15, afflic: 1.18, ret: 1.05, combat: 1.05, frost: 1.03, enh: .9, bm: .92, ele: .95 };
@@ -82,7 +89,7 @@ export function makeHero(pool, h, iterations = 12) {
   const res = { fire: gear.rfire || 0, frost: gear.rfrost || 0, nature: gear.rnature || 0, shadow: gear.rshadow || 0, arcane: gear.rarcane || 0, holy: gear.rholy || 0 };
   const out = { role: h.role, cls: h.cls, build: h.build, res, armor: (gear.armor || 0) + base.agi * 2 };
   if (h.role === 'tank') {
-    const k = TANKS[h.cls], def = 300 + (gear.def || 0) + k.def, skill = (def - 300) * .04;
+    const k = tuned(TANKS, 'tank', h), def = 300 + (gear.def || 0) + k.def, skill = (def - 300) * .04;
     const shield = k.shield && h.picks.off && pool.items[h.picks.off][5] === 4 && pool.items[h.picks.off][6] === 6;
     const main = h.picks.main && pool.items[h.picks.main][8], wdps = main ? (main.min + main.max) / 2 / (main.delay / 1000) : 2;
     return {
@@ -93,14 +100,14 @@ export function makeHero(pool, h, iterations = 12) {
     };
   }
   if (h.role === 'heal') {
-    const k = HEALERS[h.cls], [r0, r1] = REGEN[h.cls];
+    const k = tuned(HEALERS, 'heal', h), [r0, r1] = REGEN[h.cls];
     return {
       ...out, k, hp: health(h.cls, base.sta), mana: base.mana, heal: (gear.heal || 0) + (h.cls === 'PRIEST' ? base.spi * .25 : 0), crit: (gear.scrit || 0) + base.scrit + k.crit,
       regen: ((r0 + base.spi / r1) / 2 + (gear.mp5 || 0) / 5 + (k.flatRegen || 0)), castRegen: k.regen,
     };
   }
   const run = simulate(pool, h.cls, h.build, h.picks, h.seed || 1, iterations, true);
-  const power = specPower(h.build);
+  const power = specPower(h.build) * ((h.v >= 2 && TUNE.spec[h.build]) || 1);
   return { ...out, hp: health(h.cls, base.sta), power, dps: run.dps * power, log: run.log, by: run.by, melee: !RANGED.has(h.cls) && !CAST.test(h.build) && !['fire', 'frost', 'arcane', 'afflic', 'demo', 'destro'].includes(h.build) };
 }
 

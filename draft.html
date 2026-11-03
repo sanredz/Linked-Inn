@@ -125,6 +125,19 @@ body[data-view="replay"] .slot:hover { filter: none; box-shadow: none; }
 .modecard .say { position: absolute; z-index: 1; left: 34px; right: 34px; bottom: 28px; }
 @media (min-width: 761px) { .modecard .say span { display: block; min-height: 2.8em; } }
 .modecard b { display: block; font: clamp(40px, 4.6vw, 64px)/1 "Morpheus", serif; color: #ffe6a8; text-shadow: 0 3px 0 #000, 0 0 30px rgba(248, 211, 107, .35); }
+.tally { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 2px; text-align: center; animation: tallyIn .7s ease both; }
+.tally[hidden] { display: none; }
+.tally i { flex: 0 1 200px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-dim), var(--gold)); position: relative; }
+.tally i:last-child { background: linear-gradient(270deg, transparent, var(--gold-dim), var(--gold)); }
+.tally i::after { content: ""; position: absolute; top: -3px; width: 7px; height: 7px; rotate: 45deg; background: var(--gold); box-shadow: 0 0 10px rgba(248, 211, 107, .7); }
+.tally i:first-child::after { right: -2px; }
+.tally i:last-child::after { left: -2px; }
+.tally b { display: block; font: clamp(30px, 3.2vw, 42px)/1 "Morpheus", serif; color: #ffe6a8; letter-spacing: .02em; text-shadow: 0 2px 0 #000, 0 0 26px rgba(248, 211, 107, .45); font-variant-numeric: tabular-nums; }
+.tally span { display: block; margin-top: 4px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #a8987c; }
+@keyframes tallyIn { from { opacity: 0; transform: translateY(-6px); } }
+.modecount { position: absolute; z-index: 1; top: 14px; right: 14px; padding: 5px 11px 4px; font: 14px "Friz", serif; font-style: normal; color: #f3e2b6; background: rgba(8, 5, 3, .62); border: 1px solid rgba(201, 154, 59, .55); border-radius: 999px; backdrop-filter: blur(3px); text-shadow: 0 1px 2px #000; font-variant-numeric: tabular-nums; }
+.modecount[hidden] { display: none; }
+.modecount small { margin-left: 4px; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: #c9b99a; }
 .modecard span { display: block; margin-top: 8px; font-size: 17px; line-height: 1.35; color: var(--ink); text-shadow: 0 1px 3px #000; }
 .modetabs { display: flex; gap: 6px; margin: 12px 0 0; }
 .modetabs[hidden] { display: none; }
@@ -136,6 +149,11 @@ body[data-view="replay"] .slot:hover { filter: none; box-shadow: none; }
   .modecard { height: max(170px, calc((100svh - 190px) / 3)); }
   .modecard .say { left: 18px; right: 18px; bottom: 14px; }
   .modecard b { font-size: 36px; }
+  .tally { gap: 10px; }
+  .tally b { font-size: 28px; }
+  .tally span { font-size: 11px; letter-spacing: .1em; white-space: nowrap; }
+  .tally i { flex-basis: 40px; }
+  .modecount { top: 10px; right: 10px; font-size: 12.5px; padding: 4px 9px 3px; }
   .modecard span { margin-top: 4px; font-size: 15px; }
 }
 #rCode { margin-top: 10px; padding: 8px 10px; border-left: 2px solid var(--gold-dim); background: rgba(0, 0, 0, 0.3); color: var(--ink-2); font-size: 13.5px; }
@@ -412,7 +430,7 @@ body.arena #stage { cursor: default; }
   body.arena #pane { height: 62vh; min-height: 360px; }
   .score { font-size: 56px; }
 }
-@media (prefers-reduced-motion: reduce) { .ft, .slot.flash .ic, #dps.done { animation: none; } .cls, .build, .modecard, .modecard img { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .tally, .ft, .slot.flash .ic, #dps.done { animation: none; } .cls, .build, .modecard, .modecard img { transition: none; } }
 </style>
 </head>
 <body>
@@ -436,9 +454,10 @@ body.arena #stage { cursor: default; }
 </header>
 <main class="wrap">
   <section class="modepick" id="home" data-screen="home" hidden>
-    <button class="modecard" id="modeDraft"><img src="assets/draft/arena/card-draft.jpg" alt=""><div class="say"><b>Gear Draft</b><span>Draft one hero and see how much damage they do.</span></div></button>
-    <button class="modecard" id="modeArena"><img src="assets/draft/arena/card-gauntlet.jpg" alt=""><div class="say"><b>Arena Draft</b><span>Buy gear between duels and fight your way to ten wins.</span></div></button>
-    <button class="modecard" id="modeRaid"><img src="assets/draft/arena/card-raid.jpg" alt=""><div class="say"><b>Raid Draft</b><span>Draft a party of three and see how far they get.</span></div></button>
+    <div class="tally" id="tally" hidden><i></i><div><b id="tallyAll">0</b><span>runs played in total</span></div><i></i></div>
+    <button class="modecard" id="modeDraft"><em class="modecount" data-count="gear" hidden></em><img src="assets/draft/arena/card-draft.jpg" alt=""><div class="say"><b>Gear Draft</b><span>Draft one hero and see how much damage they do.</span></div></button>
+    <button class="modecard" id="modeArena"><em class="modecount" data-count="arena" hidden></em><img src="assets/draft/arena/card-gauntlet.jpg" alt=""><div class="say"><b>Arena Draft</b><span>Buy gear between duels and fight your way to ten wins.</span></div></button>
+    <button class="modecard" id="modeRaid"><em class="modecount" data-count="raid" hidden></em><img src="assets/draft/arena/card-raid.jpg" alt=""><div class="say"><b>Raid Draft</b><span>Draft a party of three and see how far they get.</span></div></button>
   </section>
 
   <nav class="modetabs" id="modeTabs" data-screen="pick gauntlet raid" hidden><button data-mode="home">&lsaquo; Home</button><button data-mode="pick">Gear</button><button data-mode="gauntlet">Arena</button><button data-mode="raid">Raid</button></nav>
@@ -640,6 +659,6 @@ body.arena #stage { cursor: default; }
 <div id="peek" hidden><div class="pane"><img class="portrait" id="pkPortrait" alt=""><div class="frameart"></div><div class="viewport"><canvas id="pkStage" aria-label="Character for this run. Drag to turn."></canvas></div><div class="peekwho" id="pkWho"></div><div class="sub" id="pkSay"></div><div class="peekdoll" id="pkDoll"></div></div></div>
 <div id="tip" hidden></div>
 <div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button class="go" id="sheetMain" hidden>Main Hand</button><button class="go" id="sheetOff" hidden>Off Hand</button><button id="sheetClose">Close</button></div></div></div>
-<script type="module" src="draft/app.js?v=20261103083534"></script>
+<script type="module" src="draft/app.js?v=20261103084753"></script>
 </body>
 </html>

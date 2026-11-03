@@ -51,6 +51,7 @@ const ago = (at) => {
   if (m < 1440) return `${Math.floor(m / 60)}h ago`;
   return `${Math.floor(m / 1440)}d ago`;
 };
+const enchLine = (id) => { const e = id && ENCHANT[id]; return e ? esc(e.crusader ? e.name : e.text) : ''; };
 const iconOf = (id) => `assets/icons/${pool.items[id][4]}.png`;
 const hearts = () => '<span class="heart"></span>'.repeat(LIVES - run.losses) + '<span class="heart gone"></span>'.repeat(run.losses);
 
@@ -76,7 +77,7 @@ function doll() {
   const art = (s) => (s === 'finger1' || s === 'finger2' ? 'finger' : s === 'trinket1' || s === 'trinket2' ? 'trinket' : s);
   return PANE.map(([s, left, top]) => {
     const id = worn()[s], ench = screen === 'pick' ? '' : run.enchants[s], dead = s === 'shirt' || s === 'tabard';
-    return `<button class="ps${id ? ' on' : ''}${dead ? ' dead' : ''}" data-item="${id || ''}" data-extra="${ench ? `Enchanted: ${ENCHANT[ench].name}` : ''}" style="left:calc(var(--u)*${left});top:calc(var(--u)*${top});background-image:url(assets/draft/ui/${art(s)}.png)${id ? `;--q:${QUALITY[pool.items[id][1]]}` : ''}" tabindex="-1">${id ? `<img src="${iconOf(id)}" alt="">` : ''}</button>`;
+    return `<button class="ps${id ? ' on' : ''}${dead ? ' dead' : ''}" data-item="${id || ''}" data-extra="${enchLine(ench)}" style="left:calc(var(--u)*${left});top:calc(var(--u)*${top});background-image:url(assets/draft/ui/${art(s)}.png)${id ? `;--q:${QUALITY[pool.items[id][1]]}` : ''}" tabindex="-1">${id ? `<img src="${iconOf(id)}" alt="">` : ''}</button>`;
   }).join('');
 }
 
@@ -148,7 +149,7 @@ function hideTip() { if (tip) tip.hidden = true; }
 function runDetail(r) {
   const items = PANE.filter(([slot]) => r.picks[slot] && pool.items[r.picks[slot]]).map(([slot]) => {
     const id = r.picks[slot], ench = r.enchants[slot];
-    return `<button class="ps on" data-item="${id}" data-extra="${ench && ENCHANT[ench] ? `Enchanted: ${ENCHANT[ench].name}` : ''}" style="--q:${QUALITY[pool.items[id][1]]}" tabindex="-1"><img src="${iconOf(id)}" alt=""></button>`;
+    return `<button class="ps on" data-item="${id}" data-extra="${enchLine(ench)}" style="--q:${QUALITY[pool.items[id][1]]}" tabindex="-1"><img src="${iconOf(id)}" alt=""></button>`;
   }).join('');
   const fights = r.fights.map((f) => `<div class="gbf ${f.won ? 'win' : 'loss'}">${f.foe && CLASSES.includes(f.foe.cls) ? `<img src="assets/classes/${f.foe.cls}.png" alt="">` : ''}<span>${esc(f.foe ? f.foe.name : 'Unknown')}</span><em>${f.won ? 'Won' : 'Lost'}</em></div>`).join('');
   const plan = PLANS[r.cls] && PLANS[r.cls][r.plan];
@@ -221,8 +222,8 @@ function showChoices() {
   const { slot, ids } = run.pending, box = document.createElement('div'), cur = run.picks[slot];
   box.className = 'gmodal';
   box.innerHTML = `<div class="gmodalbox"><h2>Choose your ${slotName(slot).toLowerCase()}</h2>
-    <div class="gchoices" style="--n:${ids.length}">${ids.map((id, i) => `<button class="gchoice" data-id="${id}" ${cur ? `data-item="${cur}" data-head="Currently equipped"` : ''} style="--q:${QUALITY[pool.items[id][1]]};--i:${i}"><img src="${iconOf(id)}" alt=""><div class="gtt">${tooltip(id, run.picks)}</div></button>`).join('')}</div>
-    ${cur ? `<details class="gnow"><summary>Compare with what you wear</summary><div class="gtt">${tooltip(cur, run.picks)}</div></details>` : ''}
+    <div class="gchoices" style="--n:${ids.length}">${ids.map((id, i) => `<button class="gchoice" data-id="${id}" ${cur ? `data-item="${cur}" data-head="Currently equipped" data-extra="${enchLine(run.enchants[slot])}"` : ''} style="--q:${QUALITY[pool.items[id][1]]};--i:${i}"><img src="${iconOf(id)}" alt=""><div class="gtt">${tooltip(id, run.picks)}</div></button>`).join('')}</div>
+    ${cur ? `<details class="gnow"><summary>Compare with what you wear</summary><div class="gtt">${tooltip(cur, run.picks, enchLine(run.enchants[slot]))}</div></details>` : ''}
     <button class="gskip" data-skip="1">Take nothing and lose your ${slotPrice(run.cls, slot)} gold</button></div>`;
   document.body.append(box);
   const done = (id) => {

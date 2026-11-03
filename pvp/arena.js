@@ -641,7 +641,7 @@ export class Arena {
     } else if (e.type === 'move') {
       side.dash = .45;
       this.shock(foe, 0, 0xffe2b0, .8, .5);
-    } else if (e.type === 'heal') this.column(x, e.name && /Drain|Siphon|Life Tap/.test(e.name) ? 0xb18cff : 0x8dff9a, e.amount > 400 ? 16 : 9);
+    } else if (e.type === 'heal' && !/Elune|Banshee/.test(e.name || '')) this.column(x, e.name && /Drain|Siphon|Life Tap/.test(e.name) ? 0xb18cff : 0x8dff9a, e.amount > 400 ? 16 : 9);
     else if (e.type === 'cc') {
       const tone = { fear: 0x9a5cff, poly: 0xff9ad8, stun: 0xffe08a, root: 0x8fd8ff }[e.name];
       if (tone) { this.burst(x, tone, 16, 1, 1.6); this.shock(x, 0, tone, .6, .45); }

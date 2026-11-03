@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261103214254';
-import { Stage } from './stage.js?v=20261103214254';
+import * as C from './core.js?v=20261103215248';
+import { Stage } from './stage.js?v=20261103215248';
 import { askFeedback, askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
@@ -70,7 +70,7 @@ let mainView = 'pick';
 let gauntletOpen = false;
 let raidOpen = false;
 
-function tooltip(id, owned) {
+function tooltip(id, owned, enchant) {
   const r = row(id), [name, q, ilvl, inv, , cls, sub, s, d, setId, , , lines] = r;
   const kind = cls === 2 ? WEAPON[sub] : ARMOR[sub] || '';
   let h = `<b style="color:${QUALITY[q]}">${esc(name)}</b><i class="il">Item Level ${ilvl}</i><div class="two"><span>${INV[inv] || ''}</span><span>${kind}</span></div>`;
@@ -81,6 +81,7 @@ function tooltip(id, owned) {
   if (s.armor) h += `<div>${s.armor} Armor</div>`;
   for (const k of Object.keys(STAT)) if (s[k]) h += `<div>+${s[k]} ${STAT[k]}</div>`;
   for (const k of Object.keys(RESIST)) if (s[k]) h += `<div>+${s[k]} ${RESIST[k]} Resistance</div>`;
+  if (enchant) h += `<div class="eq">${esc(enchant)}</div>`;
   for (const l of lines) h += `<div class="eq">${esc(l)}</div>`;
   if (s.ap && !lines.some((l) => /Attack Power/.test(l))) h += `<div class="eq">Equip: +${s.ap} Attack Power.</div>`;
   if (s.sp && !lines.some((l) => /damage/.test(l))) h += `<div class="eq">Equip: Increases damage and healing done by magical spells and effects by up to ${s.sp}.</div>`;
@@ -121,7 +122,7 @@ document.addEventListener('click', (e) => {
     return;
   }
   const worn = e.target.closest('.ps');
-  if (worn && +worn.dataset.item) openSheet(tooltip(worn.dataset.item));
+  if (worn && +worn.dataset.item) openSheet(tooltip(worn.dataset.item, undefined, worn.dataset.extra));
 }, true);
 
 document.addEventListener('mousemove', (e) => {
@@ -139,7 +140,7 @@ document.addEventListener('mousemove', (e) => {
   if (!el || !+el.dataset.item) { t.hidden = true; return; }
   const vs = (el.dataset.vs || '').split(',').filter(Boolean), key = [el.dataset.item, ...vs, el.dataset.head || ''].join();
   if (t.dataset.id !== key) {
-    t.innerHTML = vs.length ? [el.dataset.item, ...vs].map((id, i) => `<div class="ttcol">${i ? '<small>Equipped</small>' : ''}${tooltip(id)}</div>`).join('') : (el.dataset.head ? `<small class="tiphead">${esc(el.dataset.head)}</small>` : '') + tooltip(el.dataset.item) + (el.dataset.extra ? `<div class="eq">${esc(el.dataset.extra)}</div>` : '');
+    t.innerHTML = vs.length ? [el.dataset.item, ...vs].map((id, i) => `<div class="ttcol">${i ? '<small>Equipped</small>' : ''}${tooltip(id)}</div>`).join('') : (el.dataset.head ? `<small class="tiphead">${esc(el.dataset.head)}</small>` : '') + tooltip(el.dataset.item, undefined, el.dataset.extra);
     t.classList.toggle('multi', vs.length > 0);
     t.dataset.id = key;
   }
@@ -753,7 +754,7 @@ function useCode(input = 'sIn', msg = 'sMsg') {
 let hearthLib = null;
 const hearthMod = async () => {
   if (!hearthLib) {
-    hearthLib = await import('./hearth.js?v=20261103214254');
+    hearthLib = await import('./hearth.js?v=20261103215248');
     hearthLib.setupHearth({ API, key: () => playerKey, Stage, gear, row: (id) => row(id), onChange: () => hearthLib.hearthBar($('hearthBar')) });
   }
   return hearthLib;
@@ -957,7 +958,7 @@ async function loadTally() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103214254', 'draft/gear.json?v=20261103214254', 'draft/talents.json?v=20261103214254', 'draft/retired.json?v=20261103214254'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103215248', 'draft/gear.json?v=20261103215248', 'draft/talents.json?v=20261103215248', 'draft/retired.json?v=20261103215248'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {

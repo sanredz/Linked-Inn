@@ -189,7 +189,7 @@ export function fight(a, b, seed, rec) {
     }
     f.hp -= v;
     src.dealt += amount * power;
-    if (S.leech && src.hp > 0) src.hp = Math.min(src.max, src.hp + v * S.leech);
+    if (S.leech && src.hp > 0) { const gain = Math.min(src.max - src.hp, v * S.leech); src.hp += gain; src.leeched = (src.leeched || 0) + gain; }
     if (B.save && !f.saved && f.hp < f.max * .2) { f.saved = 1; f.hp = Math.max(f.hp, 1) + f.max * B.save; say('heal', f, 'Phoenix Rebirth', f.max * B.save); }
     if (B.thorns && !periodic && school === 'phys' && f.hp > 0) hurt(src, B.thorns, f, 'nature', 'Thorns', false, true);
     if (f.p.res === 'rage') f.rage = Math.min(100, f.rage + 2.5 * v / 230.6);
@@ -1020,7 +1020,9 @@ export function fight(a, b, seed, rec) {
     if (t >= regen) {
       regen = t + 2;
       for (const f of [A, B]) {
-        if (f.boon.hot) f.hp = Math.min(f.max, f.hp + f.max * f.boon.hot * healMult(f));
+        if (f.boon.hot) { const gain = Math.min(f.max - f.hp, f.max * f.boon.hot * healMult(f)); f.hp += gain; if (gain >= 1 && f.hp > 0) say('heal', f, "Elune's Grace", gain); }
+        if (f.leeched >= 1 && f.hp > 0) say('heal', f, "Banshee's Hunger", f.leeched);
+        f.leeched = 0;
         if (f.maxMana) f.mana = Math.min(f.maxMana, f.mana + f.mp5 * .4 + (REGEN[f.cls][0] + f.spi / REGEN[f.cls][1]) * (t - f.lastCast < 5 ? (f.cls === 'PRIEST' ? .5 : 0) : 1));
         if (f.p.res === 'energy') f.energy = Math.min(100, f.energy + (on(f, 'rush') ? 40 : 20));
         if (f.p.res === 'rage') f.rage = Math.min(100, f.rage + 2 / 3);

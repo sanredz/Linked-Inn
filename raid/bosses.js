@@ -26,7 +26,7 @@ export const RAIDS = {
     id: 'mc',
     name: 'Molten Core',
     blurb: 'Ten bosses of fire and shadow. Ragnaros never falls.',
-    theme: { floor: 'terrain_rock', wall: 'terrain_rock', fog: 0x2a0c04, light: 0xff6a2a },
+    theme: { floor: 'terrain_rock', wall: 'terrain_rock', fog: 0x2a0c04, light: 0xff6a2a, set: 'molten' },
     bosses: [
       {
         id: 'lucifron', name: 'Lucifron', loot: 'Lucifron', model: 13031, health: 351780, armor: 3795, resist: { shadow: 186, fire: 93 }, melee: [1635, 2165, 2],
@@ -131,7 +131,7 @@ export const RAIDS = {
     id: 'zg',
     name: "Zul'Gurub",
     blurb: 'Ten bosses of poison, blood and voodoo. Hakkar never falls.',
-    theme: { floor: 'terrain_grass', wall: 'terrain_dirt', fog: 0x0b1a0c, light: 0x8fe36a },
+    theme: { floor: 'terrain_grass', wall: 'terrain_dirt', fog: 0x0b1a0c, light: 0x8fe36a, set: 'jungle' },
     finale: 'Hakkar',
     milestones: ZG_MILESTONES,
     bosses: [

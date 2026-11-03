@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Arena } from '../pvp/arena.js';
+import { Arena, CALM } from '../pvp/arena.js';
 import { Stage } from '../draft/stage.js';
 import { MILESTONES, tierOf } from './bosses.js';
 
@@ -83,6 +83,8 @@ export class RaidScene extends Arena {
     for (const st of [this.stageB, this.stageC]) if (st.rig && st.rig.parent === scene) { scene.remove(st.rig); st.scene.add(st.rig); }
     if (this.stageA.rig) { this.stageA.rig.position.set(0, 0, 0); this.stageA.rig.rotation.set(0, 0, 0); }
     this.stageA.fightOn = false;
+    for (const m of this.team) if (m.rune) m.rune.visible = false;
+    if (this.bossRune) this.bossRune.visible = false;
     this.q('.rframes').innerHTML = '';
     this.q('.rcast').hidden = true;
   }
@@ -106,12 +108,12 @@ export class RaidScene extends Arena {
     this.host.classList.add('fighting', 'raidfight');
     const stages = [this.stageA, this.stageB, this.stageC];
     this.stageA.resize();
-    this.world.traverse((o) => { if (o.isMesh && o.geometry.type === 'CylinderGeometry' && o.position.z > 6) o.visible = false; });
     for (let i = 0; i < 3; i++) await this.dressOne(stages[i], heroes[i]);
     const a = this.stageA;
     for (const st of stages.slice(1)) a.scene.add(st.rig);
     this.bossRig = await this.loadBoss(boss);
     if (this.bossRig) { a.scene.add(this.bossRig.root); this.act(this.bossRig, 'idle', 1); }
+    await Promise.race([this.scenery.ready, new Promise((done) => { setTimeout(done, 6000); })]);
     this.showWorld(true);
     a.fightOn = true;
     a.ring.visible = false;
@@ -125,14 +127,16 @@ export class RaidScene extends Arena {
       st.rig.rotation.y = Math.atan2(-at[0], BOSS_Z - at[1]);
       const two = h.picks.main && this.pool.items[h.picks.main] && this.pool.items[h.picks.main][3] === 17;
       st.pose(two ? 'ready2h' : 'ready1h');
-      return { stage: st, hero: h, melee, two, castUntil: 0, dead: false };
+      return { stage: st, hero: h, melee, two, castUntil: 0, dead: false, home: [at[0], at[1]], goal: null, next: 1 + Math.random() * 3, moving: false };
     });
     for (const m of this.team) m.form = await this.showForm(m.stage, m.hero);
     const portrait = Math.min(1.4, Math.max(1, 1.25 / a.camera.aspect)), narrow = Math.min(1, a.camera.aspect / .95);
-    this.team.forEach((m) => { m.stage.rig.position.x *= narrow; });
-    a.scene.fog = new THREE.Fog(this.fogNear.color.getHex(), 24, 70);
+    this.team.forEach((m) => { m.stage.rig.position.x *= narrow; m.home[0] *= narrow; m.rune ||= this.rune(); m.rune.userData.v = 0; m.rune.visible = false; m.trail = m.melee || m.hero.role === 'tank'; });
+    this.bossRune ||= this.rune();
+    this.bossRune.userData.v = 0;
+    a.scene.fog = new THREE.Fog(this.fogNear.color.getHex(), 26, 76);
     a.want = { x: 0, y: 4.6, z: 13.5 * portrait, tx: 0, ty: 2.6 };
-    a.view = { ...a.want };
+    a.view = CALM ? { ...a.want } : { x: 0, y: 11, z: 13.5 * portrait + 14, tx: 0, ty: 3.4 };
     this.bossName = boss.name;
     this.endless = !!boss.endless;
     this.finale = raid.finale || 'Ragnaros';
@@ -211,8 +215,8 @@ export class RaidScene extends Arena {
 
   event(e) {
     const a = this.stageA, m = this.team[e.i];
-    if (e.k === 'hit') { this.number(e.i, e.v, COLOR[e.school] || '#fff'); if (m) a.spark(m.stage.rig.position.x, 1.3, m.stage.rig.position.z, { color: TONE[e.school] || 0xffffff, size: .4, life: .35, grow: .6, opacity: .8 }); if (e.v > 300) this.fx.shake = Math.max(this.fx.shake, .3); }
-    else if (e.k === 'deal') { if (e.v > 30) this.number('boss', e.v, e.crit ? '#ffd85a' : COLOR[e.school] || '#fff', e.crit); }
+    if (e.k === 'hit') { this.number(e.i, e.v, COLOR[e.school] || '#fff'); if (m) a.spark(m.stage.rig.position.x, 1.3, m.stage.rig.position.z, { color: TONE[e.school] || 0xffffff, size: .4, life: .35, grow: .6, opacity: .8 }); if (e.v > 300) { this.fx.shake = Math.max(this.fx.shake, .3); if (m) { this.shock(m.stage.rig.position.x, m.stage.rig.position.z, TONE[e.school] || 0xffd8a0, .7, .45); this.puff(m.stage.rig.position.x, m.stage.rig.position.z, 6, .8); } } }
+    else if (e.k === 'deal') { if (e.v > 30) this.number('boss', e.v, e.crit ? '#ffd85a' : COLOR[e.school] || '#fff', e.crit); if (e.crit && e.v > 400) this.punch(.25); }
     else if (e.k === 'heal') { if (e.v > 0) this.number(e.i, `+${e.v}`, '#5dff7a', e.crit); if (m) a.spark(m.stage.rig.position.x, 1.6, m.stage.rig.position.z, { color: 0x7dff8a, size: .3, life: .5, vy: 1, grow: .3, opacity: .7 }); }
     else if (e.k === 'avoid') this.number(e.i, e.n[0].toUpperCase() + e.n.slice(1), '#c9b99a');
     else if (e.k === 'cast') { if (m) m.castUntil = this.playing.t + e.dur; }
@@ -222,9 +226,10 @@ export class RaidScene extends Arena {
       box.hidden = false;
       clearTimeout(this.castTimer);
       this.castTimer = setTimeout(() => { box.hidden = true; }, 1300);
-      if (this.bossRig) { this.act(this.bossRig, 'cast', 1); this.bossBusy = this.playing.t + 2; }
+      if (this.bossRig) { this.act(this.bossRig, 'cast', 1); this.bossBusy = this.playing.t + 2; this.bossCast = this.playing.t + 2.4; }
+      for (const m of this.team) if (!m.melee && m.hero.role !== 'tank' && Math.random() < .7) m.next = Math.random() * .4;
     } else if (e.k === 'save') { const box = this.q('.rcast'); box.textContent = e.n; box.hidden = false; clearTimeout(this.castTimer); this.castTimer = setTimeout(() => { box.hidden = true; }, 1300); }
-    else if (e.k === 'death') { if (m) { m.dead = true; m.stage.pose('death', 1); if (m.form) this.act(m.form, 'death', 1); } this.fx.shake = .6; }
+    else if (e.k === 'death') { if (m) { m.dead = true; m.stage.pose('death', 1); if (m.form) this.act(m.form, 'death', 1); const p = m.stage.rig.position; setTimeout(() => this.puff(p.x, p.z, 12, 1), 550); } this.fx.shake = .6; }
   }
 
   play(rec, x, { onEnd }) {
@@ -247,6 +252,7 @@ export class RaidScene extends Arena {
     for (const m of this.team) {
       if (m.dead) continue;
       const role = m.hero.role;
+      if (this.wander(m, dt)) continue;
       if (m.form) this.act(m.form, 'attack', 1.2);
       if (role === 'heal') m.stage.pose(m.castUntil > run.t ? 'castdirected' : 'ready1h', 1.2);
       else if (m.melee || role === 'tank') m.stage.pose(m.two ? 'attack2h' : 'attack1h', 1.5);
@@ -262,8 +268,38 @@ export class RaidScene extends Arena {
     }
   }
 
+  wander(m, dt) {
+    const rig = m.stage.rig, p = rig.position, tank = m.hero.role === 'tank';
+    m.next -= dt * this.speed;
+    if (!m.goal && m.next <= 0 && !tank) {
+      const spread = m.melee ? .9 : 2.2, a = Math.random() * Math.PI * 2, r = spread * (.4 + Math.random() * .6);
+      m.goal = [m.home[0] + Math.cos(a) * r, m.home[1] + Math.sin(a) * r * .6];
+      m.next = (m.melee ? 5 : 3.5) + Math.random() * 4;
+    }
+    if (!m.goal) { rig.rotation.y += (Math.atan2(-p.x, BOSS_Z - p.z) - rig.rotation.y) * Math.min(1, dt * 6); return false; }
+    const dx = m.goal[0] - p.x, dz = m.goal[1] - p.z, d = Math.hypot(dx, dz), step = Math.min(d, dt * 3.4 * this.speed);
+    if (d < .05) { m.goal = null; return false; }
+    p.x += dx / d * step;
+    p.z += dz / d * step;
+    rig.rotation.y = Math.atan2(dx, dz);
+    if (m.form) this.act(m.form, 'run', 1.3); else m.stage.pose('run', 1.3);
+    return true;
+  }
+
+  afterFrame(dt) {
+    if (this.mode !== 'fight' || !this.world.visible || !this.team.length || !this.bossRig) return;
+    const t = this.playing ? this.playing.t : -1;
+    for (const m of this.team) {
+      const p = m.stage.rig.position;
+      if (m.rune) this.glyph(m.rune, !m.dead && m.castUntil > t, m.hero.role === 'heal' ? 0x8dffa8 : 0xc89bff, p.x, p.z, 1, dt);
+      this.swing(m.stage, m.trail && !m.dead && !!this.playing && !m.form, dt);
+    }
+    const b = this.bossRig.root.position;
+    if (this.bossRune) this.glyph(this.bossRune, (this.bossCast || 0) > t, this.scenery.set === 'jungle' ? 0x8fe36a : 0xff6a2a, b.x, b.z + 1, Math.min(3.4, this.size * .5), dt);
+  }
+
   loop() {
-    const now = performance.now(), dt = Math.min(.1, (now - (this.lastC || now)) / 1000);
+    const now = performance.now(), dt = Math.min(.1, (now - (this.lastC || now)) / 1000) * (this.scale ?? 1);
     this.lastC = now;
     if (this.mode === 'fight' && this.stageC.mixer) this.stageC.mixer.update(dt);
     if (this.bossRig) this.bossRig.mixer.update(dt);

@@ -505,6 +505,7 @@ export class Stage {
     this.glow ||= glowTexture(softGlow);
     this.star ||= glowTexture(starGlow);
     const s = this.spares.pop() || new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    s.material.blending = o.dust ? THREE.NormalBlending : THREE.AdditiveBlending;
     s.material.map = o.star ? this.star : this.glow;
     s.material.color.setHex(o.color);
     s.material.rotation = Math.random() * 6.28;
@@ -721,7 +722,7 @@ export class Stage {
   }
 
   frame() {
-    const dt = Math.min(.05, this.clock.getDelta());
+    const dt = Math.min(.05, this.clock.getDelta()) * (this.timeScale ?? 1);
     if (this.mixer) this.mixer.update(dt);
     for (const m of Object.values(this.minions)) {
       if (!m.root.visible) continue;
@@ -765,6 +766,7 @@ export class Stage {
       p.s.scale.setScalar(Math.max(.001, p.size * (1 + p.grow * a)));
       p.s.material.opacity = p.opacity * (1 - a);
     }
+    if (this.onFrame) this.onFrame(dt);
     this.renderer.render(this.scene, this.camera);
   }
 }

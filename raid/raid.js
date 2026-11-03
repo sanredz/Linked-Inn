@@ -21,7 +21,7 @@ const ROLE_STATS = { tank: ['def', 'dodge', 'parry', 'block', 'sta', 'armor', 'b
 const VERDICT = [[0, 'Deadly', 'bad'], [.4, 'Close', 'mid'], [.8, 'Comfortable', 'good']];
 
 let dressing = Promise.resolve();
-let root, scene, pool, gear, run, PANE, QUALITY, tooltip, viewing = 0, chosenCls = '', chosenSpec = '', board = [], boardRaid = 'mc', boardRow = -1, busy = false, offers = null, shownPick = '', shownRole = -1;
+let root, scene, pool, gear, run, PANE, QUALITY, tooltip, viewing = 0, chosenCls = '', chosenSpec = '', board = [], boardRaid = 'mc', boardRow = -1, boardPick = { tank: '', heal: '', dps: '' }, boardFind = '', boardCount = null, boardTicket = 0, findTimer = 0, busy = false, offers = null, shownPick = '', shownRole = -1;
 const cache = {};
 let aims = {};
 const dress = (step) => { dressing = dressing.then(step).catch(() => {}); return dressing; };
@@ -313,8 +313,9 @@ function boardHtml() {
   const last = RAIDS[boardRaid].bosses.at(-1).name.split(' ')[0];
   const head = `<div class="rboardhead"><h3>Leaderboard <em>highest damage to ${esc(last)}</em></h3><div class="rboardtabs">${[['mc', RAIDS.mc.name], ...SOON].map(([id, name]) => `<button class="gmini ${id === boardRaid ? 'on' : ''}" data-board="${id}"${RAIDS[id] ? '' : ' disabled'}>${name}</button>`).join('')}</div></div>`;
   if (!board) return `${head}<p>The board could not be reached.</p>`;
-  if (!board.length) return `${head}<p>Nobody has reached ${esc(last)} yet.</p>`;
-  return head + board.map((r, i) => `<div class="rrun ${i === boardRow ? 'open' : ''} ${r.mine ? 'mine' : ''}"><button class="rrow" data-row="${i}" aria-expanded="${i === boardRow}"><span>${i + 1}</span><b>${esc(r.name)}</b><span class="rclassrow">${r.party.map((c) => `<img src="assets/classes/${c}.png" alt="${c}">`).join('')}</span><em>${num(r.score)}</em><i class="rchev"></i></button>${i === boardRow ? rowDetail(r) : ''}</div>`).join('');
+  const filtered = boardFind.trim() || ROLES.some((r) => boardPick[r]), count = boardCount ? `<p class="rboardcount">${filtered ? `${num(boardCount.matched)} of ${num(boardCount.total)}` : num(boardCount.total)} ${boardCount.total === 1 ? 'run' : 'runs'}</p>` : '';
+  if (!board.length) return `${head}${count}<p>${filtered ? 'No runs match these filters.' : `Nobody has reached ${esc(last)} yet.`}</p>`;
+  return head + count + board.map((r, i) => `<div class="rrun ${i === boardRow ? 'open' : ''} ${r.mine ? 'mine' : ''}"><button class="rrow" data-row="${i}" aria-expanded="${i === boardRow}"><span>${r.pos || i + 1}</span><b>${esc(r.name)}</b><span class="rclassrow">${r.party.map((c) => `<img src="assets/classes/${c}.png" alt="${c}">`).join('')}</span><em>${num(r.score)}</em><i class="rchev"></i></button>${i === boardRow ? rowDetail(r) : ''}</div>`).join('');
 }
 
 function render() {
@@ -415,11 +416,21 @@ async function postResult() {
   loadBoard();
 }
 
+function filterHtml() {
+  const chip = (role, cls) => `<button class="rfchip ${boardPick[role] === cls ? 'on' : ''}" data-pick="${role}" data-cls="${cls}" aria-pressed="${boardPick[role] === cls}" title="${CLASS_NAME[cls]}"><img src="assets/classes/${cls}.png" alt="${CLASS_NAME[cls]}"></button>`;
+  return `${ROLES.map((role) => `<div class="rfrow"><span>${ROLE_NAME[role]}</span><div>${classesFor(role).map((c) => chip(role, c)).join('')}</div></div>`).join('')}<div class="rfind"><input type="search" maxlength="20" aria-label="Search the board by name" placeholder="Search by name" autocomplete="off" value="${esc(boardFind)}"></div>`;
+}
+
 async function loadBoard() {
+  const ticket = ++boardTicket, picks = ROLES.filter((r) => boardPick[r]).map((r) => `&${r}=${boardPick[r]}`).join(''), find = boardFind.trim();
   try {
-    const r = await fetch(`${API}/raid/board?raid=${boardRaid}&who=${who()}`);
-    board = r.ok ? (await r.json()).rows : null;
-  } catch { board = null; }
+    const r = await fetch(`${API}/raid/board?raid=${boardRaid}&who=${who()}${picks}${find ? `&q=${encodeURIComponent(find)}` : ''}`);
+    const d = r.ok ? await r.json() : null;
+    if (ticket !== boardTicket) return;
+    board = d ? d.rows : null;
+    boardCount = d && Number.isInteger(d.total) ? { total: d.total, matched: d.matched } : null;
+  } catch { if (ticket !== boardTicket) return; board = null; }
+  boardRow = -1;
   if (root) root.querySelector('.rboardlist').innerHTML = boardHtml();
 }
 
@@ -472,8 +483,22 @@ export async function openRaid(data, host) {
   pool = raidPool;
   root = host;
   root.id = 'raid';
-  root.innerHTML = '<div class="rtop"></div><div class="rmain"><div class="rstage"><div class="pane gpane"><img class="portrait" alt=""><div class="frameart"></div><div class="viewport"><div class="rscene"></div></div><div class="peekwho"></div><div class="sub"></div><div class="peekdoll"></div><div class="rctl"></div></div></div><div class="rside"></div></div><section class="gpanel rboard"><div class="rboardlist"></div></section>';
+  root.innerHTML = '<div class="rtop"></div><div class="rmain"><div class="rstage"><div class="pane gpane"><img class="portrait" alt=""><div class="frameart"></div><div class="viewport"><div class="rscene"></div></div><div class="peekwho"></div><div class="sub"></div><div class="peekdoll"></div><div class="rctl"></div></div></div><div class="rside"></div></div><section class="gpanel rboard"><div class="rboardfilter"></div><div class="rboardlist"></div></section>';
+  const filters = root.querySelector('.rboardfilter');
+  filters.innerHTML = filterHtml();
+  filters.querySelector('input').oninput = (e) => {
+    boardFind = e.target.value;
+    clearTimeout(findTimer);
+    findTimer = setTimeout(loadBoard, 150);
+  };
   root.querySelector('.rboard').onclick = (e) => {
+    const pick = e.target.closest('[data-pick]');
+    if (pick) {
+      boardPick[pick.dataset.pick] = boardPick[pick.dataset.pick] === pick.dataset.cls ? '' : pick.dataset.cls;
+      for (const b of filters.querySelectorAll(`[data-pick="${pick.dataset.pick}"]`)) { const on = boardPick[b.dataset.pick] === b.dataset.cls; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }
+      loadBoard();
+      return;
+    }
     const row = e.target.closest('[data-row]');
     if (row) { boardRow = +row.dataset.row === boardRow ? -1 : +row.dataset.row; root.querySelector('.rboardlist').innerHTML = boardHtml(); return; }
     const b = e.target.closest('[data-board]');

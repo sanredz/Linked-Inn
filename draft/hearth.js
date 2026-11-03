@@ -85,6 +85,25 @@ function forgeBanner(raid) {
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+export const readyRelics = () => (data ? RELICS.filter((x) => forgeReady(data.stats, x)) : []);
+
+export function callForge(x) {
+  const parts = x.forged.map((p) => RELICS.find((r) => r.id === p));
+  const box = document.createElement('div');
+  box.className = `fcall ${x.theme}`;
+  box.innerHTML = `<div class="fcallcard" role="dialog" aria-modal="true" aria-labelledby="fcallT"><div class="fcallembers">${'<i></i>'.repeat(14)}</div><div class="fcallglow"><i class="fcallrays"></i><i class="fcallring"></i><img src="assets/icons/${x.icon}.png" alt=""></div><small>The Legendary Forge calls</small><h2 id="fcallT">${esc(x.name)}</h2><p>You have done everything the forge asks. Bring it all to the anvil and claim your legendary.</p><ul class="fcallparts">${forgeSteps((data && data.stats) || {}, x).map(([t]) => { const p = parts.find((q) => t.includes(q.name.replace(/s$/, ''))); return `<li>${p ? `<img src="assets/icons/${p.icon}.png" alt="">` : '<i class="fcalltrial"></i>'}<span>${esc(p && p.stack ? `${p.stack} ${p.name}s` : t.replace(/^Deal /, 'Dealt '))}</span><b aria-label="done">✓</b></li>`; }).join('')}</ul><div class="fcallgo"><button type="button" class="hforgego big">Forge ${esc(x.short)}</button><button type="button" class="fcalllater">Later</button></div></div>`;
+  document.body.append(box);
+  return new Promise((done) => {
+    const close = (go) => { box.classList.add('out'); document.removeEventListener('keydown', key); setTimeout(() => box.remove(), 300); done(go); if (go) forge(x.id); };
+    const key = (e) => { if (e.key === 'Escape') close(false); };
+    document.addEventListener('keydown', key);
+    box.querySelector('.hforgego').onclick = () => close(true);
+    box.querySelector('.fcalllater').onclick = () => close(false);
+    box.onclick = (e) => { if (e.target === box) close(false); };
+    box.querySelector('.hforgego').focus({ preventScroll: true });
+  });
+}
+
 async function forge(id) {
   const x = RELICS.find((r) => r.id === id), parts = x.forged.map((p) => RELICS.find((r) => r.id === p)).flatMap((p) => (p.stack ? [p, p, p] : [p]));
   const r = await fetch(`${ctx.API}/forge`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: ctx.key(), item: id }) }).catch(() => null);

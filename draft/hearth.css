@@ -238,3 +238,39 @@ img.sq { transform: scale(1.22); }
 .freveal button { position: relative; margin-top: 14px; opacity: 0; transition: opacity .4s ease; }
 .fcer.done .freveal button { opacity: 1; }
 .hbforge { flex: none; padding: 4px 10px; font: 12px "Friz", serif; color: #1a1208; background: linear-gradient(#ffc06a, #e06f00); border-radius: 999px; box-shadow: 0 0 12px rgba(255, 128, 0, .6); animation: hready 2.4s ease-in-out infinite; }
+.fcall { --fc: #ff7a1e; position: fixed; inset: 0; z-index: 1900; display: grid; place-items: center; padding: 16px; background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--fc) 16%, rgba(6, 4, 2, .78)), rgba(4, 3, 2, .86) 70%); backdrop-filter: blur(3px); animation: fcallfade .35s ease both; }
+.fcall.storm { --fc: #6fd0ff; }
+.fcall.out { opacity: 0; transition: opacity .3s ease; }
+@keyframes fcallfade { from { opacity: 0; } }
+.fcallcard { position: relative; display: grid; justify-items: center; gap: 10px; width: min(440px, 100%); padding: 30px 24px 22px; text-align: center; overflow: hidden; background: radial-gradient(130% 80% at 50% 0%, color-mix(in srgb, var(--fc) 22%, #1a120a), #0d0905 72%); border: 1px solid color-mix(in srgb, var(--fc) 65%, #8a6a2a); border-radius: 14px; box-shadow: 0 24px 60px rgba(0, 0, 0, .75), 0 0 46px color-mix(in srgb, var(--fc) 30%, transparent), inset 0 1px 0 rgba(255, 240, 200, .1); animation: fcallrise .6s cubic-bezier(.2, 1.2, .4, 1) both; }
+@keyframes fcallrise { from { opacity: 0; transform: translateY(26px) scale(.94); } }
+.fcall.storm .fcallcard { animation: fcallrise .6s cubic-bezier(.2, 1.2, .4, 1) both, fcallbolt 5s 1.2s infinite; }
+@keyframes fcallbolt { 0%, 90%, 94%, 100% { border-color: color-mix(in srgb, var(--fc) 65%, #8a6a2a); } 91%, 95% { border-color: #e9f8ff; box-shadow: 0 24px 60px rgba(0, 0, 0, .75), 0 0 80px color-mix(in srgb, var(--fc) 70%, transparent); } }
+.fcallglow { position: relative; display: grid; place-items: center; width: 150px; height: 150px; margin-bottom: 2px; }
+.fcallrays { position: absolute; inset: -60px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--fc) 40%, transparent) 0 7deg, transparent 7deg 20deg); -webkit-mask: radial-gradient(circle, #000 18%, transparent 66%); mask: radial-gradient(circle, #000 18%, transparent 66%); animation: frays 16s linear infinite; }
+.fcallring { position: absolute; inset: 18px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--fc) 80%, #fff); box-shadow: 0 0 24px var(--fc), inset 0 0 24px color-mix(in srgb, var(--fc) 60%, transparent); animation: fcallring 2.2s ease-out infinite; }
+@keyframes fcallring { from { transform: scale(.7); opacity: .9; } to { transform: scale(1.25); opacity: 0; } }
+.fcallglow img { position: relative; width: 92px; height: 92px; border-radius: 14px; border: 3px solid #ff8000; box-shadow: 0 0 34px rgba(255, 128, 0, .8), 0 0 70px color-mix(in srgb, var(--fc) 55%, transparent); animation: fcallfloat 3.2s ease-in-out infinite, fpop .9s cubic-bezier(.2, 1.6, .4, 1) .15s both; }
+@keyframes fcallfloat { 50% { transform: translateY(-6px); } }
+.fcallcard small { font: 13px "Friz", serif; letter-spacing: .26em; text-transform: uppercase; color: color-mix(in srgb, var(--fc) 70%, #fff); }
+.fcallcard h2 { margin: 0; max-width: 100%; font: clamp(25px, 6vw, 32px)/1.15 "Morpheus", serif; font-weight: normal; text-wrap: balance; color: transparent; background: linear-gradient(100deg, #ff9a2e 20%, #ffe2b0 45%, #ff9a2e 70%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 0 14px rgba(255, 128, 0, .55)); animation: fcallshine 3.6s linear infinite; }
+@keyframes fcallshine { to { background-position: -250% 0; } }
+.fcallcard p { margin: 0; max-width: 340px; font: 14.5px/1.45 "Friz", serif; color: #d9cbad; text-wrap: pretty; }
+.fcallparts { display: grid; gap: 6px; width: 100%; max-width: 360px; margin: 4px 0 0; padding: 0; list-style: none; }
+.fcallparts li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; font: 13px/1.3 "Friz", serif; color: #f0e2c0; text-align: left; background: rgba(0, 0, 0, .35); border: 1px solid color-mix(in srgb, var(--fc) 35%, #5d4a26); border-radius: 8px; opacity: 0; animation: fcallstep .4s ease both; }
+.fcallparts li:nth-child(1) { animation-delay: .35s; } .fcallparts li:nth-child(2) { animation-delay: .5s; } .fcallparts li:nth-child(3) { animation-delay: .65s; } .fcallparts li:nth-child(4) { animation-delay: .8s; }
+@keyframes fcallstep { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+.fcallparts img { width: 24px; height: 24px; border-radius: 5px; border: 1px solid #a335ee; }
+.fcalltrial { width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle, #fff3c4 0 18%, var(--fc) 40%, transparent 72%); box-shadow: 0 0 10px var(--fc); }
+.fcallparts b { font: 15px/1 "Friz", serif; color: #7fe08a; text-shadow: 0 0 8px rgba(127, 224, 138, .6); }
+.fcallgo { display: grid; justify-items: center; gap: 4px; width: 100%; margin-top: 8px; }
+.fcallgo .hforgego { width: 100%; animation: hready 2.4s ease-in-out infinite; }
+.fcalllater { padding: 8px 14px; font: 13px "Friz", serif; color: #8f8170; background: none; border: 0; cursor: pointer; }
+.fcalllater:hover { color: #ffe6a8; }
+.fcallembers { position: absolute; inset: 0; pointer-events: none; }
+.fcallembers i { position: absolute; bottom: -8px; width: 4px; height: 4px; border-radius: 50%; background: color-mix(in srgb, var(--fc) 80%, #fff); box-shadow: 0 0 8px var(--fc); opacity: 0; animation: fcallember 4.2s linear infinite; }
+.fcallembers i:nth-child(1) { left: 8%; animation-delay: 0s; } .fcallembers i:nth-child(2) { left: 16%; animation-delay: 1.9s; } .fcallembers i:nth-child(3) { left: 24%; animation-delay: .7s; } .fcallembers i:nth-child(4) { left: 31%; animation-delay: 3.1s; } .fcallembers i:nth-child(5) { left: 39%; animation-delay: 1.2s; } .fcallembers i:nth-child(6) { left: 46%; animation-delay: 2.6s; } .fcallembers i:nth-child(7) { left: 53%; animation-delay: .3s; }
+.fcallembers i:nth-child(8) { left: 60%; animation-delay: 3.6s; } .fcallembers i:nth-child(9) { left: 67%; animation-delay: 1.5s; } .fcallembers i:nth-child(10) { left: 74%; animation-delay: 2.2s; } .fcallembers i:nth-child(11) { left: 81%; animation-delay: .9s; } .fcallembers i:nth-child(12) { left: 88%; animation-delay: 3.3s; } .fcallembers i:nth-child(13) { left: 94%; animation-delay: 2s; } .fcallembers i:nth-child(14) { left: 4%; animation-delay: 2.9s; }
+@keyframes fcallember { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: .9; } 100% { transform: translate(14px, -420px); opacity: 0; } }
+@media (max-height: 720px) { .fcall { place-items: start center; overflow-y: auto; } .fcallcard { gap: 7px; padding: 18px 20px 14px; } .fcallglow { width: 104px; height: 104px; } .fcallglow img { width: 68px; height: 68px; } .fcallrays { inset: -40px; } }
+@media (prefers-reduced-motion: reduce) { .fcall, .fcallcard, .fcallrays, .fcallring, .fcallglow img, .fcallcard h2, .fcallgo .hforgego, .fcallembers i, .fcallparts li { animation: none !important; opacity: 1; } .fcallembers { display: none; } }

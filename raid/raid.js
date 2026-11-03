@@ -239,7 +239,7 @@ function compare(o) {
   box.querySelector('[data-yes]').onclick = () => { box.remove(); chooseItem({ ...o, to: aimOf(o) }); };
 }
 
-const hintOf = (m) => (m.id === INGOT ? `Needed to forge Sulfuras, Hand of Ragnaros. Collect ${INGOTS} of them and the Eye of Sulfuras.` : FORGE[17182].needs.includes(m.id) ? `Needed to forge Sulfuras, Hand of Ragnaros, along with ${INGOTS} Sulfuron Ingots.` : FORGE[19019].needs.includes(m.id) ? `Needed to forge Thunderfury. Find both Bindings, then deal ${num(FORGE[19019].score)} damage to Ragnaros.` : '');
+const hintOf = (m) => (m.id === INGOT ? `Needed to forge Sulfuras, Hand of Ragnaros. Collect ${INGOTS} of them and the Eye of Sulfuras.` : FORGE[17182].needs.includes(m.id) ? `Needed to forge Sulfuras, Hand of Ragnaros, along with ${INGOTS} Sulfuron Ingots. Once you have it, deal ${num(FORGE[17182].score)} damage to Ragnaros.` : FORGE[19019].needs.includes(m.id) ? `Needed to forge Thunderfury. Find both Bindings, then deal ${num(FORGE[19019].score)} damage to Ragnaros.` : '');
 const mountHtml = (m, tag = 'Dropped this run') => { const hint = hintOf(m); return `<div class="rmount" ${hint ? `tabindex="0" data-hint="${esc(hint)}"` : ''}><img src="assets/icons/${m.icon}.png" alt=""><span><small>${tag}</small><b>${esc(m.name)}</b></span></div>`; };
 
 const LIVE = ['mc', 'zg'], SOON = [['aq20', "Ruins of Ahn'Qiraj"]];
@@ -490,6 +490,8 @@ function action(a, raid) {
   else if (a === 'skip') scene.skip();
   else if (a === 'again') { run = null; save(); applyTheme(); render(); showHero(); }
 }
+
+export const raidIdle = () => !run || run.over || !run.heroes.length;
 
 export function backToRaids() {
   if (run && !run.heroes.length) { run = null; save(); render(); showHero(); }

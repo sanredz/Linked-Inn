@@ -105,8 +105,9 @@ export const owned = (stats, item) => (item.forged ? forged(stats, item.id) : co
 export const usedIn = (stats, item) => RELICS.find((r) => r.forged && r.forged.includes(item.id) && forged(stats, r.id));
 export function forgeSteps(stats, item) {
   const n = (id) => count(stats, id);
-  if (item.id === 19019) return [['Left Binding of the Windseeker', n(18563) > 0], ['Right Binding of the Windseeker', n(18564) > 0], ['Deal 120,000 damage to Ragnaros with both Bindings', !!(stats.forge && stats.forge[19019] && stats.forge[19019].ready)]];
-  if (item.id === 17182) return [['Eye of Sulfuras', n(17204) > 0], [`Sulfuron Ingots ${Math.min(n(17203), 8)} of 8`, n(17203) >= 8]];
+  const trial = (id) => !!(stats.forge && stats.forge[id] && (stats.forge[id].trial || stats.forge[id].ready));
+  if (item.id === 19019) return [['Left Binding of the Windseeker', n(18563) > 0], ['Right Binding of the Windseeker', n(18564) > 0], ['Deal 120,000 damage to Ragnaros with both Bindings', trial(19019)]];
+  if (item.id === 17182) return [['Eye of Sulfuras', n(17204) > 0], [`Sulfuron Ingots ${Math.min(n(17203), 8)} of 8`, n(17203) >= 8], ['Deal 125,000 damage to Ragnaros with the Eye', trial(17182)]];
   return [];
 }
 export const portraitOpen = (got, p) => !p.needs || got.has(p.needs);

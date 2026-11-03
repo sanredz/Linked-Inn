@@ -124,6 +124,14 @@ body[data-view="replay"] .slot:hover { filter: none; box-shadow: none; }
 .modecard .say { position: absolute; z-index: 1; left: 34px; right: 34px; bottom: 28px; }
 @media (min-width: 761px) { .modecard .say span { display: block; min-height: 2.8em; } }
 .modecard b { display: block; font: clamp(40px, 4.6vw, 64px)/1 "Morpheus", serif; color: #ffe6a8; text-shadow: 0 3px 0 #000, 0 0 30px rgba(248, 211, 107, .35); }
+.feedrow { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; width: 100%; max-width: 760px; margin: 6px auto 0; padding: 10px 14px 10px 10px; color: inherit; font: inherit; text-align: left; cursor: pointer; background: rgba(0, 0, 0, .35); border: 1px dashed #5a4520; border-radius: 12px; transition: border-color .2s ease, background .2s ease; }
+.feedrow:hover { border-color: #c99a3b; background: rgba(0, 0, 0, .5); }
+.feedrow img { flex: none; width: 36px; height: 36px; border: 1px solid #6d5222; border-radius: 7px; }
+.feedrow span { flex: 1; display: grid; min-width: 0; }
+.feedrow b { font-weight: normal; font-size: 15px; color: #ecdcb8; }
+.feedrow small { font-size: 12.5px; color: #a8987c; }
+.feedrow em { flex: none; padding: 6px 12px; font: 13.5px "Friz", serif; font-style: normal; color: #f8d36b; border: 1px solid #8a6a2a; border-radius: 999px; }
+@media (max-width: 520px) { .feedrow small { display: none; } .feedrow b { font-size: 14px; } }
 .tally { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 2px; text-align: center; animation: tallyIn .7s ease both; }
 .tally[hidden] { display: none; }
 .tally i { flex: 0 1 200px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-dim), var(--gold)); position: relative; }
@@ -454,6 +462,7 @@ body.arena #stage { cursor: default; }
     <button class="modecard" id="modeDraft"><em class="modecount" data-count="gear" hidden></em><img src="assets/draft/arena/card-draft.jpg" alt=""><div class="say"><b>Gear Draft</b><span>Draft one hero and see how much damage they do.</span></div></button>
     <button class="modecard" id="modeArena"><em class="modecount" data-count="arena" hidden></em><img src="assets/draft/arena/card-gauntlet.jpg" alt=""><div class="say"><b>Arena Draft</b><span>Buy gear between duels and fight your way to ten wins.</span></div></button>
     <button class="modecard" id="modeRaid"><em class="modecount" data-count="raid" hidden></em><img src="assets/draft/arena/card-raid.jpg" alt=""><div class="say"><b>Raid Draft</b><span>Draft a party of three and see how far they get.</span></div></button>
+    <button class="feedrow" id="feedBtn"><img src="assets/game/ui/inv_misc_note_01.png" alt=""><span><b>Have an idea or found a bug?</b><small>Tell me what you would like added or changed.</small></span><em>Send feedback</em></button>
     <div class="stone" id="stone">
       <div class="stonehead"><img src="assets/icons/134414.png" alt=""><div><b>Your Hearthstone</b><small>This one code keeps every run, badge, mount and your profile, on any device. Save it somewhere safe and never share it.</small></div></div>
       <div class="stonecode"><code id="sCode">****-****-****-****</code><button class="spec" id="sShow">Show</button><button class="spec" id="sCopy">Copy</button><button class="spec" id="sUse">Load a code</button></div>
@@ -654,6 +663,6 @@ body.arena #stage { cursor: default; }
 <div id="peek" hidden><div class="pane"><img class="portrait" id="pkPortrait" alt=""><div class="frameart"></div><div class="viewport"><canvas id="pkStage" aria-label="Character for this run. Drag to turn."></canvas></div><div class="peekwho" id="pkWho"></div><div class="sub" id="pkSay"></div><div class="peekdoll" id="pkDoll"></div></div></div>
 <div id="tip" hidden></div>
 <div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button class="go" id="sheetMain" hidden>Main Hand</button><button class="go" id="sheetOff" hidden>Off Hand</button><button id="sheetClose">Close</button></div></div></div>
-<script type="module" src="draft/app.js?v=20261103171329"></script>
+<script type="module" src="draft/app.js?v=20261103193859"></script>
 </body>
 </html>

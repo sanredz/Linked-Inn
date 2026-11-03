@@ -104,6 +104,42 @@ export async function notify(n) {
   fetch(`${API}/notice/seen`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: read('draftKey'), id: n.id }) }).catch(() => {});
 }
 
+const KINDS = [['idea', 'Idea'], ['bug', 'Bug'], ['balance', 'Balance'], ['other', 'Other']];
+export function askFeedback(page = '', prompted = false) {
+  if (asking) return asking;
+  asking = style().then(() => new Promise((done) => {
+    const mask = document.createElement('div');
+    mask.className = 'nmask';
+    mask.innerHTML = `<form class="nask nfeed" role="dialog" aria-modal="true" aria-labelledby="nfeedT"><button type="button" class="naskx" aria-label="Close">&times;</button><img class="nfeedicon" src="assets/game/ui/inv_misc_note_01.png" alt=""><h3 id="nfeedT">${prompted ? 'How is it going?' : 'Send feedback'}</h3><p>${prompted ? 'You have played a few runs now. Is there anything you would like added, changed or fixed? Every message is read.' : 'Anything you would like added, changed or fixed? Every message is read.'}</p><div class="nkinds" role="radiogroup" aria-label="What is it about">${KINDS.map(([k, t], i) => `<button type="button" role="radio" aria-checked="${i ? 'false' : 'true'}" data-kind="${k}" class="${i ? '' : 'on'}">${t}</button>`).join('')}</div><textarea maxlength="1500" rows="5" placeholder="Your idea, a bug you found, a class that feels off..." aria-label="Your feedback"></textarea><small class="naskerr" role="alert"></small><button class="naskgo" type="submit">Send</button>${prompted ? '<span class="nasklater">You can always send more with the Send feedback button on the Draft home page.</span>' : ''}</form>`;
+    document.body.append(mask);
+    const form = mask.querySelector('form'), text = mask.querySelector('textarea'), err = mask.querySelector('.naskerr'), go = mask.querySelector('.naskgo');
+    let kind = 'idea';
+    const close = (ok) => { mask.classList.add('out'); setTimeout(() => mask.remove(), 180); document.removeEventListener('keydown', key); asking = null; done(ok); };
+    const key = (e) => { if (e.key === 'Escape') close(false); };
+    document.addEventListener('keydown', key);
+    mask.querySelector('.naskx').onclick = () => close(false);
+    mask.onclick = (e) => { if (e.target === mask) close(false); };
+    for (const b of mask.querySelectorAll('[data-kind]')) b.onclick = () => { kind = b.dataset.kind; for (const o of mask.querySelectorAll('[data-kind]')) { o.classList.toggle('on', o === b); o.setAttribute('aria-checked', String(o === b)); } };
+    text.oninput = () => { err.textContent = ''; };
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      if (text.value.trim().length < 3) { err.textContent = 'Write a few words first.'; return text.focus(); }
+      go.disabled = true;
+      try {
+        const r = await fetch(`${API}/feedback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: read('draftKey'), name: nameOk() ? heroName() : '', kind, text: text.value, page }) });
+        if (!r.ok) throw new Error(r.status === 429 ? 'slow' : 'bad');
+        form.innerHTML = '<img class="nfeedicon" src="assets/game/ui/inv_misc_note_01.png" alt=""><h3>Thank you!</h3><p>Your message has been sent.</p><button type="button" class="naskgo">Close</button>';
+        form.querySelector('.naskgo').onclick = () => close(true);
+      } catch (x) {
+        go.disabled = false;
+        err.textContent = x.message === 'slow' ? 'That is a lot of messages for one day. Try again tomorrow.' : 'It could not be sent. Try again.';
+      }
+    };
+    text.focus({ preventScroll: true });
+  }));
+  return asking;
+}
+
 export const ensureName = async () => nameOk() || askName();
 
 export function nameField() {

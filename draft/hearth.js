@@ -102,6 +102,7 @@ function forgeBanner(raid) {
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+export const runsDone = () => (data ? totalRuns(data.stats) : 0);
 export const readyRelics = () => (data ? RELICS.filter((x) => forgeReady(data.stats, x)) : []);
 
 export function callForge(x) {

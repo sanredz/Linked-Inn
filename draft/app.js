@@ -1,6 +1,6 @@
-import * as C from './core.js?v=20261103171329';
-import { Stage } from './stage.js?v=20261103171329';
-import { askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
+import * as C from './core.js?v=20261103193859';
+import { Stage } from './stage.js?v=20261103193859';
+import { askFeedback, askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -753,13 +753,24 @@ function useCode(input = 'sIn', msg = 'sMsg') {
 let hearthLib = null;
 const hearthMod = async () => {
   if (!hearthLib) {
-    hearthLib = await import('./hearth.js?v=20261103171329');
+    hearthLib = await import('./hearth.js?v=20261103193859');
     hearthLib.setupHearth({ API, key: () => playerKey, Stage, gear, row: (id) => row(id), onChange: () => hearthLib.hearthBar($('hearthBar')) });
   }
   return hearthLib;
 };
 let hearthAt = 0, raidMod = null;
 const asked = (id) => { try { return sessionStorage.getItem(`forgeCalled${id}`); } catch { return '1'; } };
+const FEEDBACK_OPEN = Date.UTC(2026, 10, 5, 0), FEEDBACK_KEY = 'feedbackAsked';
+const feedbackAsked = () => { try { return !!localStorage.getItem(FEEDBACK_KEY); } catch { return true; } };
+async function callFeedback() {
+  if (!hearthLib || feedbackAsked() || document.querySelector('.fcall, .fcer, .nmask')) return;
+  const runs = hearthLib.runsDone();
+  if (document.body.dataset.view !== 'home' || !(runs >= 5 || (runs > 0 && Date.now() < FEEDBACK_OPEN))) return;
+  try { localStorage.setItem(FEEDBACK_KEY, String(Date.now())); } catch {}
+  await askFeedback('prompt', true);
+}
+$('feedBtn').onclick = () => askFeedback(document.body.dataset.view || '');
+
 async function callForge() {
   if (!hearthLib || document.querySelector('.fcall, .fcer, .nmask')) return;
   const view = document.body.dataset.view, idle = ['home', 'pick', 'result'].includes(view) || (view === 'raid' && raidMod && raidMod.raidIdle());
@@ -776,7 +787,8 @@ async function refreshHearth(from) {
     await syncName(d.name);
     h.hearthBar($('hearthBar'));
     for (const n of d.notices || []) await notify(n);
-    callForge();
+    await callForge();
+    await callFeedback();
     shareId = d.share || shareId;
     $('sShare').hidden = !shareId;
     $('sShareNone').hidden = !!shareId;
@@ -945,7 +957,7 @@ async function loadTally() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103171329', 'draft/gear.json?v=20261103171329', 'draft/talents.json?v=20261103171329', 'draft/retired.json?v=20261103171329'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261103193859', 'draft/gear.json?v=20261103193859', 'draft/talents.json?v=20261103193859', 'draft/retired.json?v=20261103193859'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {
@@ -963,7 +975,7 @@ async function boot() {
     if (view !== 'hearth' && hearthLib) hearthLib.leaveHearth();
     mainView = view;
     show(view);
-    if (view !== 'hearth') setTimeout(callForge, 600);
+    if (view !== 'hearth') setTimeout(() => callForge().then(callFeedback), 600);
     for (const b of document.querySelectorAll('[data-mode]')) b.classList.toggle('on', b.dataset.mode === view);
     scrollTo(0, 0);
   };

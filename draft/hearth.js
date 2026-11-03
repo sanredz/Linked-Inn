@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ANY, FEATS, MODES, MOUNTS, PORTRAIT, PORTRAITS, RELICS, TIERS, count, earned, forgeReady, forgeSteps, owned, portraitOpen, usedIn, valueOf } from './feats.js';
+import { ANY, FEATS, LADDERS, MODES, MOUNTS, PORTRAIT, PORTRAITS, RELICS, TIERS, count, earned, forgeReady, forgeSteps, owned, portraitOpen, usedIn, valueOf } from './feats.js';
 import { askName, claimName, heroName, nameOk } from '../pvp/name.js';
 
 const WHO = 'gauntletWho', CLASSES = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];
@@ -56,12 +56,29 @@ const medal = (f) => {
 const RANK = { bronze: 0, silver: 1, gold: 2, legend: 3 }, GLANCE = 8;
 let expanded = {};
 
+const FEAT = Object.fromEntries(FEATS.map((f) => [f.id, f]));
+const inLadder = new Set(LADDERS.flatMap((l) => l.steps.map((x) => x.id)));
+const stepsOf = (l) => l.steps.map((x) => ({ ...x, f: FEAT[x.id], on: got.has(x.id) }));
+const topOf = (steps) => [...steps].reverse().find((x) => x.on);
+
+function ladderCard(l) {
+  const s = data.stats, steps = stepsOf(l), top = topOf(steps), now = l.now(s), art = l.art || artOf(steps[0].f);
+  return `<button class="hk ${top ? 'on' : 'off'} ${l.cls ? 'hcls' : ''}" style="--t:${top ? TIERS[top.f.tier] : '#3f3119'}" data-ladder="${l.id}" aria-label="${esc(l.name)}${top ? `: ${esc(top.f.rank || top.f.name)}` : ''}"><span class="hkface" style="background-image:url(${art})"></span><span class="hkbody"><span class="hkhead"><b>${esc(l.name)}</b>${top && top.f.rank ? `<i class="hkrank">${esc(top.f.rank)}</i>` : ''}${now ? `<small>${esc(now)}</small>` : ''}</span><span class="hktrack">${steps.map((x) => `<span class="hkseg ${x.on ? 'on' : ''}" style="--t:${TIERS[x.f.tier]};--p:${x.on ? 1 : x.prog(s).toFixed(3)}"><i></i><em>${esc(x.mark)}</em></span>`).join('')}</span></span></button>`;
+}
+
+function classLadders(mode) {
+  const ls = LADDERS.filter((l) => l.mode === mode && l.cls), steps = ls.flatMap((l) => l.steps);
+  if (!ls.length) return '';
+  return `<h3 class="hh3">Class badges <em>${steps.filter((x) => got.has(x.id)).length} of ${steps.length} earned</em></h3><div class="hladders">${ls.map(ladderCard).join('')}</div>`;
+}
+
 function badgeBlock(key, list, title = 'Badges') {
-  const open = list.filter((f) => !f.hidden || got.has(f.id)), mine = open.filter((f) => got.has(f.id));
+  const lad = LADDERS.filter((l) => l.mode === key && !l.cls), earnedHere = list.filter((f) => got.has(f.id)).length;
+  const open = list.filter((f) => !inLadder.has(f.id) && (!f.hidden || got.has(f.id))), mine = open.filter((f) => got.has(f.id));
   const next = open.filter((f) => !got.has(f.id)).sort((a, b) => RANK[a.tier] - RANK[b.tier]);
   const all = expanded[key], shown = all ? [...mine, ...next] : [...mine.slice(0, Math.max(GLANCE, mine.length)), ...next.slice(0, Math.max(0, GLANCE - mine.length))];
   const rest = mine.length + next.length - shown.length;
-  return `<h3 class="hh3">${title} <em>${mine.length} of ${list.length} earned</em></h3>${shown.length ? `<div class="hmedals">${shown.map(medal).join('')}</div>` : '<p class="hempty">Play this mode to earn your first badge.</p>'}<div class="hmore">${rest > 0 || all ? `<button class="gmini" data-more="${key}">${all ? 'Show fewer' : `Show all ${mine.length + next.length} badges`}</button>` : ''}</div>`;
+  return `<h3 class="hh3">${title} <em>${earnedHere} of ${list.length} earned</em></h3>${lad.length ? `<div class="hladders">${lad.map(ladderCard).join('')}</div>` : ''}${shown.length ? `<div class="hmedals">${shown.map(medal).join('')}</div>` : lad.length ? '' : '<p class="hempty">Play this mode to earn your first badge.</p>'}<div class="hmore">${rest > 0 || all ? `<button class="gmini" data-more="${key}">${all ? 'Show fewer' : `Show all ${mine.length + next.length} badges`}</button>` : ''}</div>`;
 }
 
 const tile = (value, label, tone = '') => `<div class="ht ${tone}"><b>${value}</b><span>${label}</span></div>`;
@@ -175,17 +192,15 @@ function tabHtml() {
       <h3 class="hh3">Collection</h3>${collectionHtml('')}
       <h3 class="hh3">Badges earned <em>${mine.length} of ${FEATS.length}</em></h3>${mine.length ? `<div class="hmedals">${shown.map(medal).join('')}</div>` : '<p class="hempty">Play any mode to earn your first badge.</p>'}<div class="hmore">${mine.length > 12 ? `<button class="gmini" data-more="overview">${all ? 'Show fewer' : `Show all ${mine.length}`}</button>` : ''}</div>`;
   }
-  const feats = badgeBlock(tab, FEATS.filter((f) => f.mode === tab));
+  const feats = badgeBlock(tab, FEATS.filter((f) => f.mode === tab && !(f.art && inLadder.has(f.id)))) + classLadders(tab);
   if (tab === 'gear') {
-    const g = s.gear, it = s.items, best = CLASSES.filter((c) => g.bestOf[c]);
+    const g = s.gear, it = s.items;
     return `<div class="htiles">${tile(num(g.runs), 'Runs')}${tile(g.best ? g.best.toFixed(1) : '-', 'Best DPS', 'gold')}${tile(g.rank ? `#${num(g.rank)}` : '-', 'Board rank')}${tile(`${g.classes.length}/9`, 'Classes')}</div>${feats}
-      ${best.length ? `<h3 class="hh3">Best by class</h3><div class="hbest">${best.map((c) => `<span><img src="assets/classes/${c}.png" alt=""><b>${g.bestOf[c].dps.toFixed(1)}</b><small>${CLASS_NAME[c]}</small></span>`).join('')}</div>` : ''}
       ${it.most.length ? `<h3 class="hh3">Most used gear <em>your favourite pick in each slot, across every mode</em></h3><div class="hmost">${it.most.map((x) => `<div class="hmu" style="--q:${QUALITY[x.q]}" title="${esc(x.name)}"><img src="assets/icons/${x.icon}.png" alt=""><span><small>${SLOT_NAME[x.slot]}</small><b>${esc(x.name)}</b></span><em>${x.n}x</em></div>`).join('')}</div>` : ''}`;
   }
   if (tab === 'arena') {
     const a = s.arena;
-    return `<div class="htiles">${tile(num(a.runs), 'Runs')}${tile(num(a.fights), 'Duels')}${tile(num(a.wins), 'Wins')}${tile(`${a.best}/10`, 'Best run', 'gold')}${tile(num(a.tens), '10-win runs')}</div>${feats}
-      ${a.classes.length ? `<h3 class="hh3">Champions played</h3><div class="hbest">${a.classes.map((c) => `<span class="${a.tenClasses.includes(c) ? 'ten' : ''}"><img src="assets/classes/${c}.png" alt=""><small>${CLASS_NAME[c]}${a.tenClasses.includes(c) ? ' · 10 wins' : ''}</small></span>`).join('')}</div>` : ''}`;
+    return `<div class="htiles">${tile(num(a.runs), 'Runs')}${tile(num(a.fights), 'Duels')}${tile(num(a.wins), 'Wins')}${tile(`${a.best}/10`, 'Best run', 'gold')}${tile(num(a.tens), '10-win runs')}</div>${feats}`;
   }
   const r = s.raids[tab], final = tab === 'mc' ? 'Ragnaros' : 'Hakkar';
   return `<div class="htiles">${tile(num(r.runs), 'Runs')}${tile(`${r.best}/9`, 'Most bosses')}${tile(num(r.finales), `Reached ${final}`)}${tile(r.score ? num(r.score) : '-', `Best on ${final}`, 'gold')}</div>${feats}<h3 class="hh3">Collection</h3>${collectionHtml(tab)}`;
@@ -220,8 +235,8 @@ function refresh() {
 function bindBody() {
   for (const b of root.querySelectorAll('.htabs [data-tab]')) b.classList.toggle('on', b.dataset.tab === tab);
   for (const b of root.querySelectorAll('.hbody [data-tab]')) b.onclick = () => { tab = b.dataset.tab; drawBody(); };
-  for (const b of root.querySelectorAll('[data-feat]')) {
-    b.onclick = (e) => { e.stopPropagation(); if (pop && pop.dataset.for === b.dataset.feat && pop.dataset.tap) return hidePop(); showPop(b, true); };
+  for (const b of root.querySelectorAll('[data-feat], [data-ladder]')) {
+    b.onclick = (e) => { e.stopPropagation(); if (pop && pop.dataset.for === (b.dataset.feat || b.dataset.ladder) && pop.dataset.tap) return hidePop(); showPop(b, true); };
     b.onpointerenter = (e) => { if (e.pointerType === 'mouse') showPop(b, false); };
     b.onpointerleave = (e) => { if (e.pointerType === 'mouse' && pop && !pop.dataset.tap) hidePop(); };
   }
@@ -241,10 +256,24 @@ function hidePop() {
   setTimeout(() => old.remove(), 160);
 }
 
+function ladderPop(l) {
+  const steps = stepsOf(l), top = topOf(steps), next = steps.find((x) => !x.on), val = valueOf(data.stats, (next || steps[steps.length - 1]).f), mode = MODES.find((m) => m.id === l.mode) || ANY;
+  pop.className = `hpop hkpop ${top ? 'on' : 'off'} ${l.cls ? 'hcls' : ''}`;
+  pop.style.setProperty('--t', top ? TIERS[top.f.tier] : '#8a7a60');
+  pop.innerHTML = `<span class="hpopface" style="background-image:url(${l.art || artOf(steps[0].f)})"></span><div><small>${esc(mode.name)}</small><b>${esc(l.name)}</b><ul class="hksteps">${steps.map((x) => `<li class="${x.on ? 'on' : ''}" style="--t:${TIERS[x.f.tier]}"><i></i><span><strong>${esc(x.f.rank || x.f.name)}</strong>${esc(x.f.text)}</span></li>`).join('')}</ul>${val ? `<i class="hpopval">${esc(val)}</i>` : ''}<em>${next ? `${steps.filter((x) => x.on).length} of ${steps.length} earned` : 'All earned'}</em></div>`;
+}
+
 function showPop(b, tap) {
-  const f = FEATS.find((x) => x.id === b.dataset.feat);
-  if (!f) return;
+  const l = b.dataset.ladder && LADDERS.find((x) => x.id === b.dataset.ladder), f = !l && FEATS.find((x) => x.id === b.dataset.feat);
+  if (!l && !f) return;
   if (pop) { pop.remove(); pop = null; }
+  if (l) {
+    pop = document.createElement('div');
+    pop.dataset.for = l.id;
+    if (tap) pop.dataset.tap = '1';
+    ladderPop(l);
+    return place(b);
+  }
   const mode = modeOf(f), on = got.has(f.id), art = artOf(f);
   pop = document.createElement('div');
   pop.className = `hpop ${on ? 'on' : 'off'} ${f.tier} ${f.art ? 'hcls' : ''}`;
@@ -252,6 +281,10 @@ function showPop(b, tap) {
   pop.dataset.for = f.id;
   if (tap) pop.dataset.tap = '1';
   pop.innerHTML = `<span class="hpopface" style="background-image:url(${art})"></span><div><small>${TIER_NAME[f.tier]} · ${esc(mode.name)}</small><b>${esc(f.name)}</b><p>${esc(f.text)}</p>${valueOf(data.stats, f) ? `<i class="hpopval">${esc(valueOf(data.stats, f))}</i>` : ''}<em>${on ? 'Earned' : 'Not earned yet'}</em></div>`;
+  place(b);
+}
+
+function place(b) {
   document.body.append(pop);
   const r = b.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight, x = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)), above = r.top - h - 10 > 8;
   pop.style.left = `${x}px`;

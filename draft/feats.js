@@ -55,14 +55,31 @@ const bestDps = (s, c) => (s.gear.bestOf[c] && s.gear.bestOf[c].dps) || 0;
 const arenaBest = (s, c) => (s.arena.bestBy && s.arena.bestBy[c]) || 0;
 const dpsLine = (s, c) => (bestDps(s, c) ? `Your best ${PRETTY(c)}: ${bestDps(s, c).toFixed(1)} DPS` : `No ${PRETTY(c)} run yet`);
 const winLine = (s, c) => (s.arena.bestBy && c in s.arena.bestBy ? `Your best ${PRETTY(c)} run: ${arenaBest(s, c)} wins` : `No ${PRETTY(c)} run yet`);
+const part = (v, from, to) => Math.max(0, Math.min(1, (v - from) / (to - from)));
+const climb = (score, marks, start = 0) => marks.map(([id, need, mark], i) => ({ id, mark: mark || need.toLocaleString('en-US'), prog: (s) => part(score(s) || 0, i ? marks[i - 1][1] : start, need) }));
+const short = (n) => (n >= 1000 ? `${n / 1000}k` : String(n));
+const rankProg = (top, from) => (s) => (s.gear.rank ? part(from - s.gear.rank, 0, from - top) : 0);
+export const LADDERS = [
+  { id: 'g_runs', mode: 'gear', name: 'Gear Drafts', now: (s) => `${s.gear.runs} runs`, steps: climb((s) => s.gear.runs, [['g_first', 1], ['g_25', 25], ['g_100', 100]]) },
+  { id: 'g_board', mode: 'gear', name: 'Leaderboard', now: (s) => (s.gear.rank ? `#${s.gear.rank.toLocaleString('en-US')}` : ''), steps: [{ id: 'g_top100', mark: 'Top 100', prog: rankProg(100, 1000) }, { id: 'g_top10', mark: 'Top 10', prog: rankProg(10, 100) }] },
+  { id: 'a_run', mode: 'arena', name: 'Best Arena run', now: (s) => `${s.arena.best} wins`, steps: climb((s) => s.arena.best, [['a_first', 1], ['a_five', 5], ['a_ten', 10]]) },
+  ...[['mc', 'Ragnaros'], ['zg', 'Hakkar']].map(([r, boss]) => ({ id: `${r}_way`, mode: r, name: `Road to ${boss}`, now: (s) => `${raid(s, r).best || 0} bosses`, steps: [
+    ...climb((s) => raid(s, r).best, [[`${r}_half`, 5, '5 bosses'], [`${r}_final`, 8, boss]]),
+    ...climb((s) => raid(s, r).score, [[`${r}_bane`, 150000, short(150000)]]),
+  ] })),
+];
 for (const c of CLASS_LIST) {
   const [a, b, l] = DPS_MARKS[c], art = `assets/classes/${c}.png`, n = PRETTY(c);
   FEATS.push(
-    { id: `g_${c}_1`, mode: 'gear', tier: 'silver', art, name: `${n} Adept`, text: `Reach ${a} DPS as a ${n} in Gear Draft.`, test: (s) => bestDps(s, c) >= a, value: (s) => dpsLine(s, c) },
-    { id: `g_${c}_2`, mode: 'gear', tier: 'gold', art, name: `${n} Champion`, text: `Reach ${b} DPS as a ${n} in Gear Draft.`, test: (s) => bestDps(s, c) >= b, value: (s) => dpsLine(s, c) },
-    { id: `g_${c}_3`, mode: 'gear', tier: 'legend', art, name: `${n} Legend`, text: `Reach ${l} DPS as a ${n} in Gear Draft.`, test: (s) => bestDps(s, c) >= l, value: (s) => dpsLine(s, c) },
-    { id: `a_${c}_5`, mode: 'arena', tier: 'silver', art, name: `${n} Duelist`, text: `Reach 5 wins in one Arena run as a ${n}.`, test: (s) => arenaBest(s, c) >= 5, value: (s) => winLine(s, c) },
-    { id: `a_${c}_10`, mode: 'arena', tier: 'gold', art, name: `${n} Gladiator`, text: `Reach 10 wins in one Arena run as a ${n}.`, test: (s) => arenaBest(s, c) >= 10, value: (s) => winLine(s, c) },
+    { id: `g_${c}_1`, mode: 'gear', tier: 'silver', art, rank: 'Adept', name: `${n} Adept`, text: `Reach ${a} DPS as a ${n} in Gear Draft.`, test: (s) => bestDps(s, c) >= a, value: (s) => dpsLine(s, c) },
+    { id: `g_${c}_2`, mode: 'gear', tier: 'gold', art, rank: 'Champion', name: `${n} Champion`, text: `Reach ${b} DPS as a ${n} in Gear Draft.`, test: (s) => bestDps(s, c) >= b, value: (s) => dpsLine(s, c) },
+    { id: `g_${c}_3`, mode: 'gear', tier: 'legend', art, rank: 'Legend', name: `${n} Legend`, text: `Reach ${l} DPS as a ${n} in Gear Draft.`, test: (s) => bestDps(s, c) >= l, value: (s) => dpsLine(s, c) },
+    { id: `a_${c}_5`, mode: 'arena', tier: 'silver', art, rank: 'Duelist', name: `${n} Duelist`, text: `Reach 5 wins in one Arena run as a ${n}.`, test: (s) => arenaBest(s, c) >= 5, value: (s) => winLine(s, c) },
+    { id: `a_${c}_10`, mode: 'arena', tier: 'gold', art, rank: 'Gladiator', name: `${n} Gladiator`, text: `Reach 10 wins in one Arena run as a ${n}.`, test: (s) => arenaBest(s, c) >= 10, value: (s) => winLine(s, c) },
+  );
+  LADDERS.push(
+    { id: `g_${c}`, mode: 'gear', cls: c, name: n, art, now: (s) => (bestDps(s, c) ? bestDps(s, c).toFixed(1) : ''), steps: climb((s) => bestDps(s, c), [[`g_${c}_1`, a], [`g_${c}_2`, b], [`g_${c}_3`, l]], Math.round(a * .8)) },
+    { id: `a_${c}`, mode: 'arena', cls: c, name: n, art, now: (s) => (s.arena.bestBy && c in s.arena.bestBy ? `${arenaBest(s, c)} wins` : ''), steps: climb((s) => arenaBest(s, c), [[`a_${c}_5`, 5], [`a_${c}_10`, 10]]) },
   );
 }
 FEATS.push(

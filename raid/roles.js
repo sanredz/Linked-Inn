@@ -26,6 +26,7 @@ export const TUNE = {
 };
 export const TUNE3 = { tank: { WARRIOR: { taken: .8 }, PALADIN: { taken: .8 } } };
 export const TUNE4 = { heal: { SHAMAN: { heal: 1.2 } } };
+export const RAID_TUNE = { mc: { surv: 1.3, fury: 1.22, destro: 1.25, mut: 1.22, ret: 1.22, fire: 1.04, ele: 1.18, arms: 1.1, enh: 1.06, demo: 1.1, shock: 1.08, bm: 1.07, afflic: 1.05, combat: 1.04, shadow: 1.04 } };
 const tuned = (table, role, h) => (h.v >= 2 ? { ...table[h.cls], ...TUNE[role][h.cls], ...(h.v >= 3 && TUNE3[role] && TUNE3[role][h.cls]), ...(h.v >= 4 && TUNE4[role] && TUNE4[role][h.cls]) } : table[h.cls]);
 
 const TARGET_DPS = 285, EVENNESS = .8;
@@ -104,10 +105,10 @@ function stamp(pool, i, h, bonuses) {
   return { ...h.picks, shirt: BUFF_ID + i };
 }
 
-export function makeParty(pool, heroes, iterations = 12, extra = []) {
+export function makeParty(pool, heroes, iterations = 12, extra = [], raid) {
   const bonuses = [...partyBonuses(heroes), ...extra.map((all) => ({ all }))], fx = { armor: 0, melee: 1, leech: 0 };
   for (const b of bonuses) { fx.armor = Math.max(fx.armor, (b.fx && b.fx.armor) || 0); fx.melee *= (b.fx && b.fx.melee) || 1; fx.leech += (b.fx && b.fx.leech) || 0; }
-  return heroes.map((h, i) => ({ ...makeHero(pool, { ...h, picks: stamp(pool, i, h, bonuses), seed: 7 }, iterations), fx }));
+  return heroes.map((h, i) => ({ ...makeHero(pool, { ...h, picks: stamp(pool, i, h, bonuses), seed: 7, raid }, iterations), fx }));
 }
 
 export const damageBuilds = (cls) => BUILDS[cls].filter((b) => !/d$/.test(b.id) && b.id !== 'catm').map((b) => ({ id: b.id, name: b.name, blurb: b.blurb }));
@@ -137,7 +138,7 @@ export function makeHero(pool, h, iterations = 12) {
     };
   }
   const run = simulate(pool, h.cls, h.build, h.picks, h.seed || 1, iterations, true);
-  const power = specPower(h.build) * ((h.v >= 2 && TUNE.spec[h.build]) || 1);
+  const power = specPower(h.build) * ((h.v >= 2 && TUNE.spec[h.build]) || 1) * ((h.v >= 5 && RAID_TUNE[h.raid] && RAID_TUNE[h.raid][h.build]) || 1);
   return { ...out, hp: health(h.cls, base.sta), power, dps: run.dps * power, log: run.log, by: run.by, melee: !RANGED.has(h.cls) && !CAST.test(h.build) && !['fire', 'frost', 'arcane', 'afflic', 'demo', 'destro'].includes(h.build) };
 }
 

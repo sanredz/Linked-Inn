@@ -65,7 +65,7 @@ export function worth(pool, hero, id) {
 }
 
 const DUAL_WIELD = /^(fury|furyd|mut|combat|enh|enhd)$/;
-const STARTER_ILVL = 60, STARTER_RANK = .35, HANDS = 4;
+const STARTER_ILVL = 60, STARTER_RANK = .35, HANDS = 5;
 const DUNGEON_SET = { MAGE: 181, PRIEST: 182, WARLOCK: 183, ROGUE: 184, DRUID: 185, HUNTER: 186, SHAMAN: 187, PALADIN: 188, WARRIOR: 189 };
 const SET_SLOT = { 1: 'head', 3: 'shoulder', 5: 'chest', 20: 'chest', 9: 'wrist', 10: 'hands', 6: 'waist', 7: 'legs', 8: 'feet' };
 
@@ -325,7 +325,7 @@ export function resolveFight(run, heroes, heroic) {
 export const partyStats = (run) => run.boons.map((id) => boonById(id).all).filter(Boolean);
 
 export function fightBoss(pool, run, heroic = false, iterations = 1) {
-  return resolveFight(run, makeParty(pool, run.heroes, iterations, partyStats(run)), heroic);
+  return resolveFight(run, makeParty(pool, run.heroes, iterations, partyStats(run), run.raid), heroic);
 }
 
 export function replayRun(pool, seed, moves, raid = 'mc') {

@@ -41,8 +41,8 @@ const iconOf = (id) => `assets/icons/${pool.items[id][4]}.png`;
 const num = (v) => Math.round(v).toLocaleString('en-US');
 
 function team() {
-  const key = JSON.stringify([run.boons, run.heroes.map((h) => [h.cls, h.build, h.picks])]);
-  if (cache.key !== key) { cache.key = key; cache.heroes = makeParty(pool, run.heroes, 12, partyStats(run)); }
+  const key = JSON.stringify([run.raid, run.boons, run.heroes.map((h) => [h.cls, h.build, h.v, h.picks])]);
+  if (cache.key !== key) { cache.key = key; cache.heroes = makeParty(pool, run.heroes, 12, partyStats(run), run.raid); }
   return cache.heroes;
 }
 const built = (i) => team()[i];

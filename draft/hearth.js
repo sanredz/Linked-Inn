@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ANY, FEATS, LADDERS, MODES, MOUNTS, PORTRAIT, PORTRAITS, RELICS, TIERS, count, earned, forgeReady, forgeSteps, owned, portraitOpen, badgeTotal, usedIn, valueOf } from './feats.js';
 import { askName, claimName, heroName, nameOk } from '../pvp/name.js';
+import { SEASON, SEASONS, seasonOf } from './seasons.js';
 
 const WHO = 'gauntletWho', CLASSES = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];
 const CLASS_NAME = Object.fromEntries(CLASSES.map((c) => [c, c[0] + c.slice(1).toLowerCase()]));
@@ -18,7 +19,7 @@ export const deviceWho = () => {
   } catch { return ''; }
 };
 
-let ctx = null, data = null, got = new Set(), tab = 'overview', root = null, stage = null, showing = '', mountRoot = null, mountMixer = null, heroRig = null, busy = Promise.resolve();
+let ctx = null, data = null, got = new Set(), gotIn = {}, view = '', tab = 'overview', root = null, stage = null, showing = '', mountRoot = null, mountMixer = null, heroRig = null, busy = Promise.resolve();
 
 export function setupHearth(c) { ctx = c; }
 
@@ -26,8 +27,27 @@ export async function loadHearth(extra = {}) {
   const r = await fetch(`${ctx.API}/profile`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: ctx.key(), who: deviceWho(), ...extra }) });
   if (!r.ok) throw new Error('profile');
   data = await r.json();
-  got = earned(data.stats);
+  data.season = data.season || SEASON;
+  data.seasons = data.seasons || [{ id: data.season, stats: data.stats }];
+  gotIn = Object.fromEntries(data.seasons.map((s) => [s.id, earned(s.stats)]));
+  got = new Set([...earned(data.stats), ...Object.values(gotIn).flatMap((g) => [...g])]);
+  if (view !== 'all' && !data.seasons.some((s) => s.id === view)) view = data.season;
   return data;
+}
+
+const sv = () => (view === 'all' ? data.stats : (data.seasons.find((s) => s.id === view) || {}).stats || data.stats);
+const both = () => data.seasons.length > 1;
+const viewName = () => (view === 'all' ? 'all time' : seasonOf(view).name);
+const earnedWhen = (id) => {
+  const where = SEASONS.filter((s) => gotIn[s.id] && gotIn[s.id].has(id)).map((s) => s.name);
+  return where.length ? `Earned in ${where.join(' and ')}` : 'Earned across seasons';
+};
+const pastOnly = (id) => got.has(id) && !(gotIn[data.season] && gotIn[data.season].has(id)) && SEASONS.find((s) => gotIn[s.id] && gotIn[s.id].has(id));
+
+function seasonBar() {
+  const at = SEASONS.findIndex((s) => s.id === data.season), played = new Set(data.seasons.map((s) => s.id));
+  const pills = SEASONS.map((s, i) => (played.has(s.id) ? `<button class="${view === s.id ? 'on' : ''}" data-season="${s.id}" title="${esc(s.blurb)}">${s.id === data.season ? '<i class="hnow"></i>' : ''}${esc(s.name)}</button>` : i > at ? `<span class="hsoon" title="${esc(s.blurb)}">${esc(s.name)}<small>Later</small></span>` : ''));
+  return `<div class="hseasons" role="group" aria-label="Season"><small>Season</small>${pills.join('')}${both() ? `<button class="${view === 'all' ? 'on' : ''}" data-season="all">All time</button>` : ''}</div>`;
 }
 
 const sq = (p) => (p.id.startsWith('class:') ? 'sq' : '');
@@ -52,7 +72,7 @@ const square = (src) => /assets\/(icons|classes)\//.test(src || '');
 const artOf = (f) => (f.icon ? `assets/icons/${f.icon}.png` : f.art || modeOf(f).art);
 const medal = (f) => {
   const on = got.has(f.id);
-  return `<button class="hm ${on ? 'on' : 'off'} ${f.tier} ${square(artOf(f)) ? 'hcls' : ''}" style="--t:${TIERS[f.tier]}" data-feat="${f.id}" aria-label="${esc(f.name)}: ${esc(f.text)}${on ? '' : ' (locked)'}"><span class="hmface" style="background-image:url(${artOf(f)})"></span>${on ? '' : '<i class="hmlock"></i>'}<b>${esc(f.name)}</b><small>${esc(f.text)}</small></button>`;
+  return `<button class="hm ${on ? 'on' : 'off'} ${f.tier} ${square(artOf(f)) ? 'hcls' : ''}" style="--t:${TIERS[f.tier]}" data-feat="${f.id}" aria-label="${esc(f.name)}: ${esc(f.text)}${on ? '' : ' (locked)'}"><span class="hmface" style="background-image:url(${artOf(f)})"></span>${on ? '' : '<i class="hmlock"></i>'}${pastOnly(f.id) ? `<i class="hmseason">${esc(pastOnly(f.id).name)}</i>` : ''}<b>${esc(f.name)}</b><small>${esc(f.text)}</small></button>`;
 };
 const RANK = { bronze: 0, silver: 1, gold: 2, legend: 3 }, GLANCE = 8;
 let expanded = {};
@@ -63,7 +83,7 @@ const stepsOf = (l) => l.steps.map((x) => ({ ...x, f: FEAT[x.id], on: got.has(x.
 const topOf = (steps) => [...steps].reverse().find((x) => x.on);
 
 function ladderCard(l) {
-  const s = data.stats, steps = stepsOf(l), top = topOf(steps), now = l.now(s), art = l.art || artOf(steps[0].f);
+  const s = sv(), steps = stepsOf(l), top = topOf(steps), now = l.now(s), art = l.art || artOf(steps[0].f);
   return `<button class="hk ${top ? 'on' : 'off'} ${square(art) ? 'hcls' : ''}" style="--t:${top ? TIERS[top.f.tier] : '#3f3119'}" data-ladder="${l.id}" aria-label="${esc(l.name)}${top ? `: ${esc(top.f.rank || top.f.name)}` : ''}"><span class="hkface" style="background-image:url(${art})"></span><span class="hkbody"><span class="hkhead"><b>${esc(l.name)}</b>${top && top.f.rank ? `<i class="hkrank">${esc(top.f.rank)}</i>` : ''}${now ? `<small>${esc(now)}</small>` : ''}</span><span class="hktrack">${steps.map((x) => `<span class="hkseg ${x.on ? 'on' : ''}" style="--t:${TIERS[x.f.tier]};--p:${x.on ? 1 : x.prog(s).toFixed(3)}"><i></i><em>${esc(x.mark)}</em></span>`).join('')}</span></span></button>`;
 }
 
@@ -181,13 +201,13 @@ function sparks(canvas, theme) {
 }
 
 function modeCard(m) {
-  const s = data.stats, feats = FEATS.filter((f) => f.mode === m.id), n = feats.filter((f) => got.has(f.id)).length;
+  const s = sv(), feats = FEATS.filter((f) => f.mode === m.id), n = feats.filter((f) => got.has(f.id)).length;
   const line = m.id === 'gear' ? `${num(s.gear.runs)} runs · best ${s.gear.best ? s.gear.best.toFixed(1) : '-'}` : m.id === 'arena' ? `${num(s.arena.runs)} runs · best ${s.arena.best}/10` : `${num(s.raids[m.id].runs)} runs · best ${s.raids[m.id].best} bosses`;
   return `<button class="hmode" data-tab="${m.id}" style="background-image:url(${m.art})"><span><b>${m.name}</b><small>${line}</small></span><em>${n}/${feats.length}</em></button>`;
 }
 
 function tabHtml() {
-  const s = data.stats;
+  const s = sv();
   if (tab === 'overview') {
     const mine = FEATS.filter((f) => got.has(f.id)).sort((a, b) => RANK[b.tier] - RANK[a.tier]), all = expanded.overview, shown = all ? mine : mine.slice(0, 12);
     return `<div class="hmodes">${MODES.map(modeCard).join('')}</div>
@@ -197,7 +217,7 @@ function tabHtml() {
   const feats = badgeBlock(tab, FEATS.filter((f) => f.mode === tab && !(f.art && inLadder.has(f.id)))) + classLadders(tab);
   if (tab === 'gear') {
     const g = s.gear, it = s.items;
-    return `<div class="htiles">${tile(num(g.runs), 'Runs')}${tile(g.best ? g.best.toFixed(1) : '-', 'Best DPS', 'gold')}${tile(g.rank ? `#${num(g.rank)}` : '-', 'Board rank')}${tile(`${g.classes.length}/9`, 'Classes')}</div>${feats}
+    return `<div class="htiles">${tile(num(g.runs), 'Runs')}${tile(g.best ? g.best.toFixed(1) : '-', 'Best DPS', 'gold')}${tile(g.rank ? `#${num(g.rank)}` : '-', view === 'all' ? 'Best board rank' : `${esc(seasonOf(view).name)} rank`)}${tile(`${g.classes.length}/9`, 'Classes')}</div>${feats}
       ${it.most.length ? `<h3 class="hh3">Most used gear <em>your favourite pick in each slot, across every mode</em></h3><div class="hmost">${it.most.map((x) => `<div class="hmu" style="--q:${QUALITY[x.q]}" title="${esc(x.name)}"><img src="assets/icons/${x.icon}.png" alt=""><span><small>${SLOT_NAME[x.slot]}</small><b>${esc(x.name)}</b></span><em>${x.n}x</em></div>`).join('')}</div>` : ''}`;
   }
   if (tab === 'arena') {
@@ -210,19 +230,29 @@ function tabHtml() {
 
 const headHtml = () => {
   const p = portraitOf(), n = got.size;
-  return `<button class="hface" data-act="face" aria-label="Change portrait"><img class="${sq(p)}" src="${p.src}" alt=""><i>Change</i></button><div class="hwho"><small>Your Hearth</small><h2><button class="hname" data-act="name" title="Change your name">${esc(heroName())}<i>Edit</i></button></h2><span>${num(totalRuns(data.stats))} runs across every mode</span></div><div class="hring" style="--p:${n / badgeTotal(got)}"><b>${n}</b><span>of ${badgeTotal(got)}<br>badges</span></div>`;
+  return `<button class="hface" data-act="face" aria-label="Change portrait"><img class="${sq(p)}" src="${p.src}" alt=""><i>Change</i></button><div class="hwho"><small>Your Hearth</small><h2><button class="hname" data-act="name" title="Change your name">${esc(heroName())}<i>Edit</i></button></h2><span>${both() && view !== 'all' ? `${num(totalRuns(sv()))} runs in ${esc(viewName())} · ${num(totalRuns(data.stats))} all time` : `${num(totalRuns(data.stats))} runs across every mode`}</span></div><div class="hring" style="--p:${n / badgeTotal(got)}"><b>${n}</b><span>of ${badgeTotal(got)}<br>badges</span></div>`;
 };
 const noteText = () => `${data.stats.gear.bestOf[showing] ? `Wearing your best ${CLASS_NAME[showing]} draft` : `Finish a ${CLASS_NAME[showing]} Gear Draft to dress them`}${data.profile.ride ? ` · Riding your ${(MOUNTS.find((m) => m.id === data.profile.ride) || {}).name || ''}` : ''}`;
 
 function draw() {
   root.innerHTML = `<div class="hhead">${headHtml()}</div>
     <div class="hstage"><canvas class="hcanvas"></canvas><div class="hchips">${CLASSES.map((c) => `<button class="hchip ${showing === c ? 'on' : ''}" data-show="${c}" title="${CLASS_NAME[c]}"><img src="assets/classes/${c}.png" alt="${CLASS_NAME[c]}"></button>`).join('')}</div><p class="hstagenote"></p></div>
-    <nav class="htabs">${[['overview', 'Overview'], ...MODES.map((m) => [m.id, m.name])].map(([id, name]) => `<button class="${tab === id ? 'on' : ''}" data-tab="${id}">${name}</button>`).join('')}</nav>
+    <div class="hbar"><nav class="htabs">${[['overview', 'Overview'], ...MODES.map((m) => [m.id, m.name])].map(([id, name]) => `<button class="${tab === id ? 'on' : ''}" data-tab="${id}">${name}</button>`).join('')}</nav>${seasonBar()}</div>
     <div class="hbody"></div>`;
   for (const b of root.querySelectorAll('.htabs [data-tab]')) b.onclick = () => { tab = b.dataset.tab; drawBody(); };
   for (const b of root.querySelectorAll('[data-show]')) b.onclick = () => setShow(b.dataset.show);
+  bindSeasons();
   refresh();
   dressStage();
+}
+
+function bindSeasons() {
+  for (const b of root.querySelectorAll('[data-season]')) b.onclick = () => {
+    view = b.dataset.season;
+    root.querySelector('.hseasons').outerHTML = seasonBar();
+    bindSeasons();
+    refresh();
+  };
 }
 
 function refresh() {
@@ -259,10 +289,10 @@ function hidePop() {
 }
 
 function ladderPop(l) {
-  const steps = stepsOf(l), top = topOf(steps), next = steps.find((x) => !x.on), val = valueOf(data.stats, (next || steps[steps.length - 1]).f), mode = MODES.find((m) => m.id === l.mode) || ANY;
+  const steps = stepsOf(l), top = topOf(steps), next = steps.find((x) => !x.on), val = valueOf(sv(), (next || steps[steps.length - 1]).f), mode = MODES.find((m) => m.id === l.mode) || ANY;
   pop.className = `hpop hkpop ${top ? 'on' : 'off'} ${square(l.art || artOf(steps[0].f)) ? 'hcls' : ''}`;
   pop.style.setProperty('--t', top ? TIERS[top.f.tier] : '#8a7a60');
-  pop.innerHTML = `<span class="hpopface" style="background-image:url(${l.art || artOf(steps[0].f)})"></span><div><small>${esc(mode.name)}</small><b>${esc(l.name)}</b><ul class="hksteps">${steps.map((x) => `<li class="${x.on ? 'on' : ''}" style="--t:${TIERS[x.f.tier]}"><i></i><span><strong>${esc(x.f.rank || x.f.name)}</strong>${esc(x.f.text)}</span></li>`).join('')}</ul>${val ? `<i class="hpopval">${esc(val)}</i>` : ''}<em>${next ? `${steps.filter((x) => x.on).length} of ${steps.length} earned` : 'All earned'}</em></div>`;
+  pop.innerHTML = `<span class="hpopface" style="background-image:url(${l.art || artOf(steps[0].f)})"></span><div><small>${esc(mode.name)}</small><b>${esc(l.name)}</b><ul class="hksteps">${steps.map((x) => `<li class="${x.on ? 'on' : ''}" style="--t:${TIERS[x.f.tier]}"><i></i><span><strong>${esc(x.f.rank || x.f.name)}</strong>${esc(x.f.text)}</span></li>`).join('')}</ul>${val ? `<i class="hpopval">${esc(val)}</i>` : ''}<em>${next ? `${steps.filter((x) => x.on).length} of ${steps.length} earned` : 'All earned'}${top ? ` · ${esc(earnedWhen(top.id).replace(/^Earned /, ''))}` : ''}</em></div>`;
 }
 
 function showPop(b, tap) {
@@ -282,7 +312,7 @@ function showPop(b, tap) {
   pop.style.setProperty('--t', TIERS[f.tier]);
   pop.dataset.for = f.id;
   if (tap) pop.dataset.tap = '1';
-  pop.innerHTML = `<span class="hpopface" style="background-image:url(${art})"></span><div><small>${TIER_NAME[f.tier]} · ${esc(mode.name)}</small><b>${esc(f.name)}</b><p>${esc(f.text)}</p>${valueOf(data.stats, f) ? `<i class="hpopval">${esc(valueOf(data.stats, f))}</i>` : ''}<em>${on ? 'Earned' : 'Not earned yet'}</em></div>`;
+  pop.innerHTML = `<span class="hpopface" style="background-image:url(${art})"></span><div><small>${TIER_NAME[f.tier]} · ${esc(mode.name)}</small><b>${esc(f.name)}</b><p>${esc(f.text)}</p>${valueOf(sv(), f) ? `<i class="hpopval">${esc(valueOf(sv(), f))}</i>` : ''}<em>${on ? esc(earnedWhen(f.id)) : 'Not earned yet'}</em></div>`;
   place(b);
 }
 

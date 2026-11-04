@@ -66,6 +66,19 @@ img.sq { transform: scale(1.22); }
 .htabs button { flex: none; padding: 8px 14px; font: 14.5px "Friz", serif; color: #c9b99a; cursor: pointer; background: rgba(0, 0, 0, .4); border: 1px solid #5a4620; border-radius: 999px; }
 .htabs button:hover { color: var(--gold); }
 .htabs button.on { color: #1a1006; background: linear-gradient(#ffe08a, #d39a2e); border-color: #ffe08a; }
+.hbar { display: flex; align-items: center; justify-content: space-between; gap: 10px 14px; flex-wrap: wrap; }
+.hbar .htabs { min-width: 0; }
+.hseasons { display: flex; align-items: center; gap: 4px; padding: 3px; background: rgba(0, 0, 0, .45); border: 1px solid #3f3119; border-radius: 999px; }
+.hseasons > small { padding: 0 8px 0 10px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #8a7a60; }
+.hseasons button, .hsoon { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; font: 13.5px "Friz", serif; color: #c9b99a; white-space: nowrap; background: none; border: 1px solid transparent; border-radius: 999px; }
+.hseasons button { cursor: pointer; transition: color .15s ease, background .15s ease; }
+.hseasons button:hover { color: var(--gold); }
+.hseasons button.on { color: #ffe6a8; background: linear-gradient(rgba(248, 211, 107, .2), rgba(248, 211, 107, .07)); border-color: #8a6a2a; box-shadow: inset 0 1px 0 rgba(255, 230, 168, .12); }
+.hnow { width: 7px; height: 7px; background: #5dd36b; border-radius: 50%; box-shadow: 0 0 6px #5dd36b; }
+.hsoon { color: #5f5444; cursor: not-allowed; opacity: .75; }
+.hsoon small { padding: 1px 6px; font: 10px system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #a8987c; border: 1px dashed #5a4620; border-radius: 999px; }
+.hmseason { position: absolute; top: 56px; padding: 1px 7px; font: 10px/1.4 "Friz", serif; font-style: normal; letter-spacing: .04em; color: #1a1006; white-space: nowrap; background: linear-gradient(#e8d5a8, #b39556); border: 1px solid #0a0705; border-radius: 999px; box-shadow: 0 2px 4px rgba(0, 0, 0, .6); }
+@media (max-width: 600px) { .hbar { flex-direction: column-reverse; align-items: stretch; } .hseasons { align-self: flex-start; max-width: 100%; overflow-x: auto; scrollbar-width: none; } }
 .hbody { display: grid; gap: 12px; padding: 16px; background: linear-gradient(rgba(22, 16, 10, .94), rgba(9, 7, 5, .94)); border: 1px solid #5a4520; border-radius: 14px; animation: hrise .35s ease both; }
 .hh3 { display: flex; align-items: baseline; gap: 10px; margin: 6px 0 0; font: 21px/1.1 "Morpheus", serif; font-weight: normal; color: #f8d36b; }
 .hh3 em { font: 13px "Friz", serif; font-style: normal; color: #a8987c; }

@@ -1,4 +1,5 @@
 .az-today { padding: 0 0 6px; }
+.pd-body [hidden], .az-today [hidden], .pn-main [hidden] { display: none !important; }
 .az-mast { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding: 18px 22px 14px; }
 .az-kick { display: block; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
 .az-mast h2 { margin: 0; font: 32px/1 "Morpheus", serif; color: var(--title); text-shadow: 0 2px 0 #000; }

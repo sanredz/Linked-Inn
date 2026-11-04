@@ -517,6 +517,7 @@
       body.querySelectorAll('.pd-kids').forEach((k) => { const prev = k.previousElementSibling; k.hidden = !!prev && prev.hidden && ![...k.querySelectorAll('.pd-r')].some((r) => !r.hidden); });
       body.querySelectorAll('.pd-sub').forEach((s) => { s.hidden = (!!st.cls && !!s.dataset.cls && s.dataset.cls !== st.cls) || ![...s.querySelectorAll('.pd-r')].some((r) => !r.hidden); });
       body.querySelectorAll('.pd-sec').forEach((s) => {
+        s.hidden = false;
         const off = (st.sec && s.dataset.sec !== st.sec) || (st.cls && !st.sec && s.dataset.cls !== st.cls && !s.querySelector(`.pd-sub[data-cls="${st.cls}"]`));
         s.hidden = !!off || ![...s.querySelectorAll('.pd-r')].some((r) => !r.hidden && !r.closest('[hidden]'));
       });

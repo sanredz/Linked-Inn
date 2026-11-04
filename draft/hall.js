@@ -11,7 +11,7 @@ const short = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(n >= 1e7 ? 1 : 2)}M` : n >
 const face = (p) => (PORTRAIT[p.f] || PORTRAIT['hero:thrall'] || {}).src || '';
 const square = (p) => (p.f || '').startsWith('class:');
 
-let root = null, data = null, me = () => '', raidPick = 'all';
+let root = null, data = null, me = () => '', raidPick = 'all', colors = {};
 const finds = {};
 
 function ensureStyle() {
@@ -33,7 +33,7 @@ const BOARDS = {
     title: 'Gear Draft', art: 'assets/draft/arena/card-draft.jpg', blurb: 'Mastery: how your best run in each class ranks against everyone, across all nine classes.',
     list: () => data.gear,
     value: (p) => [p.s.toFixed(1), 'mastery'],
-    extra: (p) => `<span class="hlmeter" aria-label="Classes: ${p.c.map((v, i) => `${CLASS_NAME[CLASSES[i]]} ${v}`).join(', ')}">${p.c.map((v, i) => `<i style="--v:${v / 100}" title="${CLASS_NAME[CLASSES[i]]}: better than ${v}%"></i>`).join('')}</span>`,
+    extra: (p) => `<span class="hlmeter" aria-label="Classes: ${p.c.map((v, i) => `${CLASS_NAME[CLASSES[i]]} ${v}`).join(', ')}">${p.c.map((v, i) => `<i style="--v:${v / 100};--k:${colors[CLASSES[i]] || 'var(--gold)'}" title="${CLASS_NAME[CLASSES[i]]}: better than ${v}%"></i>`).join('')}</span>`,
   },
   arena: {
     title: 'Arena Draft', art: 'assets/draft/arena/card-gauntlet.jpg',
@@ -102,6 +102,7 @@ function draw() {
 export async function mountHall(host, opts) {
   root = host;
   me = opts.me || me;
+  colors = opts.colors || colors;
   ensureStyle();
   const r = await fetch(`${opts.API}/hall${opts.season ? `?season=${encodeURIComponent(opts.season)}` : ''}`).catch(() => null);
   if (!r || !r.ok) return;

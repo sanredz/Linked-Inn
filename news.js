@@ -392,11 +392,12 @@
       let dir = 0;
       if (to != null && from != null && !isNaN(num(to)) && !isNaN(num(from)) && num(to) !== num(from)) dir = num(to) > num(from) ? 1 : -1;
       else if (to == null) {
-        const up = /\b(increased|raised|improved|higher|additional|doubled|tripled)\b/i.test(t), down = /\b(reduced|decreased|lowered|fewer)\b/i.test(t);
-        if (up !== down) dir = up ? 1 : -1;
+        const w = t.replace(/\b(?:in order )?to (?:improve|increase|reduce|lower|raise)\b[^.]*/gi, '');
+        const up = /\b(increased|increases?|raised|raises|improved|improves?|boosts?|enhances?|higher|additional|doubled|tripled)\b/i.test(w), down = /\b(reduced|reduces?|decreased|decreases?|lowered|lowers?|fewer)\b/i.test(w);
+        if (up !== down) dir = (up ? 1 : -1) * (/\bno longer (increase|reduce|decrease|lower|raise|improve|boost|grant)s?\b/i.test(w) ? -1 : 1);
       }
       if (dir) {
-        const cut = t.search(/\d|\b(increased|reduced|decreased|lowered|raised|improved|higher|additional|fewer)\b/i);
+        const cut = t.search(/\d|\b(increased|increases?|reduced|reduces?|decreased|decreases?|lowered|lowers?|raised|raises|improved|improves?|boosts?|enhances?|higher|additional|fewer)\b/i);
         const head = t.slice(Math.max(0, cut - 60), cut + 30);
         if (WORLD.test(t) && !/\byour?\b/i.test(t)) type = 'tune';
         else type = (dir > 0) !== (LOWER_BETTER.test(head) && !REDUCTION.test(head)) ? 'buff' : 'nerf';

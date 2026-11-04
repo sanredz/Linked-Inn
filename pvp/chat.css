@@ -1,8 +1,9 @@
 .chatfab { position: fixed; right: 18px; bottom: 18px; z-index: 900; display: flex; align-items: center; gap: 7px; height: 42px; padding: 0 16px 0 13px; font: 15px "Friz", serif; color: #ffe6a8; cursor: pointer; background: linear-gradient(#3a2914, #1d140a); border: 1px solid #a07a32; border-radius: 21px; box-shadow: 0 6px 18px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 230, 168, .15); transition: transform .15s, border-color .15s, box-shadow .15s; }
 .chatfab:hover { transform: translateY(-1px); border-color: #f8d36b; box-shadow: 0 8px 22px rgba(0, 0, 0, .6), 0 0 14px rgba(248, 211, 107, .2); }
 .chatfab svg { width: 19px; height: 19px; fill: #f8d36b; }
-.chatfab em { display: none; min-width: 18px; height: 18px; padding: 0 5px; font: 700 11px/18px system-ui, sans-serif; font-style: normal; color: #1d140a; text-align: center; background: #f8d36b; border-radius: 9px; }
-.chatfab.new em { display: inline-block; animation: chatpop .3s cubic-bezier(.2, 1.6, .4, 1); }
+.chatfab em { position: absolute; top: 8px; left: 26px; display: none; width: 9px; height: 9px; background: #ff9a3a; border: 2px solid #2a1c0c; border-radius: 50%; box-shadow: 0 0 8px rgba(255, 154, 58, .8); }
+.chatfab.new em { display: block; animation: chatpop .3s cubic-bezier(.2, 1.6, .4, 1), chatglow 2.4s ease-in-out .3s infinite; }
+@keyframes chatglow { 50% { box-shadow: 0 0 2px rgba(255, 154, 58, .3); } }
 .chatfab.on { border-color: #f8d36b; }
 .chatbox { position: fixed; right: 18px; bottom: 70px; z-index: 901; display: flex; flex-direction: column; width: 340px; height: min(480px, calc(100dvh - 100px)); overflow: hidden; background: radial-gradient(120% 60% at 50% 0%, #2a1f12, #120d08 70%); border: 1px solid #8a6a2a; border-radius: 12px; box-shadow: 0 18px 50px rgba(0, 0, 0, .7); animation: chatin .2s ease-out; }
 .chatbox[hidden] { display: none; }
@@ -15,7 +16,7 @@
 .chatlist { flex: 1; min-height: 0; margin: 0; padding: 8px 6px 6px; overflow-y: auto; overscroll-behavior: contain; list-style: none; scrollbar-width: thin; scrollbar-color: #5a4422 transparent; }
 .chatlist li { display: flex; gap: 9px; padding: 6px 8px; border-radius: 8px; animation: chatrow .2s ease-out; }
 .chatlist li.me { background: rgba(248, 211, 107, .06); }
-.chatlist img, .chatlist .noicon { flex: none; width: 26px; height: 26px; margin-top: 1px; border: 1px solid #5a4422; border-radius: 50%; background: #1d140a; }
+.chatlist img, .chatlist .noicon { flex: none; width: 26px; height: 26px; object-fit: cover; object-position: 50% 20%; margin-top: 1px; border: 1px solid #5a4422; border-radius: 50%; background: #1d140a; }
 .chatlist div { min-width: 0; flex: 1; }
 .chatlist b { font: 600 13.5px system-ui, sans-serif; }
 .chatlist time { margin-left: 7px; font-size: 11px; color: #7d6e58; }
@@ -41,5 +42,13 @@
   .chatbox:not([hidden]) ~ .chatfab { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .chatbox, .chatlist li, .chatfab.new em { animation: none; } }
+@media (max-width: 600px) { .chatfab em { top: 7px; left: 24px; } }
 .chatroom { margin-right: 4px; padding: 1px 4px; font: 12px system-ui, sans-serif; color: #e8d5a8; cursor: pointer; background: rgba(0, 0, 0, .35); border: 1px solid #5a4422; border-radius: 5px; }
 .chatroom:focus { outline: none; border-color: #c9a24a; }
+.chatlist li { position: relative; }
+.chatmod { position: absolute; top: 4px; right: 4px; width: 26px; height: 22px; font-size: 16px; line-height: 1; color: #8f8170; cursor: pointer; background: rgba(0, 0, 0, .35); border: 1px solid transparent; border-radius: 6px; opacity: .55; }
+.chatlist li:hover .chatmod, .chatmod:focus { opacity: 1; border-color: #5a4422; color: #ffe6a8; }
+.chatmenu { position: absolute; top: 28px; right: 4px; z-index: 2; display: grid; min-width: 190px; padding: 4px; background: #1d140a; border: 1px solid #8a6a2a; border-radius: 8px; box-shadow: 0 10px 24px rgba(0, 0, 0, .6); animation: chatin .12s ease-out; }
+.chatmenu button { padding: 8px 10px; font: 13.5px system-ui, sans-serif; color: #e6d9bc; text-align: left; cursor: pointer; background: none; border: 0; border-radius: 5px; }
+.chatmenu button:hover { background: rgba(248, 211, 107, .1); color: #ffe6a8; }
+.chatmenu .ban { color: #ff8a70; }

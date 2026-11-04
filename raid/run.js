@@ -65,7 +65,7 @@ export function worth(pool, hero, id) {
 }
 
 const DUAL_WIELD = /^(fury|furyd|mut|combat|enh|enhd)$/;
-const STARTER_ILVL = 60, STARTER_RANK = .35, HANDS = 5;
+const STARTER_ILVL = 60, STARTER_RANK = .35, HANDS = 6;
 const DUNGEON_SET = { MAGE: 181, PRIEST: 182, WARLOCK: 183, ROGUE: 184, DRUID: 185, HUNTER: 186, SHAMAN: 187, PALADIN: 188, WARRIOR: 189 };
 const SET_SLOT = { 1: 'head', 3: 'shoulder', 5: 'chest', 20: 'chest', 9: 'wrist', 10: 'hands', 6: 'waist', 7: 'legs', 8: 'feet' };
 
@@ -126,7 +126,7 @@ function curated(pool, hero, ids) {
   const keep = new Set([...ids].sort((a, b) => worth(pool, hero, b) - worth(pool, hero, a) || a - b).slice(0, Math.max(3, Math.ceil(ids.length * TANK_KEEP))));
   return ids.filter((i) => keep.has(i));
 }
-const list = (pool, hero, slot, tier, wild = false) => curated(pool, hero, withExtra(pool.pools[wild && hero.role === 'tank' ? 'dps' : hero.role][hero.cls][POOL_OF[slot] || slot]?.[tier] || [], bearExtra(pool, hero, POOL_OF[slot] || slot, tier)).concat(slot === 'off' && hero.role === 'dps' ? (pool.pools.dps[hero.cls].main?.[tier] || []).filter((i) => pool.items[i][3] === 13) : []).filter((i) => fits(pool, hero, i, wild)));
+const list = (pool, hero, slot, tier, wild = false) => curated(pool, hero, withExtra(pool.pools[wild && hero.role === 'tank' ? 'dps' : hero.role][hero.cls][POOL_OF[slot] || slot]?.[tier] || [], bearExtra(pool, hero, POOL_OF[slot] || slot, tier)).concat(slot === 'off' && hero.role === 'dps' && (!(hero.v >= 6) || DUAL_WIELD.test(hero.build)) ? (pool.pools.dps[hero.cls].main?.[tier] || []).filter((i) => pool.items[i][3] === 13) : []).filter((i) => fits(pool, hero, i, wild)));
 
 function rollSlot(pool, hero, slot, r, tiers, taken, cap, luck = 1, floor = FLOORS[0]) {
   const names = new Set([...Object.values(hero.picks), ...taken].map((i) => pool.items[i][0]));

@@ -52,3 +52,4 @@
 .chatmenu button { padding: 8px 10px; font: 13.5px system-ui, sans-serif; color: #e6d9bc; text-align: left; cursor: pointer; background: none; border: 0; border-radius: 5px; }
 .chatmenu button:hover { background: rgba(248, 211, 107, .1); color: #ffe6a8; }
 .chatmenu .ban { color: #ff8a70; }
+@media (max-width: 760px) { body[data-view="draft"] .chatfab { right: auto; left: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); } }

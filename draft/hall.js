@@ -24,7 +24,8 @@ function ensureStyle() {
 }
 
 const byWins = () => seasonOf(data && data.season).arena === 'wins';
-const raidScore =(p) => (raidPick === 'all' ? Object.values(p.d).reduce((a, b) => a + b, 0) : p.d[raidPick] || 0);
+const played = (key) => (data.played || {})[key === 'raid' ? raidPick : key] || 0;
+const raidScore = (p) => (raidPick === 'all' ? Object.values(p.d).reduce((a, b) => a + b, 0) : p.d[raidPick] || 0);
 const raidKills = (p) => (raidPick === 'all' ? Object.values(p.k).reduce((a, b) => a + b, 0) : p.k[raidPick] || 0);
 
 const BOARDS = {
@@ -75,7 +76,7 @@ function body(key) {
   } else rows = ranked.slice(3, TOP).map(([p, r]) => row(key, p, r)).join('');
   const mine = me() && ranked.find(([p]) => p.n === me()), mineShown = mine && (q ? mine[0].n.toLowerCase().includes(q) && mine[1] <= TOP : mine[1] <= TOP);
   const you = mine && !mineShown ? `<ol class="hlist hyou">${row(key, mine[0], mine[1])}</ol>` : '';
-  return `${q ? '' : podium(key, list)}<ol class="hlist" start="4">${rows}</ol>${you}<p class="hcount">${num(list.length)} ${list.length === 1 ? 'champion' : 'champions'} ranked</p>`;
+  return `${q ? '' : podium(key, list)}<ol class="hlist" start="4">${rows}</ol>${you}<p class="hcount">${num(played(key))} ${played(key) === 1 ? 'player' : 'players'} this season</p>`;
 }
 
 function card(key) {

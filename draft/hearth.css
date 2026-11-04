@@ -318,3 +318,15 @@ img.sq { transform: scale(1.22); }
 @keyframes fcallember { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: .9; } 100% { transform: translate(14px, -420px); opacity: 0; } }
 @media (max-height: 720px) { .fcall { place-items: start center; overflow-y: auto; } .fcallcard { gap: 7px; padding: 18px 20px 14px; } .fcallglow { width: 104px; height: 104px; } .fcallglow img { width: 68px; height: 68px; } .fcallrays { inset: -40px; } }
 @media (prefers-reduced-motion: reduce) { .fcall, .fcallcard, .fcallrays, .fcallring, .fcallglow img, .fcallcard h2, .fcallgo .hforgego, .fcallembers i, .fcallparts li { animation: none !important; opacity: 1; } .fcallembers { display: none; } }
+
+.htrophy { position: relative; display: flex; align-items: center; gap: 16px; width: 100%; margin-bottom: 12px; padding: 0 18px 0 0; overflow: hidden; color: inherit; font: inherit; text-align: left; cursor: pointer; background: linear-gradient(90deg, #1a0f07, #0d0805); border: 1px solid #8a6a2a; border-radius: 12px; box-shadow: 0 10px 28px rgba(0, 0, 0, .5); transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.htrophy:hover { border-color: #f8d36b; box-shadow: 0 0 0 1px rgba(248, 211, 107, .35), 0 0 30px rgba(255, 140, 50, .25), 0 10px 28px rgba(0, 0, 0, .5); transform: translateY(-1px); }
+.htrophyart { flex: none; align-self: stretch; display: grid; grid-template-columns: repeat(2, 30px); align-content: center; justify-content: center; gap: 6px; width: 120px; min-height: 84px; background: radial-gradient(70% 80% at 50% 90%, rgba(255, 130, 40, .45), transparent 72%), #1f1108; }
+.htrophyart img { width: 30px; height: 30px; border: 1px solid #3f3119; border-radius: 6px; filter: grayscale(1) brightness(.4); }
+.htrophyart img.on { border-color: #c99a3b; filter: none; box-shadow: 0 0 10px rgba(255, 150, 60, .55); }
+.htrophysay { display: grid; flex: 1; gap: 3px; min-width: 0; padding: 14px 0; }
+.htrophysay small { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #ff9b4a; }
+.htrophysay b { font: 22px/1 "Morpheus", serif; font-weight: normal; color: #ffe6a8; }
+.htrophysay em { font-size: 13px; font-style: normal; color: #c9b99a; }
+.htrophy > i { flex: none; padding: 8px 18px; font: 15px "Friz", serif; font-style: normal; color: #1a1006; background: linear-gradient(#ffe39a, #d5a548); border-radius: 999px; box-shadow: 0 0 18px rgba(248, 211, 107, .35); }
+@media (max-width: 640px) { .htrophyart { width: 84px; } .htrophysay b { font-size: 19px; } .htrophy > i { padding: 7px 13px; } }

@@ -107,13 +107,32 @@ const tile = (value, label, tone = '') => `<div class="ht ${tone}"><b>${value}</
 function collectionHtml(raid) {
   const s = data.stats, items = [...MOUNTS, ...RELICS].filter((x) => !raid || x.raid === raid);
   if (!items.length) return '';
-  return `${forgeBanner(raid)}<div class="hcoll">${items.map((x) => {
+  return `${forgeBanner(raid)}${trophyDoor()}<div class="hcoll">${items.map((x) => {
     const n = x.stack ? Math.min(count(s, x.id), x.stack) : 0, have = x.stack ? n > 0 : owned(s, x), mount = MOUNTS.includes(x), riding = mount && data.profile.ride === x.id, into = usedIn(s, x), ready = forgeReady(s, x);
     const steps = x.forged && !have && !ready ? `<span class="hcsteps">${forgeSteps(s, x).map(([t, ok]) => `<i class="${ok ? 'ok' : ''}">${esc(t)}</i>`).join('')}</span>` : '';
     const say = into ? `Forged into ${esc(into.short)}` : x.stack ? (have ? `${n} of ${x.stack} · from ${esc(x.from)}` : `Drops from ${esc(x.from)}`) : have ? (x.forged ? 'Legendary · forged' : `From ${esc(x.from)}`) : x.forged ? (ready ? 'Ready for the forge' : 'Forged from') : `Drops from ${esc(x.from)}`;
     const button = ready ? `<button class="hforgego" data-forge="${x.id}">Forge</button>` : have && mount ? `<button class="hride ${riding ? 'on' : ''}" data-ride="${riding ? 0 : x.id}">${riding ? 'Riding' : 'Ride'}</button>` : '';
     return `<div class="hc ${have ? 'on' : 'off'} ${x.forged ? 'forged' : ''} ${into ? 'used' : ''} ${ready ? 'ready' : ''}"><span class="hcicon"><img src="assets/icons/${x.icon}.png" alt=""></span><span class="hcsay"><b>${have || ready ? esc(x.name) : 'Undiscovered'}</b><small>${say}</small>${steps}</span>${button}</div>`;
   }).join('')}</div>`;
+}
+
+const TROPHIES = [...RELICS.filter((x) => x.forged), ...MOUNTS];
+const day = (at) => { const d = new Date(at); return d.toLocaleDateString('en-US', d.getFullYear() === new Date().getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' }); };
+
+function trophyDoor() {
+  const s = data.stats, have = TROPHIES.filter((x) => owned(s, x)).length;
+  return `<button class="htrophy" data-trophy><span class="htrophyart">${TROPHIES.map((x) => `<img class="${owned(s, x) ? 'on' : ''}" src="assets/icons/${x.icon}.png" alt="">`).join('')}</span><span class="htrophysay"><small>Your Trophy Hall</small><b>The Lion's Pride Inn</b><em>${have ? `${have} of ${TROPHIES.length} trophies on display` : 'Your legendaries and mounts will be shown here'}</em></span><i>Enter</i></button>`;
+}
+
+function trophyItems() {
+  const s = data.stats;
+  return TROPHIES.map((x) => {
+    const have = owned(s, x), mount = MOUNTS.includes(x), row = !mount && ctx.gear.items[x.id];
+    const done = !mount && s.forge && s.forge[x.id] && s.forge[x.id].done;
+    const got = mount && s.found && s.found[x.id];
+    const line = mount ? (have ? `Dropped by ${x.from}${got ? ` · ${day(got)}` : ''}` : `Drops from ${x.from}`) : have ? `Forged ${day(done)}` : forgeReady(s, x) ? 'Ready for the forge' : 'Not yet forged';
+    return { id: x.id, kind: mount ? 'mount' : 'weapon', name: x.name, icon: x.icon, have, line, model: mount ? `assets/raid/gear/${x.model}.glb` : row && row.m ? `assets/draft/gear/${row.m}` : '', scale: x.scale };
+  });
 }
 
 function forgeBanner(raid) {
@@ -274,6 +293,7 @@ function bindBody() {
   }
   for (const b of root.querySelectorAll('[data-ride]')) b.onclick = () => save({ ride: +b.dataset.ride });
   for (const b of root.querySelectorAll('[data-forge]')) b.onclick = () => { b.disabled = true; forge(+b.dataset.forge).finally(() => { b.disabled = false; }); };
+  for (const b of root.querySelectorAll('[data-trophy]')) b.onclick = () => import('./trophy.js').then((m) => m.openTrophyHall(trophyItems()));
   for (const b of root.querySelectorAll('[data-more]')) b.onclick = () => { expanded[b.dataset.more] = !expanded[b.dataset.more]; drawBody(); };
 }
 

@@ -545,7 +545,7 @@ local function Create()
 	if not LI.RETAIL then
 		local census = Section(page, frame.minimap, "Help the census", 22)
 		frame.censusText = Below(Body(page, HEAD_X, "The Forever Crafting Census shows what crafters across the realms can make. Have a look at the site, and add your list to it now and then. Nothing is ever sent on its own; you choose when."), census, HEAD_X, 10)
-		frame.censusSteps = Below(Body(page, HEAD_X, "1. Log out, so the game saves your list.\n2. Find World of Warcraft\\_classic_beta_\\WTF\\Account\\<your account>\\SavedVariables\\LinkedInn.lua\n3. Drop it on the upload page. Add a name if you'd like to be credited on the site."), frame.censusText, HEAD_X, 6)
+		frame.censusSteps = Below(Body(page, HEAD_X, "1. Log out, so the game saves your list.\n2. Find World of Warcraft\\_forever_\\WTF\\Account\\<your account>\\SavedVariables\\LinkedInn.lua\n3. Drop it on the upload page. Add a name if you'd like to be credited on the site."), frame.censusText, HEAD_X, 6)
 		frame.censusSteps:SetTextColor(0.9, 0.88, 0.82)
 		frame.census = LI.Theme.Button(CreateFrame("Button", nil, page, "UIPanelButtonTemplate"))
 		frame.census:SetSize(CENSUS_W, 22)

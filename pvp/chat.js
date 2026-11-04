@@ -53,7 +53,7 @@ function badge() {
 }
 
 function channels(online) {
-  const shown = Math.min(ROOMS, Math.max(2, room + 1 + (online >= 250 ? 1 : 0))), pick = box.querySelector('.chatroom');
+  const shown = Math.min(ROOMS, Math.max(2, room + (online >= 250 ? 2 : 0))), pick = box.querySelector('.chatroom');
   if (pick.options.length === shown) return;
   pick.innerHTML = Array.from({ length: shown }, (_, i) => `<option value="${i + 1}">Channel ${i + 1}</option>`).join('');
   pick.value = String(room);

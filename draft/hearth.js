@@ -48,10 +48,11 @@ export function hearthBar(el) {
 }
 
 const modeOf = (f) => MODES.find((m) => m.id === f.mode) || ANY;
+const square = (src) => /assets\/(icons|classes)\//.test(src || '');
 const artOf = (f) => (f.icon ? `assets/icons/${f.icon}.png` : f.art || modeOf(f).art);
 const medal = (f) => {
   const on = got.has(f.id);
-  return `<button class="hm ${on ? 'on' : 'off'} ${f.tier} ${f.art ? 'hcls' : ''}" style="--t:${TIERS[f.tier]}" data-feat="${f.id}" aria-label="${esc(f.name)}: ${esc(f.text)}${on ? '' : ' (locked)'}"><span class="hmface" style="background-image:url(${artOf(f)})"></span>${on ? '' : '<i class="hmlock"></i>'}<b>${esc(f.name)}</b><small>${esc(f.text)}</small></button>`;
+  return `<button class="hm ${on ? 'on' : 'off'} ${f.tier} ${square(artOf(f)) ? 'hcls' : ''}" style="--t:${TIERS[f.tier]}" data-feat="${f.id}" aria-label="${esc(f.name)}: ${esc(f.text)}${on ? '' : ' (locked)'}"><span class="hmface" style="background-image:url(${artOf(f)})"></span>${on ? '' : '<i class="hmlock"></i>'}<b>${esc(f.name)}</b><small>${esc(f.text)}</small></button>`;
 };
 const RANK = { bronze: 0, silver: 1, gold: 2, legend: 3 }, GLANCE = 8;
 let expanded = {};
@@ -63,7 +64,7 @@ const topOf = (steps) => [...steps].reverse().find((x) => x.on);
 
 function ladderCard(l) {
   const s = data.stats, steps = stepsOf(l), top = topOf(steps), now = l.now(s), art = l.art || artOf(steps[0].f);
-  return `<button class="hk ${top ? 'on' : 'off'} ${l.cls ? 'hcls' : ''}" style="--t:${top ? TIERS[top.f.tier] : '#3f3119'}" data-ladder="${l.id}" aria-label="${esc(l.name)}${top ? `: ${esc(top.f.rank || top.f.name)}` : ''}"><span class="hkface" style="background-image:url(${art})"></span><span class="hkbody"><span class="hkhead"><b>${esc(l.name)}</b>${top && top.f.rank ? `<i class="hkrank">${esc(top.f.rank)}</i>` : ''}${now ? `<small>${esc(now)}</small>` : ''}</span><span class="hktrack">${steps.map((x) => `<span class="hkseg ${x.on ? 'on' : ''}" style="--t:${TIERS[x.f.tier]};--p:${x.on ? 1 : x.prog(s).toFixed(3)}"><i></i><em>${esc(x.mark)}</em></span>`).join('')}</span></span></button>`;
+  return `<button class="hk ${top ? 'on' : 'off'} ${square(art) ? 'hcls' : ''}" style="--t:${top ? TIERS[top.f.tier] : '#3f3119'}" data-ladder="${l.id}" aria-label="${esc(l.name)}${top ? `: ${esc(top.f.rank || top.f.name)}` : ''}"><span class="hkface" style="background-image:url(${art})"></span><span class="hkbody"><span class="hkhead"><b>${esc(l.name)}</b>${top && top.f.rank ? `<i class="hkrank">${esc(top.f.rank)}</i>` : ''}${now ? `<small>${esc(now)}</small>` : ''}</span><span class="hktrack">${steps.map((x) => `<span class="hkseg ${x.on ? 'on' : ''}" style="--t:${TIERS[x.f.tier]};--p:${x.on ? 1 : x.prog(s).toFixed(3)}"><i></i><em>${esc(x.mark)}</em></span>`).join('')}</span></span></button>`;
 }
 
 function classLadders(mode) {
@@ -259,7 +260,7 @@ function hidePop() {
 
 function ladderPop(l) {
   const steps = stepsOf(l), top = topOf(steps), next = steps.find((x) => !x.on), val = valueOf(data.stats, (next || steps[steps.length - 1]).f), mode = MODES.find((m) => m.id === l.mode) || ANY;
-  pop.className = `hpop hkpop ${top ? 'on' : 'off'} ${l.cls ? 'hcls' : ''}`;
+  pop.className = `hpop hkpop ${top ? 'on' : 'off'} ${square(l.art || artOf(steps[0].f)) ? 'hcls' : ''}`;
   pop.style.setProperty('--t', top ? TIERS[top.f.tier] : '#8a7a60');
   pop.innerHTML = `<span class="hpopface" style="background-image:url(${l.art || artOf(steps[0].f)})"></span><div><small>${esc(mode.name)}</small><b>${esc(l.name)}</b><ul class="hksteps">${steps.map((x) => `<li class="${x.on ? 'on' : ''}" style="--t:${TIERS[x.f.tier]}"><i></i><span><strong>${esc(x.f.rank || x.f.name)}</strong>${esc(x.f.text)}</span></li>`).join('')}</ul>${val ? `<i class="hpopval">${esc(val)}</i>` : ''}<em>${next ? `${steps.filter((x) => x.on).length} of ${steps.length} earned` : 'All earned'}</em></div>`;
 }
@@ -277,7 +278,7 @@ function showPop(b, tap) {
   }
   const mode = modeOf(f), on = got.has(f.id), art = artOf(f);
   pop = document.createElement('div');
-  pop.className = `hpop ${on ? 'on' : 'off'} ${f.tier} ${f.art ? 'hcls' : ''}`;
+  pop.className = `hpop ${on ? 'on' : 'off'} ${f.tier} ${square(artOf(f)) ? 'hcls' : ''}`;
   pop.style.setProperty('--t', TIERS[f.tier]);
   pop.dataset.for = f.id;
   if (tap) pop.dataset.tap = '1';

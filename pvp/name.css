@@ -37,7 +37,7 @@
 .nfeed textarea:focus { outline: none; border-color: #ffe6a8; }
 .nbadge { padding-top: 30px; overflow: hidden; border-color: #c97a2a; background: radial-gradient(90% 60% at 50% 0%, rgba(255, 138, 30, .22), transparent 70%), radial-gradient(120% 90% at 50% 0%, #2a1f12, #120d08 70%); }
 .nmedal { position: relative; display: grid; place-items: center; width: 108px; height: 108px; margin-bottom: 2px; }
-.nmedal span { position: relative; width: 84px; height: 84px; background: center / cover; border-radius: 50%; border: 3px solid #ff8a1e; box-shadow: 0 0 0 3px #2a1608, 0 0 26px rgba(255, 138, 30, .75), inset 0 0 12px rgba(0, 0, 0, .6); animation: nmedal .7s cubic-bezier(.2, 1.6, .4, 1) both; }
+.nmedal span { position: relative; width: 84px; height: 84px; background: center / 124%; border-radius: 50%; border: 3px solid #ff8a1e; box-shadow: 0 0 0 3px #2a1608, 0 0 26px rgba(255, 138, 30, .75), inset 0 0 12px rgba(0, 0, 0, .6); animation: nmedal .7s cubic-bezier(.2, 1.6, .4, 1) both; }
 .nrays { position: absolute; inset: -40px; background: repeating-conic-gradient(rgba(255, 170, 70, .22) 0 6deg, transparent 6deg 22deg); -webkit-mask: radial-gradient(circle, #000 25%, transparent 68%); mask: radial-gradient(circle, #000 25%, transparent 68%); animation: nspin 14s linear infinite; }
 .nnew { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #ffb35c; }
 .nbname { margin-top: -6px; font: 23px "Morpheus", serif; color: #ff9d3a; text-shadow: 0 0 14px rgba(255, 138, 30, .45), 0 2px 0 #2a1206; }

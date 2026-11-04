@@ -1623,7 +1623,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const s = Math.floor(Math.abs(diff) / 1000);
     if (diff <= 0) {
       document.getElementById('cdT').textContent = 'Live for';
-      document.getElementById('cdD').textContent = 'Since November 4';
+      document.getElementById('cdD').textContent = 'Since November 4 · Forever census coming soon';
     }
     const parts = [[Math.floor(s / 86400), 'Days'], [Math.floor(s / 3600) % 24, 'Hours'], [Math.floor(s / 60) % 60, 'Minutes'], [s % 60, 'Seconds']];
     cd.innerHTML = parts.map(([v, l], i) => `${i ? '<span class="colon">:</span>' : ''}<div class="c"><b>${String(v).padStart(2, '0')}</b><small>${l}</small></div>`).join('');

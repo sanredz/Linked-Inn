@@ -6,6 +6,8 @@
 <title>Linked Inn · Forever census</title>
 <meta name="description" content="What World of Warcraft: Forever players craft, how they duel and how they live, counted from the game itself.">
 <link rel="icon" href="assets/favicon.png">
+<link rel="stylesheet" href="news.css">
+<script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
 @font-face { font-family: "Friz"; src: url("assets/game/frizqt.ttf") format("truetype"); font-display: swap; }
@@ -1468,6 +1470,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     <a class="brand" href="#home"><img src="assets/logo-small.png" alt=""><div><b>Linked Inn</b><small>Forever census</small></div></a>
     <nav class="tabs" id="tabs">
       <a class="tab" data-v="home" href="#home"><img src="assets/game/ui/achievement_zone_elwynnforest.png" alt=""><span>Home</span></a>
+      <a class="tab" data-v="news" href="#news"><img src="assets/game/ui/inv_misc_note_01.png" alt=""><span>News</span></a>
       <a class="tab" data-v="crafting" href="#crafting"><img src="assets/game/ui/inv_misc_bag_10.png" alt=""><span>Crafting</span></a>
       <a class="tab" data-v="duels" href="#duels"><img src="assets/game/ui/ability_parry.png" alt=""><span>Duels</span></a>
       <a class="tab" data-v="life" href="#life"><img src="assets/game/ui/inv_misc_book_09.png" alt=""><span>Life</span></a>
@@ -1528,11 +1531,11 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261104084200"></script>
-<script src="data-summary.js?v=20261104084200"></script>
-<script src="data-home.js?v=20261104084200"></script>
-<script src="data-life.js?v=20261104084200"></script>
-<script src="data-open.js?v=20261104084200"></script>
+<script src="data-multi.js?v=20261104193339"></script>
+<script src="data-summary.js?v=20261104193339"></script>
+<script src="data-home.js?v=20261104193339"></script>
+<script src="data-life.js?v=20261104193339"></script>
+<script src="data-open.js?v=20261104193339"></script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1562,6 +1565,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     duels: { kicker: 'World of Warcraft: Forever', title: 'The Dueling Grounds' },
     life: { kicker: 'World of Warcraft: Forever', title: 'Life on Azeroth' },
     open: { kicker: 'The Forever Open', title: 'Road to the Finals' },
+    news: { kicker: 'World of Warcraft: Forever', title: 'News' },
+    patches: { kicker: 'World of Warcraft: Forever', title: 'Patch notes' },
   };
   let O = window.LI_OPEN;
   const VOTE_API = 'https://forever-vote.sanredz.workers.dev';
@@ -3733,7 +3738,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.getElementById('note').textContent = `Updated ${S.generated}`;
     const tile = (href, color, bg, icon, label, big, line, go) => `<a class="frame htile" href="${href}" style="--hc:${color};--bg:url('${bg}')"><div class="in slab"><div class="tt"><img src="${icon}" alt="">${label}</div><div class="big">${big}</div><div class="line">${line}</div><div class="go">${go}</div></div></a>`;
     const every = Object.entries(C.every).sort((a, b) => b[1] - a[1]);
-    let h = WRAPPED_ON ? wrappedBand('psq') : searchBox('psq');
+    let h = window.LI_NEWS ? '<section class="frame panel s12" id="today"></section>' : '';
+    h += WRAPPED_ON ? wrappedBand('psq') : searchBox('psq');
     h += tile('#crafting', '#f8d36b', 'assets/game/parchment-wide.jpg', UI('inv_misc_bag_10'), 'Crafting', fmt(C.players), `players in the crafting census. <b>${PN[every[0][0]]}</b> is the most common profession, <b>${PN[every[every.length - 1][0]]}</b> the rarest.`, 'Find a crafter');
     const top = D.ladder[0], low = D.ladder[D.ladder.length - 1];
     h += tile('#duels', '#ff9f7a', 'assets/game/art-warriorarms.jpg', UI('ability_parry'), 'Duels', fmt(D.n), `duels watched out in the world. <b style="color:${CC[top.c]}">${CN[top.c]}s</b> win the most (${Math.round(top.p * 100)}%), <b style="color:${CC[low.c]}">${CN[low.c]}s</b> the least.`, 'See the dueling grounds');
@@ -3807,6 +3813,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     if (cards.length) h += panel('s12', 'From the archive', 'Pages from events that are over, kept exactly as they ended.', `<div class="arch">${cards.join('')}</div>`, { extra: '<a href="#archive" class="badge" style="text-decoration:none">All of it</a>' });
     document.getElementById('main').innerHTML = h;
     bindSearch('psq', WRAPPED_ON ? '/wrapped' : '');
+    const today = document.getElementById('today');
+    if (today) LI_NEWS.home(today);
   }
   function render() {
     document.body.dataset.view = view;
@@ -3816,12 +3824,28 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.getElementById('title').textContent = v.title;
     document.title = `${v.title} · Linked Inn`;
     document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('on', t.dataset.v === view));
+    if (view === 'news' || view === 'patches') { renderNews(); return; }
     if (view === 'duels') renderDuels(); else if (view === 'life') renderLife(); else if (view === 'open') renderOpen(); else if (view === 'home') renderHome(); else if (view === 'archive') renderArchive(); else if (view === 'player') renderPlayer(); else renderCrafting();
+  }
+  let NSEL = '';
+  function renderNews() {
+    plainHead();
+    document.getElementById('note').textContent = '';
+    const el = document.getElementById('main');
+    el.innerHTML = '';
+    if (window.LI_NEWS) (view === 'patches' ? LI_NEWS.patchPage : LI_NEWS.page)(el, NSEL);
   }
   function renderKeep() { const y = scrollY; render(); scrollTo(0, y); }
   function route() {
     const want = location.hash.replace('#', '');
     if (WR && !/\/wrapped$/.test(want)) closeWrapped(true);
+    if (/^(news|patches)(\/|$)/.test(want)) {
+      const [v, id] = want.split('/');
+      view = v;
+      NSEL = id || '';
+      render();
+      return;
+    }
     if (want.startsWith('player/')) {
       const [, n, rs, extra] = want.split('/');
       PSEL = { n: decodeURIComponent(n || ''), rs: rs || 'PvP', w: extra === 'wrapped' };

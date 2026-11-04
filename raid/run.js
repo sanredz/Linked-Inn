@@ -185,12 +185,36 @@ export function targetsOf(pool, hero, slot, id) {
   return main && main[3] === 17 ? [slot] : ['main', 'off'];
 }
 
+const wearable = new Map();
+function wears(pool, cls, group, id) {
+  const key = `${cls}|${group}`;
+  if (!wearable.has(key)) wearable.set(key, new Set(Object.values(pool.pools).flatMap((byCls) => Object.values(byCls[cls]?.[group] || {}).flat())));
+  return wearable.get(key).has(id);
+}
+
+const ARMOR_OK = { WARRIOR: [0, 1, 2, 3, 4, 6], PALADIN: [0, 1, 2, 3, 4, 6, 7], HUNTER: [0, 1, 2, 3], ROGUE: [0, 1, 2], PRIEST: [0, 1], SHAMAN: [0, 1, 2, 3, 6, 9], MAGE: [0, 1], WARLOCK: [0, 1], DRUID: [0, 1, 2, 8] };
+const WEAPON_OK = { WARRIOR: [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 13, 15, 16, 18], PALADIN: [0, 1, 4, 5, 6, 7, 8], HUNTER: [0, 1, 2, 3, 6, 7, 8, 10, 13, 15, 16, 18], ROGUE: [2, 3, 4, 7, 13, 15, 16, 18], PRIEST: [4, 10, 15, 19], SHAMAN: [0, 1, 4, 5, 10, 13, 15], MAGE: [7, 10, 15, 19], WARLOCK: [7, 10, 15, 19], DRUID: [4, 5, 10, 13, 15] };
+function canWear(pool, hero, slot, id) {
+  const it = pool.items[id], main = hero.picks.main && pool.items[hero.picks.main];
+  if (it[9] && !wears(pool, hero.cls, groupOf(slot), id)) return false;
+  if (slot === 'off' && main && main[3] === 17) return false;
+  if (it[5] === 2) return WEAPON_OK[hero.cls].includes(it[6]) && !(slot === 'off' && !(hero.role === 'dps' && DUAL_WIELD.test(hero.build)) && !['HUNTER', 'ROGUE', 'WARRIOR'].includes(hero.cls));
+  return ARMOR_OK[hero.cls].includes(it[6]);
+}
+
+export function receivers(pool, run, o) {
+  if (run.step !== 'spoils') return [];
+  return run.heroes.map((h, i) => i).filter((i) => i !== o.hero && canWear(pool, run.heroes[i], o.slot, o.id));
+}
+
 export function take(pool, run, choice) {
-  const hero = run.heroes[choice.hero], to = choice.to || choice.slot;
+  const giving = choice.give !== undefined;
+  if (giving && !(Number.isInteger(choice.give) && receivers(pool, run, choice).includes(choice.give))) throw new Error('bad give');
+  const hero = run.heroes[giving ? choice.give : choice.hero], to = choice.to || choice.slot;
   if (!targetsOf(pool, hero, choice.slot, choice.id).includes(to)) throw new Error('bad slot');
   hero.picks[to] = choice.id;
   if (to === 'main' && pool.items[choice.id][3] === 17) delete hero.picks.off;
-  run.moves.push(to === choice.slot ? ['t', choice.hero, choice.slot, choice.id] : ['t', choice.hero, choice.slot, choice.id, to]);
+  run.moves.push(giving ? ['t', choice.hero, choice.slot, choice.id, to, choice.give] : to === choice.slot ? ['t', choice.hero, choice.slot, choice.id] : ['t', choice.hero, choice.slot, choice.id, to]);
   if (run.step === 'spoils') {
     run.spoils.offers = run.spoils.offers.filter((o) => !(o.hero === choice.hero && o.slot === choice.slot));
     spoilDone(run);
@@ -290,7 +314,7 @@ export function reroll(run) {
 }
 
 export function finishBoss(run, result, heroic = false) {
-  run.results.push({ boss: result.boss, won: result.won, time: result.time, score: result.score, heroic });
+  run.results.push({ boss: result.boss, won: result.won, time: result.time, score: result.score, heroic, ...(result.totals && { dealt: result.totals.map((h) => Math.round(h.dealt)) }) });
   run.score = result.score;
   run.heroic = heroic;
   if (result.won) { run.boss++; run.step = 'spoils'; run.spoilsLeft = heroic ? 2 : 1; return; }
@@ -343,7 +367,7 @@ export function replayRun(pool, seed, moves, raid = 'mc') {
     } else if (m[0] === 't') {
       const offers = run.step === 'draft' ? draftOffers(pool, run) : run.step === 'spoils' ? spoilOffers(pool, run) : [];
       if (!offers.some((o) => same(o, m))) throw new Error('bad item');
-      take(pool, run, { hero: m[1], slot: m[2], id: m[3], to: m[4] });
+      take(pool, run, { hero: m[1], slot: m[2], id: m[3], to: m[4], ...(m.length > 5 && { give: m[5] }) });
     } else if (m[0] === 'b') {
       if (run.step !== 'spoils' || !m[1] || boonOffer(pool, run) !== m[1]) throw new Error('bad boon');
       takeBoon(run, m[1]);

@@ -7,7 +7,7 @@ import { Scenery } from './scenery.js';
 const SCHOOL = { fire: '#ff8a3c', frost: '#8fd0ff', arcane: '#d59bff', shadow: '#b18cff', nature: '#7dff8a', holy: '#ffe680', phys: '#ffffff' };
 const TONE = { fire: 0xff7a2a, frost: 0x7fd4ff, arcane: 0xd27dff, shadow: 0x9a5cff, nature: 0x7dff8a, holy: 0xffe680 };
 const STATE = { stun: 'Stunned', fear: 'Feared', poly: 'Disoriented', root: 'Rooted', block: 'Immune', stealth: 'Stealthed' };
-const PROP_SIZE = { druidcat: .55, sheep: .7, felhound: .42, cat: .5, whelp: .7, skeleton: 1, eskhandar: .55 };
+const PROP_SIZE = { druidcat: .55, druidbear: .84, sheep: .7, felhound: .42, cat: .5, whelp: .7, skeleton: 1, eskhandar: .55 };
 const ACT = { dead: 'death', stun: 'stun', run: 'run', cast: 'idle', attack: 'attack', idle: 'idle' };
 const DUST = 0x9a8a74;
 export const THEMES = [
@@ -80,7 +80,7 @@ export class Arena {
     this.trails = new Map();
     this.runeMap = runeTexture();
     this.extras = [0, 1].map(() => ({ block: this.ball(0x9fd8ff, 1, .22), shield: this.ball(0xffe9a8, .95, .1), ring: this.rootRing(), shadow: this.blob(), rune: this.rune(), orb: this.orb(), alpha: 1, tick: 0, dust: 0, dash: 0 }));
-    this.props = Promise.all(this.extras.flatMap((x) => [['cat', 'druidcat'], ['sheep', 'sheep'], ['pet', 'felhound'], ['beast', 'cat']].map(async ([key, file]) => { x[key] = await this.prop(file); })));
+    this.props = Promise.all(this.extras.flatMap((x) => [['cat', 'druidcat'], ['bear', 'druidbear'], ['sheep', 'sheep'], ['pet', 'felhound'], ['beast', 'cat']].map(async ([key, file]) => { x[key] = await this.prop(file); })));
     requestAnimationFrame(() => this.loop());
   }
 
@@ -229,7 +229,7 @@ export class Arena {
   }
 
   async prop(name) {
-    const g = await this.stageA.loader.loadAsync(`assets/draft/gear/summon_${name}.glb`).catch(() => null);
+    const g = await this.stageA.loader.loadAsync(name === 'druidbear' ? 'assets/raid/gear/druidbear.glb' : `assets/draft/gear/summon_${name}.glb`).catch(() => null);
     if (!g) return null;
     const mixer = new THREE.AnimationMixer(g.scene), clips = {};
     for (const c of g.animations) clips[c.name] = mixer.clipAction(c);
@@ -317,7 +317,7 @@ export class Arena {
     this.stageA.clearEffects();
     for (const x of this.extras) {
       x.alpha = 1;
-      for (const p of [x.cat, x.sheep, x.pet, x.beast, x.ally]) if (p) { p.root.visible = false; p.current = null; p.mixer.stopAllAction(); }
+      for (const p of [x.cat, x.bear, x.sheep, x.pet, x.beast, x.ally]) if (p) { p.root.visible = false; p.current = null; p.mixer.stopAllAction(); }
       x.block.visible = x.shield.visible = x.ring.visible = false;
       x.shadow.visible = false;
       if (x.rune) { x.rune.visible = x.orb.visible = false; x.rune.userData.v = x.orb.userData.v = 0; }
@@ -461,7 +461,7 @@ export class Arena {
   }
 
   plate(i, f, name) {
-    const el = this.q(`.plate[data-p="${i}"]`), rig = i ? this.stageB.rig : this.stageA.rig, v = new THREE.Vector3(rig.position.x, f.cat ? 1.5 : 2.45, 0).project(this.stageA.camera);
+    const el = this.q(`.plate[data-p="${i}"]`), rig = i ? this.stageB.rig : this.stageA.rig, v = new THREE.Vector3(rig.position.x, f.cat ? 1.5 : f.bear ? 2 : 2.45, 0).project(this.stageA.camera);
     el.style.transform = `translate(-50%,-100%) translate(${(v.x + 1) / 2 * this.host.clientWidth}px,${(1 - v.y) / 2 * this.host.clientHeight}px)`;
     el.innerHTML = `<span>${name}</span><em style="width:${Math.max(0, f.hp) / f.max * 100}%"></em>`;
     el.style.opacity = f.state === 'stealth' ? .4 : 1;
@@ -502,13 +502,13 @@ export class Arena {
   }
 
   dress3d(i, f, foe, stage, name, dt, t) {
-    const x = this.extras[i], rig = stage.rig, here = rig.position, dir = i ? -1 : 1, cls = this.classes[i], form = x.cat && f.cat, sheep = x.sheep && f.sheep;
+    const x = this.extras[i], rig = stage.rig, here = rig.position, dir = i ? -1 : 1, cls = this.classes[i], form = x.cat && f.cat, bear = x.bear && f.bear, sheep = x.sheep && f.sheep;
     const face = dir * Math.PI / 2 + (f.state === 'fear' ? Math.PI : 0), g = this.ground, goal = name === 'run' && g && g.speed[i] > 1.2 ? g.dir[i] : face;
     x.yaw = x.yaw === undefined ? goal : x.yaw + Math.atan2(Math.sin(goal - x.yaw), Math.cos(goal - x.yaw)) * Math.min(1, dt * 10);
     rig.rotation.y = x.yaw;
-    rig.visible = !form && !sheep;
+    rig.visible = !form && !bear && !sheep;
     x.shadow.position.x = here.x;
-    for (const [p, show] of [[x.cat, form], [x.sheep, sheep]]) {
+    for (const [p, show] of [[x.cat, form], [x.bear, bear], [x.sheep, sheep]]) {
       if (!p) continue;
       p.root.visible = !!show;
       if (!show) continue;
@@ -522,10 +522,11 @@ export class Arena {
       x.alpha = want;
       this.fade(rig, want);
       if (x.cat) this.fade(x.cat.root, want);
+      if (x.bear) this.fade(x.bear.root, want);
     }
-    const isCat = !!f.cat;
-    if (x.wasCat !== undefined && x.wasCat !== isCat && f.hp > 0) this.shift(here.x, isCat);
-    x.wasCat = isCat;
+    const shape = f.cat ? 1 : f.bear ? 2 : 0;
+    if (x.wasCat !== undefined && x.wasCat !== shape && f.hp > 0) this.shift(here.x, shape > 0);
+    x.wasCat = shape;
     const magic = !!f.cast && !!f.school && f.school !== 'phys' && f.hp > 0;
     this.glyph(x.rune, magic, TONE[f.school] || 0xffffff, here.x, 0, 1, dt);
     this.glyph(x.orb, magic, TONE[f.school] || 0xffffff, here.x + .5 * dir, .15, .55, dt);

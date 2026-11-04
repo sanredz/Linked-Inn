@@ -17,6 +17,7 @@ const AGI_DODGE = { WARRIOR: 20, PALADIN: 19.8, HUNTER: 52.9, ROGUE: 29, PRIEST:
 const REGEN = { WARRIOR: [15, 5], PALADIN: [15, 5], HUNTER: [15, 5], ROGUE: [15, 5], PRIEST: [12.5, 4], SHAMAN: [17, 5], MAGE: [12.5, 4], WARLOCK: [15, 5], DRUID: [15, 5] };
 const CAN_PARRY = new Set(['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE']);
 const BREAK_DAMAGE = 25 * 60 - 150, SEEN_AT = 9, REACT = 1, CAT_COST = 1244 * .55 * .7;
+const BEAR = { armor: 3, hand: 1.9, speed: 2.5, maul: 128, roar: 140, bash: 60 }, PHYSICAL = new Set(['WARRIOR', 'ROGUE', 'HUNTER', 'PALADIN']);
 const STEP = .1, RUN = 7, MELEE = 5, ARMOR_K = 400 + 85 * 60, DR_RESET = 15, START = 30;
 const SPELL_HIT = 96, BASE_MISS = 5, DW_MISS = 19;
 
@@ -74,7 +75,7 @@ export const PLANS = {
     bolt: { label: 'Shadow Bolt', tip: 'Fewer dots, more direct damage.', fearAt: 8, nuke: 1 },
   },
   DRUID: {
-    bleed: { label: 'Bleed', tip: 'Rake and Rip, heal at 35%.', healAt: .35, rip: 1 },
+    bleed: { label: 'Bleed and Bear', tip: 'Open with Pounce, Rake and Rip, then tank in Bear Form against physical fighters. Heal at 35%.', healAt: .35, rip: 1, bear: 1 },
     burst: { label: 'Burst', tip: 'Spend on Ferocious Bite and heal late.', healAt: .3, rip: 0 },
     heal: { label: 'Outlast them', tip: 'Shift out and heal early.', healAt: .55, rip: 1 },
   },
@@ -192,7 +193,7 @@ export function fight(a, b, seed, rec) {
     if (S.leech && src.hp > 0) { const gain = Math.min(src.max - src.hp, v * S.leech); src.hp += gain; src.leeched = (src.leeched || 0) + gain; }
     if (B.save && !f.saved && f.hp < f.max * .2) { f.saved = 1; f.hp = Math.max(f.hp, 1) + f.max * B.save; say('heal', f, 'Phoenix Rebirth', f.max * B.save); }
     if (B.thorns && !periodic && school === 'phys' && f.hp > 0) hurt(src, B.thorns, f, 'nature', 'Thorns', false, true);
-    if (f.p.res === 'rage') f.rage = Math.min(100, f.rage + 2.5 * v / 230.6);
+    if (f.p.res === 'rage' || f.bear) f.rage = Math.min(100, f.rage + 2.5 * v / 230.6);
     f.stealth = false;
     if (on(f, 'poly')) { f.aura.poly = 0; f.sheep = 0; }
     if (on(f, 'fear') && r() < v / BREAK_DAMAGE) f.aura.fear = 0;
@@ -215,7 +216,7 @@ export function fight(a, b, seed, rec) {
     return v;
   }
 
-  const armorDr = (f) => { const a = Math.max(0, f.armor - (on(f, 'faerie') ? 505 : 0)); return 1 - a / (a + ARMOR_K); };
+  const armorDr = (f) => { const a = Math.max(0, f.armor * (f.bear ? BEAR.armor : 1) - (on(f, 'faerie') ? 505 : 0)); return 1 - a / (a + ARMOR_K); };
   const roll = (w) => w.min + r() * (w.max - w.min);
 
   function strike(f, o = {}) {
@@ -227,7 +228,7 @@ export function fight(a, b, seed, rec) {
     if (x < miss + dodge) { f.overpower = t + 5; say('dodge', f, o.name || 'Melee'); return null; }
     if (x < miss + dodge + parry) { say('parry', f, o.name || 'Melee'); return null; }
     const crit = x < miss + dodge + parry + f.crit + (o.crit || 0);
-    const base = (roll(w) + (f.ap + (on(f, 'crus') ? 200 : 0) + (on(f, 'mighty') ? 120 : 0)) / 14 * (o.normal || w.speed)) * (o.pct ?? 1) + (o.flat || 0);
+    const base = (roll(w) + (f.ap + (on(f, 'crus') ? 200 : 0) + (on(f, 'mighty') ? 120 : 0) - (on(f, 'roar') ? BEAR.roar : 0)) / 14 * (o.normal || w.speed)) * (o.pct ?? 1) + (o.flat || 0);
     const dmg = base * (o.hand === 'off' ? f.p.offMult || .5 : 1) * (crit ? 2 + (o.white ? 0 : f.p.crit2) : 1) * (f.p.all || 1) * armorDr(e);
     hurt(e, dmg, f, 'phys', o.name || 'Melee', crit);
     return { crit, dmg };
@@ -265,7 +266,7 @@ export function fight(a, b, seed, rec) {
   }
 
   const spend = (f, cost, mult = f.p.cost || 1) => {
-    if (f.p.res === 'rage') { if (f.rage < cost) return false; f.rage -= cost; return true; }
+    if (f.p.res === 'rage' || mult === 'rage') { if (f.rage < cost) return false; f.rage -= cost; return true; }
     if (f.p.res === 'energy' && mult !== 'mana') { if (f.energy < cost) return false; f.energy -= cost; return true; }
     const c = cost * (mult === 'mana' ? 1 : mult);
     if (f.mana < c) return false;
@@ -826,8 +827,16 @@ export function fight(a, b, seed, rec) {
     if (f.mana >= 380) startCast(f, 'Shadow Bolt', 2.5, () => { if (spend(f, 380)) spell(f, 482 + r() * 57 + f.sp * .857, 'shadow', 'Shadow Bolt'); }, 'shadow');
   }
 
+  function shape(f, bear) {
+    if (!!f.bear === bear) return;
+    if (bear) { f.catHand = f.catHand || f.main; f.main = { min: f.catHand.min * BEAR.hand, max: f.catHand.max * BEAR.hand, speed: BEAR.speed }; f.rage = Math.max(f.rage, 10); }
+    else { f.main = f.catHand; f.rage = 0; }
+    f.bear = bear;
+    f.swing = Math.max(f.swing, t);
+  }
+
   function druid(f) {
-    const e = f.foe, plan = f.plan, near = d <= MELEE;
+    const e = f.foe, plan = f.plan, near = d <= MELEE, wantBear = !!plan.bear && PHYSICAL.has(e.cls) && (f.ripped || t > 14);
     if (f.stealth) {
       if (near && f.energy >= 50) {
         f.stealth = false;
@@ -845,11 +854,19 @@ export function fight(a, b, seed, rec) {
     if (avail(f, 'bark') && f.hp < f.max * .5) { f.aura.bark = t + 15; f.cd.bark = t + 60; say('buff', f, 'Barkskin'); }
     if (f.gcd > t) return;
     if (f.hp < f.max * plan.healAt && !silenced(f, 'nature') && f.mana >= (f.hots.some((x) => x.name === 'Rejuvenation') ? 880 : 360) + CAT_COST) {
-      if (f.form) { f.form = false; say('buff', f, 'Caster Form'); }
+      if (f.form) { f.form = false; shape(f, false); say('buff', f, 'Caster Form'); }
       if (!f.hots.some((x) => x.name === 'Rejuvenation') && spend(f, 360, 'mana')) { f.hots.push({ name: 'Rejuvenation', per: 222 + f.sp * .2, left: 4, next: t + 3, every: 3 }); return gcd(f); }
       if (f.mana >= 880 + CAT_COST) { startCast(f, 'Regrowth', 2, () => { if (spend(f, 880, 'mana')) { heal(f, 1003 + r() * 116 + f.sp * .286, 'Regrowth'); f.hots.push({ name: 'Regrowth', per: 152 + f.sp * .071, left: 7, next: t + 3, every: 3 }); } }, 'nature'); return; }
     }
-    if (!f.form) { f.mana = Math.max(0, f.mana - CAT_COST); f.form = true; f.energy = Math.max(f.energy, 40); say('buff', f, 'Cat Form'); return gcd(f); }
+    if (!f.form) { f.mana = Math.max(0, f.mana - CAT_COST); f.form = true; shape(f, wantBear); f.energy = Math.max(f.energy, 40); say('buff', f, wantBear ? 'Dire Bear Form' : 'Cat Form'); return gcd(f); }
+    if (wantBear && !f.bear && f.cp === 0 && f.mana >= CAT_COST * 2) { f.mana -= CAT_COST; shape(f, true); say('buff', f, 'Dire Bear Form'); return gcd(f); }
+    if (f.bear) {
+      if (!seen(e) || !near) return;
+      if (avail(f, 'bash') && !locked(e) && (e.cast || e.channel || f.hp < f.max * .6) && spend(f, 10, 'rage')) { f.cd.bash = t + BEAR.bash; control(e, 'stun', 'stun', 4); say('hit', f, 'Bash'); return gcd(f); }
+      if (!on(e, 'roar') && e.p.kind !== 'caster' && spend(f, 10, 'rage')) { e.aura.roar = t + 30; say('hit', f, 'Demoralizing Roar'); return gcd(f); }
+      if (f.rage >= 15 && spend(f, 15, 'rage')) { strike(f, { flat: BEAR.maul, name: 'Maul' }); return gcd(f, 1.5); }
+      return;
+    }
     if (avail(f, 'dash') && d > 10) { f.aura.dash = t + 15; f.cd.dash = t + 300; }
     if (!seen(e) || !near) return;
     if (f.cp >= 5 || (f.cp >= 3 && e.hp < e.max * .15)) {
@@ -858,6 +875,7 @@ export function fight(a, b, seed, rec) {
         const n = f.cp;
         dot(e, 'Rip', (18 + n * 26 + f.ap * .04) * f.p.all, 4 + n, 2, f, 'phys');
         f.cp = 0;
+        f.ripped = 1;
         return gcd(f, 1);
       }
       if (!useRip && spend(f, 35)) {
@@ -942,7 +960,7 @@ export function fight(a, b, seed, rec) {
         f.swing = t + f.main.speed / haste;
         if (f.flurry > 0) f.flurry--;
         const s = strike(f, { white: 1, name: 'Melee' });
-        if (f.p.res === 'rage') f.rage = Math.min(100, f.rage + 3.46 * f.main.speed * 1.3 * (s && s.crit ? 2 : 1) * (s ? 1 : .5));
+        if (f.p.res === 'rage' || f.bear) f.rage = Math.min(100, f.rage + 3.46 * f.main.speed * 1.3 * (s && s.crit ? 2 : 1) * (s ? 1 : .5));
         hitBonus(f, s);
       }
       if (f.off && f.swing2 <= t) {
@@ -1006,7 +1024,7 @@ export function fight(a, b, seed, rec) {
     const mana = f.p.res === 'mana' || (f.cls === 'DRUID' && !f.form);
     return {
       hp: Math.round(f.hp), max: Math.round(f.max), res: Math.round(mana ? f.mana : f.p.res === 'rage' ? f.rage : f.energy), resMax: mana ? Math.round(f.maxMana) : 100, resKind: mana ? 'mana' : f.p.res,
-      cast: f.cast ? f.cast.name : f.channel ? f.channel.name : '', school: f.cast ? f.cast.school : f.channel ? 'shadow' : '', cat: f.cls === 'DRUID' && f.form ? 1 : 0, petSheep: on(f, 'petSheep') ? 1 : 0, sheep: on(f, 'poly') && f.sheep ? 1 : 0, shield: f.absorb > 0 ? 1 : 0, mover: on(f, 'fear') ? 1 : 0, state: on(f, 'block') ? 'block' : on(f, 'stun') ? 'stun' : on(f, 'fear') ? 'fear' : on(f, 'poly') ? 'poly' : on(f, 'root') ? 'root' : f.stealth ? 'stealth' : '', absorb: Math.round(f.absorb),
+      cast: f.cast ? f.cast.name : f.channel ? f.channel.name : '', school: f.cast ? f.cast.school : f.channel ? 'shadow' : '', cat: f.cls === 'DRUID' && f.form && !f.bear ? 1 : 0, bear: f.bear ? 1 : 0, petSheep: on(f, 'petSheep') ? 1 : 0, sheep: on(f, 'poly') && f.sheep ? 1 : 0, shield: f.absorb > 0 ? 1 : 0, mover: on(f, 'fear') ? 1 : 0, state: on(f, 'block') ? 'block' : on(f, 'stun') ? 'stun' : on(f, 'fear') ? 'fear' : on(f, 'poly') ? 'poly' : on(f, 'root') ? 'root' : f.stealth ? 'stealth' : '', absorb: Math.round(f.absorb),
     };
   }
 

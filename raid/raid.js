@@ -6,7 +6,7 @@ import { RaidScene } from './scene.js';
 import { resultHtml } from '../pvp/arena.js';
 import { CLASS_COLOR } from '../draft/core.js';
 import { bindName, heroName, nameField, nameOk } from '../pvp/name.js';
-import { CLASS_NAME, DRAFT_PICKS, FORGE, INGOT, INGOTS, collect, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js';
+import { CLASS_NAME, DRAFT_PICKS, FORGE, INGOT, INGOTS, collect, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, receivers, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js';
 
 const KEY = 'raidRun', WHO = 'gauntletWho';
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
@@ -210,7 +210,12 @@ function offerHtml(o, withHero) {
   const name = (s) => { const id = hero.picks[s]; return id ? pool.items[id] : null; };
   const aim = list.length > 1 ? `<div class="raims">${list.map((s) => { const w = name(s); return `<button class="${s === to ? 'on' : ''}" data-aim="${key}|${s}"><small>${SLOT_NAME[s]}${/\d$/.test(s) ? ` ${s.slice(-1)}` : ''}</small><b style="color:${w ? QUALITY[w[1]] : 'inherit'}">${w ? esc(w[0]) : 'Empty'}</b></button>`; }).join('')}</div>` : `<p class="rold">${name(to) ? `Replaces <em style="color:${QUALITY[name(to)[1]]}">${esc(name(to)[0])}</em>` : 'Empty slot'}</p>`;
   const owner = withHero ? `<div class="rforhero"><img src="assets/classes/${hero.cls}.png" alt=""><b>${CLASS_NAME[hero.cls]}</b><span>${ROLE_NAME[hero.role]}</span></div>` : '';
-  return `<div class="roffer ${withHero ? `rfor role-${hero.role}` : ''}" data-look="${key}">${owner}<button class="rlook"><span class="rico" data-item="${o.id}" data-vs="${worn.join(',')}"><img src="${iconOf(o.id)}" alt=""></span><span class="rtxt"><b style="color:${QUALITY[it[1]]}">${esc(it[0])}</b><small>${meta}</small></span></button>${gainsHtml(hero, to, o)}${noteHtml(hero, to, o)}<div class="rfoot">${aim}<button class="gmini rtake" data-take="${key}|${to}">Take</button></div></div>`;
+  return `<div class="roffer ${withHero ? `rfor role-${hero.role}` : ''}" data-look="${key}">${owner}<button class="rlook"><span class="rico" data-item="${o.id}" data-vs="${worn.join(',')}"><img src="${iconOf(o.id)}" alt=""></span><span class="rtxt"><b style="color:${QUALITY[it[1]]}">${esc(it[0])}</b><small>${meta}</small></span></button>${gainsHtml(hero, to, o)}${noteHtml(hero, to, o)}<div class="rfoot">${aim}<button class="gmini rtake" data-take="${key}|${to}">Take</button></div>${withHero ? givesHtml(o, key) : ''}</div>`;
+}
+
+function givesHtml(o, key) {
+  const can = receivers(pool, run, o), others = run.heroes.map((h, i) => i).filter((i) => i !== o.hero);
+  return `<div class="rgive">${others.map((i) => { const h = run.heroes[i], ok = can.includes(i); return `<button data-give="${key}|${i}" ${ok ? '' : `disabled title="${CLASS_NAME[h.cls]} can't use this"`}><img src="assets/classes/${h.cls}.png" alt="">Give to ${ROLE_NAME[h.role]}</button>`; }).join('')}</div>`;
 }
 
 function previewPicks() {
@@ -300,13 +305,24 @@ function spoilsHtml() {
   return `<div class="gpanel"><div class="rtitle"><div><h3>Spoils <em>${run.spoilsLeft > 1 ? `choose ${run.spoilsLeft} of these` : 'choose 1'}</em></h3></div><button class="gmini" data-act="reroll" ${run.rerolls ? '' : 'disabled'}>Reroll (${run.rerolls} left)</button></div> <div class="roffers four">${b ? `<div class="roffer rboon"><div class="rlook"><span class="rtxt"><small>Boon for this run</small><b>${esc(b.name)}</b><span class="rboontext">${esc(b.text)}</span></span></div><button class="gmini rtake" data-boon="${b.id}">Take</button></div>` : ''}${offers.map((o) => offerHtml(o, true)).join('')}</div><button class="gskip" data-act="pass">${run.spoilsLeft > 1 ? 'Take nothing' : 'Done'}</button></div>`;
 }
 
+function bossTable() {
+  const rows = run.results.filter((r) => r.dealt);
+  if (!rows.length) return '';
+  const k = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(2)}M` : n >= 1e4 ? `${(n / 1e3).toFixed(n >= 1e5 ? 0 : 1)}k` : num(n));
+  return `<ul class="rbosses">${run.results.map((r, i) => {
+    if (!r.dealt) return '';
+    const b = RAIDS[run.raid].bosses[i], total = r.dealt.reduce((a, x) => a + x, 0), best = r.dealt.indexOf(Math.max(...r.dealt)), h = run.heroes[best];
+    return `<li class="${b.endless ? 'final' : r.won ? 'won' : 'lost'}"><b>${esc(b.name)}${r.heroic ? ' <em>Heroic</em>' : ''}</b><span>${Math.round(r.time)}s</span><span>${k(total)}</span><img src="assets/classes/${h.cls}.png" alt="" title="Top damage: ${CLASS_NAME[h.cls]} ${num(r.dealt[best])}"></li>`;
+  }).join('')}</ul>`;
+}
+
 function overHtml() {
   const k = killed(run), bosses = RAIDS[run.raid].bosses, finale = bosses[run.boss].endless, last = run.results[run.results.length - 1], tier = tierOf(run.score);
   const trail = bosses.map((b, i) => { const r = run.results[i]; return `<i class="${r ? (b.endless ? 'final' : r.won ? 'won' : 'lost') : ''} ${r && r.heroic ? 'heroic' : ''}" title="${esc(b.name)}${r ? ` ${Math.round(r.time)}s` : ''}">${i + 1}</i>`; }).join('');
   const heroics = run.results.filter((r) => r.heroic && r.won).length;
   const rank = run.rank ? `<div class="rrank"><b>#${num(run.rank.place)}</b><span>of ${num(run.rank.total)} ${run.rank.total === 1 ? 'run' : 'runs'} on the leaderboard</span></div>` : '';
   return `<div class="gpanel rsummary ${finale ? 'finale' : ''}"><small>${esc(RAIDS[run.raid].name)}</small>${finale ? `<h2>${tier >= 0 ? esc((RAIDS[run.raid].milestones || MILESTONES)[tier][1]) : 'Final Stand'}</h2><div class="rbig">${num(run.score)}</div><p class="rlabel">damage to ${esc(RAIDS[run.raid].finale || 'Ragnaros')}</p>${rank}` : `<h2>Fell to ${esc(bossAt(run, run.boss).name)}</h2><p class="rlabel">Reach ${esc(RAIDS[run.raid].finale || 'Ragnaros')} to earn a place on the leaderboard.</p>`}
-    <div class="rtrail">${trail}</div>
+    <div class="rtrail">${trail}</div>${bossTable()}
     ${keptDrops().list.map((m) => mountHtml(m, m.id === INGOT ? 'Found this run' : 'Dropped this run')).join('')}
     <p>${k} of ${bosses.length - 1} bosses killed${heroics ? `, ${heroics} on Heroic` : ''}. ${esc(last.why || '')}</p>
     <div class="rsumparty">${run.heroes.map((h) => `<div class="rsumhero"><img src="assets/classes/${h.cls}.png" alt=""><span><small>${ROLE_NAME[h.role]}</small><b>${CLASS_NAME[h.cls]}</b></span></div>`).join('')}</div>
@@ -361,6 +377,7 @@ function render() {
   for (const el of root.querySelectorAll('[data-spec]')) el.onclick = () => { chosenSpec = el.dataset.spec; viewing = run.at; render(); showHero(); };
   for (const el of root.querySelectorAll('[data-aura]')) el.onclick = () => { chosenPick = el.dataset.aura; render(); };
   for (const el of root.querySelectorAll('[data-take]')) el.onclick = () => { const [hero, slot, id, to] = el.dataset.take.split('|'); chooseItem({ hero: +hero, slot, id: +id, to }); };
+  for (const el of root.querySelectorAll('[data-give]')) el.onclick = () => { const [hero, slot, id, give] = el.dataset.give.split('|'); chooseItem({ hero: +hero, slot, id: +id, to: slot, give: +give }); };
   for (const el of root.querySelectorAll('[data-aim]')) el.onclick = () => { const [hero, slot, id, to] = el.dataset.aim.split('|'); aims[`${hero}|${slot}|${id}`] = to; render(); };
   for (const el of root.querySelectorAll('[data-boon]')) el.onclick = () => { takeBoon(run, el.dataset.boon); offers = null; save(); render(); showHero(); };
   for (const el of root.querySelectorAll('[data-look]')) el.onclick = (e) => { if (e.target.closest('button:not(.rlook)')) return; const [hero, slot, id] = el.dataset.look.split('|'); compare({ hero: +hero, slot, id: +id }); };
@@ -381,6 +398,7 @@ function chooseItem(choice) {
   const before = run.step, from = run.at, same = viewing === choice.hero;
   take(pool, run, choice);
   offers = null;
+  if (choice.give !== undefined) viewing = choice.give;
   if (run.step === 'draft' || run.step === 'party') viewing = Math.min(run.at, 2);
   save();
   render();
@@ -406,11 +424,23 @@ async function pull(heroic = false) {
   busy = false;
 }
 
+function breakdownHtml(result) {
+  const dealt = result.totals.reduce((n, h) => n + h.dealt, 0) || 1, top = Math.max(...result.totals.map((h) => h.dealt), 1), k = (n) => (n >= 1e4 ? `${(n / 1e3).toFixed(n >= 1e5 ? 0 : 1)}k` : Math.round(n).toLocaleString('en-US'));
+  const rows = result.totals.map((t, i) => {
+    const h = run.heroes[i], spec = (specsFor(h.role, h.cls).find((x) => x.id === h.build) || {}).name || CLASS_NAME[h.cls];
+    const side = h.role === 'tank' ? `Took ${k(t.took)}` : h.role === 'heal' ? `Healed ${k(t.healed)}` : `${Math.round(t.dealt / Math.max(1, result.time))} dps`;
+    const by = h.role === 'dps' && built(i).by ? Object.entries(built(i).by).filter(([, v]) => v >= 1).sort((x, y) => y[1] - x[1]).slice(0, 4) : [];
+    const spells = by.length > 1 ? `<li class="rspells">${by.map(([n, v]) => `<span><b>${esc(n)}</b> ${Math.round(v)}%</span>`).join('')}</li>` : '';
+    return `<li class="${t.dead ? 'dead' : ''}" style="--k:${CLASS_COLOR[h.cls]};--w:${t.dealt / top}"><img src="assets/classes/${h.cls}.png" alt=""><span><b>${esc(spec)} ${CLASS_NAME[h.cls]}</b><small>${side}${t.dead ? ' · died' : ''}</small></span><i></i><em>${k(t.dealt)}<small>${Math.round(t.dealt / dealt * 100)}%</small></em></li>${spells}`;
+  }).join('');
+  return `<ul class="rbreak">${rows}</ul>`;
+}
+
 function finished(result, why, after, boss) {
   const title = result.won ? 'Victory' : boss.endless ? num(result.score) : 'Wipe';
   const dealt = result.totals.reduce((n, h) => n + h.dealt, 0), share = (h) => Math.round(h).toLocaleString('en-US');
   const kept = keptDrops(), drop = (result.won || boss.endless) && boss.drop && kept.list.includes(boss.drop);
-  scene.banner(resultHtml({ title, stats: boss.endless ? [['Final Stand', `Damage to ${RAIDS[run.raid].finale || 'Ragnaros'}`], [Math.round(result.time), 'Seconds survived']] : [[Math.round(result.time), 'Seconds'], [share(dealt), 'Damage dealt'], result.won ? [run.boss, `of ${RAIDS[run.raid].bosses.length} bosses`] : [`${Math.round(result.health * 100)}%`, 'Boss health left']], note: boss.endless ? '' : esc(why), extra: drop ? mountHtml(boss.drop, boss.drop.kind === 'mount' ? 'A rare mount dropped!' : boss.drop.id === INGOT ? `Sulfuron Ingot ${kept.have[INGOT]} of ${INGOTS}` : 'A legendary relic dropped!') : '', action: result.won ? 'Claim spoils' : 'See your run' }), `result ${result.won || boss.endless ? 'win' : 'lose'}`);
+  scene.banner(resultHtml({ title, stats: boss.endless ? [['Final Stand', `Damage to ${RAIDS[run.raid].finale || 'Ragnaros'}`], [Math.round(result.time), 'Seconds survived']] : [[Math.round(result.time), 'Seconds'], [share(dealt), 'Damage dealt'], result.won ? [run.boss, `of ${RAIDS[run.raid].bosses.length} bosses`] : [`${Math.round(result.health * 100)}%`, 'Boss health left']], note: boss.endless ? '' : esc(why), extra: breakdownHtml(result) + (drop ? mountHtml(boss.drop, boss.drop.kind === 'mount' ? 'A rare mount dropped!' : boss.drop.id === INGOT ? `Sulfuron Ingot ${kept.have[INGOT]} of ${INGOTS}` : 'A legendary relic dropped!') : ''), action: result.won ? 'Claim spoils' : 'See your run' }), `result ${result.won || boss.endless ? 'win' : 'lose'}`);
   root.querySelector('[data-next]').onclick = () => {
     run.step = after;
     offers = null;

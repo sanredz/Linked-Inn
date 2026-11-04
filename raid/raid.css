@@ -64,6 +64,11 @@
 .rfoot .rold, .rfoot .raims { flex: 1; min-width: 0; margin: 0; }
 .rtake { flex: none; padding: 7px 20px; font-size: 15px; color: #ffd76a; border-color: #c99a3b; transition: background .18s ease, color .18s ease; }
 .rtake:hover { color: #1a1206; background: linear-gradient(#ffe39a, #d5a548); }
+.rgive { display: flex; gap: 5px; margin-top: 6px; }
+.rgive button { display: flex; flex: 1; align-items: center; justify-content: center; gap: 5px; min-width: 0; padding: 3px 6px; font: 12px system-ui, sans-serif; color: #a8987c; white-space: nowrap; cursor: pointer; background: none; border: 1px dashed #3f3119; border-radius: 6px; transition: color .18s ease, border-color .18s ease; }
+.rgive button:hover:not(:disabled) { color: #f0e2c0; border-color: #8a6a2a; border-style: solid; }
+.rgive button:disabled { opacity: .35; cursor: not-allowed; }
+.rgive img { width: 16px; height: 16px; border-radius: 50%; }
 .raims { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
 .raims button { display: grid; min-width: 0; padding: 2px 6px; text-align: left; font: inherit; color: #a8987c; cursor: pointer; background: rgba(0, 0, 0, .35); border: 1px solid #3f3119; border-radius: 6px; transition: border-color .18s ease, background .18s ease; }
 .raims button:hover { border-color: #8a6a2a; }
@@ -420,3 +425,26 @@ body.raidrun .banner[data-screen="raid"] { display: none; }
 @keyframes rmountIn { from { opacity: 0; transform: scale(.6); } }
 .rmicon { width: 18px; height: 18px; margin-left: 6px; vertical-align: -3px; border-radius: 3px; border: 1px solid #a335ee; box-shadow: 0 0 6px rgba(163, 53, 238, .6); }
 @media (prefers-reduced-motion: reduce) { .rmount { animation: none; } }
+
+.rbreak { display: grid; gap: 4px; width: 100%; margin: 0; padding: 8px 10px; list-style: none; background: rgba(0, 0, 0, .5); border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(248, 211, 107, .18); animation: bstat .42s ease .5s backwards; }
+.rbreak li { display: grid; grid-template-columns: 26px minmax(0, 9.5em) 1fr auto; align-items: center; gap: 9px; }
+.rbreak img { width: 26px; height: 26px; border: 1px solid var(--k); border-radius: 50%; }
+.rbreak span { display: grid; min-width: 0; text-align: left; }
+.rbreak b { overflow: hidden; font: 14px "Friz", serif; font-weight: normal; color: #f0e2c0; text-overflow: ellipsis; white-space: nowrap; }
+.rbreak span small { font-size: 11.5px; color: #a8987c; }
+.rbreak i { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--k) calc(var(--w) * 100%), rgba(255, 255, 255, .06) 0); }
+.rbreak em { display: grid; justify-items: end; min-width: 3.4em; font: 16px/1 "Morpheus", serif; font-style: normal; color: #ffe6a8; font-variant-numeric: tabular-nums; }
+.rbreak em small { margin-top: 2px; font: 10.5px system-ui, sans-serif; color: #8f8170; }
+.rbreak .dead img { filter: grayscale(1); opacity: .6; }
+@media (max-width: 520px) { .rbreak li { grid-template-columns: 22px minmax(0, 7.5em) 1fr auto; gap: 7px; } .rbreak img { width: 22px; height: 22px; } .rbreak b { font-size: 12.5px; } }
+.rbreak .rspells { display: flex; flex-wrap: wrap; gap: 4px 10px; grid-template-columns: none; margin: -2px 0 2px 35px; font-size: 11px; color: #8f8170; }
+.rbreak .rspells b { font: 11px system-ui, sans-serif; color: #c9b99a; }
+.rbosses { display: grid; gap: 2px; width: 100%; margin: 6px 0; padding: 0; list-style: none; }
+.rbosses li { display: grid; grid-template-columns: minmax(0, 1fr) 3.4em 4.6em 20px; align-items: center; gap: 10px; padding: 4px 8px; font-size: 13px; color: #c9b99a; border-radius: 6px; }
+.rbosses li:nth-child(odd) { background: rgba(255, 255, 255, .03); }
+.rbosses b { overflow: hidden; font: 14px "Friz", serif; font-weight: normal; color: #ecdcb8; text-overflow: ellipsis; white-space: nowrap; }
+.rbosses b em { font: 10.5px system-ui, sans-serif; font-style: normal; letter-spacing: .06em; text-transform: uppercase; color: #ff9b4a; }
+.rbosses span { text-align: right; font-variant-numeric: tabular-nums; }
+.rbosses img { width: 20px; height: 20px; border-radius: 50%; }
+.rbosses .lost b { color: #e0705f; }
+.rbosses .final b { color: #ffe6a8; }

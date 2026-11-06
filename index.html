@@ -1679,16 +1679,21 @@ body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
 .ap-house .sm { font-size: 12.5px; color: var(--ink-2); }
 .ap-house .gv { margin-top: 8px; font: 17px "Friz", serif; color: #ffd76a; text-shadow: 0 1px 0 #000; }
 .ap-rsc { margin-bottom: 14px; }
-.ap-tree { position: relative; height: 360px; border-radius: 8px; overflow: hidden; }
+.ap-tree { position: relative; height: 400px; border-radius: 8px; overflow: hidden; }
 .ap-tile { position: absolute; padding: 10px 12px; overflow: hidden; border: 2px solid #0b0906; border-radius: 8px; cursor: pointer; text-align: left; font: inherit; color: var(--ink);
   background: radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--tc) 35%, transparent), transparent 60%), linear-gradient(160deg, color-mix(in srgb, var(--tc) 28%, #16110a), #0f0c08);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px color-mix(in srgb, var(--tc) 40%, transparent); transition: filter 0.15s; }
 .ap-tile:hover, .ap-tile.on { filter: brightness(1.25); box-shadow: inset 0 0 0 2px var(--tc); }
-.ap-tile img { width: 34px; height: 34px; border-radius: 6px; box-shadow: 0 0 0 1px #000, 0 0 0 2px color-mix(in srgb, var(--tc) 60%, transparent); }
-.ap-tile b { display: block; margin-top: 6px; font: 18px/1.05 "Morpheus", serif; font-weight: normal; color: var(--title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ap-tile span { display: block; font: 14px "Friz", serif; color: #ffd76a; white-space: nowrap; }
-.ap-tile small { font-size: 11.5px; color: var(--ink-2); }
-.ap-tile.tiny img, .ap-tile.tiny small { display: none; } .ap-tile.tiny b { font-size: 13px; margin-top: 0; } .ap-tile.tiny span { font-size: 11px; }
+.ap-tile { display: flex; flex-direction: column; justify-content: space-between; padding: 10px 12px; }
+.ap-tile .hd { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ap-tile img { width: 28px; height: 28px; flex: none; border-radius: 5px; box-shadow: 0 0 0 1px #000, 0 0 0 2px color-mix(in srgb, var(--tc) 60%, transparent); }
+.ap-tile b { font: 17px/1.1 "Morpheus", serif; font-weight: normal; color: var(--title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ap-tile .pc { font: 30px/1 "Friz", serif; color: #fff2cf; text-shadow: 0 2px 0 #000; }
+.ap-tile .gv { display: flex; align-items: center; gap: 5px; font: 14px "Friz", serif; color: #ffd76a; white-space: nowrap; }
+.ap-tile .gv i { width: 10px; height: 10px; border-radius: 50%; flex: none; background: radial-gradient(circle at 35% 35%, #fff3a0, #d4a100); box-shadow: 0 0 0 1px #000; }
+.ap-tm .pc { font-size: 22px; } .ap-tm img { width: 22px; height: 22px; } .ap-tm b { font-size: 14px; } .ap-tm .gv { font-size: 12px; }
+.ap-ts { padding: 5px 7px; } .ap-ts img { display: none; } .ap-ts b { font-size: 12px; } .ap-ts .pc { font-size: 15px; } .ap-ts .gv { display: none; }
+.ap-txs { padding: 3px 5px; justify-content: center; } .ap-txs .hd, .ap-txs .gv { display: none; } .ap-txs .pc { font-size: 11px; }
 .ap-subs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(190px, 100%), 1fr)); gap: 8px; margin-top: 12px; }
 .ap-subs div { padding: 8px 10px; border-radius: 7px; background: rgba(0, 0, 0, 0.35); border-left: 3px solid var(--tc); }
 .ap-subs b { display: block; font: 14px "Friz", serif; font-weight: normal; color: var(--ink); }
@@ -1738,7 +1743,7 @@ body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
   .ap-regs { grid-template-columns: 1fr 1fr; } .ap-reg { height: 92px; } .ap-reg .ap-rn { font-size: 18px; }
   .ap-war { grid-template-columns: 1fr 1fr; } .ap-war .ap-tugs { grid-column: 1 / -1; grid-row: 2; } .ap-side img { width: 76px; height: 76px; } .ap-side b { font-size: 26px; }
   .ap-houses { grid-template-columns: 1fr; } .ap-house { min-height: 210px; } .ap-house .cr { width: 90px; height: 90px; }
-  .ap-tree { height: 460px; } .ap-facts { grid-template-columns: 1fr; }
+  .ap-tree { height: 520px; } .ap-facts { grid-template-columns: 1fr; }
   .ap-heat { font-size: 10px; } .ap-heat .hy span { display: none; } .ap-heat .hc { height: 26px; font-size: 9.5px; }
   .ap-gcols { height: 190px; gap: 6px; }
 }
@@ -1799,6 +1804,12 @@ body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
 @media (max-width: 720px) { .ap-mv { grid-template-columns: 1fr; } .ap-gr { grid-template-columns: 46px repeat(3, 1fr); gap: 4px; } .ap-gc { font-size: 11px; padding: 0 4px; } .ap-gr.hd span { font-size: 11px; } }
 
 @media (min-width: 721px) and (max-width: 1180px) { .top .wrap { gap: 8px; } .tabs { margin-left: 2px; gap: 0; } .tabs .tab { padding: 5px 6px 4px; } .right { gap: 6px; } .right .realm button { padding: 6px 9px; } .brand b { font-size: 24px; } }
+.ap-irows.two { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+.ap-ir { padding: 5px 8px; grid-template-columns: 28px 1fr auto; gap: 9px; }
+.ap-ir img { width: 28px; height: 28px; }
+.ap-ir .bx { font-size: 16px; }
+.ap-vs { gap: 10px; }
+@media (max-width: 720px) { .ap-irows.two { grid-template-columns: 1fr; } }
 </style>
 <script>
 let me = false;
@@ -1898,7 +1909,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261106200516';
+window.LI_V = '20261106205848';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -4541,9 +4552,14 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     h += panel('s12', 'The three houses', 'Every ruleset has its own Alliance, Horde and neutral Blackwater auction house. Which house belongs to which ruleset is our best guess for now, from how busy each one is.', rsChips + `<div class="ap-houses">${houses}</div>`);
 
     const cats = R.cats.filter((c) => c.v > 0);
-    const rects = apSquarify(cats.map((c) => ({ k: c.k, v: c.v, c })), 100, 100);
+    const TW = Math.max(300, ((document.getElementById('main') || {}).clientWidth || 1000) - 56), TH = TW < 640 ? 520 : TW < 1000 ? 440 : 400;
+    const rects = apSquarify(cats.map((c) => ({ k: c.k, v: c.v, c })), TW, TH);
     const mtot = Math.max(1, sum(cats.map((c) => c.v)));
-    const tiles = rects.map((r) => { const c = r.it.c, [ic, tc] = AP_CAT[c.k] || ['inv_misc_questionmark', '#999']; const tiny = r.w < 11 || r.h < 18; return `<button class="ap-tile${tiny ? ' tiny' : ''}${sel.ecat === c.k ? ' on' : ''}" data-ecat="${esc(c.k)}" style="left:${r.x}%;top:${r.y}%;width:${r.w}%;height:${r.h}%;--tc:${tc}" data-tip="${esc(c.k)}|${apGold(c.v)} gold in ${fmt(c.n)} auctions"><img src="${UI(ic)}" alt=""><b>${esc(c.k)}</b><span>${pct(c.v, mtot)}%</span><small>${apGold(c.v)} gold</small></button>`; }).join('');
+    const tiles = rects.map((r) => {
+      const c = r.it.c, [ic, tc] = AP_CAT[c.k] || ['inv_misc_questionmark', '#999'];
+      const size = r.w >= 150 && r.h >= 92 ? 'l' : r.w >= 96 && r.h >= 58 ? 'm' : r.w >= 54 && r.h >= 34 ? 's' : 'xs';
+      return `<button class="ap-tile ap-t${size}${sel.ecat === c.k ? ' on' : ''}" data-ecat="${esc(c.k)}" style="left:${100 * r.x / TW}%;top:${100 * r.y / TH}%;width:${100 * r.w / TW}%;height:${100 * r.h / TH}%;--tc:${tc}" data-tip="${esc(c.k)}|${pct(c.v, mtot)}% · ${apGold(c.v)} gold in ${fmt(c.n)} auctions"><span class="hd"><img src="${UI(ic)}" alt=""><b>${esc(c.k)}</b></span><span class="pc">${pct(c.v, mtot)}%</span><span class="gv"><i></i>${apGold(c.v)}</span></button>`;
+    }).join('');
     const pick = cats.find((c) => c.k === sel.ecat);
     const subMax = pick ? Math.max(1, ...pick.subs.map((x) => x[2])) : 1;
     const subs = pick ? `<div class="ap-subh" style="--tc:${(AP_CAT[pick.k] || [])[1] || '#999'}"><img src="${UI((AP_CAT[pick.k] || [])[0] || 'inv_misc_questionmark')}" alt=""><b>${esc(pick.k)}</b><span>${apGold(pick.v)} gold · ${fmt(pick.n)} auctions</span><button class="chip ap-clr" data-ecat="">Show all ×</button></div><div class="ap-subs" style="--tc:${(AP_CAT[pick.k] || [])[1] || '#999'}">${pick.subs.map(([sn, n, v]) => `<div><span class="pc">${pct(v, pick.v)}%</span><b>${esc(sn)}</b><i class="br"><i style="width:${100 * v / subMax}%"></i></i><small>${apGold(v)} gold · ${fmt(n)} auctions</small></div>`).join('')}</div>` : '';
@@ -4564,26 +4580,14 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     }
 
     const MV = R.movers || { span: 0, up: [], down: [] };
-    const mvList = (L, up) => L.length ? `<div class="ap-irows">${L.map((x) => apIRow(x.id, E, `${apCoin(x.old)} → ${apCoin(x.p)}`, `<span class="${up ? 'ap-up' : 'ap-dn'}">${up ? '+' : ''}${x.ch}%</span>`, `${fmt(x.q)} for sale`, x.rg)).join('')}</div>` : '<div class="optout">Nothing moved much.</div>';
-    h += panel('s6', 'Movers', MV.span ? `Typical prices now against ${Math.round(MV.span / 3600)} hours ago, for items with real volume.` : 'Biggest price rises and drops over the last day.',
-      MV.span ? `<div class="ap-mv"><div><h4 class="ap-up">Rising</h4>${mvList(MV.up, true)}</div><div><h4 class="ap-dn">Falling</h4>${mvList(MV.down, false)}</div></div>` : `<div class="ap-wait"><img src="${UI('inv_misc_pocketwatch_01')}" alt=""><div><b>Counting</b><span>Prices are saved every hour. Movers appear once there are a few hours to compare.</span></div></div>`);
+    const mvList = (L, up) => L.length ? `<div class="ap-irows">${L.map((x) => apIRow(x.id, E, `${apCoin(x.old)} → ${apCoin(x.p)}`, `<span class="${up ? 'ap-up' : 'ap-dn'}">${up ? '+' : ''}${x.ch}%</span>`, '', x.rg)).join('')}</div>` : '<div class="optout">Nothing moved much.</div>';
+    const hasMv = MV.span && (MV.up.length || MV.down.length);
+    if (hasMv) h += panel('s6', 'Movers', `Typical prices now against ${Math.round(MV.span / 3600)} hours ago, for items with real volume.`, `<div class="ap-mv"><div><h4 class="ap-up">Rising</h4>${mvList(MV.up.slice(0, 5), true)}</div><div><h4 class="ap-dn">Falling</h4>${mvList(MV.down.slice(0, 5), false)}</div></div>`);
     const GP = R.gaps || [];
-    h += panel('s6', 'Across the border', 'The same item on the same ruleset, priced very differently by Alliance and Horde. Typical (median) prices.',
-      `<div class="ap-strip" style="--bg:url('${ART('land-orccamp')}')"><span class="bn">×${GP[0] ? Math.round(GP[0].x) : 1}</span>The biggest gap between the two factions right now.</div>` +
-      `<div class="ap-irows">${GP.slice(0, 7).map((x) => apIRow(x.id, E, `<span class="ap-vs"><span class="a">Alliance ${apCoin(x.a)}</span>·<span class="h">Horde ${apCoin(x.h)}</span></span>`, `×${x.x >= 10 ? Math.round(x.x) : x.x}`, esc(x.rs), x.rg)).join('')}</div>`);
-
-    const BR = R.bargains || [];
-    h += panel('s6', 'Free money', 'Auctions listed for less than a vendor pays for the item. Buy, walk to any vendor, sell.',
-      `<div class="ap-strip" style="--bg:url('${ART('econ-brewery')}')"><span class="bn">${fmt(R.below.n)} auctions</span>sell for less than a vendor pays. Buying them all and vendoring them makes <b>${apCoin(R.below.v)}</b>.</div>` +
-      `<div class="ap-irows">${BR.slice(0, 7).map((x) => apIRow(x.id, E, `Buy for ${apCoin(x.low)} · vendor pays ${apCoin(x.vs)}`, apCoin(x.gain), `${fmt(x.uq)} to grab`, x.rg)).join('')}</div>`);
-
-    const QCOL = { POOR: '#9d9d9d', COMMON: '#e8e8e8', UNCOMMON: '#1eff00', RARE: '#3a95f5', EPIC: '#b94cf7', LEGENDARY: '#ff8000' }, QN = { POOR: 'Poor', COMMON: 'Common', UNCOMMON: 'Uncommon', RARE: 'Rare', EPIC: 'Epic', LEGENDARY: 'Legendary' };
-    const ql = Object.keys(QCOL).filter((k) => R.quals[k]);
-    const TL = [['SHORT', 'Under 30 min', '#d8443a'], ['MEDIUM', '30 min to 2 h', '#d9a940'], ['LONG', '2 to 12 h', '#62b98c'], ['VERY_LONG', 'Over 12 h', '#4a8fe7']];
-    h += panel('s6', 'The shape of the market', 'What quality is for sale, and how long auctions have left.',
-      `<div class="ap-mix"><h4>Quality</h4><div class="fbar">${ql.map((k) => `<i style="--c:${QCOL[k]};flex:${R.quals[k]}" data-tip="${QN[k]}|${fmt(R.quals[k])} auctions"></i>`).join('')}</div><div class="ap-mleg">${ql.map((k) => `<span style="--c:${QCOL[k]}">${QN[k]} ${pct(R.quals[k], R.listings)}%</span>`).join('')}</div></div>` +
-      `<div class="ap-mix" style="margin-bottom:0"><h4>Time left</h4><div class="fbar">${TL.map(([k, n, c]) => `<i style="--c:${c};flex:${R.tleft[k] || 0}" data-tip="${n}|${fmt(R.tleft[k] || 0)} auctions"></i>`).join('')}</div><div class="ap-mleg">${TL.map(([k, n, c]) => `<span style="--c:${c}">${n} ${pct(R.tleft[k] || 0, R.listings)}%</span>`).join('')}</div></div>`);
-
+    if (GP.length) {
+      const rowsB = GP.slice(0, hasMv ? 6 : 10).map((x) => apIRow(x.id, E, `<span class="ap-vs"><span class="a">A ${apCoin(x.a)}</span><span class="h">H ${apCoin(x.h)}</span></span>`, `×${x.x >= 10 ? Math.round(x.x) : x.x}`, esc(x.rs), x.rg)).join('');
+      h += panel(hasMv ? 's6' : 's12', 'Across the border', 'The same item on the same ruleset, priced very differently by Alliance and Horde.', `<div class="ap-irows${hasMv ? '' : ' two'}">${rowsB}</div>`);
+    }
     const TABS = [['listed', 'Most auctions', 'inv_misc_bag_10'], ['mats', 'Biggest piles of materials', 'inv_stone_04']];
     const HELP = { listed: 'The items with the most separate auctions up right now, gear included.', mats: 'Ore, herbs, cloth, leather and other trade goods, by how many are for sale in total, stacks counted.' };
     if (sel.etab !== 'listed' && sel.etab !== 'mats') sel.etab = 'listed';
@@ -4596,8 +4600,6 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     if (S.n) {
       h += panel('s12', 'What sold', `Auctions that vanished between the last two updates while they still had time left: most of them sold. ${fmt(S.n)} items in the last ${Math.round(S.span / 60)} minutes.`, `<div class="recipes">${S.top.map((x) => { const it = apItem(x.id, E); return `<div class="recipe" style="--qc:${it.qc}" data-gi="${x.id}:0" data-ep="${fmt(x.s)} sold since the last update"><img src="${it.ic}" alt=""><div style="min-width:0"><div class="nm">${esc(it.n)}</div><div class="meta"><span>${fmt(x.s)} sold</span>${apCoin(x.p)}</div></div></div>`; }).join('')}</div>`);
     }
-    h += panel('s12', 'Coming as the hours pass', 'We save the auction house every time Blizzard updates it, about once an hour. These fill in as the snapshots pile up.',
-      `<div class="ap-next">${[['What sells', 'Auctions that disappear before they run out, so we know what people actually buy.'], ['Price history', 'Every item’s price over days and weeks.'], ['Inflation', 'A basket of everyday goods, priced every hour.'], ['Rush hour', 'When the auction house is busiest, by hour of day.'], ['Crafting profit', 'What the materials cost against what the crafted item sells for.']].map(([b, t]) => `<div><b>${b}</b>${t}</div>`).join('')}</div>`);
 
     const el = document.getElementById('main');
     el.innerHTML = h;

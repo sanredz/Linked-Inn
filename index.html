@@ -1681,6 +1681,8 @@ body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
 .ap-house .sm { font-size: 12.5px; color: var(--ink-2); }
 .ap-house .gv { margin-top: 8px; font: 17px "Friz", serif; color: #ffd76a; text-shadow: 0 1px 0 #000; }
 .ap-rsc { margin-bottom: 14px; }
+.bar.ap-ebar .btn { padding: 5px 12px; font-size: 13.5px; } .bar.ap-ebar .btn img { width: 18px; height: 18px; }
+@media (max-width: 720px) { .bar.ap-ebar .wrap { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-left: 12px; padding-right: 12px; } .bar.ap-ebar .wrap::-webkit-scrollbar { display: none; } .bar.ap-ebar .seg { flex-wrap: nowrap; flex: none; } .bar.ap-ebar .btn { white-space: nowrap; flex: none; } .bar.ap-ebar .sep { display: block; flex: none; height: 24px; } }
 .ap-tree { position: relative; height: 400px; border-radius: 8px; overflow: hidden; }
 .ap-tile { position: absolute; padding: 10px 12px; overflow: hidden; border: 2px solid #0b0906; border-radius: 8px; cursor: pointer; text-align: left; font: inherit; color: var(--ink);
   background: radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--tc) 35%, transparent), transparent 60%), linear-gradient(160deg, color-mix(in srgb, var(--tc) 28%, #16110a), #0f0c08);
@@ -2033,7 +2035,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261106225312';
+window.LI_V = '20261107004619';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -3277,6 +3279,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   function plainHead() {
     ['realm', 'fac', 'opt'].forEach((id) => { document.getElementById(id).innerHTML = ''; });
     document.getElementById('sep2').hidden = true;
+    document.querySelector('.bar').classList.remove('ap-ebar');
   }
   const BETA_CARD = `<a class="acard lz-ac" href="beta/"><span class="lz-acimg" style="--bg:url('assets/game/scenes/dalaran.jpg')"><img src="${UI('inv_misc_book_11')}" alt=""></span><div><b>The Forever beta</b><span>October 4 to 23, 2026</span><span>Every chart, duel, character page and card, as the beta ended.</span></div></a>`;
   function eventCards() {
@@ -4709,10 +4712,27 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const E = window.ECON;
     const regs = ['us', 'eu', 'kr', 'tw'].filter((r) => E.regions[r]);
     if (sel.erg !== 'all' && !E.regions[sel.erg]) sel.erg = 'all';
-    const ALLR = apEconAll(E, regs);
-    const R = sel.erg === 'all' ? ALLR : E.regions[sel.erg], RN2 = APR[sel.erg];
-    document.getElementById('note').textContent = `${fmt(R.listings)} auctions in ${RN2.toLowerCase().replace('all regions', 'every region')}`;
-    let h = apRegionCards(['all', ...regs], sel.erg, 'erg', (r) => { const X = r === 'all' ? ALLR : E.regions[r]; return [`${apGold(X.market)} gold`, `in ${fmt(X.listings)} auctions`]; });
+    const rsAll = [...new Set(regs.flatMap((r) => Object.keys(E.regions[r].sets || {})))];
+    if (sel.ers !== 'all' && !rsAll.includes(sel.ers)) sel.ers = 'all';
+    const RSF = sel.ers !== 'all' ? sel.ers : null;
+    const rsWait = RSF && !regs.some((r) => E.regions[r].rs);
+    const viewOf = (X) => {
+      if (!RSF) return X;
+      if (X.rs && X.rs[RSF]) return { ...X, ...X.rs[RSF] };
+      const S = (X.sets || {})[RSF];
+      return S ? { ...X, listings: sum(Object.values(S).map((y) => y.n)), market: sum(Object.values(S).map((y) => y.v)) } : X;
+    };
+    const EV = { regions: Object.fromEntries(regs.map((r) => [r, viewOf(E.regions[r])])) };
+    const ALLR = apEconAll(EV, regs);
+    const R = sel.erg === 'all' ? ALLR : EV.regions[sel.erg], RN2 = APR[sel.erg];
+    const RSN = RSF ? ` · ${RSF}` : '';
+    const fbtn = (key, v, label, img, extra = '') => `<button class="btn${sel[key] === v ? ' on' : ''}" data-${key}="${esc(v)}">${img ? `<img src="${img}" alt="">` : ''}${label}</button>${extra}`;
+    document.getElementById('fac').innerHTML = ['all', ...regs].map((r) => fbtn('erg', r, r === 'all' ? 'All regions' : r.toUpperCase(), r === 'all' ? UI('inv_misc_coin_02') : '')).join('');
+    document.getElementById('opt').innerHTML = ['all', ...rsAll].map((k) => fbtn('ers', k, k === 'all' ? 'Every ruleset' : esc(k), UI(k === 'all' ? 'inv_misc_coin_17' : AP_RS_ICON[k] || 'inv_misc_questionmark'))).join('');
+    document.getElementById('sep2').hidden = false;
+    document.querySelector('.bar').classList.add('ap-ebar');
+    document.getElementById('note').textContent = rsWait ? 'Ruleset detail arrives with the next hourly update' : `${fmt(R.listings)} auctions in ${RN2.toLowerCase().replace('all regions', 'every region')}${RSN}`;
+    let h = apRegionCards(['all', ...regs], sel.erg, 'erg', (r) => { const X = r === 'all' ? ALLR : EV.regions[r]; return [`${apGold(X.market)} gold`, `in ${fmt(X.listings)} auctions`]; });
     h += plaque(UI('inv_misc_coin_17'), 'Auctions up', fmt(R.listings), `${fmt(R.qty)} items counting stacks`);
     h += plaque(UI('inv_misc_coin_02'), 'Gold on the market', apGold(R.market), 'at fair prices, wild listings trimmed');
     h += plaque(UI('inv_misc_note_01'), 'Different items', fmt(R.distinct), `for sale in ${RN2}`);
@@ -4724,15 +4744,12 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     }
     if (window.LI_MARKET) h += panel('s12', 'The market', 'Indexes track a basket of items like a stock index, starting at 100. Click indexes to compare them, or search any item for its full history.', '<div id="mkRoot"></div>');
 
-    const rsNames = Object.keys(R.sets);
-    if (sel.ers !== 'all' && !R.sets[sel.ers]) sel.ers = 'all';
     const hs = { Alliance: { n: 0, v: 0 }, Horde: { n: 0, v: 0 }, Blackwater: { n: 0, v: 0 } };
     Object.entries(R.sets).forEach(([rs, v]) => { if (sel.ers === 'all' || sel.ers === rs) Object.keys(hs).forEach((f) => { hs[f].n += v[f].n; hs[f].v += v[f].v; }); });
     const hsum = Math.max(1, sum(Object.values(hs).map((x) => x.n)));
     const HART = { Alliance: ['art-humanmale', ART('crest-alliance'), ''], Horde: ['land-orccamp', ART('crest-horde'), ''], Blackwater: ['econ-piratemap', UI('inv_misc_coin_17'), ' coin'] };
-    const rsChips = `<div class="chips ap-rsc">${['all', ...rsNames].map((k) => `<button class="chip ${k === sel.ers ? 'on' : ''}" data-ers="${k}"><img src="${UI(k === 'all' ? 'inv_misc_coin_02' : AP_RS_ICON[k] || 'inv_misc_questionmark')}" alt="">${k === 'all' ? 'Every ruleset' : esc(k)}</button>`).join('')}</div>`;
     const houses = Object.entries(hs).map(([f, v]) => `<div class="ap-house" style="--bg:url('${ART(HART[f][0])}');--hc:${AP_FAC[f]}"><img class="cr${HART[f][2]}" src="${HART[f][1]}" alt=""><h3>${f}</h3><div class="big">${fmt(v.n)}</div><div class="sm">auctions · ${pct(v.n, hsum)}% of the market</div><div class="gv">${apGold(v.v)} gold</div></div>`).join('');
-    h += panel('s12', 'The three houses', 'Every ruleset has its own Alliance, Horde and neutral Blackwater auction house. Which house belongs to which ruleset is our best guess for now, from how busy each one is.', rsChips + `<div class="ap-houses">${houses}</div>`);
+    h += panel('s12', `The three houses${RSN}`, 'Every ruleset has its own Alliance, Horde and neutral Blackwater auction house. Which house belongs to which ruleset is our best guess for now, from how busy each one is. Pick a ruleset in the bar at the top.', `<div class="ap-houses">${houses}</div>`);
 
     const cats = R.cats.filter((c) => c.v > 0);
     const TW = Math.max(300, ((document.getElementById('main') || {}).clientWidth || 1000) - 56), TH = TW < 640 ? 520 : TW < 1000 ? 440 : 400;
@@ -4776,13 +4793,13 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const hasMv = MV.span && (MV.up.length || MV.down.length);
     if (hasMv) {
       const mv = (L, up) => L.map((x) => { const it = apItem(x.id, E); return `<div class="ap-mvr" style="--qc:${it.qc}" data-gi="${x.id}:0"><img src="${it.ic}" alt=""><span class="nm">${esc(it.n)}</span><span class="ap-coin-from">${apCoin(x.old)} → ${apCoin(x.p)}</span><b class="${up ? 'ap-up' : 'ap-dn'}">${up ? '▲' : '▼'}${Math.abs(x.ch)}%</b></div>`; }).join('');
-      h += panel('s12', 'Movers', `Typical prices now against ${Math.round(MV.span / 3600)} hours ago, for items with real volume.`, `<div class="ap-mv"><div><h4 class="ap-up">Rising</h4>${mv(MV.up.slice(0, 6), true)}</div><div><h4 class="ap-dn">Falling</h4>${mv(MV.down.slice(0, 6), false)}</div></div>`);
+      h += panel('s12', 'Movers', `Typical prices now against ${Math.round(MV.span / 3600)} hours ago, for items with real volume${RSF ? ', across every ruleset' : ''}.`, `<div class="ap-mv"><div><h4 class="ap-up">Rising</h4>${mv(MV.up.slice(0, 6), true)}</div><div><h4 class="ap-dn">Falling</h4>${mv(MV.down.slice(0, 6), false)}</div></div>`);
     }
 
     const FG = R.fgaps || {};
     const CATS = [['all', 'Everything', 'inv_misc_coin_02'], ['trade', 'Trade goods', 'inv_stone_04'], ['cons', 'Consumables', 'inv_potion_51'], ['gear', 'Gear', 'inv_sword_27'], ['recipe', 'Recipes', 'inv_misc_book_11'], ['other', 'Other', 'inv_misc_gift_01']];
     const allG = Object.values(FG).flat().sort((x, y) => y.x - x.x).slice(0, 15);
-    const pickG = sel.egc === 'all' ? (allG.length ? allG : (R.gaps || [])) : (FG[sel.egc] || []);
+    const pickG = (sel.egc === 'all' ? (allG.length ? allG : (R.gaps || [])) : (FG[sel.egc] || [])).filter((x) => !RSF || x.rs === RSF);
     if (allG.length || (R.gaps || []).length) {
       const rows = pickG.slice(0, 12);
       const prices = rows.flatMap((x) => [x.a, x.h]).filter((v) => v > 0);
@@ -4822,8 +4839,8 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const mkRoot = document.getElementById('mkRoot');
     if (mkRoot && window.LI_MARKET) LI_MARKET.mount(mkRoot, { UI, coin: apCoin, coinT: apCoinT, fmt, tipHtml: (id) => gearTip(id + ':0'), regionName: APR }, sel.erg === 'all' ? 'eu' : sel.erg);
     el.onclick = (e) => { const g = e.target.closest('[data-gi]'); if (view === 'economy' && g && window.LI_MARKET && window.MKT && !e.target.closest('#mkRoot')) LI_MARKET.open(+g.dataset.gi.split(':')[0]); };
-    el.querySelectorAll('[data-erg]').forEach((b) => b.onclick = () => { sel.erg = b.dataset.erg; renderKeep(); });
-    el.querySelectorAll('[data-ers]').forEach((b) => b.onclick = () => { sel.ers = b.dataset.ers; renderKeep(); });
+    document.querySelectorAll('#main [data-erg], .bar [data-erg]').forEach((b) => b.onclick = () => { sel.erg = b.dataset.erg; renderKeep(); });
+    document.querySelectorAll('.bar [data-ers]').forEach((b) => b.onclick = () => { sel.ers = b.dataset.ers; renderKeep(); });
     el.querySelectorAll('[data-ecat]').forEach((b) => b.onclick = () => { sel.ecat = sel.ecat === b.dataset.ecat ? '' : b.dataset.ecat; renderKeep(); });
     el.querySelectorAll('[data-etab]').forEach((b) => b.onclick = () => { sel.etab = b.dataset.etab; renderKeep(); });
     el.querySelectorAll('[data-egc]').forEach((b) => b.onclick = () => { sel.egc = b.dataset.egc; renderKeep(); });
@@ -4958,7 +4975,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   }
   function gearTip(code) {
     const [iid, eid] = code.split(':').map(Number);
-    const G = window.LI_GEAR && window.LI_GEAR.i[iid] ? window.LI_GEAR : window.LI_PGEAR && window.LI_PGEAR.i[iid] ? window.LI_PGEAR : window.ECON && window.ECON.tips && window.ECON.tips[iid] ? { i: window.ECON.tips, e: {} } : null;
+    const G = window.LI_GEAR && window.LI_GEAR.i[iid] ? window.LI_GEAR : window.LI_PGEAR && window.LI_PGEAR.i[iid] ? window.LI_PGEAR : window.ECON && window.ECON.tips && window.ECON.tips[iid] ? { i: window.ECON.tips, e: {} } : window.LI_TIPS && window.LI_TIPS[iid] ? { i: window.LI_TIPS, e: {} } : null;
     const it = G && G.i[iid];
     if (!it) return '';
     const [name, q, ilvl, req, slot, kind, stats, equip, armor, bind, icon] = it;
@@ -4966,6 +4983,8 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     if (ilvl) L.push(`<div class="gl">Item Level ${ilvl}</div>`);
     if (bind) L.push(`<div>${esc(bind)}</div>`);
     if (slot || kind) L.push(`<div class="gr"><span>${esc(slot || '')}</span><span>${esc(kind || '')}</span></div>`);
+    const wd = it[12];
+    if (wd) L.push(`<div class="gr"><span>${wd[0]} - ${wd[1]} Damage</span><span>Speed ${wd[2].toFixed(2)}</span></div><div>(${wd[3].toFixed(1)} damage per second)</div>`);
     if (armor) L.push(`<div>${armor} Armor</div>`);
     (stats || []).forEach((x) => L.push(`<div>${esc(x)}</div>`));
     if (eid && G.e[eid]) L.push(`<div class="ge">${esc(G.e[eid])}</div>`);

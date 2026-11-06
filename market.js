@@ -3,7 +3,7 @@
   const RANGES = [['6H', 6 * 3600], ['1D', 86400], ['1W', 7 * 86400], ['1M', 30 * 86400], ['ALL', 0]];
   const CLASS = { 0: 'Consumable', 1: 'Bag', 2: 'Weapon', 3: 'Gem', 4: 'Armour', 5: 'Reagent', 6: 'Ammo', 7: 'Trade good', 9: 'Recipe', 11: 'Quiver', 12: 'Quest item', 13: 'Key', 15: 'Miscellaneous' };
   const QC = ['#9d9d9d', '#ffffff', '#1eff00', '#3a95f5', '#b94cf7', '#ff8000'];
-  const st = { region: 'eu', series: [{ kind: 'idx', key: 'F100' }], range: 'ALL', q: '', open: null };
+  const st = { region: 'eu', series: [{ kind: 'idx', key: 'F100' }], range: 'ALL', q: '', open: null, fac: 'all' };
   const shardCache = {};
   let H = null, root = null;
   let loading = null;
@@ -22,7 +22,21 @@
     if (!M.defs || !Object.keys(M.regions).length) throw new Error('empty');
     window.MKT = M;
   }
+  let tipsP = null;
+  function loadTips() {
+    if (window.LI_TIPS) return Promise.resolve();
+    tipsP = tipsP || new Promise((ok) => {
+      const s = document.createElement('script');
+      s.id = 'mkTips';
+      s.src = 'data-tips.js?v=' + (window.LI_V || Date.now());
+      s.onload = ok;
+      s.onerror = ok;
+      document.head.appendChild(s);
+    });
+    return tipsP;
+  }
   function load() {
+    loadTips();
     if (window.MKT) return Promise.resolve();
     loading = loading || loadLive().catch(() => new Promise((ok) => {
       const s = document.createElement('script');
@@ -47,8 +61,19 @@
   const icon = (id) => { const c = MKT.cat[id]; const tp = window.ECON && ECON.tips && ECON.tips[id]; const ic = (c && c[2]) || (tp && tp[10]); return ic ? `assets/icons/${ic}.png` : H.UI('inv_misc_questionmark'); };
   const pctTxt = (v) => v == null ? '–' : (v > 0 ? '+' : '') + v.toFixed(Math.abs(v) < 10 ? 1 : 0) + '%';
   const cls = (v) => v == null ? '' : v > 0 ? 'up' : v < 0 ? 'dn' : '';
-  const R = () => MKT.regions[st.region] || { t: [], idx: {}, latest: {}, counts: {} };
+  const FD = {};
+  const FACS = [['all', 'Every house', 'inv_misc_coin_02'], ['Alliance', 'Alliance', null], ['Horde', 'Horde', null], ['Blackwater', 'Blackwater', 'inv_misc_coin_17']];
+  const facIcon = (f, ic) => f === 'Alliance' ? 'assets/game/alliance-crest.png' : f === 'Horde' ? 'assets/game/horde-crest.png' : H.UI(ic);
+  function loadFac(rg, f) {
+    const k = rg + ':' + f;
+    FD[k] = FD[k] || fetch(LIVE + '/market/' + rg + '/' + f.toLowerCase()).then((r) => r.json()).then((d) => ({ t: (d.state || {}).t || [], idx: (d.state || {}).idx || {}, counts: (d.state || {}).counts || {}, latest: d.latest || {} })).catch(() => null);
+    return FD[k];
+  }
+  const facView = {};
+  const facOn = () => { const v = st.fac !== 'all' && facView[st.region + ':' + st.fac]; return v && v.t.length && Object.keys(v.latest).length ? v : null; };
+  const R = () => facOn() || MKT.regions[st.region] || { t: [], idx: {}, latest: {}, counts: {} };
   const defOf = (k) => MKT.defs.find((d) => d.k === k);
+  const shortName = (n) => n.replace(/^Green gear (\d+)–(\d+)$/, 'Green, lvl $1–$2').replace(/ patterns$/, '').replace(/^Blue gear$/, 'Blue and up').replace(/ and /, ' & ');
 
   function idxSeries(key) {
     const r = R();
@@ -63,7 +88,7 @@
     if (bi < 0 || bi === li || !v[bi]) return null;
     return 100 * (lv / v[bi] - 1);
   }
-  function spark(v, w = 64, h = 20) {
+  function spark(v, w = 48, h = 20) {
     const pts = v.map((x, i) => [i, x]).filter((p) => p[1] != null);
     if (pts.length < 2) return `<svg class="mk-spark" width="${w}" height="${h}"></svg>`;
     const lo = Math.min(...pts.map((p) => p[1])), hi = Math.max(...pts.map((p) => p[1])), n = v.length - 1 || 1;
@@ -109,10 +134,13 @@
     if (rel && lo < 0 && hi > 0) svg += `<line class="mk-zero" x1="${P.l}" x2="${W - P.r}" y1="${Y(0)}" y2="${Y(0)}"/>`;
     const xt = [xa, (xa + xb) / 2, xb];
     svg += xt.map((t, i) => `<text class="mk-xl" x="${X(t)}" y="${Hh - 6}" text-anchor="${i === 0 ? 'start' : i === 2 ? 'end' : 'middle'}">${fmtTime(t, xb - xa)}</text>`).join('');
-    S.forEach((s) => {
+    S.forEach((s, k) => {
       if (!s.pts.length) return;
       const d = s.pts.map((p, i) => `${i ? 'L' : 'M'}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join('');
-      if (S.length === 1) svg += `<path class="mk-area" d="${d}L${X(s.pts[s.pts.length - 1][0]).toFixed(1)},${Hh - P.b}L${X(s.pts[0][0]).toFixed(1)},${Hh - P.b}Z" fill="${s.color}"/>`;
+      if (S.length === 1 || (opts.fill && k === 0)) {
+        const gid = 'mkg' + Math.random().toString(36).slice(2, 8);
+        svg += `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${s.color}" stop-opacity="0.32"/><stop offset="1" stop-color="${s.color}" stop-opacity="0"/></linearGradient></defs><path class="mk-area" d="${d}L${X(s.pts[s.pts.length - 1][0]).toFixed(1)},${Hh - P.b}L${X(s.pts[0][0]).toFixed(1)},${Hh - P.b}Z" fill="url(#${gid})"/>`;
+      }
       svg += `<path class="mk-ln" d="${d}" stroke="${s.color}"/>`;
       const lp = s.pts[s.pts.length - 1];
       svg += `<circle class="mk-dot" cx="${X(lp[0])}" cy="${Y(lp[1])}" r="4" fill="${s.color}"/>`;
@@ -140,9 +168,11 @@
   function indexList() {
     const r = R(), groups = {};
     MKT.defs.forEach((d) => { if (r.idx[d.k]) (groups[d.g] = groups[d.g] || []).push(d); });
-    return Object.entries(groups).map(([g, ds]) => `<div class="mk-grp"><h5>${esc(g)}</h5>${ds.map((d) => {
+    const wait = st.fac !== 'all' && !facOn() ? `<div class="mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(st.fac)} prices start with the next hourly update. Showing every house until then.</span></div>` : '';
+    if (!Object.keys(groups).length && st.fac !== 'all' && facOn()) return `<div class="mk-empty mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(st.fac)} indexes need two hourly updates to start. Items already show ${esc(st.fac)} prices.</span></div>`;
+    return wait + Object.entries(groups).map(([g, ds]) => `<div class="mk-grp"><h5>${esc(g)}</h5>${ds.map((d) => {
       const v = r.idx[d.k], [, lv] = lastVal(v), ch = change(r.t, v, 86400), on = st.series.findIndex((s) => s.kind === 'idx' && s.key === d.k);
-      return `<button class="mk-ix${on >= 0 ? ' on' : ''}" data-ix="${d.k}" style="--sc:${on >= 0 ? COLORS[on] : 'transparent'}" title="${esc(d.d)} ${r.counts[d.k] || 0} items."><span class="mk-sw"></span><img src="${H.UI(d.ic)}" alt=""><span class="mk-nm">${esc(d.n)}</span>${spark(v)}<span class="mk-vl">${lv != null ? lv.toFixed(1) : '–'}</span><span class="mk-ch ${cls(ch)}">${pctTxt(ch)}</span></button>`;
+      return `<button class="mk-ix${on >= 0 ? ' on' : ''}" data-ix="${d.k}" style="--sc:${on >= 0 ? COLORS[on] : 'transparent'}" title="${esc(d.d)} ${r.counts[d.k] || 0} items."><span class="mk-sw"></span><img src="${H.UI(d.ic)}" alt=""><span class="mk-nm">${esc(shortName(d.n))}</span>${spark(v)}<span class="mk-vl">${lv != null ? lv.toFixed(1) : '–'}</span><span class="mk-ch ${cls(ch)}">${pctTxt(ch)}</span></button>`;
     }).join('')}</div>`).join('');
   }
 
@@ -172,50 +202,78 @@
     return hits.map(([id, c, l]) => `<button class="mk-hit" data-open="${id}" style="--qc:${QC[c[1]] || '#fff'}"><img src="${icon(id)}" alt=""><span class="mk-nm">${esc(c[0])}</span><span class="mk-pr">${l ? H.coin(l[0]) : '<small>not listed now</small>'}</span><span class="mk-ch ${cls(l && l[4])}">${l ? pctTxt(l[4]) : ''}</span></button>`).join('');
   }
 
-  async function openItem(id) {
+  async function openItem(id, rg) {
+    rg = rg || st.region;
     st.open = id;
     st.q = '';
     if (root) { const res = root.querySelector('.mk-res'), inp = root.querySelector('.mk-search input'); if (res) res.innerHTML = ''; if (inp) { inp.value = ''; inp.blur(); } }
     const c = MKT.cat[id];
     if (!c) return;
-    const r = R(), l = r.latest[id];
-    const sh = await shard(st.region, id);
+    document.querySelectorAll('.mk-modal').forEach((x) => x.remove());
+    const r = rg === st.region ? R() : MKT.regions[rg] || R(), l = r.latest[id];
+    const [sh] = await Promise.all([shard(rg, id), loadTips()]);
     const row = sh.i[id];
+    const qc = QC[c[1]] || '#fff';
     const recipes = window.LI_MULTI ? Object.values(LI_MULTI.tips) : [];
     const byName = {};
     Object.entries(MKT.cat).forEach(([i, x]) => { byName[x[0]] = +i; });
-    const made = recipes.find((t) => t.id === id);
+    const made = recipes.find((t) => t.name === c[0] && (t.reagents || []).length);
     const usedIn = recipes.filter((t) => (t.reagents || []).some((g) => g.name === c[0]));
     let madeHtml = '';
     if (made) {
       let cost = 0, known = true;
-      const rg = made.reagents.map((g) => { const gi = byName[g.name], gl = gi && r.latest[gi]; if (gl) cost += gl[0] * g.count; else known = false; return `<div class="mk-rg"><img src="assets/icons/${g.icon}.png" alt=""><span>${g.count}× ${esc(g.name)}</span><span>${gl ? H.coin(gl[0] * g.count) : '<small>no price</small>'}</span></div>`; }).join('');
+      const rgs = made.reagents.map((g) => {
+        const gi = byName[g.name], gl = gi && r.latest[gi];
+        if (gl) cost += gl[0] * g.count; else known = false;
+        return `<${gi ? `button class="mk-rg mk-go" data-open="${gi}"` : 'div class="mk-rg"'}><img src="assets/icons/${g.icon}.png" alt=""><span>${g.count}× ${esc(g.name)}</span><span>${gl ? H.coin(gl[0] * g.count) : '<small>no price</small>'}</span></${gi ? 'button' : 'div'}>`;
+      }).join('');
       const margin = l && known ? l[0] - cost : null;
-      madeHtml = `<div class="mk-box"><h4>Made by ${esc(made.prof)} <small>skill ${made.skill || '?'}</small></h4>${rg}<div class="mk-tot"><span>Materials</span><span>${known ? H.coin(cost) : 'some unpriced'}</span></div>${margin != null ? `<div class="mk-tot ${margin >= 0 ? 'up' : 'dn'}"><span>${margin >= 0 ? 'Profit crafting it' : 'Loss crafting it'}</span><span>${H.coin(Math.abs(margin))}</span></div>` : ''}</div>`;
+      madeHtml = `<div class="mk-box"><h4>Made by ${esc(made.prof)} <small>skill ${made.skill || '?'}</small></h4>${rgs}<div class="mk-tot"><span>Materials</span><span>${known ? H.coin(cost) : 'some unpriced'}</span></div>${margin != null ? `<div class="mk-tot ${margin >= 0 ? 'up' : 'dn'}"><span>${margin >= 0 ? 'Profit crafting it' : 'Loss crafting it'}</span><span>${H.coin(Math.abs(margin))}</span></div>` : ''}</div>`;
     }
     const profs = {};
     usedIn.forEach((t) => { profs[t.prof] = (profs[t.prof] || 0) + 1; });
-    const usedHtml = usedIn.length ? `<div class="mk-box"><h4>Used in ${usedIn.length} ${usedIn.length === 1 ? 'recipe' : 'recipes'}</h4><div class="mk-profs">${Object.entries(profs).sort((a, b) => b[1] - a[1]).map(([p, n]) => `<span>${esc(p)} <b>${n}</b></span>`).join('')}</div><div class="mk-icons">${usedIn.sort((a, b) => (a.skill || 0) - (b.skill || 0)).map((t, k) => `<span class="mk-ui${k >= 11 && usedIn.length > 12 ? ' mk-more-h' : ''}" style="--qc:${QC[t.q] || '#fff'}" data-tip="${esc(t.name)}|${esc(t.prof)}, skill ${t.skill || '?'}"><img src="assets/icons/${t.icon}.png" alt="${esc(t.name)}"></span>`).join('')}${usedIn.length > 12 ? `<button class="mk-more" data-more>+${usedIn.length - 11}</button>` : ''}</div></div>` : '';
-    const regs = ['us', 'eu', 'kr', 'tw'].filter((rg) => MKT.regions[rg]).map((rg) => { const x = MKT.regions[rg].latest[id]; return `<div class="mk-reg${rg === st.region ? ' on' : ''}"><span>${rg.toUpperCase()}</span>${x ? H.coin(x[0]) : '<small>–</small>'}</div>`; }).join('');
+    const usedHtml = usedIn.length ? `<div class="mk-box"><h4>Used in ${usedIn.length} ${usedIn.length === 1 ? 'recipe' : 'recipes'}</h4><div class="mk-profs">${Object.entries(profs).sort((a, b) => b[1] - a[1]).map(([p, n]) => `<span>${esc(p)} <b>${n}</b></span>`).join('')}</div><div class="mk-icons">${usedIn.sort((a, b) => (a.skill || 0) - (b.skill || 0)).map((t, k) => {
+      const oi = byName[t.name];
+      return `<${oi ? `button data-open="${oi}"` : 'span'} class="mk-ui${oi ? ' mk-go' : ''}${k >= 11 && usedIn.length > 12 ? ' mk-more-h' : ''}" style="--qc:${QC[t.q] || '#fff'}" data-tip="${esc(t.name)}|${esc(t.prof)}, skill ${t.skill || '?'}"><img src="assets/icons/${t.icon}.png" alt="${esc(t.name)}"></${oi ? 'button' : 'span'}>`;
+    }).join('')}${usedIn.length > 12 ? `<button class="mk-more" data-more>+${usedIn.length - 11}</button>` : ''}</div></div>` : '';
+    const rp = ['us', 'eu', 'kr', 'tw'].filter((x) => MKT.regions[x]).map((x) => [x, MKT.regions[x].latest[id]]);
+    const priced = rp.filter(([, x]) => x && x[0]);
+    const minP = Math.min(...priced.map(([, x]) => x[0])), low = priced.length > 1 && priced.filter(([, x]) => x[0] === minP).length === 1 ? priced.find(([, x]) => x[0] === minP)[0] : null;
+    const regs = rp.map(([x, v]) => {
+      const d = v && l && l[0] && x !== rg ? 100 * (v[0] / l[0] - 1) : null;
+      return `<button class="mk-reg${x === rg ? ' on' : ''}" data-rg="${x}"${x === rg ? ' aria-current="true"' : ''}><span class="mk-rn">${x.toUpperCase()}${x === low ? '<em>cheapest</em>' : ''}</span><span class="mk-rp">${v ? H.coin(v[0]) : '<small>not listed</small>'}</span>${d != null ? `<small class="${cls(-d)}">${pctTxt(d)} vs ${rg.toUpperCase()}</small>` : x === rg ? '<small>viewing</small>' : ''}</button>`;
+    }).join('');
+    const kin = Object.entries(MKT.cat).filter(([i, x]) => +i !== id && x[3] === c[3] && x[4] === c[4] && r.latest[i])
+      .map(([i, x]) => [+i, x, Math.abs((x[7] || 0) - (c[7] || 0)) * 1000 - (r.latest[i][3] || 0)]).sort((a, b) => a[2] - b[2]).slice(0, 8);
+    const kinHtml = kin.length ? `<div class="mk-kin"><h4>Similar on the auction house</h4><div>${kin.map(([i, x]) => `<button class="mk-go" data-open="${i}" style="--qc:${QC[x[1]] || '#fff'}"><img src="${icon(i)}" alt=""><span class="mk-nm">${esc(x[0])}</span><span class="mk-pr">${H.coin(r.latest[i][0])}</span></button>`).join('')}</div></div>` : '';
     const ch24 = l ? l[4] : null;
-    const tiles = [['Typical price', l ? H.coin(l[0]) : '–'], ['Cheapest now', l ? H.coin(l[1]) : '–'], ['24 hours', `<span class="${cls(ch24)}">${pctTxt(ch24)}</span>`], ['Auctions', l ? H.fmt(l[3]) : '0'], ['For sale', l ? H.fmt(l[2]) : '0'], ['Vendor pays', c[6] ? H.coin(c[6]) : '–']];
+    const stats = [['inv_misc_coin_02', 'Cheapest now', l ? H.coin(l[1]) : '–'], ['inv_misc_ticket_tarot_stack_01', 'Auctions', l ? H.fmt(l[3]) : '0'], ['inv_misc_bag_10', 'Items for sale', l ? H.fmt(l[2]) : '0'], ['inv_misc_coin_17', 'Vendor pays', c[6] ? H.coin(c[6]) : '–']];
+    const chips = [CLASS[c[3]] || 'Item', c[7] ? `Item level ${c[7]}` : '', c[5] ? `Requires level ${c[5]}` : ''].filter(Boolean);
     const tip = H.tipHtml(id);
     const m = document.createElement('div');
     m.className = 'mk-modal';
-    m.innerHTML = `<div class="mk-card" role="dialog" aria-label="${esc(c[0])}"><button class="mk-x" aria-label="Close">×</button>
-      <div class="mk-head" style="--qc:${QC[c[1]] || '#fff'}"><img src="${icon(id)}" alt=""><div><div class="mk-ttl"><h3>${esc(c[0])}</h3><button class="mk-add" data-cmp="${id}"><img src="${H.UI('inv_misc_note_01')}" alt="">Add to chart</button></div><div class="mk-sub">${esc(CLASS[c[3]] || 'Item')}${c[5] ? ` · needs level ${c[5]}` : ''}${c[7] ? ` · item level ${c[7]}` : ''}</div></div></div>
-      <div class="mk-body"><div class="mk-left"><div class="mk-tiles">${tiles.map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`).join('')}</div>
-        <div class="mk-ranges">${RANGES.map(([k]) => `<button class="${k === st.range ? 'on' : ''}" data-mr="${k}">${k}</button>`).join('')}</div>
-        <div class="mk-iplot"></div><div class="mk-vol"></div></div>
-        <div class="mk-right">${tip ? `<div class="mk-tip">${tip}</div>` : ''}<div class="mk-box mk-regs"><h4>Price in each region</h4><div>${regs}</div></div>${madeHtml}${usedHtml}</div></div></div>`;
+    m.innerHTML = `<div class="mk-card" role="dialog" aria-label="${esc(c[0])}" style="--qc:${qc}"><button class="mk-x" aria-label="Close">×</button>
+      <div class="mk-hero"><div class="mk-hero-ic"><img src="${icon(id)}" alt=""></div>
+        <div class="mk-hero-tx"><h3>${esc(c[0])}</h3><div class="mk-chips">${chips.map((x) => `<span>${esc(x)}</span>`).join('')}</div></div>
+        <div class="mk-hero-px"><small>Typical price · ${esc((H.regionName || {})[rg] || rg.toUpperCase())}${rg === st.region && facOn() ? ' · ' + st.fac : ''}</small><b>${l ? H.coin(l[0]) : '<span class="mk-nl">Not listed right now</span>'}</b>${l ? `<span class="mk-pill ${cls(ch24)}">${pctTxt(ch24)} <i>24h</i></span>` : ''}
+          <button class="mk-add" data-cmp="${id}"><img src="${H.UI('inv_misc_note_01')}" alt="">Add to chart</button></div></div>
+      <div class="mk-stats">${stats.map(([ic, k, v]) => `<div><img src="${H.UI(ic)}" alt=""><span><small>${k}</small><b class="mk-sv">${v}</b></span></div>`).join('')}</div>
+      <div class="mk-body"><div class="mk-left"><div class="mk-chead"><h4>Price history</h4><div class="mk-ranges">${RANGES.map(([k]) => `<button class="${k === st.range ? 'on' : ''}" data-mr="${k}">${k}</button>`).join('')}</div></div>
+        <div class="mk-key"><span><i style="background:${c[1] >= 2 ? qc : '#f8d36b'}"></i>Typical price</span><span><i style="background:#9aa3ad"></i>Cheapest listing</span></div>
+        <div class="mk-iplot"></div><div class="mk-vol"></div>${kinHtml}</div>
+        <div class="mk-right">${tip ? `<div class="mk-tip">${tip}</div>` : ''}<div class="mk-box mk-regs"><h4>Price in each region${facOn() ? ' <small>every house</small>' : ''}</h4><div>${regs}</div></div>${madeHtml}${usedHtml}</div></div></div>`;
     document.body.appendChild(m);
     const close = () => { m.remove(); st.open = null; document.removeEventListener('keydown', onKey); };
     const onKey = (e) => { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', onKey);
     m.addEventListener('click', (e) => {
-      if (e.target === m || e.target.closest('.mk-x')) close();
+      if (e.target === m || e.target.closest('.mk-x')) { close(); return; }
       const mo = e.target.closest('[data-more]');
       if (mo) { mo.parentElement.classList.add('open'); mo.remove(); return; }
+      const go = e.target.closest('[data-open]');
+      if (go) { close(); openItem(+go.dataset.open, rg); return; }
+      const rb = e.target.closest('[data-rg]');
+      if (rb && rb.dataset.rg !== rg) { close(); openItem(id, rb.dataset.rg); return; }
       const b = e.target.closest('[data-mr]');
       if (b) { st.range = b.dataset.mr; m.querySelectorAll('[data-mr]').forEach((x) => x.classList.toggle('on', x === b)); draw(); }
       const cmp = e.target.closest('[data-cmp]');
@@ -223,12 +281,12 @@
     });
     const draw = () => {
       const t = sh.t, med = row ? row[0].map((x) => x || null) : [], mn = row ? row[1].map((x) => x || null) : [];
-      drawChart(m.querySelector('.mk-iplot'), [{ name: 'Typical price', t, v: med, unit: 'coin', color: QC[c[1]] && c[1] >= 2 ? QC[c[1]] : '#f8d36b' }, { name: 'Cheapest', t, v: mn, unit: 'coin', color: '#9aa3ad' }].filter((s) => s.v.filter((x) => x != null).length >= 2), { h: 240, abs: true });
-      const left = m.querySelector('.mk-left'), right = m.querySelector('.mk-right');
-
+      drawChart(m.querySelector('.mk-iplot'), [{ name: 'Typical price', t, v: med, unit: 'coin', color: c[1] >= 2 ? qc : '#f8d36b' }, { name: 'Cheapest', t, v: mn, unit: 'coin', color: '#9aa3ad' }].filter((s) => s.v.filter((x) => x != null).length >= 2), { h: 240, abs: true, fill: true });
       const q = row ? row[2] : [];
       const mx = Math.max(1, ...q);
-      m.querySelector('.mk-vol').innerHTML = q.length ? `<small>Items for sale</small><div class="mk-bars">${q.map((x, i) => `<i style="height:${Math.max(2, 100 * x / mx)}%" title="${H.fmt(x)} for sale · ${new Date(t[i] * 1000).toLocaleString()}"></i>`).join('')}</div>` : '';
+      const kf = (x) => x >= 1e4 ? Math.round(x / 1e3) + 'k' : x >= 1e3 ? (x / 1e3).toFixed(1).replace(/\.0$/, '') + 'k' : String(x);
+      const pk = q.indexOf(mx), few = q.length <= 14;
+      m.querySelector('.mk-vol').innerHTML = q.length ? `<small>Items for sale each hour</small><div class="mk-bars">${q.map((x, i) => `<i style="height:${Math.max(2, 100 * x / mx)}%" title="${H.fmt(x)} for sale · ${new Date(t[i] * 1000).toLocaleString()}">${few || i === pk || i === q.length - 1 ? `<em>${kf(x)}</em>` : ''}</i>`).join('')}</div>` : '';
     };
     draw();
   }
@@ -236,7 +294,8 @@
   function paint() {
     root.innerHTML = `<div class="mk-term">
       <div class="mk-top"><div class="mk-search"><input type="search" placeholder="Search any item: Copper Ore, Linen Bag, Thunderfury…" value="${esc(st.q)}" aria-label="Search items"><div class="mk-res"></div></div>
-        <div class="mk-reg-note">${esc((H.regionName || {})[st.region] || st.region.toUpperCase())} · ${R().t.length} hourly snapshots</div></div>
+        ${MKT.live ? `<div class="mk-fac" role="group" aria-label="Auction house">${FACS.map(([f, n, ic]) => `<button class="${f === st.fac ? 'on' : ''}" data-fac="${f}"><img src="${facIcon(f, ic)}" alt="">${n}</button>`).join('')}</div>` : ''}
+        <div class="mk-reg-note">${esc((H.regionName || {})[st.region] || st.region.toUpperCase())}${facOn() ? ' · ' + st.fac : ''} · ${R().t.length} hourly snapshots</div></div>
       <div class="mk-grid"><div class="mk-side">${indexList()}</div>
         <div class="mk-main"><div class="mk-bar"><div class="mk-legend"></div><div class="mk-ranges">${RANGES.map(([k]) => `<button class="${k === st.range ? 'on' : ''}" data-r="${k}">${k}</button>`).join('')}</div></div><div class="mk-plot"></div>
         <div class="mk-foot">${st.series.length > 1 ? 'Compared as % change from the start of the range.' : 'Index value; every index starts at 100 when its history begins.'}</div></div></div></div>`;
@@ -251,7 +310,14 @@
       document.addEventListener('touchstart', (e) => { if (!e.target.closest('.mk-search')) document.querySelectorAll('.mk-res').forEach((r) => { r.innerHTML = ''; }); }, { passive: true });
     }
     res.innerHTML = st.q ? searchResults(st.q) : '';
-    root.onclick = (e) => {
+    root.onclick = async (e) => {
+      const fb = e.target.closest('[data-fac]');
+      if (fb) {
+        st.fac = fb.dataset.fac;
+        if (st.fac !== 'all') { fb.classList.add('busy'); facView[st.region + ':' + st.fac] = await loadFac(st.region, st.fac); }
+        paint();
+        return;
+      }
       const o = e.target.closest('[data-open]');
       if (o) { openItem(+o.dataset.open); return; }
       const ix = e.target.closest('[data-ix]');
@@ -276,6 +342,7 @@
       await load();
       if (!window.MKT) { el.innerHTML = '<div class="mk-empty">Market history is not available right now.</div>'; return; }
       st.region = MKT.regions[region] ? region : (MKT.regions.eu ? 'eu' : Object.keys(MKT.regions)[0]);
+      if (st.fac !== 'all' && MKT.live) facView[st.region + ':' + st.fac] = await loadFac(st.region, st.fac);
       st.series = st.series.filter((s) => s.kind === 'idx' ? MKT.regions[st.region].idx[s.key] : true);
       if (!st.series.length) st.series = [{ kind: 'idx', key: Object.keys(MKT.regions[st.region].idx)[0] }];
       paint();

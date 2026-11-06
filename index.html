@@ -3,8 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Linked Inn · Forever census</title>
-<meta name="description" content="What World of Warcraft: Forever players craft, how they duel and how they live, counted from the game itself.">
+<title>Life on Azeroth · the WoW: Forever census</title>
+<meta name="description" content="A fan-made census of World of Warcraft: Forever. What players craft, how they duel and how they live, counted from what the game shows. Look up any character.">
+<link rel="canonical" href="https://lifeonazeroth.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Life on Azeroth">
+<meta property="og:title" content="Life on Azeroth · the WoW: Forever census">
+<meta property="og:description" content="What Forever players craft, how they duel and how they live. Look up any character.">
+<meta property="og:url" content="https://lifeonazeroth.com/">
+<meta property="og:image" content="https://lifeonazeroth.com/assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
 <script src="news.js"></script>
@@ -51,7 +62,7 @@ a { color: inherit; }
 .brand b { font: 28px "Morpheus", serif; color: var(--gold); text-shadow: 0 2px 0 #000, 0 0 18px rgba(248, 211, 107, 0.25); white-space: nowrap; }
 .brand small { display: block; font-size: 12px; color: var(--muted); margin-top: -2px; }
 .tabs { display: flex; gap: 6px; margin-left: 14px; }
-.tab { display: flex; align-items: center; gap: 9px; padding: 7px 16px 7px 8px; border-radius: 8px; text-decoration: none; color: var(--ink-2); font: 19px "Morpheus", serif;
+.tab { display: flex; align-items: center; gap: 9px; padding: 7px 16px 7px 8px; border-radius: 8px; text-decoration: none; color: var(--ink-2); font: 15.5px "Friz", serif;
   border: 1px solid transparent; transition: background 0.15s, color 0.15s; }
 .realm:empty { display: none; }
 .tab img.folg { object-fit: contain; padding: 2px; background: radial-gradient(circle at 50% 40%, #1f4440, #07110f 75%); }
@@ -60,9 +71,9 @@ a { color: inherit; }
 .tab.on { color: var(--gold); border-color: var(--line); background: linear-gradient(rgba(248, 211, 107, 0.14), rgba(248, 211, 107, 0.03)); }
 .right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .realm { display: flex; padding: 4px; border-radius: 999px; background: rgba(0, 0, 0, 0.45); border: 1px solid var(--line); }
-.realm button { font: 15px "Morpheus", serif; color: var(--ink-2); background: none; border: 0; padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+.realm button { font: 12.5px "Friz", serif; color: var(--ink-2); background: none; border: 0; padding: 6px 14px; border-radius: 999px; cursor: pointer; }
 .realm button.on { color: #1a1206; background: linear-gradient(#ffe39a, #d5a548); box-shadow: inset 0 1px 0 #fff3c4, 0 2px 6px rgba(0, 0, 0, 0.6); }
-.hbtn { display: flex; align-items: center; gap: 8px; font: 16px "Morpheus", serif; color: var(--ink); text-decoration: none; padding: 7px 13px 7px 8px; border-radius: 8px; cursor: pointer;
+.hbtn { display: flex; align-items: center; gap: 8px; font: 13px "Friz", serif; color: var(--ink); text-decoration: none; padding: 7px 13px 7px 8px; border-radius: 8px; cursor: pointer;
   background: linear-gradient(rgba(40, 33, 22, 0.9), rgba(20, 16, 11, 0.95)); border: 1px solid #5a4620; box-shadow: inset 0 1px 0 rgba(255, 230, 160, 0.1); white-space: nowrap; }
 .hbtn img { width: 26px; height: 26px; border-radius: 5px; }
 .hbtn:hover { border-color: var(--gold-2); color: var(--gold); }
@@ -81,15 +92,15 @@ a { color: inherit; }
 .banner .art { position: absolute; top: 0; bottom: 0; right: 310px; width: 540px; background: var(--art) center 35% / cover;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent); mask-image: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent); }
 .banner .say { position: relative; padding: 30px 40px; display: flex; flex-direction: column; justify-content: center; }
-.banner .kicker { font: 18px "Morpheus", serif; color: var(--gold-2); letter-spacing: 0.04em; }
+.banner .kicker { font: 13px "Friz", serif; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gold-2); letter-spacing: 0.04em; }
 .banner h1 { margin: 2px 0 0; font: 62px/1 "Morpheus", serif; color: #ffe6a8; text-shadow: 0 3px 0 #000, 0 0 30px var(--glow); }
 .banner .count { position: relative; margin-left: auto; align-self: center; margin-right: 26px; padding: 14px 18px 12px; border-radius: 10px;
   background: rgba(8, 6, 4, 0.72); border: 1px solid var(--line); text-align: center; backdrop-filter: blur(3px); }
-.count .t { font: 18px "Morpheus", serif; color: var(--gold); margin-bottom: 8px; }
+.count .t { font: 15px "Friz", serif; color: var(--gold); margin-bottom: 8px; }
 .count .cells { display: flex; gap: 8px; align-items: flex-start; }
 .count .c b { display: block; width: 58px; padding: 6px 0 4px; font: 30px "Friz", serif; color: #fff2cf; border-radius: 6px; font-weight: normal;
   background: linear-gradient(#2a2014, #140f09); border: 1px solid #6b5226; box-shadow: inset 0 1px 0 rgba(255, 230, 160, 0.2); }
-.count .c small { display: block; margin-top: 4px; font: 12px "Morpheus", serif; color: var(--ink-2); }
+.count .c small { display: block; margin-top: 4px; font: 10px "Friz", serif; color: var(--ink-2); }
 .count .colon { color: var(--gold-dim); font-size: 26px; padding-top: 6px; }
 .count .d { margin-top: 8px; font-size: 12px; color: var(--muted); }
 
@@ -97,7 +108,7 @@ a { color: inherit; }
   border-top: 1px solid var(--soft); border-bottom: 1px solid var(--soft); }
 .bar .wrap { display: flex; gap: 10px; align-items: center; padding-top: 10px; padding-bottom: 10px; flex-wrap: wrap; }
 .seg { display: flex; gap: 6px; flex-wrap: wrap; }
-.btn { display: flex; align-items: center; gap: 8px; padding: 7px 15px; border-radius: 8px; cursor: pointer; font: 17px "Morpheus", serif; color: var(--ink-2);
+.btn { display: flex; align-items: center; gap: 8px; padding: 7px 15px; border-radius: 8px; cursor: pointer; font: 14px "Friz", serif; color: var(--ink-2);
   background: linear-gradient(rgba(40, 33, 22, 0.9), rgba(20, 16, 11, 0.95)); border: 1px solid #4a3a1c; box-shadow: inset 0 1px 0 rgba(255, 230, 160, 0.1); }
 .btn img { width: 22px; height: 22px; border-radius: 4px; }
 .btn:hover { color: var(--ink); border-color: #7a5f2c; }
@@ -135,7 +146,7 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 
 .plaque .in { display: flex; align-items: center; gap: 16px; padding: 16px 18px; min-height: 104px; }
 .plaque .icon { width: 58px; height: 58px; border-radius: 8px; box-shadow: 0 0 0 1px #000, 0 0 0 3px var(--fr1), 0 4px 10px rgba(0, 0, 0, 0.7); flex: none; }
-.plaque .lbl { font: 15px "Morpheus", serif; color: var(--title2); letter-spacing: 0.03em; }
+.plaque .lbl { font: 12.5px "Friz", serif; color: var(--title2); letter-spacing: 0.03em; }
 .plaque .num { font: 36px/1.05 "Friz", serif; color: #fff2cf; text-shadow: 0 2px 0 #000; white-space: nowrap; }
 .plaque .num.word { font-family: "Morpheus", serif; font-size: 33px; }
 .plaque .sub { font-size: 12.5px; color: var(--muted); }
@@ -172,7 +183,7 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .champ .crown { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; filter: drop-shadow(0 2px 4px #000); }
 .shelf { display: flex; align-items: center; gap: 12px; margin: 4px 0 14px; }
 .shelf img { width: 34px; height: 34px; border-radius: 7px; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--fr1); }
-.shelf b { display: block; font: 21px "Morpheus", serif; font-weight: normal; color: var(--title); }
+.shelf b { display: block; font: 17px "Friz", serif; font-weight: normal; color: var(--title); }
 .shelf small { font-size: 12.5px; color: var(--ink-2); }
 .hall2 { margin-top: 22px; padding: 16px 16px 6px; border-radius: 10px; background: linear-gradient(rgba(150, 175, 210, 0.08), rgba(150, 175, 210, 0.02)); border: 1px solid rgba(170, 190, 220, 0.25); }
 .hall2 .shelf b { color: #cfe0f5; }
@@ -180,7 +191,7 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .hall2 .honors { margin-top: 0; margin-bottom: 12px; }
 .hall2 .legends { margin-top: 0; padding-top: 0; border-top: 0; }
 .legends { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--soft); }
-.legends h3 { margin: 0 0 10px; font: 18px "Morpheus", serif; font-weight: normal; color: var(--title2); display: flex; align-items: center; gap: 8px; }
+.legends h3 { margin: 0 0 10px; font: 15px "Friz", serif; font-weight: normal; color: var(--title2); display: flex; align-items: center; gap: 8px; }
 .legends .q { width: 18px; height: 18px; font-size: 11px; line-height: 16px; }
 .legends .list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .legend { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.35); border: 1px solid color-mix(in srgb, var(--m) 40%, transparent); }
@@ -212,7 +223,7 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .ttab .th { margin: -14px -18px 14px; padding: 10px 14px 10px; background: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.15)); border-bottom: 1px solid rgba(255, 220, 150, 0.22); text-align: left; }
 .ttab .th .row1 { display: flex; align-items: center; gap: 10px; }
 .ttab .th .si { width: 32px; height: 32px; border-radius: 50%; box-shadow: 0 0 0 2px #000, 0 0 0 3px rgba(255, 220, 150, 0.5); }
-.ttab .th b { display: block; font: 19px "Morpheus", serif; color: #ffe6a8; font-weight: normal; text-shadow: 0 2px 0 #000; }
+.ttab .th b { display: block; font: 15.5px "Friz", serif; color: #ffe6a8; font-weight: normal; text-shadow: 0 2px 0 #000; }
 .ttab .th small { color: var(--ink-2); font-size: 12.5px; }
 .ttab .th i { display: block; height: 3px; margin: 8px 0 0; border-radius: 2px; background: linear-gradient(90deg, var(--title2), var(--title)); }
 .tbox { position: relative; }
@@ -239,7 +250,7 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .cchamp { position: relative; text-align: center; padding: 14px 10px 12px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--cc) 45%, transparent);
   background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--cc) 14%, transparent), transparent 70%), rgba(0, 0, 0, 0.35); }
 .cchamp .ci { position: absolute; top: 8px; left: 8px; width: 26px; height: 26px; border-radius: 5px; box-shadow: 0 0 0 1px #000; }
-.cchamp .cn { font: 15px "Morpheus", serif; color: var(--cc); margin-bottom: 8px; }
+.cchamp .cn { font: 12.5px "Friz", serif; color: var(--cc); margin-bottom: 8px; }
 .cchamp .por { width: 64px; height: 64px; --m: var(--cc); }
 .cchamp .por > img { border-width: 2px; }
 .cchamp .nm { margin-top: 8px; font: 15px "Friz", serif; text-shadow: 0 1px 0 #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -251,7 +262,7 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .hpill { font-size: 11.5px; color: var(--ink); border: 1px solid var(--hm); background: color-mix(in srgb, var(--hm) 18%, transparent); border-radius: 999px; padding: 2px 9px; }
 .honors { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
 .honor { border-radius: 12px; padding: 10px 14px 12px; border: 3px double var(--m); background: radial-gradient(circle at 20% 50%, color-mix(in srgb, var(--m) 20%, transparent), transparent 65%), rgba(0, 0, 0, 0.35); }
-.honor .htag { font: 13px "Morpheus", serif; color: var(--m); letter-spacing: 0.04em; margin-bottom: 6px; }
+.honor .htag { font: 10.5px "Friz", serif; color: var(--m); letter-spacing: 0.04em; margin-bottom: 6px; }
 .honor .hbody { display: flex; align-items: center; gap: 12px; }
 .honor .por { width: 56px; height: 56px; margin: 0; flex: none; }
 .honor .por > img { border-color: var(--m); border-width: 2px; }
@@ -268,12 +279,12 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
   text-shadow: 0 1px 2px #000; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -2px 0 rgba(0, 0, 0, 0.3); }
 .grid .cell small { font-size: 10.5px; opacity: 0.75; }
 .grid .cell.none { background: rgba(255, 255, 255, 0.03); box-shadow: none; }
-.grid .corner { font: 12px "Morpheus", serif; color: var(--muted); display: flex; align-items: flex-end; justify-content: flex-end; padding: 4px; text-align: right; line-height: 1.1; }
+.grid .corner { font: 10px "Friz", serif; color: var(--muted); display: flex; align-items: flex-end; justify-content: flex-end; padding: 4px; text-align: right; line-height: 1.1; }
 
 .gauges { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .gauge { text-align: center; padding: 8px 4px; }
 .gauge svg { width: 132px; height: 132px; display: block; margin: 0 auto; }
-.gauge .lbl { margin-top: 6px; font: 17px "Morpheus", serif; color: var(--title2); }
+.gauge .lbl { margin-top: 6px; font: 14px "Friz", serif; color: var(--title2); }
 .gauge .sub { font-size: 12px; color: var(--muted); }
 .edgewide .body { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; }
 .edgewide .feud { margin-top: 0; padding-top: 0; border-top: 0; padding-left: 28px; border-left: 1px solid var(--soft); }
@@ -283,7 +294,7 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .feud .f { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--ink-2); }
 .feud .f b { color: #fff2cf; font-weight: normal; }
 .feud .f img { width: 28px; height: 28px; border-radius: 5px; flex: none; }
-.mini { margin: 0 0 2px; font: 18px "Morpheus", serif; font-weight: normal; color: var(--title2); }
+.mini { margin: 0 0 2px; font: 15px "Friz", serif; font-weight: normal; color: var(--title2); }
 
 .cols { display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; align-items: end; height: 220px; padding-top: 10px; }
 .col { display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
@@ -320,7 +331,7 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .sbar span.dk { color: #1a1206; text-shadow: none; }
 .grid .ax img.round { border-radius: 50%; }
 .grid .cell.bonus { outline: 2px solid #8fd16a; outline-offset: -2px; }
-.vs { display: flex; justify-content: space-between; margin-bottom: 10px; font: 18px "Morpheus", serif; color: var(--ink); }
+.vs { display: flex; justify-content: space-between; margin-bottom: 10px; font: 15px "Friz", serif; color: var(--ink); }
 .vs span { display: flex; align-items: center; gap: 8px; }
 .vs img { width: 26px; height: 26px; border-radius: 5px; }
 .vs small { font: 12px "Friz", serif; color: var(--muted); }
@@ -404,12 +415,12 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .trophy:hover { border-color: var(--gold-2); }
 .trophy img { width: 44px; height: 44px; border-radius: 6px; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--fr1); flex: none; }
 .trophy .v { font: 22px "Friz", serif; color: #fff2cf; line-height: 1.1; }
-.trophy .l { font: 14px "Morpheus", serif; color: var(--title2); }
+.trophy .l { font: 11.5px "Friz", serif; color: var(--title2); }
 .trophy .w { font-size: 11.5px; color: var(--muted); }
 
 #tip { position: fixed; z-index: 1100; pointer-events: none; display: none; max-width: 300px; padding: 9px 12px; border-radius: 6px; font-size: 13px; color: var(--ink);
   background: rgba(8, 8, 16, 0.95); border: 1px solid #7d7d9a; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7); }
-#tip b { display: block; font: 16px "Morpheus", serif; color: var(--gold); margin-bottom: 2px; font-weight: normal; }
+#tip b { display: block; font: 13px "Friz", serif; color: var(--gold); margin-bottom: 2px; font-weight: normal; }
 #tip.item { max-width: 340px; color: #fff; }
 #tip.pl { min-width: 250px; }
 #tip .pt { display: flex; justify-content: space-between; gap: 14px; margin-top: 2px; }
@@ -452,7 +463,7 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .board .join h3 { margin: 0 0 12px; font: 24px "Morpheus", serif; font-weight: normal; color: #4a2c08; text-align: center; }
 .board .steps { display: grid; gap: 10px; margin-bottom: 16px; }
 .board .step { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; font-size: 15px; color: #2e2010; line-height: 1.45; }
-.board .step i { font-style: normal; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 16px "Morpheus", serif;
+.board .step i { font-style: normal; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 13px "Friz", serif;
   color: #ffe6a8; background: radial-gradient(circle at 50% 35%, #7a5424, #2a1c0c); border: 2px solid #c99a3b; }
 .board .step a { color: #7a3e06; }
 .board code { display: inline-block; margin-top: 4px; font-size: 12.5px; color: #2e2010; background: rgba(255, 255, 255, 0.75); border: 1px solid rgba(120, 80, 30, 0.3); padding: 3px 7px; border-radius: 5px; word-break: break-all; }
@@ -517,12 +528,12 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 .fogrid .ch img { width: 26px; height: 26px; border-radius: 50%; opacity: 0.85; box-shadow: 0 0 0 1px #000, 0 0 0 2px rgba(248, 211, 107, 0.15); }
 .fogrid .tot { border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font: 15px "Friz", serif; color: #fff; background: rgba(0, 0, 0, 0.35); }
 .fogrid .tot small { font-size: 10.5px; color: var(--ink-2); }
-.fogrid .toth { display: flex; align-items: flex-end; justify-content: center; font: 13px "Morpheus", serif; color: var(--title); padding-bottom: 6px; }
+.fogrid .toth { display: flex; align-items: flex-end; justify-content: center; font: 10.5px "Friz", serif; color: var(--title); padding-bottom: 6px; }
 .fokey { display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; }
 .fokey span { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
 .froad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .froad .rc { border-radius: 8px; padding: 10px 12px; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1px var(--soft); }
-.froad .rc h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font: 17px "Morpheus", serif; font-weight: normal; }
+.froad .rc h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font: 14px "Friz", serif; font-weight: normal; }
 .froad .rc h4 img { width: 24px; height: 24px; border-radius: 50%; }
 .froad .rc h4 small { margin-left: auto; font: 11.5px "Friz", serif; color: var(--muted); }
 .froad .rr { display: grid; grid-template-columns: 18px 1fr auto auto; gap: 8px; align-items: baseline; font-size: 13.5px; padding: 2px 0; cursor: pointer; }
@@ -580,7 +591,7 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 .stagesw button.on::after { opacity: 1; }
 .fan { margin: 14px 22px 0; padding: 12px 16px 14px; border-radius: 10px; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1px var(--soft); }
 .fan .fh { display: flex; align-items: baseline; justify-content: center; gap: 10px; margin-bottom: 8px; }
-.fan .fh b { font: 18px "Morpheus", serif; font-weight: normal; color: var(--title); }
+.fan .fh b { font: 15px "Friz", serif; font-weight: normal; color: var(--title); }
 .fan .fh small { font-size: 12px; color: var(--muted); }
 .fan .row3 { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
 .fan .pct { font: 22px "Friz", serif; color: #fff2cf; min-width: 48px; text-align: center; }
@@ -641,7 +652,7 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 .f36 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 @media (max-width: 1100px) { .f36 { grid-template-columns: repeat(2, 1fr); } }
 .f36 .cc { border-radius: 10px; padding: 10px; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1px var(--soft), inset 0 3px 0 var(--cc); }
-.f36 h4 { display: flex; align-items: center; gap: 7px; margin: 2px 0 8px; font: 17px "Morpheus", serif; font-weight: normal; color: var(--cc); }
+.f36 h4 { display: flex; align-items: center; gap: 7px; margin: 2px 0 8px; font: 14px "Friz", serif; font-weight: normal; color: var(--cc); }
 .f36 h4 img { width: 22px; height: 22px; border-radius: 50%; }
 .f36 h4 small { margin-left: auto; font: 11.5px "Friz", serif; color: var(--muted); white-space: nowrap; }
 .fp { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 4px; border-radius: 7px; cursor: pointer; }
@@ -662,7 +673,7 @@ body.snapping *, body.snapping *::before, body.snapping *::after { animation: no
 .btree { position: relative; margin: 0 auto; }
 .btree svg { position: absolute; left: 0; top: 0; }
 .btree .bh { position: absolute; top: 0; }
-.btree .bh b { display: block; font: 16px "Morpheus", serif; font-weight: normal; color: var(--title); text-shadow: 0 2px 0 #000; white-space: nowrap; }
+.btree .bh b { display: block; font: 13px "Friz", serif; font-weight: normal; color: var(--title); text-shadow: 0 2px 0 #000; white-space: nowrap; }
 .btree .bh small { font-size: 11px; color: var(--muted); }
 .bt { position: absolute; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 3px 8px 3px 6px; border-radius: 8px; cursor: pointer;
   background: linear-gradient(90deg, rgba(14, 30, 29, 0.95), rgba(8, 16, 16, 0.95)); box-shadow: inset 0 0 0 1px var(--soft), 0 3px 10px rgba(0, 0, 0, 0.45); transition: box-shadow 0.15s, transform 0.15s; }
@@ -684,7 +695,7 @@ body.modal { overflow: hidden; }
 .h2h { max-width: 1060px; margin: 0 auto; border-radius: 12px; padding: 3px; background: linear-gradient(160deg, var(--fr1), var(--fr2) 40%, var(--fr3) 60%, var(--fr2)); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8); }
 .h2h > .in { border-radius: 10px; background: linear-gradient(rgba(8, 14, 14, 0.94), rgba(5, 8, 8, 0.97)), var(--art) center / cover; padding: 0 0 22px; }
 .h2h .htop { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--soft); background: #0a1212; border-radius: 10px 10px 0 0; font-size: 13px; color: var(--muted); }
-.h2h .htop b { font: 18px "Morpheus", serif; font-weight: normal; color: var(--title); }
+.h2h .htop b { font: 15px "Friz", serif; font-weight: normal; color: var(--title); }
 .h2h .htop .x { margin-left: auto; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.4); color: var(--ink); font-size: 18px; cursor: pointer; }
 .vsb { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center; padding: 22px 22px 10px; }
 .vsb .pl { display: flex; align-items: center; gap: 14px; min-width: 0; }
@@ -714,7 +725,7 @@ body.modal { overflow: hidden; }
 .cmp .cr .bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 3px; background: rgba(255, 255, 255, 0.06); }
 .mup { margin: 14px 22px 0; padding: 12px 16px; border-radius: 10px; background: rgba(90, 220, 200, 0.06); box-shadow: inset 0 0 0 1px var(--soft); font-size: 14px; color: var(--ink-2); line-height: 1.55; }
 .mup b { color: var(--ink); font-weight: normal; }
-.h2h h3 { margin: 22px 22px 10px; font: 20px "Morpheus", serif; font-weight: normal; color: var(--title); }
+.h2h h3 { margin: 22px 22px 10px; font: 16.5px "Friz", serif; font-weight: normal; color: var(--title); }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 0 22px; align-items: start; }
 .road2 { display: flex; flex-direction: column; gap: 4px; }
 .road2 .g { display: grid; grid-template-columns: 92px 20px minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 13px; padding: 3px 6px; border-radius: 6px; background: rgba(0, 0, 0, 0.25); }
@@ -745,7 +756,7 @@ body.modal { overflow: hidden; }
 .h2h .doll { max-width: none; }
 .tbk { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
 .tbk .rc { border-radius: 8px; padding: 10px 12px; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1px var(--soft); }
-.tbk h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font: 17px "Morpheus", serif; font-weight: normal; }
+.tbk h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font: 14px "Friz", serif; font-weight: normal; }
 .tbk h4 img { width: 22px; height: 22px; border-radius: 50%; }
 .tbk .rl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin: 6px 0 3px; }
 .tbk .tm { display: grid; grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr); gap: 6px; font-size: 13.5px; padding: 2px 0; }
@@ -800,7 +811,7 @@ body.modal { overflow: hidden; }
 .ff .fh { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .ff .side.h .fh { flex-direction: row-reverse; text-align: right; }
 .ff .fh img { width: 48px; height: 48px; filter: drop-shadow(0 3px 6px #000); }
-.ff .fh b { display: block; font: 21px "Morpheus", serif; font-weight: normal; }
+.ff .fh b { display: block; font: 17px "Friz", serif; font-weight: normal; }
 .ff .fh .pc { font: 28px "Friz", serif; color: #fff2cf; margin-left: auto; text-shadow: 0 2px 0 #000; }
 .ff .side.h .fh .pc { margin-left: 0; margin-right: auto; }
 .ff .fh small { display: block; font-size: 11.5px; color: var(--muted); }
@@ -830,7 +841,7 @@ body.modal { overflow: hidden; }
   background: linear-gradient(180deg, rgba(6, 5, 4, 0.15), rgba(6, 5, 4, 0.9) 70%), var(--bg) center / cover; box-shadow: inset 0 0 0 1px rgba(255, 220, 150, 0.16), 0 6px 18px rgba(0, 0, 0, 0.45); }
 .hrec .ico { --s: 44px; position: absolute; top: 12px; left: 12px; }
 .hrec .n { font: 32px/1 "Friz", serif; color: #fff2cf; text-shadow: 0 2px 0 #000, 0 0 18px rgba(248, 211, 107, 0.35); }
-.hrec .k { font: 15px "Morpheus", serif; color: var(--title); margin-top: 4px; }
+.hrec .k { font: 12.5px "Friz", serif; color: var(--title); margin-top: 4px; }
 .hrec .nm { font: 17px "Friz", serif; text-shadow: 0 1px 0 #000; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hrec .who { font-size: 12px; color: var(--ink-2); margin-top: 3px; }
 @media (max-width: 1100px) { .recs { grid-template-columns: repeat(2, 1fr); } }
@@ -852,7 +863,7 @@ body.modal { overflow: hidden; }
 .rmed small { display: block; font-size: 11.5px; color: var(--muted); }
 .lgrp { margin-top: 18px; }
 .lgrp:first-child { margin-top: 0; }
-.lgrp h4 { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; font: 16px "Morpheus", serif; color: var(--title); font-weight: normal; letter-spacing: 0.04em; }
+.lgrp h4 { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; font: 13px "Friz", serif; color: var(--title); font-weight: normal; letter-spacing: 0.04em; }
 .lgrp h4::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
 .lrecs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
 .lrec { position: relative; border-radius: 9px; padding: 11px 12px 10px; background: linear-gradient(rgba(9, 8, 7, 0.55), rgba(9, 8, 7, 0.88) 75%), var(--bg) center / cover; text-shadow: 0 1px 2px #000, 0 0 6px rgba(0, 0, 0, 0.8); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07); min-width: 0; }
@@ -876,7 +887,7 @@ body.modal { overflow: hidden; }
 .sup { padding: 13px 14px 12px; border-radius: 10px; background: linear-gradient(100deg, color-mix(in srgb, var(--cc) 14%, transparent), transparent 65%), rgba(0, 0, 0, 0.35); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cc) 26%, transparent); }
 .sup .sh { display: flex; align-items: center; gap: 10px; }
 .sup .ci { flex: none; width: 38px; height: 38px; border-radius: 50%; background: center / 136% no-repeat; box-shadow: 0 0 0 2px #000, 0 0 0 3px var(--cc); }
-.sup .sc { font: 21px "Morpheus", serif; color: var(--cc); text-shadow: 0 1px 0 #000; }
+.sup .sc { font: 17px "Friz", serif; color: var(--cc); text-shadow: 0 1px 0 #000; }
 .sup ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 5px; }
 .sup li { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: center; font-size: 12.5px; color: var(--ink-2); }
 .sup li img { width: 22px; height: 22px; border-radius: 4px; box-shadow: 0 0 0 1px #000; }
@@ -961,7 +972,7 @@ body.modal { overflow: hidden; }
 .era-s { display: flex; align-items: center; gap: 12px; background: none; border: 0; padding: 4px; color: var(--ink-2); cursor: pointer; text-align: left; opacity: 0.55; transition: opacity 0.2s, filter 0.2s; }
 .era-s.c { flex-direction: row-reverse; text-align: right; }
 .era-s img { width: 40px; height: 40px; border-radius: 8px; box-shadow: 0 0 0 1px #000, 0 0 0 2px rgba(255, 255, 255, 0.15); }
-.era-s b { display: block; font: 21px/1.1 "Morpheus", serif; font-weight: normal; }
+.era-s b { display: block; font: 17px/1.1 "Friz", serif; font-weight: normal; }
 .era-s small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
 .era-s.b b { color: #f8d36b; }
 .era-s.c b { color: #9dff5a; }
@@ -1283,8 +1294,10 @@ body.reel .wr-final .wr-flip.wr-quake { animation: wr-arrive 0.6s cubic-bezier(0
 .wc-s b { display: block; font: 1.35em/1.1 "Friz", serif; color: #fff2cf; white-space: nowrap; }
 .wc-s span { display: block; margin-top: 0.15em; font-size: 0.82em; line-height: 1.15; color: #c9b892; overflow-wrap: anywhere; }
 .wc-s em { display: block; margin-top: 0.15em; font: normal 0.8em "Friz", serif; color: var(--tc, #a8977a); }
-.wc-foot { display: flex; justify-content: space-between; gap: 0.5em; padding: 0 0.3em; font: 0.85em/1 "Friz", serif; letter-spacing: 0.06em; color: rgba(243, 230, 196, 0.6); }
+.wc-foot { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 0.5em; padding: 0 0.3em; font: 0.85em/1 "Friz", serif; letter-spacing: 0.06em; color: rgba(243, 230, 196, 0.6); }
 .wc-foot b { font-weight: normal; color: var(--rc); }
+.wc-foot span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wc-foot span:last-child { text-align: right; }
 .wc-foil { position: absolute; z-index: 4; inset: 0; border-radius: inherit; pointer-events: none; opacity: calc(var(--foil, 0) * (1 + 2 * var(--glare, 0))); transition: opacity 0.3s; mix-blend-mode: color-dodge; background: linear-gradient(115deg, transparent 18%, hsla(var(--h), 100%, 65%, 0.55) 32%, hsla(calc(var(--h) + 70), 100%, 65%, 0.5) 42%, hsla(calc(var(--h) + 150), 100%, 65%, 0.55) 52%, hsla(calc(var(--h) + 230), 100%, 65%, 0.5) 62%, transparent 76%); background-size: 260% 260%; background-position: var(--mx, 50%) var(--my, 50%); }
 .wc-shine { position: absolute; z-index: 5; inset: 0; border-radius: inherit; pointer-events: none; mix-blend-mode: overlay; background: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), rgba(255, 255, 255, 0.45), transparent 45%); opacity: var(--glare, 0); transition: opacity 0.3s; }
 .wcard.r-rare { --foil: 0.07; } .wcard.r-epic { --foil: 0.1; } .wcard.r-leg, .wcard.r-art { --foil: 0.13; }
@@ -1342,7 +1355,7 @@ body.reel .wr-final .wr-flip.wr-quake { animation: wr-arrive 0.6s cubic-bezier(0
 .htile { grid-column: span 3; cursor: pointer; text-decoration: none; color: inherit; }
 .htile .in { display: flex; flex-direction: column; gap: 6px; padding: 18px 18px 16px; min-height: 196px; transition: background 0.2s; }
 .htile:hover .in { background: rgba(255, 255, 255, 0.03); }
-.htile .tt { display: flex; align-items: center; gap: 10px; font: 15px "Morpheus", serif; color: var(--hc); letter-spacing: 0.03em; }
+.htile .tt { display: flex; align-items: center; gap: 10px; font: 12.5px "Friz", serif; color: var(--hc); letter-spacing: 0.03em; }
 .htile .tt img { width: 36px; height: 36px; border-radius: 8px; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--hc); }
 .htile .big { font: 38px/1.05 "Friz", serif; color: #fff2cf; text-shadow: 0 2px 0 #000; margin-top: 8px; }
 .htile .big small { font-size: 14px; color: var(--muted); margin-left: 6px; }
@@ -1364,15 +1377,17 @@ body.reel .wr-final .wr-flip.wr-quake { animation: wr-arrive 0.6s cubic-bezier(0
 .acard { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 10px; text-decoration: none; color: inherit; background: rgba(0, 0, 0, 0.3); box-shadow: inset 0 0 0 1px var(--soft); transition: box-shadow 0.15s; }
 .acard:hover { box-shadow: inset 0 0 0 1px var(--line); }
 .acard img { width: 76px; flex: none; filter: drop-shadow(0 4px 8px #000); }
-.acard b { display: block; font: 19px "Morpheus", serif; font-weight: normal; color: var(--title); }
+.acard b { display: block; font: 15.5px "Friz", serif; font-weight: normal; color: var(--title); }
 .acard span { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.htile.ap-wide { grid-column: span 6; }
 @media (max-width: 1100px) { .htile { grid-column: span 6; } }
+@media (max-width: 720px) { .htile.ap-wide { grid-column: span 12; } }
 @media (max-width: 720px) {
   .htile .in { min-height: 0; padding: 14px; } .htile .big { font-size: 28px; }
   .pvw { grid-template-columns: 24px 64px minmax(0, 1fr) 36px minmax(0, 1fr) 38px; gap: 6px; font-size: 12.5px; } .pvw img { width: 22px; height: 22px; }
 }
 .swaph { display: flex; align-items: baseline; gap: 6px; }
-.sw { font: 19px "Morpheus", serif; color: var(--muted); background: none; border: 0; padding: 2px 4px 6px; cursor: pointer; border-bottom: 2px solid transparent; text-shadow: 0 2px 0 #000; transition: color 0.15s; white-space: nowrap; }
+.sw { font: 15.5px "Friz", serif; color: var(--muted); background: none; border: 0; padding: 2px 4px 6px; cursor: pointer; border-bottom: 2px solid transparent; text-shadow: 0 2px 0 #000; transition: color 0.15s; white-space: nowrap; }
 .sw:hover { color: var(--ink); }
 .sw.on { color: var(--title); border-bottom-color: var(--title2); }
 .swaph .dot { color: var(--muted); font-size: 16px; opacity: 0.6; }
@@ -1380,7 +1395,7 @@ body.reel .wr-final .wr-flip.wr-quake { animation: wr-arrive 0.6s cubic-bezier(0
 .fogrid .rh img.sp, .fogrid .ch img.sp { border-radius: 6px; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--cc); }
 .fogrid .ch img.sp { width: 24px; height: 24px; opacity: 1; }
 .vhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(90, 220, 200, 0.07); box-shadow: inset 0 0 0 1px var(--soft); font-size: 14px; color: var(--ink-2); }
-.vhead b { font: 18px "Morpheus", serif; font-weight: normal; color: var(--title); }
+.vhead b { font: 15px "Friz", serif; font-weight: normal; color: var(--title); }
 .vhead .err { color: #ef7d6d; }
 .froad .rr .bh { color: var(--muted); font-size: 11.5px; min-width: 44px; text-align: right; }
 .vs2 .row, .vspec .row { grid-template-columns: 30px 108px 1fr 70px; }
@@ -1447,6 +1462,343 @@ body.reel .wr-final .wr-flip.wr-quake { animation: wr-arrive 0.6s cubic-bezier(0
   .fogrid.many .tot { font-size: 11px; }
   .fogrid.many .corner { font-size: 9px; padding: 2px; }
 }
+.brand .lz-mark { position: relative; width: 46px; height: 46px; flex: none; border-radius: 10px; padding: 3px; background: linear-gradient(160deg, #f8d36b, #6b5226 45%, #c99a3b 70%, #3a2a12);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.8), 0 0 18px rgba(248, 211, 107, 0.18); }
+.brand .lz-mark img { width: 100%; height: 100%; border-radius: 7px; display: block; filter: none; box-shadow: inset 0 0 0 1px #000; }
+.lz-pre { background: repeating-linear-gradient(135deg, #2a2109, #2a2109 12px, #241c08 12px, #241c08 24px); border-bottom: 1px solid rgba(248, 211, 107, 0.35); color: #e8d6ae; font-size: 13px; }
+.lz-pre .wrap { display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; padding-top: 7px; padding-bottom: 7px; }
+.lz-pre b { color: #f8d36b; font-weight: normal; letter-spacing: 0.08em; text-transform: uppercase; font-size: 11.5px; border: 1px solid rgba(248, 211, 107, 0.5); border-radius: 999px; padding: 1px 8px; }
+.lz-pre a { color: #f8d36b; }
+.count.lz-live { text-align: center; min-width: 190px; }
+.lz-day { display: flex; align-items: baseline; justify-content: center; gap: 10px; }
+.lz-day small { font: 20px "Morpheus", serif; color: var(--ink-2); }
+.lz-day b { font: 56px/1 "Friz", serif; font-weight: normal; color: #fff2cf; text-shadow: 0 2px 0 #000, 0 0 24px rgba(255, 200, 100, 0.35); }
+footer .lz-fb { font: 16px "Morpheus", serif; color: var(--gold); font-weight: normal; }
+footer .lz-sep { flex-basis: 100%; height: 0; }
+.lz-ab { grid-column: span 12; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; }
+.lz-ab .lz-col { display: grid; gap: 20px; align-content: start; }
+.lz-ab .panel .body { font-size: 15px; line-height: 1.65; color: var(--ink-2); }
+.lz-ab .panel .body p { margin: 0 0 12px; max-width: 760px; }
+.lz-ab .panel .body b { color: var(--ink); font-weight: normal; }
+.lz-src { display: grid; gap: 12px; margin: 6px 0 4px; }
+.lz-src > div { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 14px; align-items: start; padding: 12px 14px; border-radius: 10px; background: rgba(0, 0, 0, 0.28); box-shadow: inset 0 0 0 1px var(--soft); }
+.lz-src img { width: 44px; height: 44px; border-radius: 8px; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--line); }
+.lz-src b { display: block; font: 15.5px "Friz", serif; color: var(--title) !important; }
+.lz-src span { display: block; font-size: 14px; line-height: 1.55; }
+.lz-facts { display: grid; gap: 10px; }
+.lz-facts div { display: flex; justify-content: space-between; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--soft); font-size: 14px; }
+.lz-facts div:last-child { border-bottom: 0; }
+.lz-facts em { font-style: normal; color: #fff2cf; font-family: "Friz", serif; }
+.lz-ab ul { margin: 4px 0 12px; padding-left: 20px; }
+.lz-ab li { margin: 4px 0; }
+.lz-ab a { color: var(--title); }
+.lz-ac .lz-acimg { width: 76px; height: 76px; flex: none; border-radius: 10px; background: var(--bg) center / cover; display: grid; place-items: center; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--line); }
+.lz-ac .lz-acimg img { width: 44px; height: 44px; border-radius: 8px; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--gold-2); filter: none; }
+.lz-lede { margin: 0 0 16px; max-width: 760px; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+.lz-chs { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.lz-chb { background: linear-gradient(90deg, #12202e, #1c3247 50%, #12202e); border-bottom: 1px solid rgba(140, 190, 255, 0.35); color: #d6e6f8; font-size: 13.5px; }
+.lz-chb .wrap { display: flex; gap: 10px 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
+.lz-chb b { font: 13px "Friz", serif; font-weight: normal; color: #9fd0ff; letter-spacing: 0.03em; }
+.lz-chb a { color: #9fd0ff; text-decoration: none; white-space: nowrap; }
+.lz-chb a:hover { text-decoration: underline; }
+.lz-chs > a { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 10px; background: rgba(0, 0, 0, 0.28); box-shadow: inset 0 0 0 1px var(--line); text-decoration: none; color: inherit; }
+.lz-chs > a:hover { box-shadow: inset 0 0 0 1px var(--title2); background: rgba(248, 211, 107, 0.05); }
+.lz-chs > a img, .lz-chs .lz-chk img { filter: none; }
+.lz-chs > div { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 10px; background: rgba(0, 0, 0, 0.28); box-shadow: inset 0 0 0 1px var(--soft); }
+.lz-chs img { width: 40px; height: 40px; border-radius: 8px; filter: grayscale(0.6); box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--line); }
+.lz-chs b { display: block; font: 15px "Friz", serif; font-weight: normal; color: var(--ink); }
+.lz-chs span { display: block; font-size: 12.5px; color: var(--muted); }
+.lz-warm { display: flex; gap: 14px; align-items: center; padding: 18px 6px; }
+.lz-warm img { width: 44px; height: 44px; border-radius: 8px; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--line); }
+.lz-warm > div { flex: 1; }
+.lz-warm b { display: block; font: 16.5px "Friz", serif; font-weight: normal; color: var(--title); }
+.lz-wb { height: 8px; border-radius: 99px; background: rgba(255, 255, 255, 0.06); margin: 8px 0; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6); }
+.lz-wb i { display: block; height: 100%; background: linear-gradient(90deg, var(--title2), var(--title)); border-radius: 99px; }
+.lz-warm span { font-size: 13px; color: var(--muted); }
+.lz-ch { grid-column: span 12; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 10px 16px; border-radius: 10px; background: linear-gradient(rgba(16, 14, 11, 0.86), rgba(10, 9, 7, 0.92)); box-shadow: inset 0 0 0 1px var(--soft); }
+.lz-cht { font: 12px "Friz", serif; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-right: 8px; }
+.lz-c { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 6px 10px; border-radius: 8px; color: var(--ink-2); text-align: left; text-decoration: none; cursor: default; font: inherit; }
+.lz-c img { width: 34px; height: 34px; border-radius: 7px; box-shadow: 0 0 0 1px #000, 0 0 0 2px rgba(255, 255, 255, 0.12); }
+.lz-c b { display: block; font: 14px/1.1 "Friz", serif; font-weight: normal; color: var(--ink); }
+.lz-c small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.lz-c.on { background: rgba(248, 211, 107, 0.08); box-shadow: inset 0 0 0 1px var(--line); }
+.lz-c.on b { color: var(--gold); }
+.lz-c.on img { box-shadow: 0 0 0 1px #000, 0 0 0 2px #c99a3b, 0 0 14px rgba(248, 211, 107, 0.4); }
+.lz-c.na { opacity: 0.5; }
+.lz-c.na img { filter: grayscale(1); }
+a.lz-c { cursor: pointer; }
+a.lz-c:hover { background: rgba(255, 255, 255, 0.04); }
+a.lz-c:hover b { color: var(--gold); }
+.lz-cl { width: 18px; height: 1px; background: var(--line); flex: none; }
+.lz-cb { margin-left: auto; cursor: pointer; }
+.lz-cb:hover b { color: var(--gold); }
+.lz-pg { grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); }
+.lz-card { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 4px 8px 6px; }
+.lz-card .lz-flip { touch-action: pan-y; }
+.lz-card .wcard { --w: 290px; }
+.lz-cbtn { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.lz-cbtn button { font: 13px "Friz", serif; color: var(--ink); background: rgba(0, 0, 0, 0.4); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.lz-cbtn button:hover { border-color: var(--title2); }
+.lz-cbtn button.main { color: #1a1206; background: linear-gradient(#ffe39a, #d5a548); border-color: #f3cf74; }
+@media (max-width: 1280px) { .lz-pg { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .lz-pg > .panel:first-child { grid-column: 1 / -1; } }
+@media (max-width: 1000px) { .lz-pg { grid-template-columns: 1fr; } }
+@media (max-width: 980px) { .lz-ab { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) { .lz-ch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 10px; } .lz-cht { grid-column: 1 / -1; margin: 0 0 2px 4px; } .lz-cl { display: none; } .lz-cb { margin-left: 0; } .lz-c { padding: 5px 6px; gap: 8px; } .lz-c img { width: 28px; height: 28px; } .lz-c b { font-size: 15px; } }
+@media (max-width: 760px) { .banner .count.lz-live { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 8px 14px; } .count.lz-live .t { margin: 0; } .count.lz-live .d { display: none; } .lz-day { gap: 6px; } .lz-day small { font-size: 15px; } .lz-day b { font-size: 26px; } .count.lz-live { min-width: 0; } }
+body[data-view="population"] { --accent: #c79bff; --art: url("assets/game/art-magearcane.jpg"); --glow: rgba(170, 120, 255, 0.22);
+  --fr1: #5a3f86; --fr2: #170f24; --fr3: #47326b; --title: #dcc6ff; --title2: #a98be0; --tint: rgba(180, 140, 255, 0.07);
+  --line: rgba(190, 150, 255, 0.3); --soft: rgba(190, 150, 255, 0.15); --bar0: #4a3372; --bar1: #cfb2ff; }
+body[data-view="economy"] { --accent: #ffcc4d; --art: url("assets/game/art-roguecombat.jpg"); --glow: rgba(255, 190, 60, 0.25);
+  --fr1: #7a5a1a; --fr2: #241a08; --fr3: #634816; --title: #ffe08a; --title2: #d9a940; --tint: rgba(255, 200, 80, 0.07); --bar0: #7a5a1a; --bar1: #ffd66b; }
+.ap-grp { position: relative; display: flex; }
+.ap-caret { width: 0; height: 0; border: 5px solid transparent; border-top-color: currentColor; margin: 6px 0 0 -3px; opacity: 0.7; }
+.ap-dd { position: absolute; top: 100%; left: -6px; padding-top: 8px; display: none; z-index: 10; }
+.ap-ddbox { min-width: 290px; padding: 6px; border-radius: 10px; border: 1px solid var(--line); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75);
+  background: linear-gradient(rgba(20, 17, 12, 0.97), rgba(12, 10, 7, 0.98)), url("assets/game/rock.jpg") center / 600px; }
+@media (hover: hover) { .ap-grp:hover .ap-dd, .ap-grp:focus-within .ap-dd { display: block; } }
+.ap-ddi { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: center; padding: 8px 10px; border-radius: 8px; text-decoration: none; color: var(--ink-2); }
+.ap-ddi img { width: 34px; height: 34px; border-radius: 6px; box-shadow: 0 0 0 1px #000, 0 0 0 2px rgba(248, 211, 107, 0.2); }
+.ap-ddi b { display: block; font: 19px/1.1 "Morpheus", serif; font-weight: normal; color: var(--ink); }
+.ap-ddi small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.ap-ddi:hover { background: rgba(248, 211, 107, 0.07); }
+.ap-ddi.on b { color: var(--gold); }
+.ap-ddi .ap-new { font: 10px "Friz", serif; color: #1a1206; background: var(--gold); border-radius: 4px; padding: 1px 5px; margin-left: 6px; vertical-align: 3px; }
+.ap-sub .btn { text-decoration: none; }
+.ap-lvh { display: flex; align-items: flex-end; gap: 2px; height: 190px; padding-top: 10px; }
+.ap-lvh i { flex: 1; min-height: 2px; border-radius: 3px 3px 1px 1px; background: linear-gradient(var(--bar1, var(--gold)), var(--bar0, #8a6a2a)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+.ap-lvh i:hover { filter: brightness(1.35); }
+.ap-lvh i.cap { background: linear-gradient(#9fd3ff, #3a6fb0); }
+.ap-lvx { display: grid; grid-template-columns: repeat(60, 1fr); gap: 2px; margin-top: 6px; font: 12px "Friz", serif; color: var(--muted); }
+.ap-lvx span { text-align: center; white-space: nowrap; }
+.ap-fleg { display: flex; justify-content: space-between; margin: 8px 2px 16px; font-size: 13px; color: var(--ink-2); }
+.ap-fleg b { font: 20px "Friz", serif; font-weight: normal; color: #fff2cf; margin-right: 6px; }
+.ap-lad { display: flex; flex-direction: column; gap: 4px; }
+.ap-lr { display: grid; grid-template-columns: 26px 40px 1fr auto 44px; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; }
+.ap-lr:nth-child(odd) { background: rgba(255, 255, 255, 0.025); }
+.ap-lr .ico { --s: 36px; }
+.ap-rk { font: 15px "Morpheus", serif; color: var(--muted); text-align: right; }
+.ap-lr:nth-child(-n+3) .ap-rk { color: var(--gold); font-size: 19px; }
+.ap-who { min-width: 0; }
+.ap-who b { display: block; font: 15px "Friz", serif; font-weight: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 0 #000; }
+.ap-who small { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ap-tag { font-size: 11.5px; color: var(--ink-2); border: 1px solid var(--soft); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+.ap-lv { font: 24px "Friz", serif; color: #fff2cf; text-align: right; text-shadow: 0 2px 0 #000; }
+.ap-hr { display: grid; grid-template-columns: 200px 1fr 92px; gap: 14px; align-items: center; padding: 6px 0; }
+.ap-hr .l b { display: block; font: 16px "Morpheus", serif; font-weight: normal; color: var(--ink); }
+.ap-hr .l small { font-size: 12px; color: var(--muted); }
+.ap-hr .t { text-align: right; font: 15px "Friz", serif; color: #fff2cf; }
+.ap-hleg { display: flex; gap: 16px; font-size: 12.5px; color: var(--ink-2); margin-bottom: 8px; flex-wrap: wrap; }
+.ap-hleg span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--c); margin-right: 6px; vertical-align: -1px; }
+.ap-coin { white-space: nowrap; }
+.ap-coin b { font-weight: normal; color: var(--ink); }
+.ap-coin b::after { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0 4px 0 2px; }
+.ap-coin .g::after { background: radial-gradient(circle at 35% 35%, #fff3a0, #d4a100); }
+.ap-coin .s::after { background: radial-gradient(circle at 35% 35%, #fff, #8d8d96); }
+.ap-coin .c::after { background: radial-gradient(circle at 35% 35%, #f3b07a, #8a4b1f); }
+.recipe .meta .ap-coin { margin-left: auto; font-size: 13px; }
+@media (max-width: 1180px) { .ap-caret { display: none; } }
+@media (max-width: 1600px) { .right .hbtn:not(.get) span.t { display: none; } .right .hbtn:not(.get) { padding: 6px; } .tabs { margin-left: 6px; gap: 4px; } .tab { padding-right: 12px; } }
+@media (max-width: 720px) {
+  .ap-grp { flex: 1 1 0; min-width: 0; } .ap-grp .tab { flex: 1 1 0; } .ap-dd { display: none !important; }
+  .tabs .tab { padding: 5px 0 4px; font-size: 11.5px; letter-spacing: -0.01em; } .tabs .tab span { text-overflow: clip; }
+  .ap-lr { grid-template-columns: 20px 36px 1fr 36px; gap: 8px; } .ap-lr .ap-tag { display: none; } .ap-lv { font-size: 20px; }
+  .ap-hr { grid-template-columns: 1fr 70px; gap: 6px 10px; } .ap-hr .fbar { grid-column: 1 / -1; grid-row: 2; }
+  .ap-lvx span:not(:first-child):not(:last-child) { visibility: hidden; }
+}
+body[data-view="population"] { --art: url("assets/game/art/art-nightelves.jpg"); }
+body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
+.ap-regs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.ap-reg { position: relative; overflow: hidden; height: 112px; border-radius: 10px; cursor: pointer; text-align: left; padding: 12px 14px; display: flex; flex-direction: column; justify-content: flex-end;
+  border: 2px solid #3a2c14; background: linear-gradient(180deg, rgba(8, 6, 4, 0.1), rgba(8, 6, 4, 0.88)), var(--bg) center / cover; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(0, 0, 0, 0.6);
+  color: var(--ink); font: inherit; transition: transform 0.15s, border-color 0.15s, filter 0.15s; filter: saturate(0.7) brightness(0.8); }
+.ap-reg:hover { filter: none; transform: translateY(-2px); }
+.ap-reg.on { filter: none; border-color: var(--title2); box-shadow: 0 0 0 1px #000, 0 0 24px var(--glow), 0 8px 22px rgba(0, 0, 0, 0.6); }
+.ap-reg .ap-rn { font: 22px/1 "Morpheus", serif; color: var(--title); text-shadow: 0 2px 0 #000, 0 0 12px #000; }
+.ap-reg b { font: 17px "Friz", serif; font-weight: normal; color: #fff2cf; text-shadow: 0 1px 0 #000; margin-top: 4px; }
+.ap-reg small { font-size: 11.5px; color: var(--ink-2); text-shadow: 0 1px 0 #000; }
+.ap-war { display: grid; grid-template-columns: 150px 1fr 150px; gap: 18px; align-items: center; }
+.ap-side { text-align: center; }
+.ap-side img { width: 120px; height: 120px; object-fit: contain; mix-blend-mode: lighten; filter: drop-shadow(0 0 16px rgba(0, 0, 0, 0.8)); }
+.ap-side b { display: block; font: 34px/1 "Friz", serif; font-weight: normal; text-shadow: 0 2px 0 #000; }
+.ap-side span { font: 17px "Morpheus", serif; color: var(--ink-2); }
+.ap-side.a b { color: #8fbaf5; } .ap-side.h b { color: #f08a7e; }
+.ap-tugs { display: flex; flex-direction: column; gap: 14px; }
+.ap-tug { display: grid; grid-template-columns: 46px 1fr 46px; gap: 10px; align-items: center; font: 14px "Friz", serif; }
+.ap-tug .l { text-align: right; color: #8fbaf5; } .ap-tug .r { color: #f08a7e; }
+.ap-tugbar { position: relative; display: flex; height: 30px; border-radius: 15px; overflow: hidden; box-shadow: inset 0 2px 4px #000, 0 0 0 1px rgba(255, 255, 255, 0.08); }
+.ap-tugbar i { display: block; height: 100%; }
+.ap-tugbar i.a { background: linear-gradient(#5d9ef0, #234f8f); } .ap-tugbar i.h { background: linear-gradient(#e2584c, #7d1f17); }
+.ap-tugbar em { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 15px "Morpheus", serif; font-style: normal; color: #fff; text-shadow: 0 1px 2px #000, 0 0 8px #000; }
+.ap-tugbar::after { content: ""; position: absolute; left: 50%; top: 3px; bottom: 3px; width: 2px; background: rgba(255, 255, 255, 0.35); }
+.ap-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.ap-cc { position: relative; overflow: hidden; border-radius: 10px; min-height: 200px; padding: 14px; display: flex; flex-direction: column; justify-content: flex-end;
+  background: linear-gradient(180deg, rgba(5, 4, 3, 0) 20%, rgba(5, 4, 3, 0.92) 78%), var(--bg) center 25% / cover; border: 1px solid color-mix(in srgb, var(--cc) 45%, #000);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.8), inset 0 -40px 60px rgba(0, 0, 0, 0.5), 0 10px 24px rgba(0, 0, 0, 0.6); }
+.ap-cc:hover { border-color: var(--cc); }
+.ap-cc .ci { position: absolute; top: 12px; left: 12px; width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 0 0 2px #000, 0 0 0 3px var(--cc), 0 4px 10px #000; }
+.ap-cc .rk { position: absolute; top: 12px; right: 14px; font: 15px "Morpheus", serif; color: rgba(255, 255, 255, 0.55); text-shadow: 0 1px 0 #000; }
+.ap-cc .nm { font: 26px/1 "Morpheus", serif; color: var(--cc); text-shadow: 0 2px 0 #000, 0 0 14px #000; }
+.ap-cc .pc { font: 34px/1.1 "Friz", serif; color: #fff2cf; text-shadow: 0 2px 0 #000; }
+.ap-cc .pc small { font-size: 13px; color: var(--ink-2); margin-left: 6px; }
+.ap-cc .mt { font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+.ap-cc .fb { display: flex; height: 5px; border-radius: 3px; overflow: hidden; margin-top: 9px; background: #000; }
+.ap-cc .fb i { display: block; } .ap-cc .fb .a { background: #4a8fe7; } .ap-cc .fb .h { background: #d8443a; }
+.ap-peoples { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 14px 10px; }
+.ap-ppl { text-align: center; }
+.ap-medal { width: 92px; height: 92px; margin: 0 auto 6px; border-radius: 50%; display: grid; place-items: center; overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, #2b2216, #0b0906 72%); box-shadow: 0 0 0 2px #000, 0 0 0 4px var(--fr1), 0 0 20px var(--glow), inset 0 0 18px #000; }
+.ap-medal img { width: 86%; height: 86%; object-fit: contain; mix-blend-mode: lighten; }
+.ap-medal img.por { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; transform: scale(1.32) translateY(6%); mix-blend-mode: normal; }
+.ap-ppl b { display: block; font: 24px/1 "Friz", serif; font-weight: normal; color: #fff2cf; text-shadow: 0 2px 0 #000; }
+.ap-ppl span { display: block; font: 15px "Morpheus", serif; color: var(--title2); margin-top: 3px; }
+.ap-ppl small { font-size: 11.5px; color: var(--muted); }
+.ap-heat { display: grid; gap: 3px; font-size: 12px; }
+.ap-heat .hx { display: flex; justify-content: center; align-items: flex-end; padding-bottom: 2px; }
+.ap-heat .hx img { width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--cc, var(--line)); }
+.ap-heat .hy { display: flex; align-items: center; gap: 7px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12.5px; }
+.ap-heat .hy img { width: 24px; height: 24px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px #000; }
+.ap-heat .hc { height: 32px; border-radius: 5px; display: grid; place-items: center; color: #fff; text-shadow: 0 1px 0 #000; font: 11.5px "Friz", serif;
+  background: color-mix(in srgb, var(--title2) calc(var(--a) * 100%), rgba(255, 255, 255, 0.03)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, calc(var(--a) * 0.3)); }
+.ap-heat .hc.z { color: transparent; background: rgba(255, 255, 255, 0.025); }
+.ap-clock { display: flex; align-items: flex-end; gap: 3px; height: 330px; padding-top: 8px; }
+.ap-clock i { flex: 1; border-radius: 4px 4px 1px 1px; min-height: 2px; background: linear-gradient(#7fa8e8, #24406e); }
+.ap-clock i.d { background: linear-gradient(#ffd77a, #9a6a1c); }
+.ap-clock i.pk { box-shadow: 0 0 12px var(--glow), inset 0 0 0 1px #fff7d6; }
+.ap-clx { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--muted); }
+.ap-clx span { display: flex; align-items: center; gap: 4px; } .ap-clx img { width: 16px; height: 16px; border-radius: 3px; }
+.ap-peak { margin-top: 10px; font-size: 13px; color: var(--ink-2); }
+.ap-peak b { font: 18px "Friz", serif; font-weight: normal; color: var(--title); }
+.ap-houses { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.ap-house { position: relative; overflow: hidden; min-width: 0; border-radius: 10px; min-height: 270px; padding: 18px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  background: radial-gradient(circle at 50% 35%, transparent 20%, rgba(5, 4, 3, 0.85) 75%), linear-gradient(rgba(5, 4, 3, 0.35), rgba(5, 4, 3, 0.9)), var(--bg) center / cover;
+  border: 2px solid var(--hc); box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8), 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 30px color-mix(in srgb, var(--hc) 25%, transparent); }
+.ap-house .cr { width: 130px; height: 130px; object-fit: contain; mix-blend-mode: lighten; margin-bottom: auto; filter: drop-shadow(0 6px 14px #000); }
+.ap-house .cr.coin { width: 96px; height: 96px; border-radius: 14px; mix-blend-mode: normal; margin-top: 16px; box-shadow: 0 0 0 2px #000, 0 0 0 4px var(--hc), 0 0 30px var(--hc); }
+.ap-house h3 { margin: 6px 0 0; font: 24px "Morpheus", serif; font-weight: normal; color: var(--hc); text-shadow: 0 2px 0 #000, 0 0 12px #000; }
+.ap-house .big { font: clamp(26px, 3.2vw, 38px)/1.05 "Friz", serif; color: #fff2cf; text-shadow: 0 2px 0 #000; }
+.ap-house .sm { font-size: 12.5px; color: var(--ink-2); }
+.ap-house .gv { margin-top: 8px; font: 17px "Friz", serif; color: #ffd76a; text-shadow: 0 1px 0 #000; }
+.ap-rsc { margin-bottom: 14px; }
+.ap-tree { position: relative; height: 360px; border-radius: 8px; overflow: hidden; }
+.ap-tile { position: absolute; padding: 10px 12px; overflow: hidden; border: 2px solid #0b0906; border-radius: 8px; cursor: pointer; text-align: left; font: inherit; color: var(--ink);
+  background: radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--tc) 35%, transparent), transparent 60%), linear-gradient(160deg, color-mix(in srgb, var(--tc) 28%, #16110a), #0f0c08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px color-mix(in srgb, var(--tc) 40%, transparent); transition: filter 0.15s; }
+.ap-tile:hover, .ap-tile.on { filter: brightness(1.25); box-shadow: inset 0 0 0 2px var(--tc); }
+.ap-tile img { width: 34px; height: 34px; border-radius: 6px; box-shadow: 0 0 0 1px #000, 0 0 0 2px color-mix(in srgb, var(--tc) 60%, transparent); }
+.ap-tile b { display: block; margin-top: 6px; font: 18px/1.05 "Morpheus", serif; font-weight: normal; color: var(--title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ap-tile span { display: block; font: 14px "Friz", serif; color: #ffd76a; white-space: nowrap; }
+.ap-tile small { font-size: 11.5px; color: var(--ink-2); }
+.ap-tile.tiny img, .ap-tile.tiny small { display: none; } .ap-tile.tiny b { font-size: 13px; margin-top: 0; } .ap-tile.tiny span { font-size: 11px; }
+.ap-subs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(190px, 100%), 1fr)); gap: 8px; margin-top: 12px; }
+.ap-subs div { padding: 8px 10px; border-radius: 7px; background: rgba(0, 0, 0, 0.35); border-left: 3px solid var(--tc); }
+.ap-subs b { display: block; font: 14px "Friz", serif; font-weight: normal; color: var(--ink); }
+.ap-subs small { font-size: 12px; color: var(--muted); }
+.ap-strip { position: relative; overflow: hidden; border-radius: 8px; padding: 16px 18px; margin-bottom: 14px; min-height: 96px; display: flex; flex-direction: column; justify-content: center;
+  background: linear-gradient(90deg, rgba(8, 6, 4, 0.95) 30%, rgba(8, 6, 4, 0.35)), var(--bg) center / cover; box-shadow: inset 0 0 0 1px var(--soft); font-size: 14px; color: var(--ink-2); }
+.ap-strip b { color: #fff2cf; font-weight: normal; } .ap-strip .bn { font: 30px/1.1 "Friz", serif; color: var(--title); }
+.ap-irows { display: flex; flex-direction: column; gap: 6px; }
+.ap-ir { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; background: rgba(0, 0, 0, 0.3); }
+.ap-ir img { width: 34px; height: 34px; border-radius: 6px; border: 2px solid var(--qc); box-shadow: 0 0 0 1px #000; }
+.ap-rgt { margin-left: 7px; font: 10.5px "Friz", serif; color: var(--ink-2); border: 1px solid var(--soft); border-radius: 999px; padding: 0 6px; vertical-align: 1px; }
+.ap-ir .nm { font: 14px "Friz", serif; color: var(--qc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 0 #000; }
+.ap-ir .ds { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ap-ir .ds .ap-coin { font-size: 12px; }
+.ap-ir .bx { text-align: right; font: 18px "Friz", serif; color: var(--title); white-space: nowrap; }
+.ap-ir .bx small { display: block; font-size: 11px; color: var(--muted); }
+.ap-vs { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+.ap-vs .a { color: #8fbaf5; } .ap-vs .h { color: #f08a7e; }
+.ap-poster { display: grid; grid-template-columns: minmax(260px, 1.2fr) 1fr; gap: 16px; }
+.ap-wanted { position: relative; border-radius: 6px; padding: 22px 22px 20px; text-align: center; color: #3a2510;
+  background: radial-gradient(circle at 50% 40%, rgba(255, 240, 200, 0.25), transparent 60%), url("assets/game/art/tex-parchment.jpg") center / cover;
+  box-shadow: inset 0 0 50px rgba(80, 40, 0, 0.55), 0 12px 30px rgba(0, 0, 0, 0.7); transform: rotate(-0.6deg); }
+.ap-wanted .k { font: 15px "Morpheus", serif; letter-spacing: 0.12em; color: #6b3d12; }
+.ap-wanted img { width: 64px; height: 64px; border-radius: 8px; margin: 10px auto; border: 3px solid var(--qc); box-shadow: 0 0 0 1px #000, 0 6px 14px rgba(0, 0, 0, 0.5); }
+.ap-wanted h4 { margin: 0; font: 26px/1.1 "Morpheus", serif; font-weight: normal; color: #2a1606; }
+.ap-wanted .ap-wp { margin-top: 10px; font: 30px "Friz", serif; color: #2a1606; }
+.ap-wanted .ap-wp .ap-coin b { color: #2a1606; }
+.ap-wanted .ft { margin-top: 8px; font-size: 12.5px; color: #5a3a1a; }
+.ap-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start; }
+.ap-fact { padding: 12px; border-radius: 8px; background: rgba(0, 0, 0, 0.35); box-shadow: inset 0 0 0 1px var(--soft); }
+.ap-fact img { width: 30px; height: 30px; border-radius: 6px; float: left; margin-right: 10px; box-shadow: 0 0 0 1px #000; }
+.ap-fact .fv { display: block; font: 22px/1.1 "Friz", serif; color: #fff2cf; }
+.ap-fact span { font-size: 12px; color: var(--muted); }
+.ap-mix { margin-bottom: 18px; }
+.ap-mix h4 { margin: 0 0 6px; font: 16px "Morpheus", serif; font-weight: normal; color: var(--title2); }
+.ap-mleg { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 7px; font-size: 12px; color: var(--ink-2); }
+.ap-mleg span::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 2px; background: var(--c); margin-right: 5px; }
+.ap-gcols { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; align-items: end; height: 220px; }
+.ap-gcol { display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; text-align: center; }
+.ap-gcol .bar2 { width: 100%; max-width: 54px; border-radius: 6px 6px 2px 2px; background: linear-gradient(var(--bar1), var(--bar0)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 12px var(--glow); }
+.ap-gcol .v { font-size: 12px; } .ap-gcol .t { font: 13px "Morpheus", serif; color: var(--title2); } .ap-gcol small { font-size: 11px; color: var(--muted); }
+.ap-next { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.ap-next div { padding: 12px; border-radius: 8px; background: rgba(0, 0, 0, 0.3); border: 1px dashed var(--line); font-size: 13px; color: var(--ink-2); }
+.ap-next b { display: block; font: 17px "Morpheus", serif; font-weight: normal; color: var(--title); margin-bottom: 2px; }
+@media (max-width: 1180px) { .ap-poster { grid-template-columns: 1fr; } }
+@media (max-width: 720px) {
+  .ap-regs { grid-template-columns: 1fr 1fr; } .ap-reg { height: 92px; } .ap-reg .ap-rn { font-size: 18px; }
+  .ap-war { grid-template-columns: 1fr 1fr; } .ap-war .ap-tugs { grid-column: 1 / -1; grid-row: 2; } .ap-side img { width: 76px; height: 76px; } .ap-side b { font-size: 26px; }
+  .ap-houses { grid-template-columns: 1fr; } .ap-house { min-height: 210px; } .ap-house .cr { width: 90px; height: 90px; }
+  .ap-tree { height: 460px; } .ap-facts { grid-template-columns: 1fr; }
+  .ap-heat { font-size: 10px; } .ap-heat .hy span { display: none; } .ap-heat .hc { height: 26px; font-size: 9.5px; }
+  .ap-gcols { height: 190px; gap: 6px; }
+}
+
+.ap-wgrid .ax img.round { width: 30px; height: 30px; }
+.ap-wgrid .cell { height: 42px; font-size: 13.5px; }
+.ap-wleg { display: flex; gap: 16px; margin-top: 10px; font-size: 12px; color: var(--ink-2); flex-wrap: wrap; }
+.ap-wleg span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.ap-wleg .hi::before { background: rgba(224, 102, 47, 0.85); } .ap-wleg .lo::before { background: rgba(93, 132, 180, 0.85); }
+.ap-gs { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; height: 250px; align-items: end; }
+.ap-gsc { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 6px; }
+.ap-gsc i { width: 100%; max-width: 46px; border-radius: 6px 6px 2px 2px; background: linear-gradient(var(--bar1), var(--bar0)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 12px var(--glow); }
+.ap-gsc:hover i { filter: brightness(1.3); }
+.ap-gsc .v { font: 13px "Friz", serif; color: #fff2cf; }
+.ap-gsc b { font: 12px "Friz", serif; font-weight: normal; color: var(--muted); white-space: nowrap; }
+.ap-gsx { display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 4px; font: 12.5px "Morpheus", serif; color: var(--title2); text-align: center; }
+.ap-gsx span { white-space: nowrap; overflow: visible; }
+@media (max-width: 720px) { .ap-gs { height: 200px; gap: 4px; } .ap-gsc b { font-size: 10px; } .ap-gsx { display: none; } .ap-clock { height: 220px; } .ap-wgrid .cell { height: 34px; font-size: 11px; } .ap-wgrid .cell small { display: none; } }
+
+.ap-fill .body { display: flex; flex-direction: column; }
+.ap-fill .ap-clock { flex: 1; height: auto; min-height: 260px; }
+.ap-tree.picked .ap-tile:not(.on) { --tc: #5f584c !important; }
+.ap-tree.picked .ap-tile:not(.on) img { filter: grayscale(0.7); }
+.ap-tree.picked .ap-tile:not(.on):hover img { filter: none; }
+.ap-tree .ap-tile.on { z-index: 2; filter: brightness(1.12); box-shadow: inset 0 0 0 2px var(--tc), 0 0 16px color-mix(in srgb, var(--tc) 35%, transparent); }
+.ap-clr { margin-left: auto; padding: 4px 12px; }
+.ap-subh { display: flex; align-items: center; gap: 10px; margin: 16px 0 8px; }
+.ap-subh img { width: 30px; height: 30px; border-radius: 6px; box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--tc); }
+.ap-subh b { font: 20px "Morpheus", serif; font-weight: normal; color: var(--tc); }
+.ap-subh span { font-size: 12.5px; color: var(--muted); }
+.ap-subs div { display: grid; grid-template-columns: 52px 1fr; grid-template-rows: auto auto auto; column-gap: 8px; align-items: center; }
+.ap-subs .pc { grid-row: 1 / 4; font: 22px "Friz", serif; color: #fff2cf; text-align: right; }
+.ap-subs .br { display: block; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.06); margin: 4px 0 3px; overflow: hidden; }
+.ap-subs .br i { display: block; height: 100%; border-radius: 3px; background: var(--tc); }
+.ap-esss { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.ap-ess { display: grid; grid-template-columns: 40px 1fr; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.04); }
+.ap-ess img { width: 40px; height: 40px; border-radius: 6px; border: 2px solid var(--qc); box-shadow: 0 0 0 1px #000; }
+.ap-ess .nm { font: 13.5px "Friz", serif; color: var(--qc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 0 #000; }
+.ap-ess .pp { font: 16px "Friz", serif; margin: 1px 0; }
+.ap-ess .fx { display: flex; gap: 8px; font-size: 11.5px; color: var(--muted); }
+.ap-ess .fx .ap-coin b { color: inherit; }
+.ap-ess .fx .w.a { color: #8fbaf5; } .ap-ess .fx .w.h { color: #f08a7e; }
+.ap-mv { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ap-mv h4 { margin: 0 0 6px; font: 17px "Morpheus", serif; font-weight: normal; }
+.ap-up { color: #7ddc8a; } .ap-dn { color: #ef7d6d; }
+.ap-wait { display: flex; gap: 12px; align-items: center; padding: 18px; border-radius: 8px; background: rgba(0, 0, 0, 0.3); border: 1px dashed var(--line); }
+.ap-wait img { width: 40px; height: 40px; border-radius: 8px; }
+.ap-wait b { display: block; font: 18px "Morpheus", serif; font-weight: normal; color: var(--title); }
+.ap-wait span { font-size: 13px; color: var(--ink-2); }
+.ap-gl { display: flex; flex-direction: column; gap: 6px; }
+.ap-gr { display: grid; grid-template-columns: 62px repeat(3, 1fr); gap: 8px; align-items: center; }
+.ap-gr.hd span { font: 13px "Morpheus", serif; color: var(--title2); }
+.ap-gr .lv { font: 15px "Morpheus", serif; color: var(--ink); }
+.ap-gc { position: relative; height: 28px; border-radius: 6px; background: rgba(255, 255, 255, 0.04); display: flex; align-items: center; padding: 0 8px; font-size: 13px; overflow: hidden; }
+.ap-gc i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 10%, transparent), color-mix(in srgb, var(--c) 35%, transparent)); border-right: 2px solid var(--c); }
+.ap-gc .ap-coin { position: relative; text-shadow: 0 1px 2px #000; }
+.ap-gc.none { color: var(--muted); justify-content: center; }
+@media (max-width: 720px) { .ap-mv { grid-template-columns: 1fr; } .ap-gr { grid-template-columns: 46px repeat(3, 1fr); gap: 4px; } .ap-gc { font-size: 11px; padding: 0 4px; } .ap-gr.hd span { font-size: 11px; } }
+
+@media (min-width: 721px) and (max-width: 1180px) { .top .wrap { gap: 8px; } .tabs { margin-left: 2px; gap: 0; } .tabs .tab { padding: 5px 6px 4px; } .right { gap: 6px; } .right .realm button { padding: 6px 9px; } .brand b { font-size: 24px; } }
 </style>
 <script>
 let me = false;
@@ -1465,23 +1817,32 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </script>
 </head>
 <body data-view="crafting">
+<div class="lz-pre" id="lzPre" hidden><div class="wrap"><b>Preview</b><span>Launch version of the site. Beta numbers stand in until Forever's own data arrives.</span><span>Try: <a href="?day=3#home">day 3</a> · <a href="?fresh&day=1#home">day one, almost empty</a> · <a href="?#home">before launch</a> · <a href="beta/">beta archive</a></span></div></div>
+<div class="lz-chb" id="lzChb" hidden><div class="wrap"><span><b id="lzChbT"></b> <span id="lzChbD"></span></span><a id="lzChbA" href="./">Back to now &rarr;</a></div></div>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#home"><img src="assets/logo-small.png" alt=""><div><b>Linked Inn</b><small>Forever census</small></div></a>
+    <a class="brand" href="#home"><span class="lz-mark"><img src="assets/game/ui/inv_misc_book_09.png" alt=""></span><div><b>Life on Azeroth</b><small>The WoW: Forever census</small></div></a>
     <nav class="tabs" id="tabs">
       <a class="tab" data-v="home" href="#home"><img src="assets/game/ui/achievement_zone_elwynnforest.png" alt=""><span>Home</span></a>
       <a class="tab" data-v="news" href="#news"><img src="assets/game/ui/inv_misc_note_01.png" alt=""><span>News</span></a>
-      <a class="tab" data-v="crafting" href="#crafting"><img src="assets/game/ui/inv_misc_bag_10.png" alt=""><span>Crafting</span></a>
-      <a class="tab" data-v="duels" href="#duels"><img src="assets/game/ui/ability_parry.png" alt=""><span>Duels</span></a>
-      <a class="tab" data-v="life" href="#life"><img src="assets/game/ui/inv_misc_book_09.png" alt=""><span>Life</span></a>
+      <div class="ap-grp">
+        <a class="tab" data-g="census" href="#population"><img src="assets/game/ui/achievement_bg_killxenemies_generalsroom.png" alt=""><span>Census</span><i class="ap-caret"></i></a>
+        <div class="ap-dd"><div class="ap-ddbox">
+          <a class="ap-ddi" data-v="population" href="#population"><img src="assets/game/ui/inv_bannerpvp_01.png" alt=""><span><b>Population<i class="ap-new">New</i></b><small>Everyone we can find, in every region</small></span></a>
+          <a class="ap-ddi" data-v="crafting" href="#crafting"><img src="assets/game/ui/inv_misc_bag_10.png" alt=""><span><b>Crafting</b><small>Professions and recipes</small></span></a>
+          <a class="ap-ddi" data-v="duels" href="#duels"><img src="assets/game/ui/ability_parry.png" alt=""><span><b>Duels</b><small>Who beats who</small></span></a>
+          <a class="ap-ddi" data-v="life" href="#life"><img src="assets/game/ui/inv_misc_book_09.png" alt=""><span><b>Life</b><small>Deaths, habits and records</small></span></a>
+        </div></div>
+      </div>
+      <a class="tab" data-v="economy" href="#economy"><img src="assets/game/ui/inv_misc_coin_02.png" alt=""><span>Economy</span></a>
       <a class="tab" href="draft"><img src="assets/icons/132347.png" alt=""><span>Draft</span></a>
-      <a class="tab" data-v="open" data-s="Open" href="#open"><img class="folg" src="assets/forever-open-logo.png" alt=""><span>Forever Open</span></a>
+      <a class="tab" data-g="archive" href="#archive"><img src="assets/game/ui/inv_misc_book_11.png" alt=""><span>Archive</span></a>
     </nav>
     <div class="right">
       <div class="realm" id="realm"></div>
       <button class="hbtn" id="regulars" data-tip="The Regulars|The people who collect the census, by how many crafters they brought in."><img src="assets/game/ui/inv_drink_05.png" alt=""><span class="t">Regulars</span><span class="n" id="regN" hidden></span></button>
       <a class="hbtn" href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener" data-tip="Buy me a coffee|Keeps the census running."><img src="assets/game/ui/inv_drink_04.png" alt=""><span class="t">Buy me a coffee :-)</span></a>
-      <a class="hbtn get" href="https://www.curseforge.com/wow/addons/linked-inn-profession-finder" target="_blank" rel="noopener">Get Linked Inn</a>
+      <a class="hbtn" href="#about" data-tip="About the numbers|Where they come from, how fresh they are and what they cannot see."><img src="assets/game/ui/inv_misc_note_01.png" alt=""><span class="t">About</span></a>
     </div>
   </div>
 </header>
@@ -1495,6 +1856,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <div class="bar"><div class="wrap">
+  <div class="seg ap-sub" id="sub" hidden></div>
+  <div class="sep" id="sep0" hidden></div>
   <div class="seg" id="fac"></div>
   <div class="sep" id="sep2"></div>
   <div class="seg" id="opt"></div>
@@ -1503,12 +1866,15 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 
 <main class="wrap" id="main"></main>
 <div class="wrap"><footer>
-  <span>Fan-made. Not affiliated with Blizzard Entertainment.</span>
+  <span><b class="lz-fb">Life on Azeroth</b> · a fan-made census of World of Warcraft: Forever, by sanredz</span>
+  <span id="updated" style="margin-left:auto"></span>
+  <i class="lz-sep"></i>
+  <a href="#about">About the numbers</a>
   <a href="#archive">Archive</a>
   <a href="privacy.html">Privacy</a>
   <a href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener">Buy me a coffee</a>
   <span>Your name on here? <a href="https://tally.so/r/Dq29MZ" target="_blank" rel="noopener">Ask</a> and it comes off.</span>
-  <span id="updated" style="margin-left:auto"></span>
+  <span>Not affiliated with Blizzard Entertainment.</span>
 </footer></div>
 <div id="tip"></div>
 
@@ -1531,11 +1897,16 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   </div></div>
 </div>
 
-<script src="data-multi.js?v=20261105154240"></script>
-<script src="data-summary.js?v=20261105154240"></script>
-<script src="data-home.js?v=20261105154240"></script>
-<script src="data-life.js?v=20261105154240"></script>
-<script src="data-open.js?v=20261105154240"></script>
+<script>
+window.LI_V = '20261106200516';
+window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
+(() => {
+  const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
+  const v = window.LI_V ? '?v=' + window.LI_V : '';
+  ['data-multi.js', 'data-summary.js', 'data-home.js', 'data-life.js', 'data-open.js', 'data-api.js', 'data-econ.js'].forEach((f) => document.write('<script src="' + base + f + v + '"><\/script>'));
+  document.write('<script>if (window.LI_CH && !window.LI_SUMMARY) location.replace(location.pathname + location.hash);<\/script>');
+})();
+</script>
 <script>
 (() => {
   const M = window.LI_MULTI, S = window.LI_SUMMARY;
@@ -1563,16 +1934,19 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     archive: { kicker: 'Life on Azeroth', title: 'The Archive' },
     crafting: { kicker: 'World of Warcraft: Forever', title: 'The Crafting Census' },
     duels: { kicker: 'World of Warcraft: Forever', title: 'The Dueling Grounds' },
-    life: { kicker: 'World of Warcraft: Forever', title: 'Life on Azeroth' },
+    life: { kicker: 'World of Warcraft: Forever', title: 'Everyday Life' },
+    about: { kicker: 'Life on Azeroth', title: 'About the Numbers' },
     open: { kicker: 'The Forever Open', title: 'Road to the Finals' },
     news: { kicker: 'World of Warcraft: Forever', title: 'News' },
     patches: { kicker: 'World of Warcraft: Forever', title: 'Patch notes' },
+    population: { kicker: 'World of Warcraft: Forever', title: 'Who plays Forever' },
+    economy: { kicker: 'World of Warcraft: Forever', title: 'The Auction House' },
   };
   let O = window.LI_OPEN;
   const VOTE_API = 'https://forever-vote.sanredz.workers.dev';
   const TOASTS = {};
   const toastWho = (P) => pfold(P.n) + '|' + P.rs;
-  const toastBtn = (P) => `<button class="toast" data-toast="${esc(toastWho(P))}" data-label="Toast ${esc(P.n.split(' ')[0])}" data-tip="Raise a toast|One per person, for anyone whose beta you enjoyed."><i class="tic" style="background-image:url('${UI('inv_drink_04')}')"></i><span>Toast ${esc(P.n.split(' ')[0])}</span><b></b></button>`;
+  const toastBtn = (P) => `<button class="toast" data-toast="${esc(toastWho(P))}" data-label="Toast ${esc(P.n.split(' ')[0])}" data-tip="Raise a toast|One per person, for anyone whose adventure you enjoyed."><i class="tic" style="background-image:url('${UI('inv_drink_04')}')"></i><span>Toast ${esc(P.n.split(' ')[0])}</span><b></b></button>`;
   const toastPaint = (who) => {
     const t = TOASTS[who];
     document.querySelectorAll('.toast').forEach((b) => {
@@ -1608,22 +1982,39 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   }, true);
   let VOTE = null, voteErr = '', CHEER = null, cheerErr = '';
   if (!O) document.querySelectorAll('.tab[data-v="open"]').forEach((t) => t.remove());
+  const A = window.API_DATA;
+  if (!A) {
+    document.querySelectorAll('.tabs [data-v="population"]').forEach((t) => t.remove());
+    document.querySelector('.tab[data-g="census"]').setAttribute('href', '#crafting');
+  }
+  if (!window.ECON) document.querySelectorAll('.tabs [data-v="economy"]').forEach((t) => t.remove());
+  const GROUP = { population: 'census', crafting: 'census', duels: 'census', life: 'census', open: 'archive', archive: 'archive' };
   const hasWorld = !!(S && S.duels);
-  if (!hasWorld) document.querySelectorAll('.tab[data-v="duels"], .tab[data-v="life"]').forEach((t) => t.remove());
+  if (!hasWorld) document.querySelectorAll('.tabs [data-v="duels"], .tabs [data-v="life"]').forEach((t) => t.remove());
   let PV = { s: {}, b: {} };
   const OS = { tc: '', q: '', c: '', sp: -1, st: 'all', sort: 'rank', more: 0, open: -1 };
   const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'rate', pod: 'rate', rare: 'all', tcls: '', tgrp: 'all' };
   try { const saved = JSON.parse(localStorage.getItem('inn-sel') || '{}'); ['rs', 'fac'].forEach((k) => { if (saved[k]) sel[k] = saved[k]; }); } catch (e) {}
   let view = 'crafting';
+  sel.rg = 'all'; sel.etab = 'listed'; sel.erg = 'all'; sel.ers = 'all'; sel.ecat = '';
 
   const cd = document.getElementById('cd');
   const LAUNCH = Date.UTC(2026, 10, 4, 23, 0, 0);
+  const LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  const QS = new URLSearchParams(location.search);
+  const SEASON = { id: (S && S.season) || 'launch', preview: LOCAL && (!S || S.season === 'beta'), fresh: LOCAL && QS.has('fresh') };
+  const nowMs = () => LOCAL && QS.get('day') ? LAUNCH + (Math.max(1, +QS.get('day') || 1) - 1) * 86400000 + 5 * 3600000 : Date.now();
+  const dayOf = (t) => Math.floor((t - LAUNCH) / 86400000) + 1;
+  if (SEASON.preview) document.getElementById('lzPre').hidden = false;
   function tick() {
-    const diff = LAUNCH - Date.now();
+    const now = nowMs(), diff = LAUNCH - now;
     const s = Math.floor(Math.abs(diff) / 1000);
     if (diff <= 0) {
-      document.getElementById('cdT').textContent = 'Live for';
-      document.getElementById('cdD').textContent = 'Since November 4 · Forever census coming soon';
+      document.querySelector('.banner .count').classList.add('lz-live');
+      document.getElementById('cdT').textContent = 'Forever is live';
+      cd.innerHTML = `<div class="lz-day"><small>Day</small><b>${dayOf(now)}</b></div>`;
+      document.getElementById('cdD').textContent = 'Since November 4, 2026';
+      return;
     }
     const parts = [[Math.floor(s / 86400), 'Days'], [Math.floor(s / 3600) % 24, 'Hours'], [Math.floor(s / 60) % 60, 'Minutes'], [s % 60, 'Seconds']];
     cd.innerHTML = parts.map(([v, l], i) => `${i ? '<span class="colon">:</span>' : ''}<div class="c"><b>${String(v).padStart(2, '0')}</b><small>${l}</small></div>`).join('');
@@ -1985,7 +2376,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const feuds = X.feuds.map((f) => `<div class="f"><img src="${cls(f.a.c)}" alt=""><img src="${cls(f.b.c)}" alt=""><span>${who2(f.a)} vs ${who2(f.b)} · <b>${f.n}</b> duels, ${f.aw}–${f.n - f.aw}</span></div>`);
     const streak = X.streak ? `<div class="f"><img src="${UI('spell_fire_fire')}" alt=""><img src="${cls(X.streak.c)}" alt=""><span>Longest win streak: <b>${X.streak.n}</b> in a row, by a ${who2(X.streak)}</span></div>` : '';
     const feudHtml = feuds.length || streak ? `<div class="feud"><h3 class="mini">Grudges and streaks</h3>${streak}${feuds.join('')}</div>` : '';
-    if (slayHtml) h += panel('s4', 'Who beats the best?', 'How often each class wins when it meets one of the top duelists. The giant slayers.', slayHtml);
+    if (slayHtml) h += panel('s4', 'Who beats the best?', 'How often each class wins when it meets one of the top duelists.', slayHtml);
     h += panel(slayHtml ? 's12' : 's4', 'Does the edge decide it?', 'How often the player with the higher level, or the better gear (item level), walks away the winner.',
       `<div class="gauges">${ring(X.lv, '#ff8a3c', 'Higher level', 'wins this often')}${ring(X.gear, '#5aa0ff', 'Better gear', 'wins this often')}</div>${feudHtml}`, slayHtml ? { cls: 'edgewide' } : {});
     const boards = S.duels[`All|${sel.fac}|${sel.even ? 'even' : 'all'}`].boards;
@@ -2110,7 +2501,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         const p = v / L.n, [nm, ic] = FEAT_INFO[k], big = `1 in ${1 / p < 10 ? (1 / p).toFixed(1).replace(/\.0$/, '') : fmt(Math.round(1 / p))}`;
         return `<div class="feat" style="--q:${featQ(p)}" data-tip="${esc(nm)}|${fmt(v)} of ${fmt(L.n)} characters (${(p * 100).toFixed(p < 0.01 ? 2 : 1)}%)"><img src="${UI(ic)}" alt=""><div class="fn">${esc(nm)}</div><div class="fv">${big}</div><div class="fs">${fmt(v)} characters</div></div>`;
       }).join('');
-      h += panel('s12', 'From almost nobody to almost everybody', 'How many characters have done each thing at least once, coloured like loot: legendary is rarer than 1 in 100, epic than 1 in 20, rare than 1 in 5, uncommon than 1 in 1.7.', `<div class="feats">${cards}</div>`);
+      h += panel('s12', 'How rare is it?', 'How many characters have done each thing at least once, coloured like loot: legendary is rarer than 1 in 100, epic than 1 in 20, rare than 1 in 5, uncommon than 1 in 1.7.', `<div class="feats">${cards}</div>`);
     }
     if (L.sup && L.sup.length && L.sup[0].top) {
       const num = (v) => v < 10 ? v.toFixed(1) : fmt(Math.round(v));
@@ -2752,7 +3143,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     ['realm', 'fac', 'opt'].forEach((id) => { document.getElementById(id).innerHTML = ''; });
     document.getElementById('sep2').hidden = true;
   }
-  function archiveCards() {
+  const BETA_CARD = `<a class="acard lz-ac" href="beta/"><span class="lz-acimg" style="--bg:url('assets/game/scenes/dalaran.jpg')"><img src="${UI('inv_misc_book_11')}" alt=""></span><div><b>The Forever beta</b><span>October 4 to 23, 2026</span><span>Every chart, duel, character page and card, as the beta ended.</span></div></a>`;
+  function eventCards() {
     const cards = [];
     if (O) {
       const F = O.fin, M = F ? F.m : [];
@@ -2763,12 +3155,124 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     }
     return cards;
   }
+  function archiveCards() {
+    return [BETA_CARD, ...eventCards()];
+  }
+  const CH_PLAN = [['week', 'Launch week', '2026-11-11', 'inv_misc_pocketwatch_01'], ['month', 'First month', '2026-12-04', 'achievement_zone_elwynnforest']];
+  const CUR = window.LI_CH || '';
+  let CHI = null;
+  const CHX = fetch('snap/index.json').then((r) => r.ok ? r.json() : null).catch(() => null).then((x) => { CHI = (x && x.chapters) || []; return CHI; });
+  const chDate = (d) => d ? new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+  const chYear = (d) => d ? new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  const chShort = (d) => d ? new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+  function chList() {
+    const saved = Object.fromEntries((CHI || []).map((c) => [c.id, c]));
+    const out = CH_PLAN.map(([id, t, due, ic]) => saved[id] ? Object.assign({ ic, saved: true }, saved[id]) : { id, t, due, ic });
+    (CHI || []).filter((c) => !c.per && !CH_PLAN.some(([id]) => id === c.id)).forEach((c) => out.push(Object.assign({ ic: 'inv_misc_gear_01', saved: true }, c)));
+    out.push(saved.cap ? Object.assign({ ic: 'achievement_level_30', saved: true }, saved.cap) : { id: 'cap', t: 'Level 60', ic: 'achievement_level_30', per: true });
+    return out;
+  }
+  const chSub = (c) => c.per ? (c.saved ? 'When they reached it' : 'Saved when they reach it') : `Saved ${chShort(c.saved ? c.at : c.due)}`;
+  function chHref(id, hash) {
+    const q = new URLSearchParams(location.search);
+    if (id) q.set('ch', id); else q.delete('ch');
+    const s = q.toString();
+    return `${location.pathname}${s ? '?' + s : ''}${hash}`;
+  }
+  const pfind = (shard, n, rs) => shard && (shard[pfold(n) + '|' + rs] || Object.entries(shard).find(([k]) => k.startsWith(pfold(n) + '|') || k.startsWith(pfold(n) + ' '))?.[1]);
+  const pgz = (url) => {
+    PCACHE[url] = PCACHE[url] || fetch(url).then(async (r) => {
+      if (!r.ok) return null;
+      const b = new Uint8Array(await r.arrayBuffer());
+      if (b[0] === 0x1f && b[1] === 0x8b) return JSON.parse(await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
+      return JSON.parse(new TextDecoder().decode(b));
+    }).catch(() => null);
+    return PCACHE[url];
+  };
+  function chapters(P) {
+    const cur = CUR || 'now', hash = plink(P.n, P.rs);
+    const now = cur === 'now' ? `<span class="lz-c on"><img src="${UI('inv_misc_book_09')}" alt=""><span><b>Now</b><small>Updated with every read</small></span></span>`
+      : `<a class="lz-c" href="${chHref('', hash)}" data-tip="Now|How they stand today."><img src="${UI('inv_misc_book_09')}" alt=""><span><b>Now</b><small>Updated with every read</small></span></a>`;
+    const items = chList().map((c) => {
+      const inner = `<img src="${UI(c.ic)}" alt=""><span><b>${esc(c.t)}</b><small>${chSub(c)}</small></span>`;
+      if (c.id === cur) return `<span class="lz-c on" data-ch="${c.id}">${inner}</span>`;
+      if (!c.saved) return `<span class="lz-c na" data-tip="${esc(c.t)}|${c.per ? 'Saved the moment they reach the level cap' : `Saved on ${chDate(c.due)}`}. A snapshot of this page as it stood then: stats, Renown and card.">${inner}</span>`;
+      return `<a class="lz-c" data-ch="${c.id}" href="${chHref(c.id, hash)}" data-tip="${esc(c.t)}|${c.per ? `How they stood the day they reached level ${c.lv}.` : `How they stood on ${chDate(c.at)}.`}">${inner}</a>`;
+    });
+    return `<section class="lz-ch" id="lzCh"><span class="lz-cht">Chapters</span>${[now, ...items].join('<i class="lz-cl"></i>')}</section>`;
+  }
+  function chProbe(P) {
+    document.querySelectorAll('#lzCh [data-ch]').forEach((a) => {
+      pgz(`snap/${a.dataset.ch}/d/${pbucket(P.n, 3)}.json.gz`).then((sh) => {
+        const hit = pfind(sh, P.n, P.rs), small = a.querySelector('small');
+        if (hit) { if (hit.sa && small) small.textContent = `Reached ${chShort(hit.sa)}`; return; }
+        if (a.tagName !== 'A') return;
+        const s = document.createElement('span');
+        s.className = 'lz-c na';
+        s.innerHTML = a.innerHTML;
+        s.dataset.tip = `${a.querySelector('b').textContent}|${a.dataset.ch === 'cap' ? 'Not there yet.' : 'Not in the census yet back then.'}`;
+        s.querySelector('small').textContent = a.dataset.ch === 'cap' ? 'Not yet' : 'Not seen by then';
+        a.replaceWith(s);
+      });
+    });
+  }
+  CHX.then(() => {
+    const c = CUR && CHI.find((x) => x.id === CUR);
+    if (!c) return;
+    document.getElementById('lzChb').hidden = false;
+    document.getElementById('lzChbT').textContent = `Chapter · ${c.t}`;
+    document.getElementById('lzChbD').textContent = c.per ? `· every character as they stood the day they reached level ${c.lv}` : `· the census as it stood on ${chDate(c.at)}`;
+    const back = document.getElementById('lzChbA');
+    back.href = chHref('', location.hash);
+    addEventListener('hashchange', () => { back.href = chHref('', location.hash); });
+  });
   function renderArchive() {
     plainHead();
     document.getElementById('note').textContent = '';
-    const cards = archiveCards();
-    document.getElementById('main').innerHTML = panel('s12', 'The Archive', 'Pages from events that are over, kept exactly as they ended.',
-      cards.length ? `<div class="arch">${cards.join('')}</div>` : '<div class="optout">Nothing here yet.</div>');
+    const ev = eventCards();
+    if (CHI === null) CHX.then(() => { if (view === 'archive') renderArchive(); });
+    const chs = chList().map((c) => {
+      const body = `<img src="${UI(c.ic)}" alt=""><div><b>${esc(c.t)}</b><span>${c.saved ? (c.per ? `${fmt(c.n)} characters saved so far` : `${chDate(c.at)} · ${fmt(c.n)} characters`) : chSub(c)}</span></div>`;
+      return c.saved && !c.per ? `<a href="${chHref(c.id, '#home')}">${body}</a>` : `<div${c.saved ? ' class="lz-chk"' : ''}>${body}</div>`;
+    });
+    document.getElementById('main').innerHTML =
+      panel('s6', 'Seasons', 'Whole seasons of the census, frozen the day they ended. Everything still works: look people up, open their story, save their card.', `<div class="arch">${BETA_CARD}</div>`)
+      + panel('s6', 'Events', 'Tournaments and world events, each kept as a page of its own once it is over.', ev.length ? `<div class="arch">${ev.join('')}</div>` : '<div class="optout">Nothing here yet.</div>')
+      + panel('s12', 'Chapters', 'Snapshots of the census saved at milestones.', `<p class="lz-lede">At each milestone the census is saved as it stood that day: every chart, and every character's stats, Renown and card. Open a chapter to see the whole site as it was then, or use the chapter strip on any character page. Level 60 is saved per character, the day each one reaches it.</p><div class="lz-chs">${chs.join('')}</div>`);
+  }
+  function renderAbout() {
+    plainHead();
+    document.getElementById('note').textContent = S ? `Updated ${S.generated}` : '';
+    const D = S.duels['All|Both|even'], L = S.life['All|Both|all'], C = S.craft['All|Both'];
+    const LI = '<a href="https://www.curseforge.com/wow/addons/linked-inn-profession-finder" target="_blank" rel="noopener">Linked Inn</a>';
+    const src = [
+      ['inv_misc_bag_10', 'Crafting', `Professions and recipes of crafters, picked up by the ${LI} addon and from players who send in their lists.`],
+      ['ability_parry', 'Duels', 'Duel results the game announces to everyone nearby, with each fighter\'s class, race, level and gear.'],
+      ['inv_misc_book_09', 'Life', 'The Statistics panel every player has, the same one anyone can open when comparing achievements: deaths, quests, gold, dungeons, hugs.'],
+      ['inv_helmet_25', 'Gear and talents', 'What a character was wearing and their talents, as anyone sees them when inspecting a player.'],
+      ['inv_bannerpvp_02', 'Events', 'Public standings and results, for example the Forever Open tournament on Raider.IO.'],
+    ];
+    const left = panel('s12', 'What this is', '', `<p>Hi, I'm <b>sanredz</b>. I play Forever and I make the ${LI} addon. <b>Life on Azeroth</b> is my fan-made census of the game: what people craft, how they duel and how they live, with a page for every character I've come across.</p>
+        <p>It's a hobby. No accounts, no ads, no tracking cookies.</p>`)
+      + panel('s12', 'Where the numbers come from', '', `<p>Everything comes from the game itself, the same way any player sees it.</p><div class="lz-src">${src.map(([ic, t, s]) => `<div><img src="${UI(ic)}" alt=""><div><b>${t}</b><span>${s}</span></div></div>`).join('')}</div>`)
+      + panel('s12', 'What I can’t see', '', `<ul>
+          <li>Only characters that someone with the addon has walked past. Quiet corners of the world are under-counted.</li>
+          <li>Shares are of the characters I've seen, not of everyone who plays.</li>
+          <li>A character's page is as fresh as the last time someone passed them, so it can be a few days behind.</li>
+          <li>A rank like <b>Top 5%</b> compares you with characters of your own level when there are at least 50 of them, and with everyone otherwise. Your story and card only show off a stat when at least 30 characters are in the comparison.</li>
+          <li>Right after launch some charts say <b>Counting</b> until there are enough characters behind them to be worth showing.</li>
+        </ul>`)
+      + panel('s12', 'Your name', '', `<p>Names show up only next to a stat, a record or a result, the same names anyone sees in the game. If you want yours off, <a href="https://tally.so/r/Dq29MZ" target="_blank" rel="noopener">ask</a> and I'll take it off. The <a href="privacy.html">privacy page</a> has the details.</p>`);
+    const facts = [['Characters seen', fmt(L.n)], ['Crafters in the census', fmt(C.players)], ['Duels watched', fmt(D.n)], ['Last updated', esc(S.generated)]];
+    const right = panel('s12', 'The census so far', '', `<div class="lz-facts">${facts.map(([k, v]) => `<div><span>${k}</span><em>${v}</em></div>`).join('')}</div>`)
+      + panel('s12', 'Help it grow', '', `<ul>
+          <li>Play with ${LI} installed. Every crafter you pass counts.</li>
+          <li>Send in your list and join <a href="#" id="abReg">the Regulars</a>.</li>
+          <li><a href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener">Buy me a coffee</a> if you'd like to keep it going.</li>
+        </ul><p class="optout">Fan-made. Not affiliated with Blizzard Entertainment.</p>`);
+    document.getElementById('main').innerHTML = `<div class="lz-ab"><div class="lz-col">${left}</div><div class="lz-col">${right}</div></div>`;
+    const reg = document.getElementById('abReg');
+    if (reg) reg.onclick = (e) => { e.preventDefault(); document.getElementById('regulars').click(); };
   }
   const FCOL = { Alliance: '#4a8fe7', Horde: '#d8443a' };
   const RACE_FAC = { Human: 'Alliance', Dwarf: 'Alliance', Gnome: 'Alliance', NightElf: 'Alliance', Orc: 'Horde', Scourge: 'Horde', Tauren: 'Horde', Troll: 'Horde' };
@@ -2795,12 +3299,12 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const tiers = Object.keys(pool).filter((t) => t !== 'art' && pool[t].length).sort(() => Math.random() - 0.5).slice(0, lucky ? 2 : 3).concat(lucky ? ['art'] : []).sort(() => Math.random() - 0.5);
     const ex = tiers.length === 3 ? tiers.map((t) => { const [n, rs] = pool[t][Math.floor(Math.random() * pool[t].length)]; return `<a href="${plink(n, rs)}/wrapped" style="color:${EXC[t]}">${esc(n)}</a>`; }).join('<i>·</i>')
       : WRAPPED_SHOW.map(([n, rs]) => `<a href="${plink(n, rs)}/wrapped">${esc(n)}</a>`).join('<i>·</i>');
-    return `<section class="frame wband" data-snap-title="beta wrapped"><div class="in slab"><button class="snap wband-snap" data-act="png">Save PNG</button>
-      <div class="wband-t"><span class="wband-k">Beta Wrapped</span><b>Your beta, wrapped</b>
-        <p>Everyone we ran into during the Forever beta gets a short story of their beta and a trading card to keep. Look yourself up.</p>
+    return `<section class="frame wband" data-snap-title="story mode"><div class="in slab"><button class="snap wband-snap" data-act="png">Save PNG</button>
+      <div class="wband-t"><span class="wband-k">Story mode</span><b>Your story so far</b>
+        <p>Look yourself up. Every character we come across gets a short story of their time on Forever and a card that changes as they play. At each milestone a chapter is saved, so you can look back.</p>
         <div class="box"><input id="${id}" type="search" placeholder="Your character's name" autocomplete="off" spellcheck="false"><div class="pdrop" id="${id}-d"></div></div>
         <div class="wband-ex">Or open one: ${ex}</div></div>
-      <div class="wfan">${WRAPPED_SHOW.map(([n, rs, img], i) => `<a class="wfan-c c${i}" href="${plink(n, rs)}/wrapped" aria-label="${esc(n)}, beta wrapped"><img src="${img}" alt="" loading="lazy"></a>`).join('')}</div>
+      <div class="wfan">${WRAPPED_SHOW.map(([n, rs, img], i) => `<a class="wfan-c c${i}" href="${plink(n, rs)}/wrapped" aria-label="${esc(n)}, story"><img src="${img}" alt="" loading="lazy"></a>`).join('')}</div>
     </div></section>`;
   }
   function bindSearch(id, then = '') {
@@ -2914,7 +3418,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     soulstone: ['A warlock always keeps a stone for them.', 'Their soul is on a tab.', 'Death keeps asking. A warlock keeps saying no.'],
     exalted: ['Everyone is glad to see them.', 'Welcomed in every hall.', 'Exalted, as few ever are.'],
     pets: ['Never travels alone.', 'Their backpack squeaks.', 'A whole menagerie follows them home.'],
-    camped: ['Every road ends at a campfire.', 'They know a good spot to rest.', 'Half their beta was spent by a fire.'] });
+    camped: ['Every road ends at a campfire.', 'They know a good spot to rest.', 'Half their nights end by a fire.'] });
   const wrFlavour = (arch, k, x, P, H, seed) => {
     const pick = (a) => a[seed % a.length];
     if (!k || !x) return pick(arch.fl);
@@ -2968,8 +3472,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const cell = (k, icon, label) => { const x = val(k); return x ? `<div class="wr-cell ${H.tier(x)}"><img src="${UI(icon)}" alt=""><b>${H.shown(k, x)}</b><span>${label}</span>${H.tier(x) ? `<em>${H.solo(x) ? '#1' : H.topTxt(x)}</em>` : ''}</div>` : ''; };
     const who = `${RN[P.r] || P.r} ${H.specName}${CN[P.c]}`;
     const slides = [];
-    slides.push(`<div class="wr-k wr-in">Your beta on Forever</div><div class="wr-por wr-in" style="--fc:${FCOL[P.f] || '#888'};--d:.15s;margin-top:26px"><span class="pi"><img src="${race(P.r, P.x)}" alt=""></span><span class="cl"><img src="${cls(P.c)}" alt=""></span></div>
-      <div class="wr-h wr-in" style="--d:.3s;color:${CC[P.c]}">${esc(P.n)}</div><p class="wr-p wr-in" style="--d:.5s">Level ${P.lv} ${who}${P.g ? ` of <b>&lt;${esc(P.g)}&gt;</b>` : ''}.${P.fs ? ` First seen on ${new Date(P.fs).toLocaleDateString([], { month: 'long', day: 'numeric' })}.` : ''}</p><p class="wr-p wr-in" style="--d:.8s;color:#a8977a">Here is how the beta went.</p>`);
+    slides.push(`<div class="wr-k wr-in">${P.chT ? esc(P.chT) + ' on Forever' : 'Your story on Forever'}</div><div class="wr-por wr-in" style="--fc:${FCOL[P.f] || '#888'};--d:.15s;margin-top:26px"><span class="pi"><img src="${race(P.r, P.x)}" alt=""></span><span class="cl"><img src="${cls(P.c)}" alt=""></span></div>
+      <div class="wr-h wr-in" style="--d:.3s;color:${CC[P.c]}">${esc(P.n)}</div><p class="wr-p wr-in" style="--d:.5s">Level ${P.lv} ${who}${P.g ? ` of <b>&lt;${esc(P.g)}&gt;</b>` : ''}.${P.fs ? ` First seen on ${new Date(P.fs).toLocaleDateString([], { month: 'long', day: 'numeric' })}.` : ''}</p><p class="wr-p wr-in" style="--d:.8s;color:#a8977a">${P.chAt ? `Here is how it had gone by ${chDate(P.chAt)}.` : 'Here is how it has gone so far.'}</p>`);
 
     const firsts = Object.entries(P.v).filter(([, x]) => Array.isArray(x) && x[2] >= 30 && H.solo(x)).sort((a, b) => (H.joint(a[1]) - H.joint(b[1])) || (!WR_HEAD.includes(a[0]) - !WR_HEAD.includes(b[0])) || (H.base(b[1]) - H.base(a[1])));
     const top1 = firsts.length ? firsts[0][0] : null;
@@ -3103,7 +3607,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       <div class="wc-type"><span>${who}</span>${P.pts ? `<b class="wc-tal">${P.pts.join('/')}</b>` : ''}</div>
       <div class="wc-text ${abTier}"><div class="wc-at"><span class="wc-ic"><span class="wc-ii"><img src="${UI(arch.ic)}" alt=""></span>${abTier ? `<img class="wc-fr" src="assets/game/ui/frame-${abTier.slice(2)}.png" alt="">` : ''}</span><span class="wc-atx">${atitle}</span>${abTier ? `<span class="wc-tag">${abSeal}</span>` : ''}</div><div class="wc-ab">${ability}</div><div class="wc-fl">“${wrFlavour(arch, ak, ax, P, H, seed)}”</div></div>
       ${stats.length ? `<div class="wc-stats">${stats.map(([k, x]) => `<div class="wc-s ${H.tier(x)}">${H.solo(x) ? `<img class="wc-sf" src="${UI('spell_fire_incinerate')}" alt="">` : ''}<b>${H.shown(k, x)}</b><span>${H.nice(k)}</span><em>${H.solo(x) ? (x.fx ? `#1 ${x.fx}` : '#1 of all') : H.tier(x) ? H.topTxt(x) : '&nbsp;'}</em></div>`).join('')}</div>` : ''}
-      <div class="wc-foot"><span>${chaos ? 'Chaos ladder' : 'Forever Beta'} · ${P.rs}</span><b>${rn}</b><span>${P.ov ? `${chaos ? 'Chaos' : 'Renown'} #${fmt(P.ov[0])}` : ''}</span></div>
+      <div class="wc-foot"><span>${chaos ? 'Chaos ladder' : P.chT ? esc(P.chT) : `Live · ${chYear(P.ls || (S.generated || '').slice(0, 10))}`}</span><b>${rn}</b><span>${P.ov ? `${chaos ? 'Chaos' : 'Renown'} #${fmt(P.ov[0])}` : ''}</span></div>
       <div class="wc-foil"></div><div class="wc-shine"></div><div class="wc-sweep"></div></div></div>`;
     const back = `<div class="wcard wc-back ${rc}${chaos ? ' chaos' : ''}">${chaos ? '<i class="wc-lava"></i><i class="wc-crk"></i>' : ''}<i class="gem a"></i><i class="gem b"></i><i class="gem c"></i><i class="gem d"></i><div class="wc-in"><div class="wc-ring"><img src="assets/logo.png" alt=""></div><img class="wc-motto" src="assets/wrapped/logo-text.webp" alt="Life on Azeroth">${chaos ? '<div class="wc-cl">Chaos ladder</div>' : ''}</div></div>`;
     slides.push({ last: true, html: `<div class="wr-final"><div class="wr-rar wr-in" style="--d:1.75s"></div><div class="wr-flip wr-act"><div class="wr-flipper">${card}${back}</div></div>
@@ -3444,7 +3948,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       setTimeout(() => old.remove(), 600);
     } else closeWrapped(true);
     let { slides, art } = wrBuild(P, H);
-    if (REEL && !WR_JUMP) slides = slides.filter((x) => typeof x !== 'string' || /Your beta on Forever|wr-ologo|in all of Azeroth|Your finest feats|And so you became/.test(x));
+    if (REEL && !WR_JUMP) slides = slides.filter((x) => typeof x !== 'string' || /Your story on Forever|wr-ologo|in all of Azeroth|Your finest feats|And so you became/.test(x));
     const fin = slides.find((x) => typeof x !== 'string');
     if (fin) wrPreload(fin);
     wrPlay('open', 0.3, 0);
@@ -3567,14 +4071,19 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.getElementById('note').textContent = '';
     const want = PSEL || { n: '', rs: 'PvP' };
     document.getElementById('title').textContent = want.n || 'Character';
+    if (want.n) document.title = `${want.n} · Life on Azeroth`;
     document.getElementById('main').innerHTML = searchBox('psq2') + panel('s12', 'Loading', '', '<div class="pempty">Looking them up…</div>');
     bindSearch('psq2');
-    Promise.all([pget(`p/d/${pbucket(want.n, 3)}.json`), pget('p/items.json')]).then(([shard, items]) => {
+    const shardGet = CUR ? pgz(`snap/${CUR}/d/${pbucket(want.n, 3)}.json.gz`) : pget(`p/d/${pbucket(want.n, 3)}.json`);
+    const itemsGet = CUR ? pgz(`snap/${CUR}/items.json.gz`) : pget('p/items.json');
+    Promise.all([shardGet, itemsGet, CHX]).then(([shard, items]) => {
       if (view !== 'player' || PSEL !== want) return;
       if (items && !window.LI_PGEAR) window.LI_PGEAR = items;
-      const P = shard && (shard[pfold(want.n) + '|' + want.rs] || Object.entries(shard).find(([k]) => k.startsWith(pfold(want.n) + '|') || k.startsWith(pfold(want.n) + ' '))?.[1]);
-      if (!P) { document.getElementById('main').innerHTML = searchBox('psq2') + panel('s12', 'Not found', '', `<div class="pempty">We have not seen anyone called ${esc(want.n)}. Characters show up here once someone with the addon has inspected them.</div>`); bindSearch('psq2'); return; }
+      const P = pfind(shard, want.n, want.rs);
+      const ch = CUR && CHI.find((c) => c.id === CUR);
+      if (!P) { document.getElementById('main').innerHTML = searchBox('psq2') + panel('s12', 'Not found', '', ch ? `<div class="pempty">${esc(want.n)} is not in this chapter${ch.per ? ` yet: they are saved here the day they reach level ${ch.lv}` : `: they were not in the census on ${chDate(ch.at)}`}. <a href="${chHref('', plink(want.n, want.rs))}">See them now</a>.</div>` : `<div class="pempty">We have not seen anyone called ${esc(want.n)}. Characters show up here once someone with the addon has inspected them.</div>`); bindSearch('psq2'); return; }
       drawPlayer(P);
+      chProbe(P);
       if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) fetch(`${VOTE_API}/api/look`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: toastWho(P) }), keepalive: true }).catch(() => {});
     });
   }
@@ -3598,6 +4107,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const P = era === 'chaos' && !P0.co ? Object.assign({}, P0, P0.cx) : P0;
     if (!P.v) P.v = {};
     P.era = era;
+    const CHP = CUR && (CHI || []).find((c) => c.id === CUR);
+    if (CHP) { P.chT = CHP.t; P.chAt = CHP.per ? P0.sa : CHP.at; }
     document.body.classList.toggle('chaos', era === 'chaos');
     Object.entries(P.v || {}).forEach(([k, x]) => { if (Array.isArray(x) && x[1] === 1 && x[7] >= 2 && x[7] <= JOINT_MAX && !PROFS.includes(k) && k !== 'farec') x.j = x[7]; if (k === 'hk' && Array.isArray(x) && x[1] !== 1 && x[3] === 1 && x[4] >= 30) x.fx = P.f; });
     const T = S.trees || {}, tree = T[P.c];
@@ -3636,10 +4147,10 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const shown = (k, x) => k === 'legendary' ? legName : gkeys.has(k) ? money(x[0]) : fmt(x[0]);
     const fameHtml = fame.length ? `<div class="fame"><div class="fmh">Best at</div>${fame.map(([k, x]) => `<div class="fm ${tier(x)}" data-tip="${rankTip(nice(k), x, shown(k, x))}"><div class="pc">${solo(x) ? '#1' : Math.max(1, Math.ceil(100 * frac(x))) + '%'}<small>${solo(x) ? (joint(x) ? 'joint' : x.fx || 'of all') : 'top'}</small></div><div><b>${nice(k)}<i>${shown(k, x)}</i></b><span>${tie(x) > x[1] ? `#${fmt(x[1])}–${fmt(tie(x))}` : `#${fmt(x[1])}`} of ${pool(x)}${P.cc && P.cc[0] === k ? ` · ${P.cc[1] > 1 ? 'joint ' : ''}${CN[P.c]} champion` : ''}</span></div></div>`).join('')}<div class="tierkey"><span class="t-unc"><i></i>Top 30%</span><span class="t-rare"><i></i>15%</span><span class="t-epic"><i></i>5%</span><span class="t-leg"><i></i>1%</span><span class="t-art"><i></i>#1</span></div></div>` : '<div></div>';
     const legHtml = legs.length ? `<div class="pleg">${legs.map((e) => `<span class="lg" data-gi="${e[0]}:${e[1] || 0}"><img src="assets/icons/${LG.i[e[0]][10]}.png" alt="" onerror="this.onerror=null;this.src='assets/icons/134400.png'"><b>${esc(LG.i[e[0]][0])}</b></span>`).join('')}</div>` : '';
-    let h = searchBox('psq2') + eraSwitch(P0, era);
+    let h = searchBox('psq2') + chapters(P0);
     h += `<section class="frame phero"><div class="in slab" style="--bg:url('${bg}')"><div style="position:relative">${icoR(P.r, P.f, 0, P.x)}<span class="cl"><img src="${cls(P.c)}" alt=""></span></div>
       <div><h2 style="color:${CC[P.c]}">${esc(P.n)}</h2><div class="sub">Level ${P.lv} ${RN[P.r] || P.r} ${specName}${CN[P.c]}${P.g ? ` · <span class="g">&lt;${esc(P.g)}&gt;</span>` : ''}</div>${legHtml}
-      <div class="chips2"><span style="color:${FCOL[P.f]}">${P.f}</span><span>${P.rs} realm</span>${P.fs ? `<span>First seen ${new Date(P.fs).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>` : ''}${P.pts ? `<span>Talents ${P.pts.join('/')}</span>` : ''}${P.ov ? `<span class="${wrOvTier(P.ov)}" style="${wrOvTier(P.ov) ? 'color:var(--tc)' : ''}" data-tip="${era === 'chaos' ? CHAOS_TIP : RENOWN_TIP}">${era === 'chaos' ? 'Chaos renown' : 'Renown'} #${fmt(P.ov[0])} of ${fmt(P.ov[1])}</span>` : era === 'chaos' ? '<span data-tip="Chaos renown|Needs a statistics read from during the invasion. They will get one the next time someone with the addon passes them.">Chaos renown pending</span>' : ''}</div><button class="wr-open" id="wropen"><img src="${UI(era === 'chaos' ? 'spell_shadow_summoninfernal' : 'inv_misc_ticket_tarot_stack_01')}" alt="">${era === 'chaos' ? 'Their invasion, wrapped' : 'Their beta, wrapped'}</button>${toastBtn(P)}</div>${fameHtml}</div></section>`;
+      <div class="chips2"><span style="color:${FCOL[P.f]}">${P.f}</span><span>${P.rs} realm</span>${P.fs ? `<span>First seen ${new Date(P.fs).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>` : ''}${P.pts ? `<span>Talents ${P.pts.join('/')}</span>` : ''}${P.ov ? `<span class="${wrOvTier(P.ov)}" style="${wrOvTier(P.ov) ? 'color:var(--tc)' : ''}" data-tip="${era === 'chaos' ? CHAOS_TIP : RENOWN_TIP}">${era === 'chaos' ? 'Chaos renown' : 'Renown'} #${fmt(P.ov[0])} of ${fmt(P.ov[1])}</span>` : era === 'chaos' ? '<span data-tip="Chaos renown|Needs a statistics read from during the invasion. They will get one the next time someone with the addon passes them.">Chaos renown pending</span>' : ''}</div><button class="wr-open" id="wropen"><img src="${UI(era === 'chaos' ? 'spell_shadow_summoninfernal' : 'inv_misc_ticket_tarot_stack_01')}" alt="">${era === 'chaos' ? 'Their invasion, wrapped' : 'Their story'}</button>${toastBtn(P)}</div>${fameHtml}</div></section>`;
     document.getElementById('title').textContent = P.n;
 
     const statRows = (rows) => rows.filter(([k]) => Array.isArray(P.v[k])).sort((a, b) => frac(P.v[a[0]]) - frac(P.v[b[0]])).map(([k, l, unit]) => {
@@ -3697,7 +4208,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       const empty = tree.tabs.filter((_, t) => !P.pts[t]);
       tal = `<div class="mtrees">${used.map(one).join('')}</div><div class="other">${P.pts.join('/')}${empty.length ? ` · nothing in ${empty.join(' or ')}` : ''}</div>`;
     }
-    h += `<div class="pgrid">${panel('', 'Gear', 'What they were wearing the last time someone with the addon inspected them.', gear)}${panel('', 'Talents', 'The talents they had when last inspected.', tal)}</div>`;
+    h += `<div class="pgrid lz-pg">${panel('', 'Card', 'Their trading card. The frame shows how high they rank: the rarer the frame, the higher they stand. It changes as they play.', '<div class="lz-card" id="lzCard"></div>')}${panel('', 'Gear', 'What they were wearing the last time someone with the addon inspected them.', gear)}${panel('', 'Talents', 'The talents they had when last inspected.', tal)}</div>`;
 
     const dw = P.v.duelsw, dl = P.v.duelsl, du = P.du;
     let duel = '';
@@ -3723,6 +4234,25 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.getElementById('main').innerHTML = h;
     const H = { tier, frac, solo, joint, base, pool, topTxt, shown, nice, money, spec, specName, fame, gkeys };
     document.getElementById('wropen').onclick = () => openWrapped(P, H);
+    const cardBox = document.getElementById('lzCard');
+    if (cardBox) {
+      try {
+        const fin = wrBuild(P, H).slides.find((x) => typeof x !== 'string');
+        const tmp = document.createElement('div');
+        tmp.innerHTML = fin ? fin.html : '';
+        const c = tmp.querySelector('.wr-flipper > .wcard');
+        if (!c) throw new Error('no card');
+        const fl = document.createElement('div');
+        fl.className = 'wr-flip lz-flip';
+        fl.appendChild(c);
+        cardBox.appendChild(fl);
+        cardBox.insertAdjacentHTML('beforeend', '<div class="lz-cbtn"><button class="main" data-lz="story">Play their story</button><button data-lz="save">Save card</button></div>');
+        cardBox.querySelector('[data-lz="story"]').onclick = () => openWrapped(P, H);
+        const sv = cardBox.querySelector('[data-lz="save"]');
+        sv.onclick = async () => { sv.disabled = true; sv.textContent = 'Saving…'; if (c.wrReset) c.wrReset(); c.classList.add('still'); try { await savePng(c, true); } catch (e) {} c.classList.remove('still'); sv.disabled = false; sv.textContent = 'Save card'; };
+        wrTilt(c);
+      } catch (e) { cardBox.closest('.panel').remove(); }
+    }
     const flip = (to) => { if (to === era || (to === 'beta' && P0.co) || (to === 'chaos' && !P0.cx)) return; PERA = to; if (PSEL) PSEL.w = false; const y = scrollY; drawPlayer(P0); scrollTo(0, y); };
     document.querySelectorAll('.era-s').forEach((b) => b.onclick = () => flip(b.dataset.era));
     const knob = document.querySelector('.era-k');
@@ -3738,17 +4268,18 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     document.getElementById('note').textContent = `Updated ${S.generated}`;
     const tile = (href, color, bg, icon, label, big, line, go) => `<a class="frame htile" href="${href}" style="--hc:${color};--bg:url('${bg}')"><div class="in slab"><div class="tt"><img src="${icon}" alt="">${label}</div><div class="big">${big}</div><div class="line">${line}</div><div class="go">${go}</div></div></a>`;
     const every = Object.entries(C.every).sort((a, b) => b[1] - a[1]);
+    const fz = (n, small) => SEASON.fresh ? small : n;
+    const warm = (n, need, what) => (SEASON.fresh || n < need) ? `<div class="lz-warm"><img src="${UI('inv_misc_pocketwatch_01')}" alt=""><div><b>Counting</b><div class="lz-wb"><i style="width:${Math.min(100, SEASON.fresh ? 18 : 100 * n / need)}%"></i></div><span>${fmt(SEASON.fresh ? Math.round(need * 0.18) : n)} of ${fmt(need)} ${what} so far. This fills in once there are enough to say something true.</span></div></div>` : '';
     let h = window.LI_NEWS ? '<section class="frame panel s12" id="today"></section>' : '';
     h += WRAPPED_ON ? wrappedBand('psq') : searchBox('psq');
-    h += tile('#crafting', '#f8d36b', 'assets/game/parchment-wide.jpg', UI('inv_misc_bag_10'), 'Crafting', fmt(C.players), `players in the crafting census. <b>${PN[every[0][0]]}</b> is the most common profession, <b>${PN[every[every.length - 1][0]]}</b> the rarest.`, 'Find a crafter');
+    const wide = (x) => x.replace('class="frame htile"', 'class="frame htile ap-wide"');
+    if (A) { const PA = A.census.regions.all || { chars: 0 }; h += wide(tile('#population', '#dcc6ff', 'assets/game/art/art-nightelves.jpg', UI('achievement_bg_killxenemies_generalsroom'), 'Population', fmt(PA.chars), `characters found across every region and ruleset. <b>${fmt((A.census.guildCount || {}).all || 0)}</b> guilds and counting.`, 'Who plays Forever')); }
+    if (window.ECON) { const ER = Object.values(ECON.regions); h += wide(tile('#economy', '#ffe08a', 'assets/game/art/econ-undermine.jpg', UI('inv_misc_coin_02'), 'Economy', fmt(ER.reduce((x, r) => x + r.listings, 0)), `auctions up in every auction house right now, from bargains below vendor price to a single gem listed for a million gold.`, 'Visit the auction house')); }
+    h += tile('#crafting', '#f8d36b', 'assets/game/parchment-wide.jpg', UI('inv_misc_bag_10'), 'Crafting', fmt(fz(C.players, 54)), `players in the crafting census. <b>${PN[every[0][0]]}</b> is the most common profession, <b>${PN[every[every.length - 1][0]]}</b> the rarest.`, 'Find a crafter');
     const top = D.ladder[0], low = D.ladder[D.ladder.length - 1];
-    h += tile('#duels', '#ff9f7a', 'assets/game/art-warriorarms.jpg', UI('ability_parry'), 'Duels', fmt(D.n), `duels watched out in the world. <b style="color:${CC[top.c]}">${CN[top.c]}s</b> win the most (${Math.round(top.p * 100)}%), <b style="color:${CC[low.c]}">${CN[low.c]}s</b> the least.`, 'See the dueling grounds');
-    h += tile('#life', '#9fd0ff', 'assets/game/art-druidrestoration.jpg', UI('inv_misc_book_09'), 'Life', fmt(L.totals.deaths), `deaths across ${fmt(L.n)} characters. ${fmt(L.totals.fall)} of them from falling, ${fmt(L.totals.drown)} from drowning.`, 'Read their stories');
-    if (O) {
-      const F = O.fin, M = F ? F.m : [];
-      const done = M.filter((m) => m[5] === 'd').length;
-      h += tile('#open', '#8ff0e2', 'assets/game/art-shamanrestoration.jpg', 'assets/forever-open-logo.png', 'Events', F && F.live ? `${done}<small>of ${M.length} series</small>` : fmt(O.entrants), F && F.live ? 'The Forever Open finals are being played right now: bracket, head to heads and a fan meter.' : 'players in the Forever Open, the $100k 1v1 tournament.', F && F.live ? 'Follow the finals' : 'Look back at it');
-    }
+    h += tile('#duels', '#ff9f7a', 'assets/game/art-warriorarms.jpg', UI('ability_parry'), 'Duels', fmt(fz(D.n, 31)), `duels watched out in the world. <b style="color:${CC[top.c]}">${CN[top.c]}s</b> win the most (${Math.round(top.p * 100)}%), <b style="color:${CC[low.c]}">${CN[low.c]}s</b> the least.`, 'See every matchup');
+    h += tile('#life', '#9fd0ff', 'assets/game/art-druidrestoration.jpg', UI('inv_misc_book_09'), 'Life', fmt(fz(L.totals.deaths, 212)), `deaths across ${fmt(fz(L.n, 61))} characters. ${fmt(fz(L.totals.fall, 9))} of them from falling, ${fmt(fz(L.totals.drown, 2))} from drowning.`, 'See how they live');
+    h += tile('#archive', '#e8c98a', 'assets/game/scenes/dalaran.jpg', UI('inv_misc_book_11'), 'Archive', `${archiveCards().length}<small>pages</small>`, 'The Forever beta and the Forever Open, kept as they ended. Every event to come lands here too.', 'Open the archive');
 
     const pop = L.habits.deaths.map((x) => ({ c: x.c, n: x.n }));
     const tot = sum(pop.map((x) => x.n));
@@ -3765,7 +4296,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
         <div class="tr r" ${tip}><i style="width:${100 * w.p}%;background:linear-gradient(90deg,${CC[x.c]}44,${CC[x.c]})"></i></div><span class="v" ${tip}>${Math.round(w.p * 100)}%</span>`;
     });
     h += panel('s6', 'Played vs winning', 'Left: how common each class is among the characters we have seen. Right: how often that class wins its duels; the dark notch marks 50%. Hover a row for the numbers.',
-      `<div class="bfly">${bf}</div><div class="optout">${fmt(tot)} characters seen; career duel records from ${fmt(sum((D.life || []).map((x) => x.n)))} of them.</div>`);
+      warm(tot, 300, 'characters') || `<div class="bfly">${bf}</div><div class="optout">${fmt(tot)} characters seen; career duel records from ${fmt(sum((D.life || []).map((x) => x.n)))} of them.</div>`);
 
     const side = (fac) => {
       const R = (S.craft['All|' + fac].races || []).slice().sort((a, b) => b.n - a.n), n = sum(R.map((x) => x.n));
@@ -3796,7 +4327,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       }).join('')}</div>`;
     };
     h += panel('s6', 'Faction face-off', 'Races within each faction, from the players in the crafting census. Skyborne can join either side, so they show up on both.',
-      `<div class="ff">${side('Alliance')}${side('Horde')}</div>${habits()}`);
+      warm(S.craft['All|Alliance'].players + S.craft['All|Horde'].players, 300, 'players') || `<div class="ff">${side('Alliance')}${side('Horde')}</div>${habits()}`);
 
     const recs = ((window.LI_HOME && LI_HOME.records) || L.records || []).filter((r) => REC[r.k] && r.v > 0);
     const day = Math.floor(Date.now() / 86400000);
@@ -3804,17 +4335,276 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     for (let i = 0; i < recs.length && pick.length < 4; i++) pick.push(recs[(day * 4 + i * 5) % recs.length]);
     const uniq = [...new Map(pick.map((r) => [r.k, r])).values()];
     h += panel('s12', 'Hall of records', 'The single highest count we have seen for each stat, from one character. A different four every day.',
-      `<div class="recs">${uniq.map((r) => {
+      warm(L.n, 500, 'characters with statistics') || `<div class="recs">${uniq.map((r) => {
         const fac = r.f || RACE_FAC[r.r];
         return `<div class="hrec" style="--bg:url('assets/game/${REC_ART[r.c] || 'art-warriorarms'}.jpg')">${icoR(r.r, fac, 44)}<div class="n">${fmt(r.v)}</div><div class="k">${REC[r.k]}</div>${r.nm ? `<div class="nm" style="color:${CC[r.c]}">${esc(r.nm)}</div>` : ''}<div class="who">${r.nm ? 'Level' : 'A level'} ${r.lv} ${RN[r.r] || r.r} <span style="color:${CC[r.c]}">${CN[r.c]}</span></div></div>`;
       }).join('')}</div>`);
 
-    const cards = archiveCards();
+    const cards = [];
     if (cards.length) h += panel('s12', 'From the archive', 'Pages from events that are over, kept exactly as they ended.', `<div class="arch">${cards.join('')}</div>`, { extra: '<a href="#archive" class="badge" style="text-decoration:none">All of it</a>' });
     document.getElementById('main').innerHTML = h;
     bindSearch('psq', WRAPPED_ON ? '/wrapped' : '');
     const today = document.getElementById('today');
     if (today) LI_NEWS.home(today);
+  }
+  const APR = { all: 'All regions', us: 'Americas', eu: 'Europe', kr: 'Korea', tw: 'Taiwan' };
+  const ART = (n) => `assets/game/art/${n}.jpg`;
+  const AP_REG_ART = { all: 'land-badlands', us: 'land-thunderbluff', eu: 'land-tirisfall', kr: 'land-darnassus', tw: 'land-thousandneedles' };
+  const AP_CLASS_ART = { WARRIOR: 'art-warriorarms', PALADIN: 'art-paladinholy', HUNTER: 'art-hunterbeastmastery', ROGUE: 'art-roguecombat', PRIEST: 'art-priestholy', SHAMAN: 'art-shamanrestoration', MAGE: 'art-magefire', WARLOCK: 'art-warlocksummoning', DRUID: 'art-druidferalcombat' };
+  const AP_CREST = { Human: 'crest-alliance', Dwarf: 'crest-dwarf', 'Night Elf': 'crest-nightelf', Orc: 'crest-orc', Troll: 'crest-troll', Tauren: 'crest-tauren', Undead: 'crest-forsaken' };
+  const AP_RS_ICON = { PvP: 'ability_dualwield', Normal: 'achievement_zone_elwynnforest', Roleplay: 'inv_misc_book_11', 'Roleplay PvP': 'inv_bannerpvp_02' };
+  const AP_FAC = { Alliance: '#4a8fe7', Horde: '#d8443a', Blackwater: '#d9a940' };
+  const AP_CAT = { Armor: ['inv_helmet_25', '#7aa0d8'], 'Trade goods': ['inv_stone_04', '#62b98c'], Weapons: ['inv_sword_27', '#d8694a'], Consumables: ['inv_potion_51', '#c77dff'],
+    Recipes: ['inv_misc_book_11', '#d9a940'], Miscellaneous: ['inv_misc_gift_01', '#9aa3ad'], Bags: ['inv_misc_bag_07', '#b88a5a'], Reagents: ['inv_misc_dice_01', '#5fc7a8'],
+    Gems: ['spell_shadow_soulgem', '#e070b0'], Ammo: ['ability_hunter_snipershot', '#c9b99a'], Quivers: ['inv_misc_bag_10', '#a08060'], Keys: ['inv_misc_key_14', '#e0c060'], 'Quest items': ['inv_misc_note_01', '#e0d0a0'] };
+  const QI = { POOR: 0, COMMON: 1, UNCOMMON: 2, RARE: 3, EPIC: 4, LEGENDARY: 5 };
+  const apRace = (n) => /Skyborne/.test(n) ? 'Skyborne' : ({ 'Night Elf': 'NightElf', Undead: 'Scourge' })[n] || String(n || '').replace(/\s+/g, '');
+  const apCls = (n) => String(n || '').toUpperCase().replace(/\s+/g, '');
+  const apAgo = (t) => { const h = (Date.now() / 1000 - t) / 3600; return h < 1 ? `${Math.max(1, Math.round(h * 60))} min ago` : h < 48 ? `${Math.round(h)} h ago` : `${Math.round(h / 24)} days ago`; };
+  const apCoin = (c) => {
+    c = Math.round(c || 0);
+    const g = Math.floor(c / 10000), s = Math.floor(c / 100) % 100, k = c % 100;
+    let h = '';
+    if (g) h += `<b class="g">${fmt(g)}</b>`;
+    if (s && g < 100) h += `<b class="s">${s}</b>`;
+    if (!g && (k || !s)) h += `<b class="c">${k}</b>`;
+    return `<span class="ap-coin">${h}</span>`;
+  };
+  const apGold = (c) => { const g = c / 10000; return g >= 1e6 ? `${(g / 1e6).toFixed(g >= 1e7 ? 0 : 1)} million` : g >= 1e4 ? `${fmt(g / 1000)}k` : fmt(g); };
+  function apRegionCards(list, cur, key, stat) {
+    return `<div class="ap-regs s12">${list.map((r) => { const [v, l] = stat(r); return `<button class="ap-reg${r === cur ? ' on' : ''}" data-${key}="${r}" style="--bg:url('${ART(AP_REG_ART[r])}')"><span class="ap-rn">${APR[r]}</span><b>${v}</b><small>${l}</small></button>`; }).join('')}</div>`;
+  }
+  function apItem(id, E) { const it = E.items[id] || {}, tp = (E.tips || {})[id]; const ic = it.ic || (tp && tp[10]); return { n: it.n || (tp && tp[0]) || 'Unknown item', qc: QC[it.q ?? (tp ? tp[1] : 1)] || '#fff', ic: ic ? `assets/icons/${ic}.png` : UI('inv_misc_questionmark') }; }
+  function apIRow(id, E, desc, big, bigSub, rg) {
+    const it = apItem(id, E);
+    return `<div class="ap-ir" style="--qc:${it.qc}" data-gi="${id}:0"><img src="${it.ic}" alt="" onerror="this.src='${UI('inv_misc_questionmark')}'"><div style="min-width:0"><div class="nm">${esc(it.n)}${rg ? `<span class="ap-rgt">${rg.toUpperCase()}</span>` : ''}</div><div class="ds">${desc}</div></div><div class="bx">${big}${bigSub ? `<small>${bigSub}</small>` : ''}</div></div>`;
+  }
+  function apSquarify(items, W, H) {
+    const total = sum(items.map((x) => x.v)) || 1;
+    const out = [];
+    let x = 0, y = 0, w = W, h = H;
+    let rest = items.map((it) => ({ it, a: it.v / total * W * H })).filter((r) => r.a > 0);
+    const worst = (row, side) => { const s = sum(row.map((r) => r.a)); const mx = Math.max(...row.map((r) => r.a)), mn = Math.min(...row.map((r) => r.a)); return Math.max(side * side * mx / (s * s), s * s / (side * side * mn)); };
+    while (rest.length) {
+      const side = Math.min(w, h);
+      let row = [rest[0]], i = 1;
+      while (i < rest.length && worst(row.concat([rest[i]]), side) <= worst(row, side)) { row.push(rest[i]); i++; }
+      const s = sum(row.map((r) => r.a));
+      if (w >= h) { const cw = s / h; let cy = y; row.forEach((r) => { const ch = r.a / cw; out.push({ it: r.it, x, y: cy, w: cw, h: ch }); cy += ch; }); x += cw; w -= cw; }
+      else { const ch = s / w; let cx = x; row.forEach((r) => { const cw = r.a / ch; out.push({ it: r.it, x: cx, y, w: cw, h: ch }); cx += cw; }); y += ch; h -= ch; }
+      rest = rest.slice(i);
+    }
+    return out;
+  }
+  function apLadder(L, all, val) {
+    return `<div class="ap-lad">${L.map((p, i) => { const k = apCls(p.c); return `<div class="ap-lr"><span class="ap-rk">${i + 1}</span>${icoR(apRace(p.r), p.f, 36)}<div class="ap-who"><b style="color:${CC[k] || 'var(--ink)'}">${esc(p.n + ' ' + p.s)}</b><small>Level ${p.lv} ${esc(p.r)} ${esc(p.c)}${p.g ? ` · &lt;${esc(p.g)}&gt;` : ''}</small></div><span class="ap-tag">${esc(p.rs)}${all ? ' · ' + p.rg.toUpperCase() : ''}</span><span class="ap-lv">${val(p)}</span></div>`; }).join('')}</div>`;
+  }
+
+  function renderPopulation() {
+    plainHead();
+    const C = A.census;
+    if (!C.regions[sel.rg]) sel.rg = 'all';
+    const R = Object.assign({ rsfac: {}, combo: {}, gender: {}, hour: Array(24).fill(0) }, C.regions[sel.rg]), all = sel.rg === 'all';
+    const top = (C.leaders[sel.rg] || [])[0], gN = C.guildCount[sel.rg] || 0;
+    const KN = C.known || {};
+    const known = (r) => KN[r] || (C.regions[r] || {}).chars || 0;
+    document.getElementById('note').textContent = `${fmt(known(sel.rg))} characters · ${fmt(gN)} guilds`;
+    let h = apRegionCards(['all', 'us', 'eu', 'kr', 'tw'].filter((r) => C.regions[r]), sel.rg, 'rg', (r) => [fmt(known(r)), 'characters found']);
+    h += plaque(UI('achievement_bg_killxenemies_generalsroom'), 'Characters', fmt(known(sel.rg)), `the charts below draw on ${fmt(R.chars)} of them`);
+    h += plaque(UI('inv_bannerpvp_01'), 'Guilds', fmt(gN), 'with a public roster');
+    h += plaque(UI('inv_misc_pocketwatch_01'), 'Played today', fmt(R.active1), `of the ${fmt(R.profiled)} we looked up`);
+    h += plaque(UI('achievement_level_30'), 'Highest level', top ? top.lv : '–', top ? `${esc(top.n + ' ' + top.s)}, ${esc(top.c)}` : '');
+
+    const fa = R.faction.Alliance || 0, fh = R.faction.Horde || 0, ft = Math.max(1, fa + fh);
+    const tugs = Object.entries(R.rsfac).filter(([k]) => k !== '?').sort((x, y) => sum(Object.values(y[1])) - sum(Object.values(x[1]))).map(([rs, v]) => {
+      const a = v.Alliance || 0, ho = v.Horde || 0, t = Math.max(1, a + ho);
+      return `<div class="ap-tug" data-tip="${esc(rs)}|${fmt(a)} Alliance · ${fmt(ho)} Horde"><span class="l">${pct(a, t)}%</span><div class="ap-tugbar"><i class="a" style="flex:${a}"></i><i class="h" style="flex:${ho}"></i><em>${esc(rs)}${t < 3000 ? ` <small style="opacity:.75;font:11px Friz,serif">· only ${fmt(t)} so far</small>` : ''}</em></div><span class="r">${pct(ho, t)}%</span></div>`;
+    }).join('');
+    h += panel('s12', 'The faction war', 'Alliance against Horde on every ruleset. The line in the middle is an even split. Counted only from guilds we found by trying ordinary words, so whatever realm or faction anyone plays on cannot tilt it.',
+      `<div class="ap-war"><div class="ap-side a"><img src="${ART('crest-alliance')}" alt=""><b>${pct(fa, ft)}%</b><span>Alliance</span></div><div class="ap-tugs">${tugs}</div><div class="ap-side h"><img src="${ART('crest-horde')}" alt=""><b>${pct(fh, ft)}%</b><span>Horde</span></div></div>`);
+
+    const lv = R.levels.slice(1), lmax = Math.max(1, ...lv);
+    const bars = lv.map((v, i) => `<i${i === 59 ? ' class="cap"' : ''} style="height:${Math.max(1, 100 * v / lmax)}%" data-tip="Level ${i + 1}|${fmt(v)} characters"></i>`).join('');
+    const axis = [1, 10, 20, 30, 40, 50, 60].map((n) => `<span style="grid-column:${n}">${n}</span>`).join('');
+    h += panel('s12', 'Where everyone is', 'How many characters are at each level right now. Blizzard only lists characters from level 10, so lower levels come from guild rosters alone. Blue is level 60.', `<div class="ap-lvh">${bars}</div><div class="ap-lvx">${axis}</div>`);
+
+    const cf = Object.entries(R.classfac).filter(([k]) => CC[apCls(k)]).map(([k, v]) => ({ name: k, k: apCls(k), a: v.Alliance || 0, h: v.Horde || 0, t: sum(Object.values(v)) })).sort((x, y) => y.t - x.t);
+    const cards = cf.map((x, i) => {
+      const races = Object.entries(R.combo[x.name] || {}).filter(([k]) => k !== '?').sort((p, q) => q[1] - p[1]);
+      const g = R.gender[x.name] || {}, gt = (g.MALE || 0) + (g.FEMALE || 0);
+      const meta = [races[0] ? `Mostly ${esc(races[0][0])}` : '', gt ? `${pct(g.FEMALE || 0, gt)}% female` : ''].filter(Boolean).join(' · ');
+      return `<div class="ap-cc" style="--bg:url('assets/game/${AP_CLASS_ART[x.k]}.jpg');--cc:${CC[x.k]}" data-tip="${CN[x.k]}|${fmt(x.a)} Alliance · ${fmt(x.h)} Horde"><img class="ci" src="${cls(x.k)}" alt=""><span class="rk">#${i + 1}</span><div class="nm">${CN[x.k]}</div><div class="pc">${pct(x.t, R.chars)}%<small>${fmt(x.t)}</small></div><div class="mt">${meta}</div><div class="fb"><i class="a" style="flex:${x.a}"></i><i class="h" style="flex:${x.h}"></i></div></div>`;
+    }).join('');
+    h += panel('s12', 'The classes', 'Every class by how many play it. The thin bar shows the Alliance and Horde split.', `<div class="ap-cards">${cards}</div>`);
+
+    const rc = Object.entries(R.race).filter(([k]) => k !== '?').sort((x, y) => y[1] - x[1]);
+    const ppl = rc.map(([k, v]) => `<div class="ap-ppl" data-tip="${esc(k)}|${fmt(v)} characters"><div class="ap-medal"><img class="por" src="${race(apRace(k))}" alt=""></div><b>${pct(v, R.chars)}%</b><span>${esc(k)}</span><small>${fmt(v)}</small></div>`).join('');
+    h += panel('s12', 'The peoples of Azeroth', 'Every race by how many play it.', `<div class="ap-peoples">${ppl}</div>`);
+
+    const ccols = cf.map((x) => x.name);
+    const rrows = rc.map(([k]) => k);
+    const shadeW = (p, t) => p >= 0 ? `rgba(224,102,47,${(0.18 + 0.75 * t).toFixed(2)})` : `rgba(93,132,180,${(0.18 + 0.75 * t).toFixed(2)})`;
+    let grid = `<div class="grid ap-wgrid" style="grid-template-columns:44px repeat(${ccols.length},1fr)"><div class="corner">Race<br>Class</div>${ccols.map((c) => `<div class="ax" data-tip="${esc(c)}|"><img class="round" src="${cls(apCls(c))}" alt="" style="box-shadow:0 0 0 1px #000,0 0 0 2px ${CC[apCls(c)]}"></div>`).join('')}`;
+    rrows.forEach((r) => {
+      const tot = sum(ccols.map((c) => (R.combo[c] || {})[r] || 0));
+      const open = ccols.filter((c) => (R.combo[c] || {})[r] >= Math.max(3, tot * 0.004));
+      const avg = open.length ? 1 / open.length : 0;
+      grid += `<div class="ax" data-tip="${esc(r)}|${fmt(tot)} characters"><img class="round" src="${race(apRace(r))}" alt=""></div>`;
+      ccols.forEach((c) => {
+        const v = (R.combo[c] || {})[r] || 0;
+        if (!open.includes(c) || !tot) { grid += '<div class="cell none"></div>'; return; }
+        const p = v / tot, d = (p - avg) / avg;
+        grid += `<div class="cell" style="background:${shadeW(d, Math.min(1, Math.abs(d)))}" data-tip="${esc(r)} ${esc(c)}|${Math.round(p * 100)}% of ${esc(r)} characters play ${esc(c)} · ${fmt(v)} characters">${Math.round(p * 100)}%<small>${v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v}</small></div>`;
+      });
+    });
+    grid += '</div><div class="ap-wleg"><span class="hi">More popular than usual for that race</span><span class="lo">Less popular</span></div>';
+    h += panel('s7', 'Who plays what', 'For each race, the share of its characters playing each class. Orange means that class is picked more than an even split would give, blue less. Empty squares are pairs the game does not allow.', grid);
+
+    const hr = R.hour, hrmax = Math.max(1, ...hr), peak = hr.indexOf(Math.max(...hr));
+    const clock = `<div class="ap-clock">${hr.map((v, i) => `<i class="${i >= 7 && i < 19 ? 'd' : ''}${i === peak ? ' pk' : ''}" style="height:${Math.max(2, 100 * v / hrmax)}%" data-tip="${String(i).padStart(2, '0')}:00 to ${String((i + 1) % 24).padStart(2, '0')}:00|${fmt(v)} characters last logged out then"></i>`).join('')}</div>
+      <div class="ap-clx"><span><img src="${UI('spell_nature_sleep')}" alt="">00:00</span><span>06:00</span><span><img src="${UI('spell_holy_holybolt')}" alt="">12:00</span><span>18:00</span><span>24:00</span></div>
+      <div class="ap-peak">Most often logged out around <b>${String(peak).padStart(2, '0')}:00</b> local time.</div>`;
+    h += panel('s5', 'When they log off', 'The hour each character last logged out in the past three days, in local time for its region.', clock, { cls: 'ap-fill' });
+
+    h += panel('s6', 'The race to 60', 'The highest-level characters right now. Ties go to the better item level.', apLadder(C.leaders[sel.rg] || [], all, (p) => p.lv));
+    h += panel('s6', 'Best geared', 'The highest equipped item level.', apLadder((C.gear || {})[sel.rg] || [], all, (p) => p.il));
+
+    const GS = (C.gsize || {})[sel.rg] || [], GL = ['1–4', '5–9', '10–24', '25–49', '50–99', '100–249', '250+'], gsmax = Math.max(1, ...GS), gst = Math.max(1, sum(GS));
+    const GW = ['Small bands', '', 'Raid teams', '', 'Big guilds', '', 'Giants'];
+    h += panel('s5', 'Guild sizes', 'How many guilds have each number of members.', `<div class="ap-gs">${GS.map((v, i) => `<div class="ap-gsc" data-tip="${GL[i]} members|${fmt(v)} guilds, ${pct(v, gst)}%"><span class="v">${fmt(v)}</span><i style="height:${Math.max(3, 100 * v / gsmax)}%"></i><b>${GL[i]}</b></div>`).join('')}</div><div class="ap-gsx">${GW.map((w) => `<span>${w}</span>`).join('')}</div>`);
+    const G = C.guilds[sel.rg] || [], gmax = Math.max(1, ...G.map((g) => g.m));
+    h += panel('s7', 'Biggest guilds', 'By members on the guild roster.', `<div class="rows">${G.slice(0, 12).map((g) => row(AP_FAC[g.f] && g.f !== 'Blackwater' ? ART(`crest-${g.f.toLowerCase()}`) : UI('inv_bannerpvp_01'), g.n, AP_FAC[g.f] || 'inherit', g.m, fmt(g.m), `${g.n}|${g.rs}${all ? ' · ' + APR[g.rg] : ''}`, gmax)).join('')}</div>`);
+    const el = document.getElementById('main');
+    el.innerHTML = h;
+    el.querySelectorAll('[data-rg]').forEach((b) => b.onclick = () => { sel.rg = b.dataset.rg; renderKeep(); });
+  }
+
+  function apEconAll(E, regs) {
+    const RS = regs.map((r) => [r, E.regions[r]]);
+    const sumK = (k) => RS.reduce((t, [, R]) => t + (R[k] || 0), 0);
+    const addMap = (k) => { const o = {}; RS.forEach(([, R]) => Object.entries(R[k] || {}).forEach(([a, v]) => { o[a] = (o[a] || 0) + v; })); return o; };
+    const sets = {};
+    RS.forEach(([, R]) => Object.entries(R.sets || {}).forEach(([rs, v]) => { const S = sets[rs] = sets[rs] || { Alliance: { n: 0, v: 0 }, Horde: { n: 0, v: 0 }, Blackwater: { n: 0, v: 0 } }; Object.keys(S).forEach((f) => { S[f].n += (v[f] || {}).n || 0; S[f].v += (v[f] || {}).v || 0; }); }));
+    const cats = {};
+    RS.forEach(([, R]) => (R.cats || []).forEach((c) => { const C = cats[c.k] = cats[c.k] || { k: c.k, n: 0, v: 0, subs: {} }; C.n += c.n; C.v += c.v; c.subs.forEach(([sn, n, v]) => { const x = C.subs[sn] = C.subs[sn] || [sn, 0, 0]; x[1] += n; x[2] += v; }); }));
+    const stacks = {};
+    RS.forEach(([, R]) => (R.stacks || []).forEach(([k, v]) => { stacks[k] = (stacks[k] || 0) + v; }));
+    const br = {};
+    RS.forEach(([, R]) => (R.brackets || []).forEach((b) => { const x = br[b.b] = br[b.b] || { b: b.b, n: 0, w: 0 }; x.n += b.n; x.w += b.p * b.n; }));
+    const merge = (k, rank) => {
+      const o = {};
+      RS.forEach(([, R]) => (R[k] || []).forEach((x) => { const y = o[x.id] = o[x.id] || { id: x.id, n: 0, q: 0, w: 0 }; y.n += x.n; y.q += x.q; y.w += x.p * x.n; }));
+      return Object.values(o).map((y) => ({ id: y.id, n: y.n, q: y.q, p: Math.round(y.w / Math.max(1, y.n)) })).sort((a, b) => rank(b) - rank(a)).slice(0, 24);
+    };
+    const pool = (k, rank, n = 12) => RS.flatMap(([r, R]) => (R[k] || []).map((x) => ({ ...x, rg: r }))).sort((a, b) => rank(b) - rank(a)).slice(0, n);
+    const sold = { n: 0, gone: 0, prev: 0, span: 0, top: [] };
+    const st = {};
+    RS.forEach(([, R]) => { const S = R.sold || {}; sold.n += S.n || 0; sold.gone += S.gone || 0; sold.prev += S.prev || 0; sold.span = Math.max(sold.span, S.span || 0); (S.top || []).forEach((x) => { const y = st[x.id] = st[x.id] || { ...x, s: 0 }; y.s += x.s; }); });
+    sold.top = Object.values(st).sort((a, b) => b.s - a.s).slice(0, 24);
+    return {
+      listings: sumK('listings'), qty: sumK('qty'), distinct: Math.max(...RS.map(([, R]) => R.distinct || 0)), market: sumK('market'), bidonly: sumK('bidonly'), penny: sumK('penny'),
+      below: { n: RS.reduce((t, [, R]) => t + ((R.below || {}).n || 0), 0), v: RS.reduce((t, [, R]) => t + ((R.below || {}).v || 0), 0) },
+      sets, cats: Object.values(cats).map((c) => ({ ...c, subs: Object.values(c.subs).sort((a, b) => b[2] - a[2]).slice(0, 8) })).sort((a, b) => b.v - a.v),
+      quals: addMap('quals'), tleft: addMap('tleft'), stacks: Object.entries(stacks).map(([k, v]) => [+k, v]).sort((a, b) => b[1] - a[1]).slice(0, 8),
+      brackets: Object.values(br).sort((a, b) => a.b - b.b).map((x) => ({ b: x.b, n: x.n, p: Math.round(x.w / Math.max(1, x.n)) })),
+      listed: merge('listed', (x) => x.n), mats: merge('mats', (x) => x.q), pricey: pool('pricey', (x) => x.p, 24),
+      bargains: pool('bargains', (x) => x.gain), gaps: pool('gaps', (x) => x.x), undercut: pool('undercut', (x) => x.cut), markups: pool('markups', (x) => x.x),
+      absurd: pool('absurd', (x) => x.total, 6), sold,
+      jewels: pool('jewels', (x) => x.p3, 12),
+      essentials: (() => { const o = {}; RS.forEach(([, R]) => (R.essentials || []).forEach((x) => { const y = o[x.id] = o[x.id] || { id: x.id, n: 0, q: 0, p: 0, a: 0, h: 0 }; y.n += x.n; y.q += x.q; y.p += x.p * x.n; y.a += x.a * x.n; y.h += x.h * x.n; })); return Object.values(o).map((y) => ({ ...y, p: Math.round(y.p / y.n), a: Math.round(y.a / y.n), h: Math.round(y.h / y.n) })); })(),
+      gear: (() => { const o = {}; RS.forEach(([, R]) => (R.gear || []).forEach((g) => { const y = o[g.b] = o[g.b] || { b: g.b, n: 0, w: 0, a: 0, r: 0, nw: 0, na: 0, nr: 0 }; y.n += g.n; y.w += g.w2 * g.nw; y.a += g.a2 * g.na; y.r += g.r3 * g.nr; y.nw += g.nw; y.na += g.na; y.nr += g.nr; })); return Object.values(o).sort((a, b) => a.b - b.b).map((y) => ({ b: y.b, n: y.n, w2: Math.round(y.w / Math.max(1, y.nw)), a2: Math.round(y.a / Math.max(1, y.na)), r3: Math.round(y.r / Math.max(1, y.nr)), nw: y.nw, na: y.na, nr: y.nr })); })(),
+      movers: { span: Math.max(0, ...RS.map(([, R]) => (R.movers || {}).span || 0)), up: RS.flatMap(([r, R]) => ((R.movers || {}).up || []).map((x) => ({ ...x, rg: r }))).sort((a, b) => b.ch - a.ch).slice(0, 8), down: RS.flatMap(([r, R]) => ((R.movers || {}).down || []).map((x) => ({ ...x, rg: r }))).sort((a, b) => a.ch - b.ch).slice(0, 8) },
+    };
+  }
+  function renderEconomy() {
+    plainHead();
+    const E = window.ECON;
+    const regs = ['us', 'eu', 'kr', 'tw'].filter((r) => E.regions[r]);
+    if (sel.erg !== 'all' && !E.regions[sel.erg]) sel.erg = 'all';
+    const ALLR = apEconAll(E, regs);
+    const R = sel.erg === 'all' ? ALLR : E.regions[sel.erg], RN2 = APR[sel.erg];
+    document.getElementById('note').textContent = `${fmt(R.listings)} auctions in ${RN2.toLowerCase().replace('all regions', 'every region')}`;
+    let h = apRegionCards(['all', ...regs], sel.erg, 'erg', (r) => { const X = r === 'all' ? ALLR : E.regions[r]; return [`${apGold(X.market)} gold`, `in ${fmt(X.listings)} auctions`]; });
+    h += plaque(UI('inv_misc_coin_17'), 'Auctions up', fmt(R.listings), `${fmt(R.qty)} items counting stacks`);
+    h += plaque(UI('inv_misc_coin_02'), 'Gold on the market', apGold(R.market), 'at fair prices, wild listings trimmed');
+    h += plaque(UI('inv_misc_note_01'), 'Different items', fmt(R.distinct), `for sale in ${RN2}`);
+    h += plaque(UI('inv_misc_pocketwatch_01'), 'Updated', apAgo(E.taken), `${E.snaps} snapshots so far`, true);
+
+    const rsNames = Object.keys(R.sets);
+    if (sel.ers !== 'all' && !R.sets[sel.ers]) sel.ers = 'all';
+    const hs = { Alliance: { n: 0, v: 0 }, Horde: { n: 0, v: 0 }, Blackwater: { n: 0, v: 0 } };
+    Object.entries(R.sets).forEach(([rs, v]) => { if (sel.ers === 'all' || sel.ers === rs) Object.keys(hs).forEach((f) => { hs[f].n += v[f].n; hs[f].v += v[f].v; }); });
+    const hsum = Math.max(1, sum(Object.values(hs).map((x) => x.n)));
+    const HART = { Alliance: ['art-humanmale', ART('crest-alliance'), ''], Horde: ['land-orccamp', ART('crest-horde'), ''], Blackwater: ['econ-piratemap', UI('inv_misc_coin_17'), ' coin'] };
+    const rsChips = `<div class="chips ap-rsc">${['all', ...rsNames].map((k) => `<button class="chip ${k === sel.ers ? 'on' : ''}" data-ers="${k}"><img src="${UI(k === 'all' ? 'inv_misc_coin_02' : AP_RS_ICON[k] || 'inv_misc_questionmark')}" alt="">${k === 'all' ? 'Every ruleset' : esc(k)}</button>`).join('')}</div>`;
+    const houses = Object.entries(hs).map(([f, v]) => `<div class="ap-house" style="--bg:url('${ART(HART[f][0])}');--hc:${AP_FAC[f]}"><img class="cr${HART[f][2]}" src="${HART[f][1]}" alt=""><h3>${f}</h3><div class="big">${fmt(v.n)}</div><div class="sm">auctions · ${pct(v.n, hsum)}% of the market</div><div class="gv">${apGold(v.v)} gold</div></div>`).join('');
+    h += panel('s12', 'The three houses', 'Every ruleset has its own Alliance, Horde and neutral Blackwater auction house. Which house belongs to which ruleset is our best guess for now, from how busy each one is.', rsChips + `<div class="ap-houses">${houses}</div>`);
+
+    const cats = R.cats.filter((c) => c.v > 0);
+    const rects = apSquarify(cats.map((c) => ({ k: c.k, v: c.v, c })), 100, 100);
+    const mtot = Math.max(1, sum(cats.map((c) => c.v)));
+    const tiles = rects.map((r) => { const c = r.it.c, [ic, tc] = AP_CAT[c.k] || ['inv_misc_questionmark', '#999']; const tiny = r.w < 11 || r.h < 18; return `<button class="ap-tile${tiny ? ' tiny' : ''}${sel.ecat === c.k ? ' on' : ''}" data-ecat="${esc(c.k)}" style="left:${r.x}%;top:${r.y}%;width:${r.w}%;height:${r.h}%;--tc:${tc}" data-tip="${esc(c.k)}|${apGold(c.v)} gold in ${fmt(c.n)} auctions"><img src="${UI(ic)}" alt=""><b>${esc(c.k)}</b><span>${pct(c.v, mtot)}%</span><small>${apGold(c.v)} gold</small></button>`; }).join('');
+    const pick = cats.find((c) => c.k === sel.ecat);
+    const subMax = pick ? Math.max(1, ...pick.subs.map((x) => x[2])) : 1;
+    const subs = pick ? `<div class="ap-subh" style="--tc:${(AP_CAT[pick.k] || [])[1] || '#999'}"><img src="${UI((AP_CAT[pick.k] || [])[0] || 'inv_misc_questionmark')}" alt=""><b>${esc(pick.k)}</b><span>${apGold(pick.v)} gold · ${fmt(pick.n)} auctions</span><button class="chip ap-clr" data-ecat="">Show all ×</button></div><div class="ap-subs" style="--tc:${(AP_CAT[pick.k] || [])[1] || '#999'}">${pick.subs.map(([sn, n, v]) => `<div><span class="pc">${pct(v, pick.v)}%</span><b>${esc(sn)}</b><i class="br"><i style="width:${100 * v / subMax}%"></i></i><small>${apGold(v)} gold · ${fmt(n)} auctions</small></div>`).join('')}</div>` : '';
+    h += panel('s12', 'Where the gold is', 'Every auction by what it sells, sized by its gold. Click a block to see what is inside it.', `<div class="ap-tree${pick ? ' picked' : ''}">${tiles}</div>${subs}`);
+
+    const JW = R.jewels || [];
+    if (JW.length) {
+      const j0 = JW[0], it0 = apItem(j0.id, E);
+      const poster = `<div class="ap-wanted" style="--qc:${it0.qc}"><div class="k">THE CROWN JEWEL OF ${RN2.toUpperCase()}</div><img src="${it0.ic}" alt="" data-gi="${j0.id}:0"><h4>${esc(it0.n)}</h4><div class="ap-wp">${apCoin(j0.p3)}</div><div class="ft">${fmt(j0.k)} on sale${j0.rg ? ` in ${APR[j0.rg]}` : ''} · typical asking price ${apCoin(j0.p)}</div></div>`;
+      const rest = `<div class="ap-irows">${JW.slice(1, 10).map((x) => apIRow(x.id, E, `${fmt(x.k)} on sale · typical ${apCoin(x.p)}`, apCoin(x.p3), 'to buy one', x.rg)).join('')}</div>`;
+      h += panel('s12', 'The crown jewels', 'The most expensive items you could actually buy right now. Each is priced at its third-cheapest auction, so one silly listing cannot top the list.', `<div class="ap-poster">${poster}${rest}</div>`);
+    }
+
+    const ES = R.essentials || [];
+    if (ES.length) {
+      const tilesE = ES.map((x) => { const it = apItem(x.id, E); const cheap = x.a && x.h ? (x.a < x.h ? 'a' : x.h < x.a ? 'h' : '') : ''; return `<div class="ap-ess" style="--qc:${it.qc}" data-gi="${x.id}:0" data-ep="${fmt(x.q)} for sale in ${fmt(x.n)} auctions"><img src="${it.ic}" alt=""><div style="min-width:0"><div class="nm">${esc(it.n)}</div><div class="pp">${apCoin(x.p)}</div><div class="fx"><span class="a${cheap === 'a' ? ' w' : ''}">A ${x.a ? apCoin(x.a) : '–'}</span><span class="h${cheap === 'h' ? ' w' : ''}">H ${x.h ? apCoin(x.h) : '–'}</span></div></div></div>`; }).join('');
+      h += panel('s12', 'Everyday essentials', 'What the basics cost right now: ore, bars, cloth, leather, herbs and dust. The typical price for one, and on each side, Alliance against Horde. The cheaper side is lit.', `<div class="ap-esss">${tilesE}</div>`);
+    }
+
+    const MV = R.movers || { span: 0, up: [], down: [] };
+    const mvList = (L, up) => L.length ? `<div class="ap-irows">${L.map((x) => apIRow(x.id, E, `${apCoin(x.old)} → ${apCoin(x.p)}`, `<span class="${up ? 'ap-up' : 'ap-dn'}">${up ? '+' : ''}${x.ch}%</span>`, `${fmt(x.q)} for sale`, x.rg)).join('')}</div>` : '<div class="optout">Nothing moved much.</div>';
+    h += panel('s6', 'Movers', MV.span ? `Typical prices now against ${Math.round(MV.span / 3600)} hours ago, for items with real volume.` : 'Biggest price rises and drops over the last day.',
+      MV.span ? `<div class="ap-mv"><div><h4 class="ap-up">Rising</h4>${mvList(MV.up, true)}</div><div><h4 class="ap-dn">Falling</h4>${mvList(MV.down, false)}</div></div>` : `<div class="ap-wait"><img src="${UI('inv_misc_pocketwatch_01')}" alt=""><div><b>Counting</b><span>Prices are saved every hour. Movers appear once there are a few hours to compare.</span></div></div>`);
+    const GP = R.gaps || [];
+    h += panel('s6', 'Across the border', 'The same item on the same ruleset, priced very differently by Alliance and Horde. Typical (median) prices.',
+      `<div class="ap-strip" style="--bg:url('${ART('land-orccamp')}')"><span class="bn">×${GP[0] ? Math.round(GP[0].x) : 1}</span>The biggest gap between the two factions right now.</div>` +
+      `<div class="ap-irows">${GP.slice(0, 7).map((x) => apIRow(x.id, E, `<span class="ap-vs"><span class="a">Alliance ${apCoin(x.a)}</span>·<span class="h">Horde ${apCoin(x.h)}</span></span>`, `×${x.x >= 10 ? Math.round(x.x) : x.x}`, esc(x.rs), x.rg)).join('')}</div>`);
+
+    const BR = R.bargains || [];
+    h += panel('s6', 'Free money', 'Auctions listed for less than a vendor pays for the item. Buy, walk to any vendor, sell.',
+      `<div class="ap-strip" style="--bg:url('${ART('econ-brewery')}')"><span class="bn">${fmt(R.below.n)} auctions</span>sell for less than a vendor pays. Buying them all and vendoring them makes <b>${apCoin(R.below.v)}</b>.</div>` +
+      `<div class="ap-irows">${BR.slice(0, 7).map((x) => apIRow(x.id, E, `Buy for ${apCoin(x.low)} · vendor pays ${apCoin(x.vs)}`, apCoin(x.gain), `${fmt(x.uq)} to grab`, x.rg)).join('')}</div>`);
+
+    const QCOL = { POOR: '#9d9d9d', COMMON: '#e8e8e8', UNCOMMON: '#1eff00', RARE: '#3a95f5', EPIC: '#b94cf7', LEGENDARY: '#ff8000' }, QN = { POOR: 'Poor', COMMON: 'Common', UNCOMMON: 'Uncommon', RARE: 'Rare', EPIC: 'Epic', LEGENDARY: 'Legendary' };
+    const ql = Object.keys(QCOL).filter((k) => R.quals[k]);
+    const TL = [['SHORT', 'Under 30 min', '#d8443a'], ['MEDIUM', '30 min to 2 h', '#d9a940'], ['LONG', '2 to 12 h', '#62b98c'], ['VERY_LONG', 'Over 12 h', '#4a8fe7']];
+    h += panel('s6', 'The shape of the market', 'What quality is for sale, and how long auctions have left.',
+      `<div class="ap-mix"><h4>Quality</h4><div class="fbar">${ql.map((k) => `<i style="--c:${QCOL[k]};flex:${R.quals[k]}" data-tip="${QN[k]}|${fmt(R.quals[k])} auctions"></i>`).join('')}</div><div class="ap-mleg">${ql.map((k) => `<span style="--c:${QCOL[k]}">${QN[k]} ${pct(R.quals[k], R.listings)}%</span>`).join('')}</div></div>` +
+      `<div class="ap-mix" style="margin-bottom:0"><h4>Time left</h4><div class="fbar">${TL.map(([k, n, c]) => `<i style="--c:${c};flex:${R.tleft[k] || 0}" data-tip="${n}|${fmt(R.tleft[k] || 0)} auctions"></i>`).join('')}</div><div class="ap-mleg">${TL.map(([k, n, c]) => `<span style="--c:${c}">${n} ${pct(R.tleft[k] || 0, R.listings)}%</span>`).join('')}</div></div>`);
+
+    const TABS = [['listed', 'Most auctions', 'inv_misc_bag_10'], ['mats', 'Biggest piles of materials', 'inv_stone_04']];
+    const HELP = { listed: 'The items with the most separate auctions up right now, gear included.', mats: 'Ore, herbs, cloth, leather and other trade goods, by how many are for sale in total, stacks counted.' };
+    if (sel.etab !== 'listed' && sel.etab !== 'mats') sel.etab = 'listed';
+    const list = R[sel.etab] || [];
+    const tilesI = list.map((x) => { const it = apItem(x.id, E); const sub = sel.etab === 'mats' ? `${fmt(x.q)} for sale` : `${fmt(x.n)} auctions`; return `<div class="recipe" style="--qc:${it.qc}" data-gi="${x.id}:0" data-ep="${fmt(x.n)} auctions · ${fmt(x.q)} for sale"><img src="${it.ic}" alt="" onerror="this.src='${UI('inv_misc_questionmark')}'"><div style="min-width:0"><div class="nm">${esc(it.n)}</div><div class="meta"><span>${sub}</span>${apCoin(x.p)}</div></div></div>`; }).join('');
+    const chips = `<div class="chips" style="margin-bottom:14px">${TABS.map(([k, n, i]) => `<button class="chip ${k === sel.etab ? 'on' : ''}" data-etab="${k}"><img src="${UI(i)}" alt="">${n}</button>`).join('')}</div>`;
+    h += panel('s12', 'What is for sale', `${HELP[sel.etab]} Prices are the typical (median) price per item.`, chips + `<div class="recipes">${tilesI}</div>`);
+
+    const S = R.sold || {};
+    if (S.n) {
+      h += panel('s12', 'What sold', `Auctions that vanished between the last two updates while they still had time left: most of them sold. ${fmt(S.n)} items in the last ${Math.round(S.span / 60)} minutes.`, `<div class="recipes">${S.top.map((x) => { const it = apItem(x.id, E); return `<div class="recipe" style="--qc:${it.qc}" data-gi="${x.id}:0" data-ep="${fmt(x.s)} sold since the last update"><img src="${it.ic}" alt=""><div style="min-width:0"><div class="nm">${esc(it.n)}</div><div class="meta"><span>${fmt(x.s)} sold</span>${apCoin(x.p)}</div></div></div>`; }).join('')}</div>`);
+    }
+    h += panel('s12', 'Coming as the hours pass', 'We save the auction house every time Blizzard updates it, about once an hour. These fill in as the snapshots pile up.',
+      `<div class="ap-next">${[['What sells', 'Auctions that disappear before they run out, so we know what people actually buy.'], ['Price history', 'Every item’s price over days and weeks.'], ['Inflation', 'A basket of everyday goods, priced every hour.'], ['Rush hour', 'When the auction house is busiest, by hour of day.'], ['Crafting profit', 'What the materials cost against what the crafted item sells for.']].map(([b, t]) => `<div><b>${b}</b>${t}</div>`).join('')}</div>`);
+
+    const el = document.getElementById('main');
+    el.innerHTML = h;
+    el.querySelectorAll('[data-erg]').forEach((b) => b.onclick = () => { sel.erg = b.dataset.erg; renderKeep(); });
+    el.querySelectorAll('[data-ers]').forEach((b) => b.onclick = () => { sel.ers = b.dataset.ers; renderKeep(); });
+    el.querySelectorAll('[data-ecat]').forEach((b) => b.onclick = () => { sel.ecat = sel.ecat === b.dataset.ecat ? '' : b.dataset.ecat; renderKeep(); });
+    el.querySelectorAll('[data-etab]').forEach((b) => b.onclick = () => { sel.etab = b.dataset.etab; renderKeep(); });
   }
   function render() {
     document.body.dataset.view = view;
@@ -3822,10 +4612,17 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     const v = VIEWS[view];
     document.getElementById('kicker').textContent = v.kicker;
     document.getElementById('title').textContent = v.title;
-    document.title = `${v.title} · Linked Inn`;
-    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('on', t.dataset.v === view));
+    document.title = view === 'home' ? 'Life on Azeroth · the WoW: Forever census' : `${v.title} · Life on Azeroth`;
+    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('on', !!(t.dataset.v ? t.dataset.v === view : t.dataset.g && t.dataset.g === GROUP[view])));
+    document.querySelectorAll('.ap-ddi').forEach((t) => t.classList.toggle('on', t.dataset.v === view));
+    const subEl = document.getElementById('sub'), inCensus = GROUP[view] === 'census';
+    subEl.innerHTML = inCensus ? [...document.querySelectorAll('.ap-ddi')].map((a) => `<a class="btn${a.dataset.v === view ? ' on' : ''}" href="${a.getAttribute('href')}"><img src="${a.querySelector('img').getAttribute('src')}" alt="">${a.querySelector('b').firstChild.textContent}</a>`).join('') : '';
+    subEl.hidden = !inCensus;
+    document.getElementById('sep0').hidden = !inCensus;
     if (view === 'news' || view === 'patches') { renderNews(); return; }
-    if (view === 'duels') renderDuels(); else if (view === 'life') renderLife(); else if (view === 'open') renderOpen(); else if (view === 'home') renderHome(); else if (view === 'archive') renderArchive(); else if (view === 'player') renderPlayer(); else renderCrafting();
+    if (view === 'population') { renderPopulation(); return; }
+    if (view === 'economy') { renderEconomy(); return; }
+    if (view === 'duels') renderDuels(); else if (view === 'life') renderLife(); else if (view === 'open') renderOpen(); else if (view === 'home') renderHome(); else if (view === 'archive') renderArchive(); else if (view === 'about') renderAbout(); else if (view === 'player') renderPlayer(); else renderCrafting();
   }
   let NSEL = '';
   function renderNews() {
@@ -3853,7 +4650,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       render();
       return;
     }
-    view = VIEWS[want] && (want === 'crafting' || want === 'archive' || (want === 'open' ? !!O : hasWorld)) ? want : (hasWorld ? 'home' : 'crafting');
+    view = VIEWS[want] && (want === 'crafting' || want === 'archive' || want === 'about' || (want === 'population' ? !!A : want === 'economy' ? !!window.ECON : want === 'open' ? !!O : hasWorld)) ? want : (hasWorld ? 'home' : 'crafting');
     render();
   }
   window.addEventListener('hashchange', () => { const y = scrollY; route(); scrollTo(0, Math.min(y, document.querySelector('.bar').offsetTop)); });
@@ -3939,7 +4736,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   }
   function gearTip(code) {
     const [iid, eid] = code.split(':').map(Number);
-    const G = window.LI_GEAR && window.LI_GEAR.i[iid] ? window.LI_GEAR : window.LI_PGEAR;
+    const G = window.LI_GEAR && window.LI_GEAR.i[iid] ? window.LI_GEAR : window.LI_PGEAR && window.LI_PGEAR.i[iid] ? window.LI_PGEAR : window.ECON && window.ECON.tips && window.ECON.tips[iid] ? { i: window.ECON.tips, e: {} } : null;
     const it = G && G.i[iid];
     if (!it) return '';
     const [name, q, ilvl, req, slot, kind, stats, equip, armor, bind, icon] = it;
@@ -3973,9 +4770,12 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 
   document.addEventListener('mousemove', (e) => {
     const gi = e.target.closest && e.target.closest('[data-gi]');
-    if (gi && (window.LI_GEAR || window.LI_PGEAR)) {
+    if (gi && (window.LI_GEAR || window.LI_PGEAR || window.ECON)) {
       tip.className = 'item';
-      tip.innerHTML = gearTip(gi.dataset.gi);
+      const gid = +gi.dataset.gi.split(':')[0], ei = window.ECON && window.ECON.items[gid];
+      const gt = gearTip(gi.dataset.gi) || (ei ? `<div class="name"><span style="color:${QC[ei.q ?? 1] || '#fff'}">${esc(ei.n || 'Unknown item')}</span></div><div>${esc(ei.c || '')}</div>` : '');
+      if (!gt) { tip.style.display = 'none'; return; }
+      tip.innerHTML = gt + (gi.dataset.ep ? `<hr><div class="gd">${esc(gi.dataset.ep)}</div>` : '');
       tip.style.display = 'block';
       tip.style.left = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8) + 'px';
       tip.style.top = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8) + 'px';

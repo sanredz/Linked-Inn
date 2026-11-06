@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.1] - 2026-11-06
+
+- Fixed: your profession window could pop open, or briefly show someone
+  else's recipes, when a reply to an earlier recipe lookup arrived late. Your
+  own profession window now only ever opens when you open it, and always shows
+  your own recipes.
+- The Forever Crafting Census how-to in Settings now points at the Forever game
+  folder.
+
 ## [1.6.0] - 2026-10-19
 
 - Smoother in busy cities. With the window open, Linked Inn no longer hitches

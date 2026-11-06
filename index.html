@@ -18,6 +18,8 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
+<link rel="stylesheet" href="market.css">
+<script src="market.js"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -1894,6 +1896,44 @@ body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
 }
 @media (max-width: 460px) { .ap-board { grid-template-columns: 1fr; } }
 
+.ap-db-chips { margin-bottom: 14px; }
+.ap-dbs { display: flex; flex-direction: column; gap: 4px; }
+.ap-db, .ap-db-axis { display: grid; grid-template-columns: 250px minmax(0, 1fr) 150px; gap: 16px; align-items: center; }
+.ap-db { padding: 6px 8px; border-radius: 8px; }
+.ap-db:hover { background: rgba(255, 255, 255, 0.035); }
+.ap-db-axis { padding: 0 8px 4px; }
+.ap-db-axis .ap-db-tr { height: 16px; }
+.ap-db-axis b { position: absolute; transform: translateX(-50%); font: 11px "Friz", serif; font-weight: normal; color: var(--muted); }
+.ap-db-it { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ap-db-it img { width: 34px; height: 34px; border-radius: 6px; border: 2px solid var(--qc); box-shadow: 0 0 0 1px #000; flex: none; }
+.ap-db-it > div { min-width: 0; }
+.ap-db-it .nm { font: 14px "Friz", serif; color: var(--qc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ap-db-it small { font-size: 11.5px; color: var(--muted); }
+.ap-db-tr { position: relative; height: 34px; }
+.ap-db-tr > i { position: absolute; top: 4px; bottom: 4px; width: 1px; background: rgba(255, 255, 255, 0.07); }
+.ap-db-tr .ap-db-bar { position: absolute; top: 50%; height: 6px; margin-top: -3px; border-radius: 3px; background: linear-gradient(90deg, var(--from), var(--to)); opacity: 0.55; }
+.ap-db-tr .ap-db-mk { position: absolute; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; }
+.ap-db-tr .ap-db-mk img { width: 26px; height: 26px; object-fit: contain; filter: drop-shadow(0 2px 3px #000); }
+.ap-db-tr .ap-db-mk em { position: absolute; top: 100%; font-style: normal; font-size: 11px; white-space: nowrap; margin-top: -2px; }
+.ap-db-tr .ap-db-mk.a em .ap-coin b { color: #a9c9f5; } .ap-db-tr .ap-db-mk.h em .ap-coin b { color: #f3a49b; }
+.ap-db-v { text-align: right; line-height: 1.15; }
+.ap-db-v b { display: block; font: 22px "Friz", serif; font-weight: normal; color: var(--title); }
+.ap-db-v span { font-size: 12px; color: var(--ink-2); }
+.ap-db-v .ca { color: #8fbaf5; } .ap-db-v .ch { color: #f08a7e; }
+.ap-db-key { display: flex; gap: 18px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.ap-db-key span { display: flex; align-items: center; gap: 6px; } .ap-db-key img { width: 18px; height: 18px; object-fit: contain; }
+@media (max-width: 900px) { .ap-db, .ap-db-axis { grid-template-columns: 1fr 90px; } .ap-db-it { grid-column: 1 / -1; } .ap-db .ap-db-tr { grid-column: 1; } .ap-db-axis > span:first-child { display: none; } }
+
+.ap-ring { position: relative; flex: none; width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--gold) calc(var(--p) * 360deg), rgba(255, 255, 255, 0.08) 0); box-shadow: 0 0 0 1px #000, 0 4px 10px rgba(0, 0, 0, 0.7); }
+.ap-ring .icon { width: 54px !important; height: 54px !important; border-radius: 50% !important; box-shadow: 0 0 0 2px #000 !important; }
+.ap-ring.busy { background: conic-gradient(var(--gold) 0 25%, rgba(255, 255, 255, 0.08) 25% 100%); animation: apSpin 1.2s linear infinite; }
+.ap-ring.busy .icon { animation: apSpin 1.2s linear infinite reverse; }
+@keyframes apSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ap-ring.busy, .ap-ring.busy .icon { animation: none; } }
+@media (max-width: 720px) { .ap-ring { width: 44px; height: 44px; } .ap-ring .icon { width: 36px !important; height: 36px !important; } }
+.ap-fn { display: flex; justify-content: space-between; margin-top: 4px; font: 11.5px "Friz", serif; text-shadow: 0 1px 0 #000; }
+.ap-fn .a { color: #8fbaf5; } .ap-fn .h { color: #f08a7e; }
 </style>
 <script>
 let me = false;
@@ -1993,7 +2033,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261106220410';
+window.LI_V = '20261106225312';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -2077,7 +2117,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   }, true);
   let VOTE = null, voteErr = '', CHEER = null, cheerErr = '';
   if (!O) document.querySelectorAll('.tab[data-v="open"]').forEach((t) => t.remove());
-  const A = window.API_DATA;
+  let A = window.API_DATA;
   if (!A) {
     document.querySelectorAll('.tabs [data-v="population"]').forEach((t) => t.remove());
     document.querySelector('.tab[data-g="census"]').setAttribute('href', '#crafting');
@@ -2091,7 +2131,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'rate', pod: 'rate', rare: 'all', tcls: '', tgrp: 'all' };
   try { const saved = JSON.parse(localStorage.getItem('inn-sel') || '{}'); ['rs', 'fac'].forEach((k) => { if (saved[k]) sel[k] = saved[k]; }); } catch (e) {}
   let view = 'crafting';
-  sel.rg = 'all'; sel.etab = 'listed'; sel.erg = 'all'; sel.ers = 'all'; sel.ecat = '';
+  sel.rg = 'all'; sel.etab = 'listed'; sel.erg = 'all'; sel.ers = 'all'; sel.ecat = ''; sel.egc = 'all';
 
   const cd = document.getElementById('cd');
   const LAUNCH = Date.UTC(2026, 10, 4, 23, 0, 0);
@@ -4529,7 +4569,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
       const races = Object.entries(R.combo[x.name] || {}).filter(([k]) => k !== '?').sort((p, q) => q[1] - p[1]);
       const g = R.gender[x.name] || {}, gt = (g.MALE || 0) + (g.FEMALE || 0);
       const meta = [races[0] ? `Mostly ${esc(races[0][0])}` : '', gt ? `${pct(g.FEMALE || 0, gt)}% female` : ''].filter(Boolean).join(' · ');
-      return `<div class="ap-cc" style="--bg:url('assets/game/${AP_CLASS_ART[x.k]}.jpg');--cc:${CC[x.k]}" data-tip="${CN[x.k]}|${fmt(x.a)} Alliance · ${fmt(x.h)} Horde"><img class="ci" src="${cls(x.k)}" alt=""><span class="rk">#${i + 1}</span><div class="nm">${CN[x.k]}</div><div class="pc">${pct(x.t, R.chars)}%<small>${fmt(x.t)}</small></div><div class="mt">${meta}</div><div class="fb"><i class="a" style="flex:${x.a}"></i><i class="h" style="flex:${x.h}"></i></div></div>`;
+      return `<div class="ap-cc" style="--bg:url('assets/game/${AP_CLASS_ART[x.k]}.jpg');--cc:${CC[x.k]}" data-tip="${CN[x.k]}|${fmt(x.a)} Alliance · ${fmt(x.h)} Horde"><img class="ci" src="${cls(x.k)}" alt=""><span class="rk">#${i + 1}</span><div class="nm">${CN[x.k]}</div><div class="pc">${pct(x.t, R.chars)}%<small>${fmt(x.t)}</small></div><div class="mt">${meta}</div><div class="fb"><i class="a" style="flex:${x.a}"></i><i class="h" style="flex:${x.h}"></i></div><div class="ap-fn"><span class="a">${pct(x.a, x.a + x.h)}% Alliance</span><span class="h">${pct(x.h, x.a + x.h)}% Horde</span></div></div>`;
     }).join('');
     h += panel('s12', 'The classes', 'Every class by how many play it. The thin bar shows the Alliance and Horde split.', `<div class="ap-cards">${cards}</div>`);
 
@@ -4606,11 +4646,63 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
       listed: merge('listed', (x) => x.n), mats: merge('mats', (x) => x.q), pricey: pool('pricey', (x) => x.p, 24),
       bargains: pool('bargains', (x) => x.gain), gaps: pool('gaps', (x) => x.x), undercut: pool('undercut', (x) => x.cut), markups: pool('markups', (x) => x.x),
       absurd: pool('absurd', (x) => x.total, 6), sold,
+      fgaps: (() => { const o = {}; RS.forEach(([r, R]) => Object.entries(R.fgaps || {}).forEach(([k, L]) => { (o[k] = o[k] || []).push(...L.map((x) => ({ ...x, rg: r }))); })); Object.keys(o).forEach((k) => { o[k] = o[k].sort((a, b) => b.x - a.x).slice(0, 15); }); return o; })(),
       jewels: pool('jewels', (x) => x.p3, 12),
       essentials: (() => { const o = {}; RS.forEach(([, R]) => (R.essentials || []).forEach((x) => { const y = o[x.id] = o[x.id] || { id: x.id, n: 0, q: 0, p: 0, a: 0, h: 0 }; y.n += x.n; y.q += x.q; y.p += x.p * x.n; y.a += x.a * x.n; y.h += x.h * x.n; if (x.ch != null) { y.cw = (y.cw || 0) + x.n; y.c = (y.c || 0) + x.ch * x.n; } })); return Object.values(o).map((y) => ({ ...y, p: Math.round(y.p / y.n), a: Math.round(y.a / y.n), h: Math.round(y.h / y.n), ch: y.cw ? Math.round(10 * y.c / y.cw) / 10 : undefined })); })(),
       gear: (() => { const o = {}; RS.forEach(([, R]) => (R.gear || []).forEach((g) => { const y = o[g.b] = o[g.b] || { b: g.b, n: 0, w: 0, a: 0, r: 0, nw: 0, na: 0, nr: 0 }; y.n += g.n; y.w += g.w2 * g.nw; y.a += g.a2 * g.na; y.r += g.r3 * g.nr; y.nw += g.nw; y.na += g.na; y.nr += g.nr; })); return Object.values(o).sort((a, b) => a.b - b.b).map((y) => ({ b: y.b, n: y.n, w2: Math.round(y.w / Math.max(1, y.nw)), a2: Math.round(y.a / Math.max(1, y.na)), r3: Math.round(y.r / Math.max(1, y.nr)), nw: y.nw, na: y.na, nr: y.nr })); })(),
       movers: { span: Math.max(0, ...RS.map(([, R]) => (R.movers || {}).span || 0)), up: RS.flatMap(([r, R]) => ((R.movers || {}).up || []).map((x) => ({ ...x, rg: r }))).sort((a, b) => b.ch - a.ch).slice(0, 8), down: RS.flatMap(([r, R]) => ((R.movers || {}).down || []).map((x) => ({ ...x, rg: r }))).sort((a, b) => a.ch - b.ch).slice(0, 8) },
     };
+  }
+  const AP_LIVE = 'https://forever-live.sanredz.workers.dev/v1';
+  function apLiveLoad() {
+    return fetch(AP_LIVE + '/live').then((r) => r.ok ? r.json() : null).then((d) => {
+      if (!d) return;
+      let changed = false;
+      if (d.census && (!A || d.census.built > (A.built || 0))) { A = window.API_DATA = { built: d.census.built, census: d.census.census }; changed = true; }
+      const E = window.ECON;
+      if (d.econ && Object.keys(d.econ.regions || {}).length && (!E || d.econ.taken > (E.taken || 0))) {
+        d.econ.tips = (E && E.tips) || {};
+        d.econ.items = Object.assign({}, (E && E.items) || {}, d.econ.items || {});
+        window.ECON = d.econ;
+        changed = true;
+      }
+      if (changed && ['population', 'economy', 'home'].includes(view)) renderKeep();
+    }).catch(() => {});
+  }
+  let apTick = null, apPoll = 0;
+  function apTimer() {
+    clearInterval(apTick);
+    const step = () => {
+      if (view !== 'economy' || !document.getElementById('apNextN')) { clearInterval(apTick); return; }
+      const E = window.ECON, now = Date.now() / 1000, due = E.taken + 3600, left = due - now;
+      const N = document.getElementById('apNextN'), L = document.getElementById('apNextL'), S = document.getElementById('apNextS'), Rg = document.getElementById('apRing');
+      const at = new Date(E.taken * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      if (left > 0) {
+        L.textContent = 'Next update';
+        N.textContent = left > 60 ? `${Math.ceil(left / 60)} min` : 'under a minute';
+        S.textContent = `Prices from ${at}, refreshed every hour`;
+        Rg.style.setProperty('--p', Math.max(0, Math.min(1, 1 - left / 3600)));
+        Rg.classList.remove('busy');
+      } else if (left > -1800) {
+        L.textContent = 'Next update';
+        N.textContent = 'Updating…';
+        S.textContent = `Prices from ${at}, new ones on the way`;
+        Rg.style.setProperty('--p', 1);
+        Rg.classList.add('busy');
+        if (now - apPoll > 90) {
+          apPoll = now;
+          apLiveLoad();
+        }
+      } else {
+        L.textContent = 'Last update';
+        N.textContent = apAgo(E.taken);
+        S.textContent = `Prices from ${at}`;
+        Rg.style.setProperty('--p', 1);
+        Rg.classList.remove('busy');
+      }
+    };
+    step();
+    apTick = setInterval(step, 15000);
   }
   function renderEconomy() {
     plainHead();
@@ -4624,12 +4716,13 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     h += plaque(UI('inv_misc_coin_17'), 'Auctions up', fmt(R.listings), `${fmt(R.qty)} items counting stacks`);
     h += plaque(UI('inv_misc_coin_02'), 'Gold on the market', apGold(R.market), 'at fair prices, wild listings trimmed');
     h += plaque(UI('inv_misc_note_01'), 'Different items', fmt(R.distinct), `for sale in ${RN2}`);
-    h += plaque(UI('inv_misc_pocketwatch_01'), 'Updated', apAgo(E.taken), `${E.snaps} snapshots so far`, true);
+    h += `<section class="frame plaque s3 ap-next-p"><div class="in slab"><span class="ap-ring" id="apRing" style="--p:0"><img class="icon" src="${UI('inv_misc_pocketwatch_01')}" alt=""></span><div><div class="lbl" id="apNextL">Next update</div><div class="num word" id="apNextN">–</div><div class="sub" id="apNextS"></div></div></div></section>`;
     const ESx = R.essentials || [];
     if (ESx.length) {
       const tk = ESx.map((x) => { const it = apItem(x.id, E), d = x.ch; return `<span class="ap-tk" data-gi="${x.id}:0" data-ep="${fmt(x.q)} for sale"><img src="${it.ic}" alt=""><b>${esc(it.n)}</b>${apCoin(x.p)}${d != null ? `<em class="${d > 0 ? 'up' : d < 0 ? 'dn' : ''}">${d > 0 ? '▲' : d < 0 ? '▼' : '■'}${Math.abs(d)}%</em>` : ''}</span>`; }).join('');
       h += `<div class="ap-ticker s12"><div class="ap-tkl"><img src="${UI('inv_misc_coin_17')}" alt="">Market<small>${RN2}</small></div><div class="ap-tkw"><div class="ap-tkr">${tk}${tk}</div></div></div>`;
     }
+    if (window.LI_MARKET) h += panel('s12', 'The market', 'Indexes track a basket of items like a stock index, starting at 100. Click indexes to compare them, or search any item for its full history.', '<div id="mkRoot"></div>');
 
     const rsNames = Object.keys(R.sets);
     if (sel.ers !== 'all' && !R.sets[sel.ers]) sel.ers = 'all';
@@ -4686,13 +4779,31 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
       h += panel('s12', 'Movers', `Typical prices now against ${Math.round(MV.span / 3600)} hours ago, for items with real volume.`, `<div class="ap-mv"><div><h4 class="ap-up">Rising</h4>${mv(MV.up.slice(0, 6), true)}</div><div><h4 class="ap-dn">Falling</h4>${mv(MV.down.slice(0, 6), false)}</div></div>`);
     }
 
-    const GP = R.gaps || [];
-    if (GP.length) {
-      const duel = GP.slice(0, 6).map((x) => {
-        const it = apItem(x.id, E), aCheap = x.a < x.h, r = x.x >= 10 ? Math.round(x.x) : x.x;
-        return `<div class="ap-duel" style="--qc:${it.qc}" data-gi="${x.id}:0"><div class="sd a${aCheap ? ' w' : ''}"><img src="assets/game/alliance-crest.png" alt=""><span>${apCoin(x.a)}</span></div><div class="it"><img src="${it.ic}" alt=""><div class="nm">${esc(it.n)}</div></div><div class="sd h${!aCheap ? ' w' : ''}"><span>${apCoin(x.h)}</span><img src="assets/game/horde-crest.png" alt=""></div><div class="ln"><b>${r}× cheaper</b> for the ${aCheap ? '<span class="ca">Alliance</span>' : '<span class="ch">Horde</span>'} · ${esc(x.rs)}${x.rg ? ' · ' + APR[x.rg] : ''}</div></div>`;
+    const FG = R.fgaps || {};
+    const CATS = [['all', 'Everything', 'inv_misc_coin_02'], ['trade', 'Trade goods', 'inv_stone_04'], ['cons', 'Consumables', 'inv_potion_51'], ['gear', 'Gear', 'inv_sword_27'], ['recipe', 'Recipes', 'inv_misc_book_11'], ['other', 'Other', 'inv_misc_gift_01']];
+    const allG = Object.values(FG).flat().sort((x, y) => y.x - x.x).slice(0, 15);
+    const pickG = sel.egc === 'all' ? (allG.length ? allG : (R.gaps || [])) : (FG[sel.egc] || []);
+    if (allG.length || (R.gaps || []).length) {
+      const rows = pickG.slice(0, 12);
+      const prices = rows.flatMap((x) => [x.a, x.h]).filter((v) => v > 0);
+      const lo = Math.log10(Math.max(1, Math.min(...prices) / 1.6)), hi = Math.log10(Math.max(...prices) * 1.6);
+      const P = (v) => 100 * (Math.log10(Math.max(1, v)) - lo) / Math.max(0.0001, hi - lo);
+      const ticks = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000].filter((v) => Math.log10(v) >= lo && Math.log10(v) <= hi);
+      const tickLab = (v) => v >= 10000 ? `${v / 10000}g` : v >= 100 ? `${v / 100}s` : `${v}c`;
+      const axis = `<div class="ap-db-axis"><span></span><div class="ap-db-tr">${ticks.map((v) => `<b style="left:${P(v)}%">${tickLab(v)}</b>`).join('')}</div><span></span></div>`;
+      const body = rows.map((x) => {
+        const it = apItem(x.id, E), pa = P(x.a), ph = P(x.h), aMore = x.a > x.h, r = x.x >= 10 ? Math.round(x.x) : x.x;
+        const l = Math.min(pa, ph), w = Math.abs(pa - ph);
+        return `<div class="ap-db" style="--qc:${it.qc}" data-gi="${x.id}:0" data-ep="Alliance median ${apCoinT(x.a)}${x.na ? ` (${fmt(x.na)} auctions)` : ''} · Horde median ${apCoinT(x.h)}${x.nh ? ` (${fmt(x.nh)} auctions)` : ''} · ${x.rs}">
+          <div class="ap-db-it"><img src="${it.ic}" alt=""><div><div class="nm">${esc(it.n)}</div><small>${esc(x.rs)}${x.rg ? ' · ' + x.rg.toUpperCase() : ''}</small></div></div>
+          <div class="ap-db-tr">${ticks.map((v) => `<i style="left:${P(v)}%"></i>`).join('')}<span class="ap-db-bar" style="left:${l}%;width:${w}%;--from:${pa < ph ? '#4a8fe7' : '#d8443a'};--to:${pa < ph ? '#d8443a' : '#4a8fe7'}"></span>
+            <span class="ap-db-mk a" style="left:${pa}%"><img src="assets/game/alliance-crest.png" alt="Alliance"><em>${apCoin(x.a)}</em></span>
+            <span class="ap-db-mk h" style="left:${ph}%"><img src="assets/game/horde-crest.png" alt="Horde"><em>${apCoin(x.h)}</em></span></div>
+          <div class="ap-db-v"><b>${r}×</b><span>${aMore ? '<span class="ca">Alliance</span>' : '<span class="ch">Horde</span>'} pays more</span></div></div>`;
       }).join('');
-      h += panel('s12', 'Alliance against Horde', 'The same item on the same ruleset can cost wildly different amounts depending on which faction you play. These are the biggest gaps right now.', `<div class="ap-duels">${duel}</div>`);
+      const chipsG = `<div class="chips ap-db-chips">${CATS.filter(([k]) => k === 'all' || (FG[k] || []).length).map(([k, n, i]) => `<button class="chip ${k === sel.egc ? 'on' : ''}" data-egc="${k}"><img src="${UI(i)}" alt="">${n}</button>`).join('')}</div>`;
+      h += panel('s12', 'Alliance against Horde', 'The same item on the same ruleset, at the typical (median) price each faction pays, on a scale where every step is ten times dearer. Only items with plenty of auctions on both sides count.',
+        chipsG + `<div class="ap-dbs">${axis}${body || '<div class="optout">No big gaps in this group right now.</div>'}</div><div class="ap-db-key"><span><img src="assets/game/alliance-crest.png" alt="">Alliance price</span><span><img src="assets/game/horde-crest.png" alt="">Horde price</span></div>`);
     }
 
     const S = R.sold || {};
@@ -4707,10 +4818,15 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
 
     const el = document.getElementById('main');
     el.innerHTML = h;
+    apTimer();
+    const mkRoot = document.getElementById('mkRoot');
+    if (mkRoot && window.LI_MARKET) LI_MARKET.mount(mkRoot, { UI, coin: apCoin, coinT: apCoinT, fmt, tipHtml: (id) => gearTip(id + ':0'), regionName: APR }, sel.erg === 'all' ? 'eu' : sel.erg);
+    el.onclick = (e) => { const g = e.target.closest('[data-gi]'); if (view === 'economy' && g && window.LI_MARKET && window.MKT && !e.target.closest('#mkRoot')) LI_MARKET.open(+g.dataset.gi.split(':')[0]); };
     el.querySelectorAll('[data-erg]').forEach((b) => b.onclick = () => { sel.erg = b.dataset.erg; renderKeep(); });
     el.querySelectorAll('[data-ers]').forEach((b) => b.onclick = () => { sel.ers = b.dataset.ers; renderKeep(); });
     el.querySelectorAll('[data-ecat]').forEach((b) => b.onclick = () => { sel.ecat = sel.ecat === b.dataset.ecat ? '' : b.dataset.ecat; renderKeep(); });
     el.querySelectorAll('[data-etab]').forEach((b) => b.onclick = () => { sel.etab = b.dataset.etab; renderKeep(); });
+    el.querySelectorAll('[data-egc]').forEach((b) => b.onclick = () => { sel.egc = b.dataset.egc; renderKeep(); });
   }
   function render() {
     document.body.dataset.view = view;
@@ -4928,6 +5044,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     if (y) { scrollTo(0, y); setTimeout(() => { if (Math.abs(scrollY - y) > 2) scrollTo(0, y); }, 60); }
   }
   if (!waitLive) route();
+  apLiveLoad();
   function loadVotes() {
     
     fetch(VOTE_API + '/api/votes').then((r) => r.json()).then((v) => {

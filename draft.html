@@ -456,6 +456,32 @@ body.arena #stage { cursor: default; }
 .ap-ddi .ap-new { font: 10px "Friz", serif; color: #1a1206; background: var(--gold, #f8d36b); border-radius: 4px; padding: 1px 5px; margin-left: 6px; vertical-align: 3px; font-style: normal; }
 @media (max-width: 1180px) { .ap-caret { display: none; } }
 @media (max-width: 720px) { .ap-grp { flex: 1 1 0; min-width: 0; } .ap-grp .tab { flex: 1 1 0; } .ap-dd { display: none !important; } }
+/* shared-header */
+.top .tab { font: 15.5px "Friz", serif; }
+.top .hbtn { font: 13px "Friz", serif; }
+@media (max-width: 1600px) { .top .right .hbtn:not(.get) span.t { display: none; } .top .right .hbtn:not(.get) { padding: 6px; } .top .tabs { margin-left: 6px; gap: 4px; } .top .tab { padding-right: 12px; } }
+@media (min-width: 721px) and (max-width: 1180px) { .top .wrap { gap: 8px; } .top .tabs { margin-left: 2px; gap: 0; } .top .tabs .tab { flex-direction: column; gap: 3px; padding: 5px 6px 4px; font-size: 13px; line-height: 1; } .top .tab img { width: 30px; height: 30px; } .top .brand b { font-size: 24px; } .top .brand small { display: none; } .top .hbtn.get { display: none; } }
+@media (max-width: 720px) {
+  .top .wrap { height: auto; flex-wrap: wrap; align-items: center; padding: 8px 12px 6px; gap: 6px; }
+  .top .brand { order: 0; gap: 9px; min-width: 0; flex: 0 1 auto; }
+  .top .brand .lz-mark { width: 36px; height: 36px; padding: 2px; border-radius: 8px; }
+  .top .brand .lz-mark img { border-radius: 6px; }
+  .top .brand b { font-size: 21px; }
+  .top .brand small { display: none; }
+  .top .right { display: contents; }
+  .top .right .hbtn { order: 1; padding: 4px; gap: 4px; border-radius: 8px; margin-left: 0; }
+  .top .right .hbtn:not(.hbtn ~ .hbtn) { margin-left: auto; }
+  .top .right .hbtn img { width: 24px; height: 24px; }
+  .top .right .hbtn span.t, .top .hbtn.get { display: none; }
+  .top .right .hbtn .n { font-size: 10.5px; padding: 0 5px; }
+  .top .right .realm { order: 3; width: 100%; justify-content: center; }
+  .top .tabs { order: 2; width: 100%; margin: 2px 0 0; gap: 2px; justify-content: space-between; }
+  .top .tabs > .tab, .top .tabs > .ap-grp { flex: 1 1 0; min-width: 0; }
+  .top .tabs .tab { flex-direction: column; gap: 3px; padding: 4px 0 3px; font: 11.5px/1 "Friz", serif; letter-spacing: -0.01em; }
+  .top .tab img { width: 28px; height: 28px; }
+  .top .tab span { white-space: nowrap; overflow: hidden; text-overflow: clip; max-width: 100%; }
+}
+@media (max-width: 370px) { .top .brand b { font-size: 18px; } .top .brand .lz-mark { width: 32px; height: 32px; } .top .right .hbtn img { width: 20px; height: 20px; } }
 </style>
 </head>
 <body>

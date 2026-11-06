@@ -18,8 +18,8 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261107004818">
-<script src="market.js?v=20261107004818"></script>
+<link rel="stylesheet" href="market.css?v=20261107005636">
+<script src="market.js?v=20261107005636"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -1936,6 +1936,32 @@ body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
 @media (max-width: 720px) { .ap-ring { width: 44px; height: 44px; } .ap-ring .icon { width: 36px !important; height: 36px !important; } }
 .ap-fn { display: flex; justify-content: space-between; margin-top: 4px; font: 11.5px "Friz", serif; text-shadow: 0 1px 0 #000; }
 .ap-fn .a { color: #8fbaf5; } .ap-fn .h { color: #f08a7e; }
+/* shared-header */
+.top .tab { font: 15.5px "Friz", serif; }
+.top .hbtn { font: 13px "Friz", serif; }
+@media (max-width: 1600px) { .top .right .hbtn:not(.get) span.t { display: none; } .top .right .hbtn:not(.get) { padding: 6px; } .top .tabs { margin-left: 6px; gap: 4px; } .top .tab { padding-right: 12px; } }
+@media (min-width: 721px) and (max-width: 1180px) { .top .wrap { gap: 8px; } .top .tabs { margin-left: 2px; gap: 0; } .top .tabs .tab { flex-direction: column; gap: 3px; padding: 5px 6px 4px; font-size: 13px; line-height: 1; } .top .tab img { width: 30px; height: 30px; } .top .brand b { font-size: 24px; } .top .brand small { display: none; } .top .hbtn.get { display: none; } }
+@media (max-width: 720px) {
+  .top .wrap { height: auto; flex-wrap: wrap; align-items: center; padding: 8px 12px 6px; gap: 6px; }
+  .top .brand { order: 0; gap: 9px; min-width: 0; flex: 0 1 auto; }
+  .top .brand .lz-mark { width: 36px; height: 36px; padding: 2px; border-radius: 8px; }
+  .top .brand .lz-mark img { border-radius: 6px; }
+  .top .brand b { font-size: 21px; }
+  .top .brand small { display: none; }
+  .top .right { display: contents; }
+  .top .right .hbtn { order: 1; padding: 4px; gap: 4px; border-radius: 8px; margin-left: 0; }
+  .top .right .hbtn:not(.hbtn ~ .hbtn) { margin-left: auto; }
+  .top .right .hbtn img { width: 24px; height: 24px; }
+  .top .right .hbtn span.t, .top .hbtn.get { display: none; }
+  .top .right .hbtn .n { font-size: 10.5px; padding: 0 5px; }
+  .top .right .realm { order: 3; width: 100%; justify-content: center; }
+  .top .tabs { order: 2; width: 100%; margin: 2px 0 0; gap: 2px; justify-content: space-between; }
+  .top .tabs > .tab, .top .tabs > .ap-grp { flex: 1 1 0; min-width: 0; }
+  .top .tabs .tab { flex-direction: column; gap: 3px; padding: 4px 0 3px; font: 11.5px/1 "Friz", serif; letter-spacing: -0.01em; }
+  .top .tab img { width: 28px; height: 28px; }
+  .top .tab span { white-space: nowrap; overflow: hidden; text-overflow: clip; max-width: 100%; }
+}
+@media (max-width: 370px) { .top .brand b { font-size: 18px; } .top .brand .lz-mark { width: 32px; height: 32px; } .top .right .hbtn img { width: 20px; height: 20px; } }
 </style>
 <script>
 let me = false;
@@ -2035,7 +2061,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261107004818';
+window.LI_V = '20261107005636';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -4742,7 +4768,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
       const tk = ESx.map((x) => { const it = apItem(x.id, E), d = x.ch; return `<span class="ap-tk" data-gi="${x.id}:0" data-ep="${fmt(x.q)} for sale"><img src="${it.ic}" alt=""><b>${esc(it.n)}</b>${apCoin(x.p)}${d != null ? `<em class="${d > 0 ? 'up' : d < 0 ? 'dn' : ''}">${d > 0 ? '▲' : d < 0 ? '▼' : '■'}${Math.abs(d)}%</em>` : ''}</span>`; }).join('');
       h += `<div class="ap-ticker s12"><div class="ap-tkl"><img src="${UI('inv_misc_coin_17')}" alt="">Market<small>${RN2}</small></div><div class="ap-tkw"><div class="ap-tkr">${tk}${tk}</div></div></div>`;
     }
-    if (window.LI_MARKET) h += panel('s12', 'The market', 'Indexes track a basket of items like a stock index, starting at 100. Click indexes to compare them, or search any item for its full history.', '<div id="mkRoot"></div>');
+    if (window.LI_MARKET) h += panel('s12', 'The market', 'Indexes track a basket of items like a stock index, starting at 100. Click indexes to compare them, or search any item for its full history.', '<div id="mkRoot"></div>', { cls: 'ap-mkp' });
 
     const hs = { Alliance: { n: 0, v: 0 }, Horde: { n: 0, v: 0 }, Blackwater: { n: 0, v: 0 } };
     Object.entries(R.sets).forEach(([rs, v]) => { if (sel.ers === 'all' || sel.ers === rs) Object.keys(hs).forEach((f) => { hs[f].n += v[f].n; hs[f].v += v[f].v; }); });

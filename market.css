@@ -166,3 +166,14 @@ button.mk-ui:hover { transform: translateY(-1px); }
 @media (max-width: 1000px) { .mk-grid { grid-template-columns: 1fr; } .mk-side { max-height: 260px; } .mk-body { grid-template-columns: 1fr; } .mk-tiles { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 520px) { .mk-bar { flex-direction: column; align-items: stretch; } .mk-bar .mk-ranges { align-self: flex-start; } .mk-hint { display: none; } .mk-ix { grid-template-columns: 4px 20px 1fr 46px 48px; } .mk-ix .mk-spark { display: none; } .mk-reg-note { margin-left: 0; } .mk-card { padding: 14px; } .mk-head h3 { font-size: 22px; } .mk-regs > div { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 720px) { .mk-fac { max-width: 100%; overflow-x: auto; scrollbar-width: none; } .mk-fac::-webkit-scrollbar { display: none; } .mk-fac button { padding: 5px 8px; font-size: 12.5px; } .mk-search { min-width: 0; flex-basis: 100%; } }
+@media (max-width: 720px) {
+  .ap-mkp { width: 100vw; max-width: 100vw; margin-left: calc(50% - 50vw); border-radius: 0; padding: 2px 0; }
+  .ap-mkp > .in { border-radius: 0; }
+  .ap-mkp > .in > .head { padding-left: 14px; padding-right: 14px; }
+  .ap-mkp > .in > .body { padding: 12px 12px 14px; }
+  .ap-mkp .mk-main { margin: 0 -12px; }
+  .ap-mkp .mk-bar, .ap-mkp .mk-foot { padding: 0 12px; }
+  .ap-mkp .mk-plot { min-height: 280px; }
+  .ap-mkp .mk-chart .mk-yl { font-size: 11px; }
+  .ap-mkp .mk-ix { padding-left: 0; padding-right: 0; }
+}

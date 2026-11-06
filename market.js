@@ -109,7 +109,7 @@
   }
 
   function drawChart(el, list, opts = {}) {
-    const W = Math.max(280, el.clientWidth || 600), Hh = opts.h || Math.max(280, el.clientHeight || 300), P = { l: 8, r: 64, t: 12, b: 26 };
+    const W = Math.max(280, el.clientWidth || 600), Hh = opts.h || Math.max(280, el.clientHeight || 300), P = { l: W < 520 ? 4 : 8, r: W < 520 ? 48 : 64, t: 12, b: 26 };
     const span = (RANGES.find((r) => r[0] === st.range) || [])[1];
     const tmax = Math.max(...list.map((s) => Math.max(...s.t, 0)));
     const t0 = span ? tmax - span : Math.min(...list.map((s) => s.t.find((x, i) => s.v[i] != null) ?? tmax));

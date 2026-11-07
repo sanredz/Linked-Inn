@@ -235,6 +235,15 @@
     el.innerHTML = `<div class="ar-top s12">${searchHtml('arq2')}</div>` + sheet(D);
     bind('arq2');
     wire(el, D);
+    const M3 = (LOCAL && QS.get('m3') !== '0') ? { lib: 'charmodels/out/lib/', split: 'charmodels/out/split/', items: 'charmodels/out/items/', itemglb: 'charmodels/out/itemglb/', code: './charmodels/armoryview.js' } : window.LI_MODELS || null;
+    const box3 = el.querySelector('.ar-model');
+    if (M3 && D.look && box3 && window.WebGLRenderingContext) {
+      box3.classList.add('ar-3d');
+      const holder = document.createElement('div');
+      holder.className = 'ar-3dv';
+      box3.appendChild(holder);
+      import(M3.code).then((m) => m.mountViewer(holder, D.look, M3, { name: D.c.n })).then((v) => { box3.classList.add('ar-3don'); box3._v = v; }).catch(() => { holder.remove(); box3.classList.remove('ar-3d'); });
+    }
     const db = el.querySelector('[data-duel]');
     if (db) db.onclick = () => { if (window.LI_DUEL) LI_DUEL.challenge(D); };
     const img = el.querySelector('.ar-render');

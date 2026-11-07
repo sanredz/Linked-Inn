@@ -150,3 +150,13 @@ button.ar-slot:hover { border-color: color-mix(in srgb, var(--qc) 60%, transpare
 .ar-how a { color: #ffd36b; }
 .ar-land p.ar-hidnote { margin: 0 auto 20px; font-size: 13px; color: #9b8c6e; }
 @media (max-width: 720px) { .ar-hid { padding: 14px 14px; } .ar-hidh b { font-size: 21px; } .ar-lock { width: 44px; height: 44px; } .ar-hid p { font-size: 15px; } .ar-how ol { font-size: 14px; } }
+.ar-3dv { position: absolute; inset: 0; opacity: 0; transition: opacity 0.6s; }
+.ar-3don .ar-3dv { opacity: 1; }
+.ar-3don .ar-render, .ar-3don .ar-lvl { opacity: 0; transition: opacity 0.4s; }
+.ar-3dv .cv-c { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.ar-3dv .cv-load { position: absolute; inset: 0; display: grid; place-items: center; color: var(--gold, #f8d36b); font: 14px "Friz", serif; }
+.ar-3dv .cv-anims { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); display: flex; gap: 3px; padding: 4px; border-radius: 10px; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(248, 211, 107, 0.2); }
+.ar-3dv .cv-anims button { border: 0; background: none; color: var(--ink-2, #cbb994); padding: 6px 9px; border-radius: 7px; cursor: pointer; font: 12.5px "Friz", serif; }
+.ar-3dv .cv-anims button.on { background: rgba(248, 211, 107, 0.18); color: var(--gold, #f8d36b); }
+.ar-model.ar-3d { min-height: 520px; }
+@media (max-width: 720px) { .ar-model.ar-3d { min-height: 440px; } .ar-3dv .cv-anims button { padding: 6px 7px; font-size: 11.5px; } }

@@ -19,12 +19,12 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261107144932">
-<script src="market.js?v=20261107144932"></script>
-<link rel="stylesheet" href="armory.css?v=20261107144932">
-<script src="armory.js?v=20261107144932"></script>
-<link rel="stylesheet" href="duel.css?v=20261107144932">
-<script src="duel.js?v=20261107144932"></script>
+<link rel="stylesheet" href="market.css?v=20261107145304">
+<script src="market.js?v=20261107145304"></script>
+<link rel="stylesheet" href="armory.css?v=20261107145304">
+<script src="armory.js?v=20261107145304"></script>
+<link rel="stylesheet" href="duel.css?v=20261107145304">
+<script src="duel.js?v=20261107145304"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -2128,7 +2128,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261107144932';
+window.LI_V = '20261107145304';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -4741,7 +4741,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     el.innerHTML = h;
     if (window.LI_ARMORY) arm().bind('arpop');
     document.querySelectorAll('.bar [data-prs]').forEach((b) => b.onclick = () => { sel.prs = b.dataset.prs; renderKeep(); });
-    if (sel.prs !== 'all' && !hasRs) el.insertAdjacentHTML('afterbegin', `<div class="ap-rsnote s12"><img src="${UI('inv_misc_pocketwatch_01')}" alt="">Per-ruleset census numbers start with the next hourly update. Showing every ruleset until then.</div>`);
+    if (sel.prs !== 'all' && !hasRs) el.insertAdjacentHTML('afterbegin', `<div class="ap-rsnote s12"><img src="${UI('inv_misc_pocketwatch_01')}" alt="">Per-ruleset numbers are still loading. Refresh in a minute.</div>`);
     el.querySelectorAll('[data-rg]').forEach((b) => b.onclick = () => { sel.rg = b.dataset.rg; renderKeep(); });
   }
 

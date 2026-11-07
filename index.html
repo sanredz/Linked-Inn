@@ -19,12 +19,12 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261107145304">
-<script src="market.js?v=20261107145304"></script>
-<link rel="stylesheet" href="armory.css?v=20261107145304">
-<script src="armory.js?v=20261107145304"></script>
-<link rel="stylesheet" href="duel.css?v=20261107145304">
-<script src="duel.js?v=20261107145304"></script>
+<link rel="stylesheet" href="market.css?v=20261107150611">
+<script src="market.js?v=20261107150611"></script>
+<link rel="stylesheet" href="armory.css?v=20261107150611">
+<script src="armory.js?v=20261107150611"></script>
+<link rel="stylesheet" href="duel.css?v=20261107150611">
+<script src="duel.js?v=20261107150611"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -2128,7 +2128,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261107145304';
+window.LI_V = '20261107150611';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -4672,8 +4672,8 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     document.getElementById('note').textContent = `${fmt(known(sel.rg))} characters · ${fmt(gN)} guilds`;
     let h = window.LI_ARMORY ? `<section class="frame psearch ar-home s12"><div class="in slab"><div class="pt"><b>Find anyone</b><small>Search ${fmt(known('all'))} characters. Opens their gear, stats and model, live.</small></div>${arm().searchHtml('arpop')}</div></section>` : '';
     const onRs = sel.prs !== 'all' && hasRs;
-    h += apRegionCards(['all', 'us', 'eu', 'kr', 'tw'].filter((r) => C.regions[r]), sel.rg, 'rg', (r) => onRs ? [fmt((C.regions[rsKey(r)] || {}).chars || 0), `${sel.prs} in the charts`] : [fmt(known(r)), 'characters found']);
-    h += onRs ? plaque(UI(AP_RS_ICON[sel.prs] || 'achievement_bg_killxenemies_generalsroom'), `${sel.prs} characters`, fmt(R.chars), 'in the charts below') : plaque(UI('achievement_bg_killxenemies_generalsroom'), 'Characters', fmt(known(sel.rg)), `the charts below draw on ${fmt(R.chars)} of them`);
+    h += apRegionCards(['all', 'us', 'eu', 'kr', 'tw'].filter((r) => C.regions[r]), sel.rg, 'rg', (r) => onRs ? [fmt(KN[rsKey(r)] || 0), `${sel.prs} characters found`] : [fmt(known(r)), 'characters found']);
+    h += onRs ? plaque(UI(AP_RS_ICON[sel.prs] || 'achievement_bg_killxenemies_generalsroom'), `${sel.prs} characters`, fmt(KN[rsKey(sel.rg)] || 0), `the charts below draw on ${fmt(R.chars)} of them`) : plaque(UI('achievement_bg_killxenemies_generalsroom'), 'Characters', fmt(known(sel.rg)), `the charts below draw on ${fmt(R.chars)} of them`);
     h += plaque(UI('inv_bannerpvp_01'), 'Guilds', fmt(gN), 'with a public roster');
     h += plaque(UI('inv_misc_pocketwatch_01'), 'Played today', fmt(R.active1), `of the ${fmt(R.profiled)} we looked up`);
     const medLv = (() => { const L = R.levels || [], n = L.reduce((a, b) => a + b, 0); let c = 0; for (let i = 0; i < L.length; i++) { c += L[i]; if (c >= n / 2) return i; } return 0; })();

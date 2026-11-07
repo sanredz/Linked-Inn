@@ -140,8 +140,9 @@ export async function buildCharacter(a, P) {
   await Promise.all([...on].filter((x) => x).map(async (id) => {
     const g = await L.loadAsync(`${P.split}${who.body}/g${id}.glb`).catch(() => null);
     if (!g) return;
-    g.scene.traverse((o) => {
-      if (!o.isSkinnedMesh) return;
+    const meshes = [];
+    g.scene.traverse((o) => { if (o.isSkinnedMesh) meshes.push(o); });
+    meshes.forEach((o) => {
       o.bind(new THREE.Skeleton(o.skeleton.bones.map((b) => bones[b.name] || b), o.skeleton.boneInverses), o.bindMatrix);
       look(o);
       root.add(o);

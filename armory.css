@@ -159,4 +159,7 @@ button.ar-slot:hover { border-color: color-mix(in srgb, var(--qc) 60%, transpare
 .ar-3dv .cv-anims button { border: 0; background: none; color: var(--ink-2, #cbb994); padding: 6px 9px; border-radius: 7px; cursor: pointer; font: 12.5px "Friz", serif; }
 .ar-3dv .cv-anims button.on { background: rgba(248, 211, 107, 0.18); color: var(--gold, #f8d36b); }
 .ar-model.ar-3d { min-height: 520px; }
+.ar-3dnote { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); z-index: 3; pointer-events: none; white-space: nowrap; padding: 6px 14px; border-radius: 999px; background: rgba(0, 0, 0, 0.65); border: 1px solid rgba(248, 211, 107, 0.35); color: var(--gold, #f8d36b); font: 13px "Friz", serif; animation: ar-3dpulse 1.2s ease-in-out infinite; }
+@keyframes ar-3dpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .ar-3dnote { animation: none; } }
 @media (max-width: 720px) { .ar-model.ar-3d { min-height: 440px; } .ar-3dv .cv-anims button { padding: 6px 7px; font-size: 11.5px; } }

@@ -242,7 +242,11 @@
       const holder = document.createElement('div');
       holder.className = 'ar-3dv';
       box3.appendChild(holder);
-      import(M3.code).then((m) => m.mountViewer(holder, D.look, M3, { name: D.c.n })).then((v) => { box3.classList.add('ar-3don'); box3._v = v; }).catch(() => { holder.remove(); box3.classList.remove('ar-3d'); });
+      const note = document.createElement('div');
+      note.className = 'ar-3dnote';
+      note.textContent = 'Loading 3D model…';
+      box3.appendChild(note);
+      import(M3.code).then((m) => m.mountViewer(holder, D.look, M3, { name: D.c.n })).then((v) => { note.remove(); box3.classList.add('ar-3don'); box3._v = v; }).catch(() => { note.remove(); holder.remove(); box3.classList.remove('ar-3d'); });
     }
     const db = el.querySelector('[data-duel]');
     if (db) db.onclick = () => { if (window.LI_DUEL) LI_DUEL.challenge(D); };

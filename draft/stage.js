@@ -172,6 +172,7 @@ export class Stage {
   }
 
   async setClass(cls, body) {
+    this.real = false;
     const race = (body && this.gear.rigs[body] && body) || RACE[cls], rig = this.gear.rigs[race];
     if (this.rig && this.race === race) {
       this.yaw = 0;
@@ -211,6 +212,32 @@ export class Stage {
     });
     await this.repaint();
     this.applyGeosets();
+    this.pose('idle');
+  }
+
+  async setLook(look, P) {
+    const { buildCharacter } = await import(new URL(P.code.replace(/armoryview\.js$/, 'charbuilder.js'), location.href).href);
+    const ch = await buildCharacter(look, P);
+    if (this.rig) this.scene.remove(this.rig);
+    if (this.mixer) this.mixer.stopAllAction();
+    this.current = null;
+    this.race = 'look';
+    this.real = true;
+    this.groups = { ...NAKED };
+    this.worn = {};
+    this.attached = {};
+    this.rangedFile = null;
+    this.yaw = 0;
+    this.hideHair = false;
+    this.rig = ch.root;
+    this.rig.traverse((o) => {
+      if (o.isMesh) o.frustumCulled = false;
+      if (/^att\d+$/.test(o.name) && o.children.length && !this.attached[o.name]) this.attached[o.name] = o.children[0];
+    });
+    this.scene.add(this.rig);
+    this.mixer = new THREE.AnimationMixer(this.rig);
+    this.clips = {};
+    for (const c of ch.animations) this.clips[c.name] = this.mixer.clipAction(c);
     this.pose('idle');
   }
 

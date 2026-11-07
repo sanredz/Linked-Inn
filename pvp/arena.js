@@ -296,9 +296,13 @@ export class Arena {
   }
 
   async dressOne(stage, s) {
-    await stage.setClass(s.cls, s.body);
-    await new Promise((done) => { stage.outfit(this.list(s), () => {}).then(done); });
-    if (PRESETS[s.cls].kind === 'ranged' && stage.rangedFile) {
+    let real = false;
+    if (s.look && s.m3) real = await stage.setLook(s.look, s.m3).then(() => true, () => false);
+    if (!real) {
+      await stage.setClass(s.cls, s.body);
+      await new Promise((done) => { stage.outfit(this.list(s), () => {}).then(done); });
+    }
+    if (!real && PRESETS[s.cls].kind === 'ranged' && stage.rangedFile) {
       await stage.attach('ranged', 'att31', null);
       await stage.attach('ranged', 'att2', stage.rangedFile);
     }

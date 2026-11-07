@@ -134,7 +134,9 @@
       picks[slot] = p3.id;
       rows[p3.id] = p3.row || [g.n, g.q, g.il, 0, 0, 4, 0];
     }
-    return { cls, picks, rows, boons: [], body: BODY[D.c.r] || null };
+    const local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).get('m3') !== '0';
+    const m3 = local ? { lib: 'charmodels/out/lib/', split: 'charmodels/out/split/', items: 'charmodels/out/items/', itemglb: 'charmodels/out/itemglb/', code: './charmodels/armoryview.js' } : window.LI_MODELS || null;
+    return { cls, picks, rows, boons: [], body: BODY[D.c.r] || null, look: D.look || null, m3 };
   }
 
   async function arena3d() {

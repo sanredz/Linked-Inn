@@ -22,13 +22,13 @@ local STALE = 3 * 86400
 local CLICK_WINDOW = 20
 local AUTO_ECHO = 10
 local OWN_BACK = 5
-local ownProf, ownAt = nil, -60
+local ownAt = -60
 local REST = 3
 local CLICK_HOLD = 1
 local restUntil = 0
 local lateAt = -60
 local UserFrame
-local GuardOff
+local AfterCollect
 local userShown = false
 
 local queue = {}
@@ -273,9 +273,6 @@ local function LateReply()
 	return linked == true and not mine
 end
 
-local concealedHideAt = -60
-local ShowOwnFrame
-
 local function HookFrame()
 	local frame = ProfessionsFrame
 	if hooked or not frame or not frame.HookScript then
@@ -288,23 +285,9 @@ local function HookFrame()
 	frame:HookScript("OnHide", function()
 		if not concealed then
 			restUntil = Now() + REST
-			GuardOff()
-		else
-			concealedHideAt = Now()
 		end
 		Reveal()
 	end)
-	if hooksecurefunc and type(ToggleProfessionsBook) == "function" then
-		hooksecurefunc("ToggleProfessionsBook", function()
-			if Now() - concealedHideAt < 0.2 and not FrameShown() then
-				LI.After(0, function()
-					if not FrameShown() then
-						ShowOwnFrame()
-					end
-				end)
-			end
-		end)
-	end
 	return true
 end
 
@@ -398,23 +381,6 @@ end
 
 local Kick
 
-ShowOwnFrame = function()
-	local frame = ProfessionsFrame
-	if not frame or FrameShown() then
-		return
-	end
-	if InCombatLockdown and InCombatLockdown() then
-		LI.Log("Your profession window can't be opened for you in combat; open it again")
-		return
-	end
-	if ShowUIPanel then
-		LI.Try(ShowUIPanel, frame)
-	end
-	if not FrameShown() and frame.Show then
-		LI.Try(frame.Show, frame)
-	end
-end
-
 local function ScanStep(job, ok, outcome)
 	local run = scanRun
 	if not run then
@@ -487,112 +453,6 @@ EndScan = function(force)
 	end
 end
 
-local GUARD_EVENTS = { "TRADE_SKILL_SHOW", "TRADE_SKILL_LIST_UPDATE", "TRADE_SKILL_DATA_SOURCE_CHANGING", "TRADE_SKILL_DATA_SOURCE_CHANGED", "TRADE_SKILL_NAME_UPDATE" }
-local guardFrame
-local guarded
-local viewName
-local restoring = false
-
-local function GuardSweep()
-	if not guarded or not GetFramesRegisteredForEvent then
-		return
-	end
-	for _, event in ipairs(GUARD_EVENTS) do
-		local list = guarded[event] or {}
-		guarded[event] = list
-		for _, frame in ipairs({ LI.Try(GetFramesRegisteredForEvent, event) }) do
-			if type(frame) == "table" and frame ~= LI.eventFrame and frame ~= guardFrame and frame.UnregisterEvent then
-				if pcall(frame.UnregisterEvent, frame, event) then
-					list[#list + 1] = frame
-				end
-			end
-		end
-	end
-end
-
-local function Foreign()
-	if Now() - userClickAt <= USER_CLICK then
-		return false
-	end
-	local linked, mine = LinkState()
-	if linked ~= true or mine then
-		return false
-	end
-	local _, name = LI.Try(C_TradeSkillUI.IsTradeSkillLinked)
-	name = LI.Safe(name)
-	return not (viewName and type(name) == "string" and Reader.NameMatches(name, viewName))
-end
-
-local function RestoreView()
-	if restoring or viewName then
-		return
-	end
-	restoring = true
-	LI.After(0, function()
-		restoring = false
-		local api = C_TradeSkillUI
-		if guarded and ownProf and tradeOpen and api and api.OpenTradeSkill and Foreign() then
-			LI.Try(api.OpenTradeSkill, ownProf)
-		end
-	end)
-end
-
-local function Forward(event, ...)
-	for _, frame in ipairs(guarded and guarded[event] or {}) do
-		if not (event == "TRADE_SKILL_SHOW" and frame == UIParent) then
-			local fn = frame.GetScript and LI.Try(frame.GetScript, frame, "OnEvent")
-			if type(fn) == "function" then
-				local ok, err = pcall(fn, frame, event, ...)
-				if not ok then
-					LI.Log("A profession window update failed: " .. tostring(err):sub(1, 120))
-				end
-			end
-		end
-	end
-end
-
-local function GuardEvent(_, event, ...)
-	GuardSweep()
-	if Foreign() then
-		RestoreView()
-		return
-	end
-	Forward(event, ...)
-end
-
-local function GuardOn()
-	if guarded or not GetFramesRegisteredForEvent or not CreateFrame then
-		return
-	end
-	if not guardFrame then
-		guardFrame = CreateFrame("Frame")
-		guardFrame:SetScript("OnEvent", GuardEvent)
-	end
-	guarded = {}
-	GuardSweep()
-	for _, event in ipairs(GUARD_EVENTS) do
-		pcall(guardFrame.RegisterEvent, guardFrame, event)
-	end
-end
-
-GuardOff = function()
-	if not guarded then
-		return
-	end
-	local list = guarded
-	guarded = nil
-	viewName = nil
-	for _, event in ipairs(GUARD_EVENTS) do
-		pcall(guardFrame.UnregisterEvent, guardFrame, event)
-		for _, frame in ipairs(list[event] or {}) do
-			pcall(frame.RegisterEvent, frame, event)
-		end
-	end
-end
-Reader.Guarding = function()
-	return guarded ~= nil
-end
-
 local silenced
 local QUIET_EVENTS = { "TRADE_SKILL_SHOW" }
 local QUIET_HOLD = 60
@@ -610,7 +470,7 @@ local function Silence(startup)
 	for _, event in ipairs(QUIET_EVENTS) do
 		local frames = { LI.Try(GetFramesRegisteredForEvent, event) }
 		for _, frame in ipairs(frames) do
-			if type(frame) == "table" and frame ~= LI.eventFrame and frame ~= guardFrame and frame.UnregisterEvent then
+			if type(frame) == "table" and frame ~= LI.eventFrame and frame.UnregisterEvent then
 				if pcall(frame.UnregisterEvent, frame, event) then
 					silenced[#silenced + 1] = { frame = frame, event = event }
 				end
@@ -627,7 +487,6 @@ local function Unsilence()
 		pcall(entry.frame.RegisterEvent, entry.frame, entry.event)
 	end
 	silenced = nil
-	GuardSweep()
 end
 Reader.Unsilence = Unsilence
 
@@ -805,26 +664,25 @@ local function UserOpened()
 	ours = false
 	userShown = true
 	local api = C_TradeSkillUI
-	local base = api and api.GetBaseProfessionInfo and LI.Try(api.GetBaseProfessionInfo)
-	ownProf = type(base) == "table" and LI.Safe(base.professionID) or nil
 	ownAt = Now()
 	local missed = silenced ~= nil
 	Unsilence()
-	viewName = nil
 	Yield()
 	Reveal()
-	LI.After(0, function()
-		if not tradeOpen or not userShown then
-			return
-		end
-		GuardOn()
-		if missed then
-			if not (InCombatLockdown and InCombatLockdown()) then
-				Forward("TRADE_SKILL_SHOW")
-			end
-			ShowOwnFrame()
-		end
-	end)
+	if missed then
+		LI.After(SETTLE, function()
+			AfterCollect(function()
+				if tradeOpen and userShown and not FrameShown() then
+					ours = false
+					if api and api.CloseTradeSkill then
+						LI.Try(api.CloseTradeSkill)
+					end
+					LI.Log("Your profession opened while reading was muted; asked you to open it again")
+					LI.Print("Linked Inn was reading a profession in the background. Please open your profession again.")
+				end
+			end)
+		end)
+	end
 end
 
 local function ClearForUser()
@@ -1377,7 +1235,7 @@ local function Collect(profKey, done)
 	Step()
 end
 
-local function AfterCollect(fn, job, tries)
+AfterCollect = function(fn, job, tries)
 	local waiting = collecting or (job and not job.readDone)
 	if waiting and ((tries or 0) < 40 or (collecting and (tries or 0) < 300)) then
 		LI.After(0.1, function()
@@ -1642,13 +1500,10 @@ LI.On("TRADE_SKILL_SHOW", function()
 		UserOpened()
 	elseif Now() - userClickAt <= USER_CLICK then
 		ours = false
-		local linked, name = LI.Try(C_TradeSkillUI.IsTradeSkillLinked)
-		viewName = LI.Safe(linked) == true and LI.Safe(name) or nil
 	elseif userShown and FrameVisible() and not pending then
 		keep = true
 		ours = false
-		LI.Log("A late reply landed while your profession window was open; kept it out of your window")
-		RestoreView()
+		LI.Log("A late reply landed while your profession window was open")
 	elseif pending then
 		ours = true
 	elseif silenced then
@@ -1686,13 +1541,6 @@ LI.On("TRADE_SKILL_SHOW", function()
 		ours = false
 	end
 	userShown = keep or not ours
-	if userShown then
-		LI.After(0, function()
-			if userShown and tradeOpen then
-				GuardOn()
-			end
-		end)
-	end
 	Replied()
 	ScheduleRead()
 end)
@@ -1748,9 +1596,14 @@ local function OnBook()
 	return false
 end
 
+local WINDOW_SPELLS = { [2656] = true, [2842] = true }
+
 local function ProfessionSpell(spell)
 	if type(spell) ~= "number" then
 		return false
+	end
+	if WINDOW_SPELLS[spell] then
+		return true
 	end
 	for _, nums in pairs(LI.ownLinks or {}) do
 		if nums.spell == spell then
@@ -1771,6 +1624,8 @@ end)
 LI.On("UNIT_SPELLCAST_SENT", function(unit, _, _, spell)
 	if LI.Safe(unit) == "player" and ProfessionSpell(LI.Safe(spell)) then
 		userInputAt = Now()
+		Unsilence()
+		ClearForUser()
 	end
 end)
 LI.On("TRADE_SKILL_LIST_UPDATE", function()
@@ -1797,7 +1652,6 @@ LI.On("PLAYER_LOGIN", function()
 end)
 
 LI.On("PLAYER_LOGOUT", function()
-	GuardOff()
 	Unsilence()
 end)
 
@@ -1812,7 +1666,6 @@ LI.On("TRADE_SKILL_CLOSE", function()
 	userShown = false
 	tradeOpen = false
 	ours = false
-	GuardOff()
 	LI.After(0.01, function()
 		Kick()
 	end)

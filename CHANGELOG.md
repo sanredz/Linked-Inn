@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.2] - 2026-11-07
+
+- Fixed: after opening a profession, the game could block Linked Inn with
+  "LinkedInn has been blocked from an action only available to the Blizzard
+  UI", and your bank could open empty. Linked Inn no longer touches any of
+  Blizzard's own windows; it keeps working quietly in the background.
+- Your profession window opens on the first press even while Linked Inn is
+  looking someone up, Smelting included.
+
 ## [1.6.1] - 2026-11-06
 
 - Fixed: your profession window could pop open, or briefly show someone

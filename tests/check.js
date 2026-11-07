@@ -37,9 +37,21 @@ if (files.length === 0) {
   console.log('FAIL no addon files found');
   process.exit(1);
 }
+const BLIZZARD_ONLY = [
+  [/\bOpenTradeSkill\b/, 'calls the protected OpenTradeSkill'],
+  [/\b(Show|Hide|Toggle)UIPanel\b/, 'drives Blizzard panels from addon code (taints the panel manager)'],
+  [/GetScript[^\n]*"OnEvent"/, 'runs a Blizzard event handler from addon code'],
+];
 for (const f of files) {
   try {
-    const ast = lp.parse(fs.readFileSync(path.join(dir, f), 'utf8'), { luaVersion: '5.1', scope: true });
+    const src = fs.readFileSync(path.join(dir, f), 'utf8');
+    for (const [re, why] of BLIZZARD_ONLY) {
+      if (re.test(src)) {
+        bad++;
+        console.log('FAIL', f, why);
+      }
+    }
+    const ast = lp.parse(src, { luaVersion: '5.1', scope: true });
     const found = [];
     globalWrites(ast.body, found);
     const foreign = found.filter(n => !OWN.test(n));

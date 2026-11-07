@@ -68,6 +68,9 @@ export class Arena {
     this.last = performance.now();
     this.names = ['', ''];
     this.mats = [[], []];
+    this.swing = [0, 0];
+    this.zap = [0, 0];
+    this.fresh = [0, 0];
   }
 
   async init() {
@@ -314,6 +317,9 @@ export class Arena {
 
   reset() {
     this.playing = null;
+    this.swing = [0, 0];
+    this.zap = [0, 0];
+    this.fresh = [0, 0];
     this.stageA.clearEffects();
     for (const x of this.extras) {
       x.alpha = 1;
@@ -481,14 +487,24 @@ export class Arena {
     return out;
   }
 
-  animOf(f, prev, kind, d, dead, moving) {
+  animOf(f, prev, kind, d, dead, moving, i) {
     if (dead) return 'dead';
     if (f.state === 'stun' || f.state === 'poly') return 'stun';
     if (f.state === 'fear') return 'run';
     if (f.cast) return 'cast';
+    const t = this.playing ? this.playing.t : 0;
+    if (i !== undefined && this.swing[i] > t) return 'attack';
+    if (i !== undefined && this.zap[i] > t) return 'cast';
     if (moving) return 'run';
-    if (kind === 'melee' && d <= 5) return 'attack';
     return 'idle';
+  }
+
+  struck(e) {
+    if (!['hit', 'miss', 'dodge', 'parry', 'resist'].includes(e.type) || !e.name || !this.playing) return;
+    if (/Sting|Corruption|Agony|Pain|Ignite|Immolate|Flame Shock|Rend|Rip|Rake|Garrote|Deep Wound|Siphon|Drain|Mind Flay|Consecration|Thorns|Retribution Aura|Poison|Bleed|Felhunter|Cat|Pet|Wolf|Bear|Whelp|Skeleton|Hawk/.test(e.name)) return;
+    const t = this.playing.t, i = e.side, phys = !e.school || e.school === 'phys' || /Shot|Shoot|Throw/.test(e.name);
+    if (phys) { this.swing[i] = t + 0.6; this.fresh[i] = 1; }
+    else if (!(this.zap[i] > t)) this.zap[i] = t + 0.45;
   }
 
   pose(stage, name, kind, two, i) {
@@ -497,7 +513,12 @@ export class Arena {
     if (name === 'run') return stage.pose('run', 1.3);
     if (name === 'cast') return stage.pose('castdirected', 1.2);
     if (this.fx.wound[i] > 0 && name !== 'attack') return stage.pose('wound', 1.4);
-    if (name === 'attack') return stage.pose(two ? 'attack2h' : 'attack1h', 1.8);
+    if (name === 'attack') {
+      const clip = kind === 'ranged' ? 'attackbow' : two ? 'attack2h' : 'attack1h';
+      if (this.fresh[i] && stage.clips && stage.clips[clip] && stage.current === stage.clips[clip]) stage.clips[clip].reset();
+      this.fresh[i] = 0;
+      return stage.pose(clip, 1.5);
+    }
     return stage.pose(kind === 'ranged' ? 'attackbow' : two ? 'ready2h' : 'ready1h', 1);
   }
 
@@ -691,7 +712,7 @@ export class Arena {
     this.q('.castbar.b').textContent = f.b.cast;
     this.q('.gapline').textContent = `${Math.round(f.d)} yards`;
     const mv = this.whoMoves(f, prev);
-    const animA = this.animOf(f.a, prev, this.kinds[0], f.d, end && x.winner === 1, mv[0]), animB = this.animOf(f.b, prev, this.kinds[1], f.d, end && x.winner === 0, mv[1]);
+    const animA = this.animOf(f.a, prev, this.kinds[0], f.d, end && x.winner === 1, mv[0], 0), animB = this.animOf(f.b, prev, this.kinds[1], f.d, end && x.winner === 0, mv[1], 1);
     this.movers = [animA === 'run', animB === 'run'];
     this.anims = [animA, animB];
     this.pose(this.stageA, animA, this.kinds[0], this.two[0], 0);
@@ -702,6 +723,7 @@ export class Arena {
       const e = rec.events[run.at++];
       if (['hit', 'heal', 'miss', 'dodge', 'parry', 'resist'].includes(e.type)) this.float(e.type === 'heal' ? e.side : 1 - e.side, e);
       if (e.type === 'hit') this.fire(e);
+      this.struck(e);
       this.cue(e);
       if (this.onLine) this.onLine(e);
     }

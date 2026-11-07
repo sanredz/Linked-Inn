@@ -206,7 +206,8 @@
 .du-pick { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 20px; background: rgba(5, 4, 2, 0.8); backdrop-filter: blur(4px); animation: du-in 0.2s ease-out; }
 .du-pbox { position: relative; width: min(560px, 100%); max-height: calc(100dvh - 40px); overflow-y: auto; padding: 28px 24px 24px; border-radius: 16px; text-align: center; border: 2px solid #6b5426;
   background: radial-gradient(ellipse at 50% 0%, rgba(255, 110, 70, 0.18), transparent 60%), linear-gradient(rgba(20, 15, 9, 0.98), rgba(11, 9, 6, 0.99)); box-shadow: 0 30px 90px rgba(0, 0, 0, 0.9); }
-.du-pbox .ar-drop { position: static; margin-top: 8px; box-shadow: none; }
+.du-pbox .ar-sbox { z-index: 5; }
+.du-pbox .ar-drop { max-height: 46vh; }
 .du-px { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255, 220, 140, 0.35); background: rgba(0, 0, 0, 0.6); color: var(--ink, #f1e3c2); font-size: 20px; line-height: 1; cursor: pointer; }
 .du-pic { width: 60px; height: 60px; border-radius: 12px; box-shadow: 0 0 0 2px #000, 0 0 0 4px #b8913f, 0 0 30px rgba(255, 110, 70, 0.4); }
 .du-pbox h3 { margin: 12px 0 6px; font: 32px/1.1 "Morpheus", serif; font-weight: normal; color: var(--title, #f8d36b); }

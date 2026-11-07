@@ -19,12 +19,12 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261107113220">
-<script src="market.js?v=20261107113220"></script>
-<link rel="stylesheet" href="armory.css?v=20261107113220">
-<script src="armory.js?v=20261107113220"></script>
-<link rel="stylesheet" href="duel.css?v=20261107113220">
-<script src="duel.js?v=20261107113220"></script>
+<link rel="stylesheet" href="market.css?v=20261107113831">
+<script src="market.js?v=20261107113831"></script>
+<link rel="stylesheet" href="armory.css?v=20261107113831">
+<script src="armory.js?v=20261107113831"></script>
+<link rel="stylesheet" href="duel.css?v=20261107113831">
+<script src="duel.js?v=20261107113831"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -2126,7 +2126,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261107113220';
+window.LI_V = '20261107113831';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -4785,7 +4785,11 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
         window.ECON = d.econ;
         changed = true;
       }
-      if (changed && ['population', 'economy', 'home'].includes(view)) renderKeep();
+      if (changed && ['population', 'economy', 'home'].includes(view)) {
+        const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && (a.value || '').length > 0; };
+        const go = () => { if (typing()) { setTimeout(go, 1500); return; } if (['population', 'economy', 'home'].includes(view)) renderKeep(); };
+        go();
+      }
     }).catch(() => {});
   }
   let apTick = null, apPoll = 0;

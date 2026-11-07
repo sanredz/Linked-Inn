@@ -19,12 +19,12 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261107141126">
-<script src="market.js?v=20261107141126"></script>
-<link rel="stylesheet" href="armory.css?v=20261107141126">
-<script src="armory.js?v=20261107141126"></script>
-<link rel="stylesheet" href="duel.css?v=20261107141126">
-<script src="duel.js?v=20261107141126"></script>
+<link rel="stylesheet" href="market.css?v=20261107144932">
+<script src="market.js?v=20261107144932"></script>
+<link rel="stylesheet" href="armory.css?v=20261107144932">
+<script src="armory.js?v=20261107144932"></script>
+<link rel="stylesheet" href="duel.css?v=20261107144932">
+<script src="duel.js?v=20261107144932"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -1992,6 +1992,8 @@ a.ap-lr { text-decoration: none; color: inherit; border-radius: 8px; } a.ap-lr:h
 .psearch.ar-home { position: relative; z-index: 6; }
 .ap-lad2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 18px; }
 @media (max-width: 720px) { .ap-lad2 { grid-template-columns: minmax(0, 1fr); } }
+.ap-rsnote { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(248, 211, 107, 0.2); color: var(--ink-2); }
+.ap-rsnote img { width: 28px; height: 28px; border-radius: 6px; }
 /* shared-header */
 .top .tab { font: 15.5px "Friz", serif; }
 .top .hbtn { font: 13px "Friz", serif; }
@@ -2126,7 +2128,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261107141126';
+window.LI_V = '20261107144932';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -4657,14 +4659,21 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     plainHead();
     const C = A.census;
     if (!C.regions[sel.rg]) sel.rg = 'all';
-    const R = Object.assign({ rsfac: {}, combo: {}, gender: {}, hour: Array(24).fill(0) }, C.regions[sel.rg]), all = sel.rg === 'all';
+    sel.prs = sel.prs || 'all';
+    const RSL = ['PvP', 'Normal', 'Roleplay', 'Roleplay PvP'], hasRs = !!C.regions['all|PvP'];
+    document.getElementById('opt').innerHTML = ['all', ...RSL].map((k) => `<button class="btn${sel.prs === k ? ' on' : ''}" data-prs="${esc(k)}"><img src="${UI(k === 'all' ? 'achievement_bg_killxenemies_generalsroom' : AP_RS_ICON[k] || 'inv_misc_questionmark')}" alt="">${k === 'all' ? 'Every ruleset' : esc(k)}</button>`).join('');
+    document.getElementById('sep2').hidden = false;
+    document.querySelector('.bar').classList.add('ap-ebar');
+    const rsKey = (r) => (sel.prs !== 'all' && hasRs ? `${r}|${sel.prs}` : r);
+    const R = Object.assign({ rsfac: {}, combo: {}, gender: {}, hour: Array(24).fill(0), class: {}, race: {}, faction: {}, ruleset: {}, levels: Array(61).fill(0), classfac: {}, rsclass: {}, ilvl: {} }, C.regions[rsKey(sel.rg)] || C.regions[sel.rg]), all = sel.rg === 'all';
     const top = (C.leaders[sel.rg] || [])[0], gN = C.guildCount[sel.rg] || 0;
     const KN = C.known || {};
     const known = (r) => KN[r] || (C.regions[r] || {}).chars || 0;
     document.getElementById('note').textContent = `${fmt(known(sel.rg))} characters · ${fmt(gN)} guilds`;
     let h = window.LI_ARMORY ? `<section class="frame psearch ar-home s12"><div class="in slab"><div class="pt"><b>Find anyone</b><small>Search ${fmt(known('all'))} characters. Opens their gear, stats and model, live.</small></div>${arm().searchHtml('arpop')}</div></section>` : '';
-    h += apRegionCards(['all', 'us', 'eu', 'kr', 'tw'].filter((r) => C.regions[r]), sel.rg, 'rg', (r) => [fmt(known(r)), 'characters found']);
-    h += plaque(UI('achievement_bg_killxenemies_generalsroom'), 'Characters', fmt(known(sel.rg)), `the charts below draw on ${fmt(R.chars)} of them`);
+    const onRs = sel.prs !== 'all' && hasRs;
+    h += apRegionCards(['all', 'us', 'eu', 'kr', 'tw'].filter((r) => C.regions[r]), sel.rg, 'rg', (r) => onRs ? [fmt((C.regions[rsKey(r)] || {}).chars || 0), `${sel.prs} in the charts`] : [fmt(known(r)), 'characters found']);
+    h += onRs ? plaque(UI(AP_RS_ICON[sel.prs] || 'achievement_bg_killxenemies_generalsroom'), `${sel.prs} characters`, fmt(R.chars), 'in the charts below') : plaque(UI('achievement_bg_killxenemies_generalsroom'), 'Characters', fmt(known(sel.rg)), `the charts below draw on ${fmt(R.chars)} of them`);
     h += plaque(UI('inv_bannerpvp_01'), 'Guilds', fmt(gN), 'with a public roster');
     h += plaque(UI('inv_misc_pocketwatch_01'), 'Played today', fmt(R.active1), `of the ${fmt(R.profiled)} we looked up`);
     const medLv = (() => { const L = R.levels || [], n = L.reduce((a, b) => a + b, 0); let c = 0; for (let i = 0; i < L.length; i++) { c += L[i]; if (c >= n / 2) return i; } return 0; })();
@@ -4731,6 +4740,8 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const el = document.getElementById('main');
     el.innerHTML = h;
     if (window.LI_ARMORY) arm().bind('arpop');
+    document.querySelectorAll('.bar [data-prs]').forEach((b) => b.onclick = () => { sel.prs = b.dataset.prs; renderKeep(); });
+    if (sel.prs !== 'all' && !hasRs) el.insertAdjacentHTML('afterbegin', `<div class="ap-rsnote s12"><img src="${UI('inv_misc_pocketwatch_01')}" alt="">Per-ruleset census numbers start with the next hourly update. Showing every ruleset until then.</div>`);
     el.querySelectorAll('[data-rg]').forEach((b) => b.onclick = () => { sel.rg = b.dataset.rg; renderKeep(); });
   }
 

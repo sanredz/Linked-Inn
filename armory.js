@@ -193,9 +193,9 @@
 
   function landing(el) {
     const A = window.API_DATA && API_DATA.census;
-    const L = ((A && A.leaders && A.leaders.all) || []).slice(0, 6);
+    const L = ((A && A.gear && A.gear.all) || []).slice(0, 6);
     el.innerHTML = `<section class="frame ar-land s12"><div class="in"><img class="ar-lic" src="${H.UI('inv_misc_book_09')}" alt=""><h2>The Armory</h2><p>Look up anyone on WoW: Forever. You get their gear, stats and model as they are right now, straight from the armory.</p>${searchHtml('arq', true)}
-      ${L.length ? `<div class="ar-try"><span>Highest levels right now</span>${L.map((p) => `<a href="${link(p.rg, p.slug)}" style="color:${H.CC[H.apCls(p.c)] || '#fff'}">${esc(p.n)}<small>${p.lv}</small></a>`).join('')}</div>` : ''}</div></section>`;
+      ${L.length ? `<div class="ar-try"><span>Best geared right now</span>${L.map((p) => `<a href="${link(p.rg, p.slug)}" style="color:${H.CC[H.apCls(p.c)] || '#fff'}">${esc(p.n)}<small>ilvl ${p.il}</small></a>`).join('')}</div>` : ''}</div></section>`;
     bind('arq');
     setTimeout(() => { const q = document.getElementById('arq'); if (q && matchMedia('(hover: hover)').matches) q.focus(); }, 30);
   }

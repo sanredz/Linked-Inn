@@ -19,12 +19,12 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261107112900">
-<script src="market.js?v=20261107112900"></script>
-<link rel="stylesheet" href="armory.css?v=20261107112900">
-<script src="armory.js?v=20261107112900"></script>
-<link rel="stylesheet" href="duel.css?v=20261107112900">
-<script src="duel.js?v=20261107112900"></script>
+<link rel="stylesheet" href="market.css?v=20261107113220">
+<script src="market.js?v=20261107113220"></script>
+<link rel="stylesheet" href="armory.css?v=20261107113220">
+<script src="armory.js?v=20261107113220"></script>
+<link rel="stylesheet" href="duel.css?v=20261107113220">
+<script src="duel.js?v=20261107113220"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -1990,6 +1990,8 @@ a.ap-lr { text-decoration: none; color: inherit; border-radius: 8px; } a.ap-lr:h
 .ar-home .ar-sbox { margin: 14px 0 0; max-width: none; }
 .psearch.ar-home > .in { overflow: visible; }
 .psearch.ar-home { position: relative; z-index: 6; }
+.ap-lad2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 18px; }
+@media (max-width: 720px) { .ap-lad2 { grid-template-columns: minmax(0, 1fr); } }
 /* shared-header */
 .top .tab { font: 15.5px "Friz", serif; }
 .top .hbtn { font: 13px "Friz", serif; }
@@ -2124,7 +2126,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261107112900';
+window.LI_V = '20261107113220';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -4665,7 +4667,8 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     h += plaque(UI('achievement_bg_killxenemies_generalsroom'), 'Characters', fmt(known(sel.rg)), `the charts below draw on ${fmt(R.chars)} of them`);
     h += plaque(UI('inv_bannerpvp_01'), 'Guilds', fmt(gN), 'with a public roster');
     h += plaque(UI('inv_misc_pocketwatch_01'), 'Played today', fmt(R.active1), `of the ${fmt(R.profiled)} we looked up`);
-    h += plaque(UI('achievement_level_30'), 'Highest level', top ? top.lv : '–', top ? `${esc(top.n + ' ' + top.s)}, ${esc(top.c)}` : '');
+    const medLv = (() => { const L = R.levels || [], n = L.reduce((a, b) => a + b, 0); let c = 0; for (let i = 0; i < L.length; i++) { c += L[i]; if (c >= n / 2) return i; } return 0; })();
+    h += plaque(UI('achievement_level_30'), 'Typical level', medLv || '–', 'half of everyone is above this level');
 
     const fa = R.faction.Alliance || 0, fh = R.faction.Horde || 0, ft = Math.max(1, fa + fh);
     const tugs = Object.entries(R.rsfac).filter(([k]) => k !== '?').sort((x, y) => sum(Object.values(y[1])) - sum(Object.values(x[1]))).map(([rs, v]) => {
@@ -4718,8 +4721,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
       <div class="ap-peak">Most often logged out around <b>${String(peak).padStart(2, '0')}:00</b> local time.</div>`;
     h += panel('s5', 'When they log off', 'The hour each character last logged out in the past three days, in local time for its region.', clock, { cls: 'ap-fill' });
 
-    h += panel('s6', 'The race to 60', 'The highest-level characters right now. Ties go to the better item level.', apLadder(C.leaders[sel.rg] || [], all, (p) => p.lv));
-    h += panel('s6', 'Best geared', 'The highest equipped item level.', apLadder((C.gear || {})[sel.rg] || [], all, (p) => p.il));
+    h += panel('s12', 'Best geared', 'The highest equipped item level. Tap anyone to open their armory.', apLadder((C.gear || {})[sel.rg] || [], all, (p) => p.il).replace('class="ap-lad"', 'class="ap-lad ap-lad2"'));
 
     const GS = (C.gsize || {})[sel.rg] || [], GL = ['1–4', '5–9', '10–24', '25–49', '50–99', '100–249', '250+'], gsmax = Math.max(1, ...GS), gst = Math.max(1, sum(GS));
     const GW = ['Small bands', '', 'Raid teams', '', 'Big guilds', '', 'Giants'];

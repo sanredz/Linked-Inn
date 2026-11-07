@@ -129,7 +129,7 @@
     const X = (t) => P.l + (xb > xa ? (t - xa) / (xb - xa) : 0.5) * (W - P.l - P.r);
     const Y = (v) => P.t + (1 - (v - lo) / (hi - lo)) * (Hh - P.t - P.b);
     const ticks = [0, 1, 2, 3, 4].map((i) => lo + (hi - lo) * i / 4);
-    const lab = (v) => rel ? (v > 0 ? '+' : '') + v.toFixed(1) + '%' : list[0].unit === 'coin' ? H.coinT(v) : v.toFixed(1);
+    const lab = (v) => rel ? (v > 0 ? '+' : '') + v.toFixed(1) + '%' : list[0].unit === 'coin' ? H.coinT(Math.max(0, v)) : v.toFixed(1);
     let svg = `<svg class="mk-chart" width="${W}" height="${Hh}" viewBox="0 0 ${W} ${Hh}">`;
     svg += ticks.map((v) => `<line class="mk-gl" x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="mk-yl" x="${W - P.r + 6}" y="${Y(v) + 4}">${esc(lab(v))}</text>`).join('');
     if (rel && lo < 0 && hi > 0) svg += `<line class="mk-zero" x1="${P.l}" x2="${W - P.r}" y1="${Y(0)}" y2="${Y(0)}"/>`;
@@ -172,7 +172,8 @@
     const wait = st.fac !== 'all' && !facOn() ? `<div class="mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(st.fac)} prices start with the next hourly update. Showing every house until then.</span></div>` : '';
     if (!Object.keys(groups).length && st.fac !== 'all' && facOn()) return `<div class="mk-empty mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(st.fac)} indexes need two hourly updates to start. Items already show ${esc(st.fac)} prices.</span></div>`;
     const per = { '6H': 'last 6 hours', '1D': 'last 24 hours', '1W': 'last 7 days', '1M': 'last 30 days', ALL: 'since tracking began' }[st.range];
-    return wait + `<div class="mk-per"><span>Change over the <b>${per}</b></span><small>Follows the chart's time range</small></div>` + Object.entries(groups).map(([g, ds]) => `<div class="mk-grp"><h5>${esc(g)}</h5>${ds.map((d) => {
+    const short = { '6H': '6h', '1D': '24h', '1W': '7d', '1M': '30d', ALL: 'all time' }[st.range];
+    return wait + `<div class="mk-per"><span>Change over the <b>${per}</b></span><small>Follows the chart's time range</small></div><div class="mk-ix mk-ixh" aria-hidden="true"><span></span><span></span><span class="mk-nm">Index</span><span class="mk-spark">Trend</span><span class="mk-vl">Value</span><span class="mk-ch">${short}</span></div>` + Object.entries(groups).map(([g, ds]) => `<div class="mk-grp"><h5>${esc(g)}</h5>${ds.map((d) => {
       const v = r.idx[d.k], [, lv] = lastVal(v), ch = change(r.t, v, (RANGES.find((x) => x[0] === st.range) || [])[1]), on = st.series.findIndex((s) => s.kind === 'idx' && s.key === d.k);
       return `<button class="mk-ix${on >= 0 ? ' on' : ''}" data-ix="${d.k}" style="--sc:${on >= 0 ? COLORS[on] : 'transparent'}" title="${esc(d.d)} ${r.counts[d.k] || 0} items."><span class="mk-sw"></span><img src="${H.UI(d.ic)}" alt=""><span class="mk-nm">${esc(shortName(d.n))}</span>${spark(v)}<span class="mk-vl">${lv != null ? lv.toFixed(1) : '–'}</span><span class="mk-ch ${cls(ch)}">${pctTxt(ch)}</span></button>`;
     }).join('')}</div>`).join('');
@@ -290,8 +291,8 @@
       const q = row ? row[2] : [];
       const mx = Math.max(1, ...q);
       const kf = (x) => x >= 1e4 ? Math.round(x / 1e3) + 'k' : x >= 1e3 ? (x / 1e3).toFixed(1).replace(/\.0$/, '') + 'k' : String(x);
-      const pk = q.indexOf(mx), few = q.length <= 14;
-      m.querySelector('.mk-vol').innerHTML = q.length ? `<small>Items for sale each hour</small><div class="mk-bars">${q.map((x, i) => `<i${i === pk ? ' class="pk"' : ''} style="height:${Math.max(2, 100 * x / mx)}%" title="${H.fmt(x)} for sale · ${new Date(t[i] * 1000).toLocaleString()}">${few || i === pk || i === q.length - 1 ? `<em>${kf(x)}</em>` : ''}</i>`).join('')}</div>` : '';
+      const pk = q.indexOf(mx), vw = (m.querySelector('.mk-vol') || {}).clientWidth || 600, step = Math.max(1, Math.ceil(q.length / Math.max(4, Math.floor(vw / 32))));
+      m.querySelector('.mk-vol').innerHTML = q.length ? `<small>Items for sale each hour</small><div class="mk-bars">${q.map((x, i) => `<i${i === pk ? ' class="pk"' : ''} style="height:${Math.max(2, 100 * x / mx)}%" title="${H.fmt(x)} for sale · ${new Date(t[i] * 1000).toLocaleString()}">${(q.length - 1 - i) % step === 0 || (i === pk && (q.length - 1 - i) % step > 1) ? `<em>${kf(x)}</em>` : ''}</i>`).join('')}</div>` : '';
     };
     draw();
   }

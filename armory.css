@@ -135,3 +135,18 @@ button.ar-slot:hover { border-color: color-mix(in srgb, var(--qc) 60%, transpare
   .ar-res small { font-size: 10px; }
 }
 .ar-sbox input, .psearch .ar-sbox input, .psearch .ar-sbox input:focus { width: auto; padding: 0; border-radius: 0; background: none; box-shadow: none; }
+.ar-known .ar-line { margin: 0 0 18px; }
+.ar-known h2 { margin-top: 12px; }
+.ar-hid { max-width: 640px; margin: 22px auto 14px; padding: 18px 20px; border-radius: 14px; text-align: left; border: 2px solid #c2462e; background: linear-gradient(rgba(70, 18, 10, 0.88), rgba(30, 9, 5, 0.92)); box-shadow: 0 0 0 1px #000, 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 34px rgba(220, 70, 40, 0.25); }
+.ar-hidh { display: flex; align-items: center; gap: 14px; }
+.ar-lock { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; color: #ffd36b; background: radial-gradient(circle at 40% 35%, #8a2a18, #3a0e07); box-shadow: 0 0 0 2px #000, 0 0 0 4px #c2462e; }
+.ar-lock svg { width: 26px; height: 26px; }
+.ar-hidh b { display: block; font: 26px/1.1 "Morpheus", serif; font-weight: normal; color: #ffe3c2; text-shadow: 0 2px 0 #000; }
+.ar-hidh span { display: inline-block; margin-top: 4px; font: 12.5px "Friz", serif; letter-spacing: 0.08em; text-transform: uppercase; color: #ffb39a; }
+.ar-hid p { margin: 14px 0 0; max-width: none; font-size: 16px; line-height: 1.5; color: #f1e3c2; }
+.ar-how { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 211, 107, 0.25); }
+.ar-how > b { display: block; font: 16px "Friz", serif; font-weight: normal; color: #ffd36b; }
+.ar-how ol { margin: 8px 0 0; padding-left: 22px; color: #e6d9bc; font-size: 15px; line-height: 1.6; }
+.ar-how a { color: #ffd36b; }
+.ar-land p.ar-hidnote { margin: 0 auto 20px; font-size: 13px; color: #9b8c6e; }
+@media (max-width: 720px) { .ar-hid { padding: 14px 14px; } .ar-hidh b { font-size: 21px; } .ar-lock { width: 44px; height: 44px; } .ar-hid p { font-size: 15px; } .ar-how ol { font-size: 14px; } }

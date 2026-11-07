@@ -19,12 +19,12 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261107095519">
-<script src="market.js?v=20261107095519"></script>
-<link rel="stylesheet" href="armory.css?v=20261107095519">
-<script src="armory.js?v=20261107095519"></script>
-<link rel="stylesheet" href="duel.css?v=20261107095519">
-<script src="duel.js?v=20261107095519"></script>
+<link rel="stylesheet" href="market.css?v=20261107112900">
+<script src="market.js?v=20261107112900"></script>
+<link rel="stylesheet" href="armory.css?v=20261107112900">
+<script src="armory.js?v=20261107112900"></script>
+<link rel="stylesheet" href="duel.css?v=20261107112900">
+<script src="duel.js?v=20261107112900"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -2012,7 +2012,7 @@ a.ap-lr { text-decoration: none; color: inherit; border-radius: 8px; } a.ap-lr:h
   .top .right .realm { order: 3; width: 100%; justify-content: center; }
   .top .tabs { order: 2; width: 100%; margin: 2px 0 0; gap: 2px; justify-content: space-between; }
   .top .tabs > .tab, .top .tabs > .ap-grp { flex: 1 1 0; min-width: 0; }
-  .top .tabs .tab { flex-direction: column; gap: 3px; padding: 4px 0 3px; font: 11.5px/1 "Friz", serif; letter-spacing: -0.01em; }
+  .top .tabs .tab { flex-direction: column; gap: 3px; padding: 4px 0 3px; font: 10.5px/1 "Friz", serif; letter-spacing: -0.02em; }
   .top .tab img { width: 28px; height: 28px; }
   .top .tab span { white-space: nowrap; overflow: hidden; text-overflow: clip; max-width: 100%; }
 }
@@ -2059,13 +2059,13 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
           <a class="ap-ddi" data-v="life" href="#life"><img src="assets/game/ui/inv_misc_book_09.png" alt=""><span><b>Life</b><small>Deaths, habits and records</small></span></a>
         </div></div>
       </div>
+      <a class="tab" data-g="armory" href="#armory"><img src="assets/game/ui/inv_helmet_25.png" alt=""><span>Armory</span></a>
       <a class="tab" data-v="economy" href="#economy"><img src="assets/game/ui/inv_misc_coin_02.png" alt=""><span>Economy</span></a>
       <a class="tab" href="draft"><img src="assets/icons/132347.png" alt=""><span>Draft</span></a>
       <a class="tab" data-g="archive" href="#archive"><img src="assets/game/ui/inv_misc_book_11.png" alt=""><span>Archive</span></a>
     </nav>
     <div class="right">
       <div class="realm" id="realm"></div>
-      <a class="hbtn" href="#armory" data-tip="The Armory|Look up any character: gear, stats and model, live."><img src="assets/game/ui/inv_helmet_25.png" alt=""><span class="t">Armory</span></a>
       <button class="hbtn" id="regulars" data-tip="The Regulars|The people who collect the census, by how many crafters they brought in."><img src="assets/game/ui/inv_drink_05.png" alt=""><span class="t">Regulars</span><span class="n" id="regN" hidden></span></button>
       <a class="hbtn" href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener" data-tip="Buy me a coffee|Keeps the census running."><img src="assets/game/ui/inv_drink_04.png" alt=""><span class="t">Buy me a coffee :-)</span></a>
       <a class="hbtn" href="#about" data-tip="About the numbers|Where they come from, how fresh they are and what they cannot see."><img src="assets/game/ui/inv_misc_note_01.png" alt=""><span class="t">About</span></a>
@@ -2124,7 +2124,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261107095519';
+window.LI_V = '20261107112900';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -2216,7 +2216,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     document.querySelector('.tab[data-g="census"]').setAttribute('href', '#crafting');
   }
   if (!window.ECON) document.querySelectorAll('.tabs [data-v="economy"]').forEach((t) => t.remove());
-  const GROUP = { population: 'census', crafting: 'census', duels: 'census', life: 'census', open: 'archive', archive: 'archive' };
+  const GROUP = { population: 'census', crafting: 'census', duels: 'census', life: 'census', open: 'archive', archive: 'archive', armory: 'armory', duel: 'armory' };
   const hasWorld = !!(S && S.duels);
   if (!hasWorld) document.querySelectorAll('.tabs [data-v="duels"], .tabs [data-v="life"]').forEach((t) => t.remove());
   let PV = { s: {}, b: {} };
@@ -4660,7 +4660,8 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const KN = C.known || {};
     const known = (r) => KN[r] || (C.regions[r] || {}).chars || 0;
     document.getElementById('note').textContent = `${fmt(known(sel.rg))} characters · ${fmt(gN)} guilds`;
-    let h = apRegionCards(['all', 'us', 'eu', 'kr', 'tw'].filter((r) => C.regions[r]), sel.rg, 'rg', (r) => [fmt(known(r)), 'characters found']);
+    let h = window.LI_ARMORY ? `<section class="frame psearch ar-home s12"><div class="in slab"><div class="pt"><b>Find anyone</b><small>Search ${fmt(known('all'))} characters. Opens their gear, stats and model, live.</small></div>${arm().searchHtml('arpop')}</div></section>` : '';
+    h += apRegionCards(['all', 'us', 'eu', 'kr', 'tw'].filter((r) => C.regions[r]), sel.rg, 'rg', (r) => [fmt(known(r)), 'characters found']);
     h += plaque(UI('achievement_bg_killxenemies_generalsroom'), 'Characters', fmt(known(sel.rg)), `the charts below draw on ${fmt(R.chars)} of them`);
     h += plaque(UI('inv_bannerpvp_01'), 'Guilds', fmt(gN), 'with a public roster');
     h += plaque(UI('inv_misc_pocketwatch_01'), 'Played today', fmt(R.active1), `of the ${fmt(R.profiled)} we looked up`);
@@ -4727,6 +4728,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     h += panel('s7', 'Biggest guilds', 'By members on the guild roster.', `<div class="rows">${G.slice(0, 12).map((g) => row(AP_FAC[g.f] && g.f !== 'Blackwater' ? ART(`crest-${g.f.toLowerCase()}`) : UI('inv_bannerpvp_01'), g.n, AP_FAC[g.f] || 'inherit', g.m, fmt(g.m), `${g.n}|${g.rs}${all ? ' · ' + APR[g.rg] : ''}`, gmax)).join('')}</div>`);
     const el = document.getElementById('main');
     el.innerHTML = h;
+    if (window.LI_ARMORY) arm().bind('arpop');
     el.querySelectorAll('[data-rg]').forEach((b) => b.onclick = () => { sel.rg = b.dataset.rg; renderKeep(); });
   }
 

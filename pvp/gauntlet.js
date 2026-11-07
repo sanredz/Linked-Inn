@@ -3,11 +3,13 @@ import { bindName, heroName, nameField, nameOk } from './name.js';
 import { BOON, BOON_KIND, boonIcon, boonsOf } from './boons.js';
 import { PLANS, PRESETS, fight } from './engine.js';
 import { Arena, THEMES, resultHtml } from './arena.js';
+import { FightHud, classColor } from './hud.js';
 import { CLASSES, gear, references, statsOf } from './gear.js';
 import { CONSUME, ENCHANT } from './shop.js';
 import { LIVES, MAX_WINS, buyConsume, buyEnchant, className, fakeName, finishRound, itemCount, lowestLevel, lowestQuality, makeBot, newRun, paySlot, pickBoon, planNames, rerollPrice, rerollShop, rollShop, sideOf, slotFloor, slotPrice, snapshot, takeItem } from './run.js';
 
 const KEY = 'gauntletRun', WHO = 'gauntletWho';
+let hud = null;
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const SLOT_NAME = { head: 'Head', neck: 'Neck', shoulder: 'Shoulders', back: 'Back', chest: 'Chest', wrist: 'Wrists', hands: 'Hands', waist: 'Waist', legs: 'Legs', feet: 'Feet', finger1: 'Ring', finger2: 'Ring', trinket1: 'Trinket', trinket2: 'Trinket', main: 'Main Hand', off: 'Off Hand', ranged: 'Ranged' };
 const RANGED_NAME = { SHAMAN: 'Totem', PALADIN: 'Libram', DRUID: 'Idol', MAGE: 'Wand', PRIEST: 'Wand', WARLOCK: 'Wand' };
@@ -110,7 +112,7 @@ function pickHtml() {
 }
 
 function fightHtml() {
-  return '<div class="glog"></div>';
+  return '<div class="glog fh-log"></div>';
 }
 
 function speedHtml() {
@@ -289,6 +291,7 @@ async function findFoe() {
 }
 
 async function toShop() {
+  if (hud) hud.clear();
   screen = 'shop';
   arena.heroShift = 0;
   render();
@@ -320,6 +323,12 @@ function preview(cls) {
 const worn = () => (screen === 'pick' ? preview(pickCls).picks : run.picks);
 
 function logLine(e) {
+  if (hud) {
+    hud.speed = arena.speed;
+    hud.event(e, arena.playing && arena.playing.t >= 1e4);
+    if (e.type !== 'cast') hud.logLine(ui.querySelector('.glog'), e, arena.names);
+    return;
+  }
   if (!['hit', 'heal', 'interrupt', 'trinket', 'cc'].includes(e.type) || (e.type === 'hit' && !e.amount)) return;
   const box = ui.querySelector('.glog');
   if (!box) return;
@@ -340,13 +349,16 @@ async function startFight() {
   root.querySelector('.gscene').scrollIntoView({ block: 'center', behavior: 'smooth' });
   arena.theme(THEMES[run.round % THEMES.length]);
   const names = [heroName(), foe.name];
-  await dress(() => arena.stageFight([snap, foe], names));
-  arena.banner(`<small>${THEMES[run.round % THEMES.length].name} · Round ${run.round}</small><h2>${names[0]}</h2><em>versus</em><h2>${foe.name}</h2><small>${className(foe.cls)}</small>`, 'vs');
-  await new Promise((done) => { setTimeout(done, 1900); });
+  hud = hud || new FightHud(root.querySelector('.gscene'));
+  const hid = hud.intro({ name: names[0], sub: `${className(run.cls)} · Round ${run.round}`, color: classColor(run.cls), portrait: `assets/classes/${run.cls}.png` }, { name: foe.name, sub: className(foe.cls), color: classColor(foe.cls), portrait: `assets/classes/${foe.cls}.png` }, `${THEMES[run.round % THEMES.length].name} · Round ${run.round}`);
+  const dressed = dress(() => arena.stageFight([snap, foe], names));
+  await dressed;
   const rec = { events: [], frames: [] }, x = fight(sideOf(pool, snap, REF), sideOf(pool, foe, REF), Math.floor(Math.random() * 1e9), rec);
   run.fought = x.winner === 0 ? 'won' : 'lost';
   save();
-  arena.play(rec, x, { onLine: logLine, onEnd: finish });
+  await hud.countdown(hid, 1600);
+  arena.play(rec, x, { onLine: logLine, onEnd: (r) => { hud.end(); finish(r); } });
+  hud.play(arena, rec);
   busy = false;
 }
 
@@ -373,7 +385,7 @@ function finish(x) {
   const left = LIVES - run.losses, record = over ? `${run.wins} ${run.wins === 1 ? 'win' : 'wins'} with ${className(run.cls)}` : `${run.wins} of ${MAX_WINS} wins · ${left} ${left === 1 ? 'life' : 'lives'} left`;
   arena.banner(resultHtml({ title: over ? (champion ? 'Champion' : 'Run over') : won ? 'Victory' : 'Defeat', stats: [[x.time.toFixed(0), 'Seconds'], [Math.round(x.a.dealt).toLocaleString('en-US'), 'Damage dealt'], [Math.round(x.b.dealt).toLocaleString('en-US'), 'Damage taken']], note: record, extra: over ? `${winPips()}${recap()}` : '', action: over ? 'New run' : 'Back to the shop', badge: over ? `assets/classes/${run.cls}.png` : '' }), `result ${won || champion ? 'win' : 'lose'}`);
   root.querySelector('[data-next]').onclick = () => {
-    if (over) { run = null; save(); screen = 'pick'; render(); } else toShop();
+    if (over) { if (hud) hud.clear(); run = null; save(); screen = 'pick'; render(); } else toShop();
   };
 }
 
@@ -392,7 +404,7 @@ function action(a) {
   } else if (a === 'fight') startFight();
   else if (a === 'reroll') { if (rerollShop(pool, run)) { save(); render(); } }
   else if (a === 'skip') arena.skip();
-  else if (a === 'quit') { save(); screen = 'pick'; render(); }
+  else if (a === 'quit') { if (hud) hud.clear(); save(); screen = 'pick'; render(); }
 }
 
 export async function openGauntlet(data, host) {

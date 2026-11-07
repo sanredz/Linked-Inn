@@ -217,6 +217,16 @@
     el.innerHTML = `<section class="frame ar-wait s12"><div class="in"><span class="ar-spin"></span><b>Opening the armory…</b><small>Fetching ${esc(slug.replace(/-/g, ' '))} live from Forever</small></div></section>`;
     const D = await load(rg, slug);
     if (!document.body.contains(el)) return D;
+    if ((D.missing || D.error) && D.known && D.known.n) {
+      const k = D.known, cc = H.CC[H.apCls(k.c)] || '#f8d36b';
+      el.innerHTML = `<section class="frame ar-land ar-known s12"><div class="in">${k.r ? H.icoR(H.apRace(k.r), k.f, 84) : ''}<h2 style="color:${cc}">${esc(k.n)}${k.s ? ' ' + esc(k.s) : ''}</h2><div class="ar-line">Level <b>${k.lv || '?'}</b> ${esc(k.r || '')} <b style="color:${cc}">${esc(k.c || '')}</b>${k.g ? ` · <span class="ar-guild">&lt;${esc(k.g)}&gt;</span>` : ''} · ${esc(rg.toUpperCase())}</div>
+        <div class="ar-hid"><div class="ar-hidh"><span class="ar-lock"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2" fill="currentColor"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></span><div><b>This player has hidden their armory</b><span>Not a problem with this site</span></div></div>
+          <p>${esc(k.n)} has turned off sharing of their game data with community sites in their Battle.net privacy settings. Blizzard's own armory still shows them, but Blizzard won't share their gear, stats or model with any fan site, including this one.</p>
+          <div class="ar-how"><b>Is this you? Here is how to show up:</b><ol><li>Sign in at <a href="https://account.battle.net" target="_blank" rel="noopener">account.battle.net</a>.</li><li>Open your account settings and go to <b>Privacy</b>.</li><li>Turn on sharing your game data with community developers.</li><li>Log in to the game once. Your page here fills in on your next search.</li></ol></div></div>
+        <p class="ar-hidnote">${k.fresh ? 'Level and guild above are current, read from their guild roster just now.' : 'Level above is from the last time we saw them.'}</p>${searchHtml('arq', true)}</div></section>`;
+      bind('arq');
+      return D;
+    }
     if (D.missing || D.error) {
       el.innerHTML = `<section class="frame ar-land s12"><div class="in"><img class="ar-lic" src="${H.UI('inv_misc_questionmark')}" alt=""><h2>${D.error ? 'The armory is not answering' : 'Nobody home'}</h2><p>${D.error ? 'Try again in a minute.' : 'This character could not be found. They may have been renamed, deleted, or asked to be left out.'}</p>${searchHtml('arq', true)}</div></section>`;
       bind('arq');

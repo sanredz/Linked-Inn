@@ -435,7 +435,7 @@
     stageEl.classList.add('done');
     const aft = el.querySelector('.du-after');
     after(aft, rec, x, [A, B], names, again);
-    endEl.querySelector('.du-see').onclick = () => aft.scrollIntoView({ behavior: CALM ? 'auto' : 'smooth', block: 'start' });
+    endEl.querySelector('.du-see').onclick = (ev) => { ev.stopPropagation(); const t = aft.querySelector('.du-res') || aft.firstElementChild; if (t) scrollTo({ top: t.getBoundingClientRect().top + scrollY - 70, behavior: CALM ? 'auto' : 'smooth' }); };
     root.querySelector('.du-log').classList.add('done');
     return { A, B, x };
   }
@@ -549,7 +549,7 @@
     stageEl.classList.add('done');
     const aft = el.querySelector('.du-after');
     after(aft, rec, x, Ds, names, again);
-    endEl.querySelector('.du-see').onclick = () => aft.scrollIntoView({ behavior: CALM ? 'auto' : 'smooth', block: 'start' });
+    endEl.querySelector('.du-see').onclick = (ev) => { ev.stopPropagation(); const t = aft.querySelector('.du-res') || aft.firstElementChild; if (t) scrollTo({ top: t.getBoundingClientRect().top + scrollY - 70, behavior: CALM ? 'auto' : 'smooth' }); };
     root.querySelector('.du-log').classList.add('done');
     return { A, B, x };
   }

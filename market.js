@@ -204,6 +204,8 @@
   }
 
   async function openItem(id, rg) {
+    const hideTip = () => { const tp = document.getElementById('tip'); if (tp) tp.style.display = 'none'; };
+    hideTip();
     rg = rg || st.region;
     st.open = id;
     st.q = '';
@@ -264,6 +266,7 @@
         <div class="mk-iplot"></div><div class="mk-vol"></div>${kinHtml}</div>
         <div class="mk-right">${tip ? `<div class="mk-tip">${tip}</div>` : ''}<div class="mk-box mk-regs"><h4>Price in each region${facOn() ? ' <small>every house</small>' : ''}</h4><div>${regs}</div></div>${madeHtml}${usedHtml}</div></div></div>`;
     document.body.appendChild(m);
+    hideTip();
     const close = () => { m.remove(); st.open = null; document.removeEventListener('keydown', onKey); };
     const onKey = (e) => { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', onKey);

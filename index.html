@@ -18,8 +18,8 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261107010501">
-<script src="market.js?v=20261107010501"></script>
+<link rel="stylesheet" href="market.css?v=20261107011244">
+<script src="market.js?v=20261107011244"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -2067,7 +2067,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261107010501';
+window.LI_V = '20261107011244';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -5041,8 +5041,11 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     return out;
   }
 
+  let lastTouch = 0;
+  document.addEventListener('touchstart', () => { lastTouch = Date.now(); }, { passive: true, capture: true });
   document.addEventListener('mousemove', (e) => {
     const gi = e.target.closest && e.target.closest('[data-gi]');
+    if (gi && view === 'economy' && window.LI_MARKET && Date.now() - lastTouch < 1000) { tip.style.display = 'none'; return; }
     if (gi && (window.LI_GEAR || window.LI_PGEAR || window.ECON)) {
       tip.className = 'item';
       const gid = +gi.dataset.gi.split(':')[0], ei = window.ECON && window.ECON.items[gid];

@@ -1966,6 +1966,7 @@ body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
 .ap-soon .ap-sbtn a.main { color: #1a1206; border-color: #ffe39a; background: linear-gradient(#ffe39a, #d5a548); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 20px rgba(248, 211, 107, 0.25); }
 .ap-soon .ap-sbtn a:hover { filter: brightness(1.1); }
 .ap-soon .ap-sbtn img { width: 22px; height: 22px; border-radius: 5px; }
+.ap-tbnote { margin: 10px 2px 0; font-size: 12.5px; color: var(--muted, #9b8c6e); text-align: right; }
 .ap-soon small.ap-snote { display: block; margin-top: 18px; font-size: 13px; color: var(--muted, #9b8c6e); }
 .htile.ap-tsoon .big { font: 34px/1.1 "Morpheus", serif; color: var(--hc); white-space: nowrap; }
 @media (max-width: 720px) { .htile.ap-tsoon .big { font-size: 23px; } }
@@ -4912,14 +4913,15 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
       const GROUPS = [['Ore and bars', 'inv_stone_04', [2770, 2771, 2772, 3858, 10620, 2840, 3576]], ['Cloth', 'inv_misc_bag_10', [2589, 2592, 4306, 4338, 14047]], ['Leather', 'inv_misc_bag_07', [2318, 2319, 4234, 4304, 8170]], ['Herbs', 'inv_potion_51', [2447, 765, 2449, 785, 2450, 3356, 3820]], ['Dust and stone', 'spell_shadow_soulgem', [10940, 10938, 2835, 2836]]];
       const byId = Object.fromEntries(ES.map((x) => [x.id, x]));
       const AC = 'assets/game/alliance-crest.png', HC = 'assets/game/horde-crest.png';
+      const sh = Math.round(((R.movers || {}).span || 0) / 3600), since = sh >= 20 && sh <= 28 ? 'about a day ago' : `${sh} hours ago`;
       const cols = GROUPS.map(([g, ic, ids]) => {
         const rows = ids.filter((i) => byId[i]).map((i) => {
           const x = byId[i], it = apItem(i, E), cheapA = x.a && x.h && x.a < x.h, cheapH = x.a && x.h && x.h < x.a, d = x.ch;
-          return `<div class="ap-tb" style="--qc:${it.qc}" data-gi="${i}:0" data-ep="${fmt(x.q)} for sale in ${fmt(x.n)} auctions"><img class="ic" src="${it.ic}" alt=""><div class="mid"><div class="nm">${esc(it.n)}</div><div class="fx"><span class="${cheapA ? 'w' : ''}"><img src="${AC}" alt="">${x.a ? apCoin(x.a) : '–'}</span><span class="${cheapH ? 'w' : ''}"><img src="${HC}" alt="">${x.h ? apCoin(x.h) : '–'}</span></div></div><div class="ap-rt">${apCoin(x.p)}${d != null ? `<em class="${d > 0 ? 'up' : d < 0 ? 'dn' : ''}">${d > 0 ? '▲' : d < 0 ? '▼' : '■'}${Math.abs(d)}%</em>` : ''}</div></div>`;
+          return `<div class="ap-tb" style="--qc:${it.qc}" data-gi="${i}:0" data-ep="${fmt(x.q)} for sale in ${fmt(x.n)} auctions"><img class="ic" src="${it.ic}" alt=""><div class="mid"><div class="nm">${esc(it.n)}</div><div class="fx"><span class="${cheapA ? 'w' : ''}"><img src="${AC}" alt="">${x.a ? apCoin(x.a) : '–'}</span><span class="${cheapH ? 'w' : ''}"><img src="${HC}" alt="">${x.h ? apCoin(x.h) : '–'}</span></div></div><div class="ap-rt">${apCoin(x.p)}${d != null ? `<em class="${d > 0 ? 'up' : d < 0 ? 'dn' : ''}" title="Change since ${since}">${d > 0 ? '▲' : d < 0 ? '▼' : '■'}${Math.abs(d)}%</em>` : ''}</div></div>`;
         }).join('');
         return rows ? `<div class="ap-tbc"><h4><img src="${UI(ic)}" alt="">${g}</h4>${rows}</div>` : '';
       }).join('');
-      h += panel('s12', 'The trade board', 'What the basics cost right now, for one. Under each, what the Alliance and the Horde pay: the cheaper side is lit.', `<div class="ap-board">${cols}</div>`);
+      h += panel('s12', 'The trade board', `What the basics cost right now, for one. Under each, what the Alliance and the Horde pay: the cheaper side is lit.${sh ? ` Arrows show the change since ${since}.` : ''}`, `<div class="ap-board">${cols}</div>${sh ? `<p class="ap-tbnote">▲▼ change since ${since}</p>` : ''}`);
     }
 
     const MV = R.movers || { span: 0, up: [], down: [] };

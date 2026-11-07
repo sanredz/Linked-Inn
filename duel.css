@@ -273,3 +273,41 @@
   .du-pbox h3 { font-size: 26px; }
   .ar-duel { width: 100%; justify-content: center; }
 }
+.du.three .du-sky, .du.three .du-floor { display: none; }
+.du-3d { position: absolute; inset: 0; z-index: 1; }
+.du-3d .du-3dhost, .du-3d .arena3d { position: absolute; inset: 0; overflow: hidden; }
+.du-3d .arena-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+.du-3d .arena-other { display: none !important; }
+.du-3d .vignette { position: absolute; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(ellipse at 50% 46%, transparent 45%, rgba(0, 0, 0, 0.6) 100%); }
+.du-3d .frames, .du-3d .castbar, .du-3d .gapline, .du-3d .banner3d { display: none !important; }
+.du-3d .plates { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; display: none; }
+.du-3d .arena3d.fighting .plates { display: block; }
+.du-3d .plate { position: absolute; left: 0; top: 0; width: 110px; text-align: center; font-size: 11.5px; color: #fff; text-shadow: 0 1px 2px #000, 0 0 4px #000; }
+.du-3d .plate span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.du-3d .plate em { display: block; height: 5px; margin: 1px auto 0; max-width: 100%; background: linear-gradient(#ff5a44, #a82012); border: 1px solid #000; }
+.du-3d .dmg { --dx: 0px; position: absolute; z-index: 4; pointer-events: none; font: 22px "Friz", serif; -webkit-text-stroke: 3px rgba(0, 0, 0, 0.85); paint-order: stroke fill; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.9); animation: du-dmgrise 1s cubic-bezier(0.2, 0.9, 0.3, 1) forwards; }
+.du-3d .dmg.crit { font-size: 34px; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.9), 0 0 14px rgba(255, 190, 70, 0.65); animation-name: du-dmgcrit; }
+.du-3d .dmg.heal { font-size: 18px; }
+@keyframes du-dmgrise { 0% { transform: translate(-50%, 8px) scale(0.6); opacity: 0; } 14% { transform: translate(calc(-50% + var(--dx) * 0.2), -8px) scale(1.18); opacity: 1; } 24% { transform: translate(calc(-50% + var(--dx) * 0.3), -12px) scale(1); } 70% { opacity: 1; } 100% { transform: translate(calc(-50% + var(--dx)), -64px) scale(0.9); opacity: 0; } }
+@keyframes du-dmgcrit { 0% { transform: translate(-50%, 8px) scale(0.3) rotate(-6deg); opacity: 0; } 14% { transform: translate(-50%, -16px) scale(1.65) rotate(3deg); opacity: 1; } 26% { transform: translate(calc(-50% + var(--dx) * 0.2), -18px) scale(1.25) rotate(0); } 72% { opacity: 1; } 100% { transform: translate(calc(-50% + var(--dx) * 0.6), -86px) scale(1.05); opacity: 0; } }
+.du.three .du-flash { z-index: 2; }
+.du-call { position: absolute; z-index: 6; top: 96px; display: flex; flex-direction: column; gap: 4px; pointer-events: none; }
+.du-call.a { left: 14px; align-items: flex-start; }
+.du-call.b { right: 14px; align-items: flex-end; }
+.du-c { display: flex; align-items: center; gap: 7px; padding: 4px 11px 4px 5px; border-radius: 999px; background: rgba(0, 0, 0, 0.72); border: 1px solid color-mix(in srgb, var(--tc, #ffd36b) 55%, transparent); color: var(--tc, #ffd36b); font: 14px "Friz", serif; text-shadow: 0 1px 2px #000; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5); animation: du-callin 2.2s ease forwards; }
+.du-call.b .du-c { flex-direction: row-reverse; padding: 4px 5px 4px 11px; }
+.du-c img { width: 22px; height: 22px; border-radius: 5px; box-shadow: 0 0 0 1px #000; }
+@keyframes du-callin { 0% { opacity: 0; transform: translateY(-6px) scale(0.9); } 10% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(4px); } }
+.du-stage.loading .du-where::after { content: "Summoning the duelists…"; display: block; margin-top: 8px; font-size: 12px; letter-spacing: 0.1em; color: #cbb994; animation: du-low 1.2s ease-in-out infinite; }
+@media (max-width: 720px) {
+  .du-3d .plates { display: none !important; }
+  .du-call { top: 76px; }
+  .du-c { font-size: 12px; padding: 3px 9px 3px 4px; }
+  .du-c img { width: 18px; height: 18px; }
+  .du-3d .dmg { font-size: 18px; } .du-3d .dmg.crit { font-size: 27px; } .du-3d .dmg.heal { font-size: 15px; }
+}
+.du-3d { transition: opacity 0.6s ease; }
+.du-stage.loading .du-3d { opacity: 0; }
+.du.three .du-end { top: 76%; }
+.du.three .du-end b { font-size: 40px; }
+@media (max-width: 720px) { .du.three .du-end { top: 74%; } .du.three .du-end b { font-size: 30px; } }

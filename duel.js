@@ -64,6 +64,70 @@
   };
   let SPELLS_MAP = {};
 
+  const SLOT3 = { HEAD: 'head', SHOULDER: 'shoulder', BACK: 'back', CHEST: 'chest', WRIST: 'wrist', HANDS: 'hands', WAIST: 'waist', LEGS: 'legs', FEET: 'feet', MAIN_HAND: 'main', OFF_HAND: 'off', RANGED: 'ranged' };
+  const INV = { head: [1], shoulder: [3], back: [16], chest: [5, 20], wrist: [9], hands: [10], waist: [6], legs: [7], feet: [8], main: [13, 17, 21], off: [13, 14, 22, 23], ranged: [15, 25, 26] };
+  const ARMOR = { Cloth: 1, Leather: 2, Mail: 3, Plate: 4 };
+  const WPN = { Axe: [0, 1], Mace: [4, 5], Sword: [7, 8], Staff: [10], Polearm: [6], Dagger: [15], 'Fist Weapon': [13], Bow: [2], Gun: [3], Crossbow: [18], Wand: [19], Thrown: [16], 'Fishing Pole': [20] };
+  const BODY = { Human: 'human', Dwarf: 'human', Gnome: 'human', Undead: 'human', 'High Order Skyborne': 'human', Orc: 'orc', Troll: 'orc', Tauren: 'orc', 'Night Elf': 'nightelf', 'Windshaper Skyborne': 'nightelf' };
+  let D3 = null;
+
+  function index3d(pool, gear) {
+    const by = {};
+    for (const id of Object.keys(gear.items)) {
+      const r = pool.items[id];
+      if (!r) continue;
+      for (const [slot, inv] of Object.entries(INV)) if (inv.includes(r[3])) (by[slot] = by[slot] || []).push(+id);
+    }
+    return by;
+  }
+
+  function pick3d(g, slot, cls) {
+    const { pool, gear, by } = D3;
+    if (gear.items[g.id]) return { id: g.id, row: pool.items[g.id] || null };
+    const two = /two-hand/i.test(g.inv || ''), list = by[slot] || [];
+    let subs = null, klass = 4;
+    if (slot === 'main' || slot === 'ranged' || (slot === 'off' && WPN[g.sub])) { klass = 2; subs = WPN[g.sub] || null; if (subs && slot === 'main' && subs.length > 1) subs = two ? [subs[1]] : [subs[0]]; }
+    else if (slot === 'off' && /shield/i.test(g.sub || '')) subs = [6];
+    else if (ARMOR[g.sub]) subs = [ARMOR[g.sub]];
+    let pool2 = list.filter((id) => { const r = pool.items[id]; return r[5] === klass && (!subs || subs.includes(r[6])) && (slot !== 'main' || (two ? r[3] === 17 : r[3] !== 17)); });
+    if (!pool2.length && slot === 'main') pool2 = list.filter((id) => (two ? pool.items[id][3] === 17 : pool.items[id][3] !== 17));
+    if (!pool2.length) pool2 = list;
+    if (!pool2.length) return null;
+    const near = pool2.slice().sort((a, b) => (Math.abs(pool.items[a][2] - g.il) + 6 * Math.abs(pool.items[a][1] - g.q)) - (Math.abs(pool.items[b][2] - g.il) + 6 * Math.abs(pool.items[b][1] - g.q))).slice(0, 5);
+    const id = near[g.id % near.length];
+    return { id, row: pool.items[id] };
+  }
+
+  function side3d(D) {
+    const cls = clsKey(D.c.c), picks = {}, rows = {};
+    for (const g of D.gear) {
+      const slot = SLOT3[g.slot];
+      if (!slot) continue;
+      const p3 = pick3d(g, slot, cls);
+      if (!p3) continue;
+      picks[slot] = p3.id;
+      rows[p3.id] = p3.row || [g.n, g.q, g.il, 0, 0, 4, 0];
+    }
+    return { cls, picks, rows, boons: [], body: BODY[D.c.r] || null };
+  }
+
+  async function arena3d() {
+    if (D3) return D3;
+    if (!window.WebGLRenderingContext) throw new Error('no webgl');
+    const [mod, pool, gear] = await Promise.all([import('./pvp/arena.js'), fetch('draft/pool.json').then((r) => r.json()), fetch('draft/gear.json').then((r) => r.json())]);
+    const host = document.createElement('div');
+    host.className = 'du-3dhost';
+    const P = { items: {} };
+    const arena = new mod.Arena(host, gear, P);
+    D3 = { mod, pool, gear, host, P, arena, by: index3d(pool, gear), ready: null };
+    document.body.appendChild(host);
+    host.style.cssText = 'position:fixed;left:-9999px;top:0;width:600px;height:400px';
+    await arena.init();
+    host.style.cssText = '';
+    host.remove();
+    return D3;
+  }
+
   function nameOf(D) { return D.c.n; }
   function full(D) { return D.c.n + (D.c.s ? ' ' + D.c.s : ''); }
 
@@ -83,13 +147,13 @@
     return `<div class="du-fig ${i ? 'b' : 'a'}" style="--cc:${cc}"><div class="du-body"><div class="du-glow"></div>${D.media.main ? `<img class="du-ren" src="${esc(D.media.main)}" alt="" onerror="this.closest('.du-fig').classList.add('noimg')">` : ''}<div class="du-alt">${AR().H.icoR(AR().H.apRace(D.c.r), D.c.f, 110)}</div><div class="du-bubble"></div><div class="du-poly"><img src="${AR().RI('spell_nature_polymorph')}" alt=""></div></div><div class="du-st"></div><div class="du-fx"></div></div>`;
   }
 
-  function stageHtml(A, B, arena) {
+  function stageHtml(A, B, arena, three) {
     const ka = clsKey(A.c.c), kb = clsKey(B.c.c), ca = AR().H.CC[ka] || '#f8d36b', cb = AR().H.CC[kb] || '#f8d36b';
-    return `<section class="du" style="--ca:${ca};--cb:${cb}">
+    return `<section class="du${three ? ' three' : ''}" style="--ca:${ca};--cb:${cb}">
       <div class="du-stage" style="--bg:url('assets/game/${arena[0]}.jpg')">
         <div class="du-sky"></div><div class="du-floor"></div>
         <div class="du-top">${frameHtml(A, 0)}<div class="du-clock"><b>0.0</b><small>sec</small></div>${frameHtml(B, 1)}</div>
-        ${figHtml(A, 0)}${figHtml(B, 1)}
+        ${three ? '<div class="du-3d"></div><div class="du-call a"></div><div class="du-call b"></div>' : figHtml(A, 0) + figHtml(B, 1)}
         <div class="du-flash"></div>
         <div class="du-intro"><div class="du-half a" style="--cc:${ca}">${A.media.main ? `<img src="${esc(A.media.main)}" alt="">` : ''}<div class="du-who"><b>${esc(full(A))}</b><small>Level ${A.c.lv} ${esc(A.c.r)} ${esc(A.c.c)}</small></div></div><div class="du-half b" style="--cc:${cb}">${B.media.main ? `<img src="${esc(B.media.main)}" alt="">` : ''}<div class="du-who"><b>${esc(full(B))}</b><small>Level ${B.c.lv} ${esc(B.c.r)} ${esc(B.c.c)}</small></div></div><div class="du-vs"><span>VS</span></div><div class="du-where">A duel in ${esc(arena[1])}</div></div>
         <div class="du-cd"></div>
@@ -113,6 +177,7 @@
     rs.dataset.k = f.resKind;
     rs.querySelector('i').style.width = Math.max(0, Math.min(100, (100 * f.res) / (f.resMax || 100))) + '%';
     const fig = root.querySelector(`.du-fig.${i ? 'b' : 'a'}`);
+    if (!fig) return;
     fig.dataset.state = f.state || '';
     fig.classList.toggle('shield', !!(f.shield || f.absorb));
     fig.classList.toggle('casting', !!f.cast);
@@ -267,8 +332,10 @@
     };
   }
 
+  let run0 = 0;
   async function page(el, a, b, seed) {
     if (run) run.dead = true;
+    const R0 = ++run0;
     el.innerHTML = `<section class="frame ar-wait s12"><div class="in"><span class="ar-spin"></span><b>The duelists approach…</b><small>Reading both characters live from the armory</small></div></section>`;
     const [E, , A, B] = await Promise.all([engine(), spells().then((m) => { SPELLS_MAP = m || {}; }), AR().load(a[0], a[1]), AR().load(b[0], b[1])]);
     if (!document.body.contains(el)) return null;
@@ -283,6 +350,10 @@
     const rec = { events: [], frames: [] };
     const x = E.fight(sideOf(A, E, r, ea), sideOf(B, E, r, eb), seed, rec);
     const names = A.c.n === B.c.n ? [full(A), full(B)] : [A.c.n, B.c.n];
+    let G3 = null;
+    try { G3 = await arena3d(); } catch (e) { G3 = null; }
+    if (R0 !== run0) return null;
+    if (G3) return page3d(el, A, B, x, rec, names, seed, G3);
     el.innerHTML = stageHtml(A, B, arena);
     const root = el.querySelector('.du');
     const R = { dead: false, speed: 1, t: 0, at: 0, last: 0, phase: 'intro', seed };
@@ -369,6 +440,120 @@
     return { A, B, x };
   }
 
+  function call(root, side, html, color) {
+    const box = root.querySelector(`.du-call.${side ? 'b' : 'a'}`);
+    if (!box) return;
+    const el = document.createElement('div');
+    el.className = 'du-c';
+    if (color) el.style.setProperty('--tc', color);
+    el.innerHTML = html;
+    box.appendChild(el);
+    while (box.childElementCount > 3) box.firstElementChild.remove();
+    setTimeout(() => el.remove(), 2200);
+  }
+
+  async function page3d(el, A, B, x, rec, names, seed, G3) {
+    const { arena, host, P, mod } = G3;
+    const theme = mod.THEMES[seed % mod.THEMES.length];
+    el.innerHTML = stageHtml(A, B, [ARENAS[0][0], theme.name], true);
+    const root = el.querySelector('.du');
+    const R = { dead: false, speed: 1, phase: 'intro', seed, three: true };
+    run = R;
+    const stageEl = root.querySelector('.du-stage');
+    root.querySelector('.du-3d').appendChild(host);
+    arena.stageA.resume();
+    arena.stageA.resize();
+    arena.speed = 1;
+    const sa = side3d(A), sb = side3d(B);
+    P.items = Object.assign({}, sa.rows, sb.rows);
+    setBars(root, 0, rec.frames[0].a);
+    setBars(root, 1, rec.frames[0].b);
+    const again = () => { const h = location.hash.split('/'); h[5] = String(Math.floor(Math.random() * 1e9)); location.hash = h.slice(0, 6).join('/'); };
+    root.querySelectorAll('[data-sp]').forEach((bt) => {
+      bt.onclick = () => {
+        if (bt.dataset.sp === 'skip') { R.skip = true; arena.skip(); return; }
+        R.speed = arena.speed = +bt.dataset.sp;
+        root.querySelectorAll('[data-sp]').forEach((y) => y.classList.toggle('on', y === bt));
+      };
+    });
+    const wait = (ms) => new Promise((done) => { const s = performance.now(); const tick = () => { if (R.dead || R.skipIntro || performance.now() - s >= ms) done(); else setTimeout(tick, 50); }; tick(); });
+    stageEl.onclick = (e) => { if (R.phase === 'intro' && !e.target.closest('.du-ctl')) R.skipIntro = true; };
+    stageEl.classList.add('intro', 'loading');
+    arena.theme(theme);
+    const dressed = arena.stageFight([sa, sb], names).catch(() => null);
+    await Promise.all([Promise.race([dressed, new Promise((d) => { setTimeout(d, 20000); })]), wait(CALM ? 600 : 2800)]);
+    if (R.dead) return null;
+    stageEl.classList.remove('loading');
+    R.skipIntro = false;
+    await wait(CALM ? 0 : 500);
+    root.querySelector('.du-intro').classList.add('out');
+    stageEl.classList.remove('intro');
+    const cd = root.querySelector('.du-cd');
+    if (!CALM) {
+      await wait(500);
+      for (const n of ['3', '2', '1']) {
+        if (R.dead || R.skipIntro) break;
+        cd.innerHTML = `<span>${n}</span>`;
+        pulse(cd, 'show', 650);
+        await wait(720);
+      }
+    }
+    if (R.dead) return null;
+    cd.innerHTML = '<span class="go">Duel!</span>';
+    pulse(cd, 'show', 900);
+    R.phase = 'fight';
+    const Ds = [A, B];
+    let shown = -1;
+    const ended = new Promise((done) => {
+      arena.play(rec, x, {
+        onLine: (e) => {
+          if (R.dead) return;
+          if (e.type === 'cast') castBar(root, e.side, e, Ds[e.side]);
+          else logLine(root, e, names, Ds);
+          if (R.skip) return;
+          if (e.type === 'interrupt') { const cb = root.querySelector(`.du-uf.${e.side ? 'b' : 'a'} .du-cb`); cb.classList.remove('go'); cb.classList.add('cut'); call(root, e.side, 'Interrupted!', '#ff6a5a'); }
+          else if (e.type === 'cc') call(root, e.side, `<img src="${AR().RI(STATE_IC[e.name] || 'spell_frost_stun')}" alt="">${STATE[e.name] || e.name}`, '#ffd36b');
+          else if (e.type === 'buff' || e.type === 'move' || e.type === 'trinket') call(root, e.side, `<img src="${spellIcon(e.type === 'trinket' ? 'PvP Trinket' : e.name, Ds[e.side])}" alt="">${esc(e.type === 'trinket' ? 'Breaks free!' : e.name)}`, '#9fe0ff');
+          else if (e.type === 'hit' && e.crit && e.amount) { call(1 - e.side === 0 ? root : root, e.side, `<img src="${spellIcon(e.name, Ds[e.side])}" alt="">${esc(e.name)} crit!`, '#ffe14d'); if (!CALM) pulse(stageEl, 'flashing', 260); }
+        },
+        onEnd: (r) => done(r),
+      });
+      const tick = () => {
+        if (R.dead) { done(null); return; }
+        const p = arena.playing;
+        if (p) {
+          const endT = rec.frames[rec.frames.length - 1].t, t = Math.min(endT, p.t);
+          const i = Math.min(rec.frames.length - 1, Math.floor(t / 0.2) + 1);
+          if (i !== shown) { shown = i; const f = rec.frames[i]; setBars(root, 0, f.a); setBars(root, 1, f.b); root.querySelector('.du-clock b').textContent = f.t.toFixed(1); }
+          stageEl.classList.toggle('slowmo', endT - t < 1 && !CALM);
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    const res = await ended;
+    if (R.dead || !res) return null;
+    const last = rec.frames[rec.frames.length - 1];
+    setBars(root, 0, last.a);
+    setBars(root, 1, last.b);
+    root.querySelector('.du-clock b').textContent = last.t.toFixed(1);
+    R.phase = 'end';
+    stageEl.classList.remove('slowmo');
+    root.querySelectorAll('.du-cb').forEach((c) => c.classList.remove('go'));
+    await wait(R.skip ? 200 : 900);
+    const W = x.winner, wD = W ? B : A;
+    const endEl = root.querySelector('.du-end');
+    endEl.style.setProperty('--cc', AR().H.CC[clsKey(wD.c.c)] || '#f8d36b');
+    endEl.innerHTML = `<i class="du-rays"></i><small>${x.timedOut ? 'Time!' : 'Victory'}</small><b>${esc(full(wD))}</b><span>${esc(names[1 - W])} has been defeated${x.timedOut ? ' on points' : ''}</span><button class="du-see">See the breakdown</button>`;
+    endEl.classList.add('on');
+    stageEl.classList.add('done');
+    const aft = el.querySelector('.du-after');
+    after(aft, rec, x, Ds, names, again);
+    endEl.querySelector('.du-see').onclick = () => aft.scrollIntoView({ behavior: CALM ? 'auto' : 'smooth', block: 'start' });
+    root.querySelector('.du-log').classList.add('done');
+    return { A, B, x };
+  }
+
   function challenge(D) {
     const H2 = AR().H, C = window.API_DATA && API_DATA.census;
     const pool = ((C && C.leaders && C.leaders.all) || []).filter((p) => !(p.rg === D.c.rg && p.slug === D.c.slug));
@@ -389,7 +574,12 @@
     setTimeout(() => { if (matchMedia('(hover: hover)').matches) document.getElementById('dupq').focus(); }, 30);
   }
 
-  function stop() { if (run) run.dead = true; const m = document.querySelector('.du-pick'); if (m) m.remove(); }
+  function stop() {
+    if (run) run.dead = true;
+    const m = document.querySelector('.du-pick');
+    if (m) m.remove();
+    if (D3) { D3.arena.playing = null; D3.arena.reset(); D3.arena.stageA.pause(); D3.host.remove(); }
+  }
 
   window.LI_DUEL = { page, challenge, stop };
 })();

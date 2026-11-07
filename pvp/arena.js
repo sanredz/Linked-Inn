@@ -293,7 +293,7 @@ export class Arena {
   }
 
   async dressOne(stage, s) {
-    await stage.setClass(s.cls);
+    await stage.setClass(s.cls, s.body);
     await new Promise((done) => { stage.outfit(this.list(s), () => {}).then(done); });
     if (PRESETS[s.cls].kind === 'ranged' && stage.rangedFile) {
       await stage.attach('ranged', 'att31', null);

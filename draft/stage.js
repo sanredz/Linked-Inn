@@ -171,8 +171,8 @@ export class Stage {
     this.camera.updateProjectionMatrix();
   }
 
-  async setClass(cls) {
-    const race = RACE[cls], rig = this.gear.rigs[race];
+  async setClass(cls, body) {
+    const race = (body && this.gear.rigs[body] && body) || RACE[cls], rig = this.gear.rigs[race];
     if (this.rig && this.race === race) {
       this.yaw = 0;
       await this.strip();

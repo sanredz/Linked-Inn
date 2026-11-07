@@ -18,8 +18,8 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261107005715">
-<script src="market.js?v=20261107005715"></script>
+<link rel="stylesheet" href="market.css?v=20261107010501">
+<script src="market.js?v=20261107010501"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -1941,6 +1941,7 @@ body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
 @media (max-width: 720px) { .ap-ring { width: 44px; height: 44px; } .ap-ring .icon { width: 36px !important; height: 36px !important; } }
 .ap-fn { display: flex; justify-content: space-between; margin-top: 4px; font: 11.5px "Friz", serif; text-shadow: 0 1px 0 #000; }
 .ap-fn .a { color: #8fbaf5; } .ap-fn .h { color: #f08a7e; }
+@media (max-width: 720px) { .ap-regs > .ap-reg:first-child:nth-last-child(odd) { grid-column: 1 / -1; } }
 /* shared-header */
 .top .tab { font: 15.5px "Friz", serif; }
 .top .hbtn { font: 13px "Friz", serif; }
@@ -2066,7 +2067,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261107005715';
+window.LI_V = '20261107010501';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';

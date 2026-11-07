@@ -61,6 +61,7 @@
   const icon = (id) => { const c = MKT.cat[id]; const tp = window.ECON && ECON.tips && ECON.tips[id]; const ic = (c && c[2]) || (tp && tp[10]); return ic ? `assets/icons/${ic}.png` : H.UI('inv_misc_questionmark'); };
   const pctTxt = (v) => v == null ? '–' : (v > 0 ? '+' : '') + v.toFixed(Math.abs(v) < 10 ? 1 : 0) + '%';
   const cls = (v) => v == null ? '' : v > 0 ? 'up' : v < 0 ? 'dn' : '';
+  const FAC_UI = false;
   const FD = {};
   const FACS = [['all', 'Every house', 'inv_misc_coin_02'], ['Alliance', 'Alliance', null], ['Horde', 'Horde', null], ['Blackwater', 'Blackwater', 'inv_misc_coin_17']];
   const facIcon = (f, ic) => f === 'Alliance' ? 'assets/game/alliance-crest.png' : f === 'Horde' ? 'assets/game/horde-crest.png' : H.UI(ic);
@@ -294,7 +295,7 @@
   function paint() {
     root.innerHTML = `<div class="mk-term">
       <div class="mk-top"><div class="mk-search"><input type="search" placeholder="Search any item: Copper Ore, Linen Bag, Thunderfury…" value="${esc(st.q)}" aria-label="Search items"><div class="mk-res"></div></div>
-        ${MKT.live ? `<div class="mk-fac" role="group" aria-label="Auction house">${FACS.map(([f, n, ic]) => `<button class="${f === st.fac ? 'on' : ''}" data-fac="${f}"><img src="${facIcon(f, ic)}" alt="">${n}</button>`).join('')}</div>` : ''}
+        ${MKT.live && FAC_UI ? `<div class="mk-fac" role="group" aria-label="Auction house">${FACS.map(([f, n, ic]) => `<button class="${f === st.fac ? 'on' : ''}" data-fac="${f}"><img src="${facIcon(f, ic)}" alt="">${n}</button>`).join('')}</div>` : ''}
         <div class="mk-reg-note">${esc((H.regionName || {})[st.region] || st.region.toUpperCase())}${facOn() ? ' · ' + st.fac : ''} · ${R().t.length} hourly snapshots</div></div>
       <div class="mk-grid"><div class="mk-side">${indexList()}</div>
         <div class="mk-main"><div class="mk-bar"><div class="mk-legend"></div><div class="mk-ranges">${RANGES.map(([k]) => `<button class="${k === st.range ? 'on' : ''}" data-r="${k}">${k}</button>`).join('')}</div></div><div class="mk-plot"></div>

@@ -47,6 +47,18 @@
     };
   }
 
+  function realHealth(rec, x, A, B) {
+    const f0 = rec.frames[0], k = [0, 1].map((i) => { const real = ((i ? B : A).stats || {}).hp, max = (i ? f0.b : f0.a).max; return real > 0 && max > 0 ? real / max : 1; });
+    for (const f of rec.frames) for (const [i, s] of [[0, f.a], [1, f.b]]) { s.hp = Math.round(s.hp * k[i]); s.max = Math.round(s.max * k[i]); if (s.absorb) s.absorb = Math.round(s.absorb * k[i]); }
+    for (const e of rec.events) {
+      if (!e.amount || e.type === 'cast' || e.type === 'cc') continue;
+      const on = e.type === 'heal' ? e.side : 1 - e.side;
+      e.amount = Math.max(1, Math.round(e.amount * k[on]));
+    }
+    x.a.dealt *= k[1]; x.b.dealt *= k[0]; x.a.healed *= k[0]; x.b.healed *= k[1];
+    x.a.hp *= k[0]; x.a.max *= k[0]; x.b.hp *= k[1]; x.b.max *= k[1];
+  }
+
   function edges(la, lb) {
     const d = la - lb, up = Math.min(2.5, Math.abs(d) * 0.06), tough = Math.min(0.75, Math.abs(d) * 0.025), weak = Math.min(0.75, Math.abs(d) * 0.025);
     if (!d) return [{ dmg: 0, taken: 0 }, { dmg: 0, taken: 0 }];
@@ -349,6 +361,7 @@
     const arena = ARENAS[seed % ARENAS.length];
     const rec = { events: [], frames: [] };
     const x = E.fight(sideOf(A, E, r, ea), sideOf(B, E, r, eb), seed, rec);
+    realHealth(rec, x, A, B);
     const names = A.c.n === B.c.n ? [full(A), full(B)] : [A.c.n, B.c.n];
     let G3 = null;
     try { G3 = await arena3d(); } catch (e) { G3 = null; }

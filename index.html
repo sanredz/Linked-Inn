@@ -1591,6 +1591,7 @@ body[data-view="economy"] { --accent: #ffcc4d; --art: url("assets/game/art-rogue
 .ap-who small { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ap-tag { font-size: 11.5px; color: var(--ink-2); border: 1px solid var(--soft); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
 .ap-lv { font: 24px "Friz", serif; color: #fff2cf; text-align: right; text-shadow: 0 2px 0 #000; }
+.ap-lv small { display: block; margin-top: -2px; font-size: 11px; color: var(--muted); text-shadow: none; }
 .ap-hr { display: grid; grid-template-columns: 200px 1fr 92px; gap: 14px; align-items: center; padding: 6px 0; }
 .ap-hr .l b { display: block; font: 16px "Morpheus", serif; font-weight: normal; color: var(--ink); }
 .ap-hr .l small { font-size: 12px; color: var(--muted); }
@@ -4731,7 +4732,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
       <div class="ap-peak">Most often logged out around <b>${String(peak).padStart(2, '0')}:00</b> local time.</div>`;
     h += panel('s5', 'When they log off', 'The hour each character last logged out in the past three days, in local time for its region.', clock, { cls: 'ap-fill' });
 
-    h += panel('s12', 'Best geared', 'The highest equipped item level. Tap anyone to open their armory.', apLadder((C.gear || {})[sel.rg] || [], all, (p) => p.il).replace('class="ap-lad"', 'class="ap-lad ap-lad2"'));
+    h += panel('s12', 'Best geared', 'The highest equipped item level. Tap anyone to open their armory.', apLadder((C.gear || {})[sel.rg] || [], all, (p) => `${p.il}<small>ilvl</small>`).replace('class="ap-lad"', 'class="ap-lad ap-lad2"'));
 
     const GS = (C.gsize || {})[sel.rg] || [], GL = ['1–4', '5–9', '10–24', '25–49', '50–99', '100–249', '250+'], gsmax = Math.max(1, ...GS), gst = Math.max(1, sum(GS));
     const GW = ['Small bands', '', 'Raid teams', '', 'Big guilds', '', 'Giants'];

@@ -171,8 +171,9 @@
     MKT.defs.forEach((d) => { if (r.idx[d.k]) (groups[d.g] = groups[d.g] || []).push(d); });
     const wait = st.fac !== 'all' && !facOn() ? `<div class="mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(st.fac)} prices start with the next hourly update. Showing every house until then.</span></div>` : '';
     if (!Object.keys(groups).length && st.fac !== 'all' && facOn()) return `<div class="mk-empty mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(st.fac)} indexes need two hourly updates to start. Items already show ${esc(st.fac)} prices.</span></div>`;
-    return wait + Object.entries(groups).map(([g, ds]) => `<div class="mk-grp"><h5>${esc(g)}</h5>${ds.map((d) => {
-      const v = r.idx[d.k], [, lv] = lastVal(v), ch = change(r.t, v, 86400), on = st.series.findIndex((s) => s.kind === 'idx' && s.key === d.k);
+    const per = { '6H': 'last 6 hours', '1D': 'last 24 hours', '1W': 'last 7 days', '1M': 'last 30 days', ALL: 'since tracking began' }[st.range];
+    return wait + `<div class="mk-per"><span>Change over the <b>${per}</b></span><small>Follows the chart's time range</small></div>` + Object.entries(groups).map(([g, ds]) => `<div class="mk-grp"><h5>${esc(g)}</h5>${ds.map((d) => {
+      const v = r.idx[d.k], [, lv] = lastVal(v), ch = change(r.t, v, (RANGES.find((x) => x[0] === st.range) || [])[1]), on = st.series.findIndex((s) => s.kind === 'idx' && s.key === d.k);
       return `<button class="mk-ix${on >= 0 ? ' on' : ''}" data-ix="${d.k}" style="--sc:${on >= 0 ? COLORS[on] : 'transparent'}" title="${esc(d.d)} ${r.counts[d.k] || 0} items."><span class="mk-sw"></span><img src="${H.UI(d.ic)}" alt=""><span class="mk-nm">${esc(shortName(d.n))}</span>${spark(v)}<span class="mk-vl">${lv != null ? lv.toFixed(1) : '–'}</span><span class="mk-ch ${cls(ch)}">${pctTxt(ch)}</span></button>`;
     }).join('')}</div>`).join('');
   }
@@ -290,7 +291,7 @@
       const mx = Math.max(1, ...q);
       const kf = (x) => x >= 1e4 ? Math.round(x / 1e3) + 'k' : x >= 1e3 ? (x / 1e3).toFixed(1).replace(/\.0$/, '') + 'k' : String(x);
       const pk = q.indexOf(mx), few = q.length <= 14;
-      m.querySelector('.mk-vol').innerHTML = q.length ? `<small>Items for sale each hour</small><div class="mk-bars">${q.map((x, i) => `<i style="height:${Math.max(2, 100 * x / mx)}%" title="${H.fmt(x)} for sale · ${new Date(t[i] * 1000).toLocaleString()}">${few || i === pk || i === q.length - 1 ? `<em>${kf(x)}</em>` : ''}</i>`).join('')}</div>` : '';
+      m.querySelector('.mk-vol').innerHTML = q.length ? `<small>Items for sale each hour</small><div class="mk-bars">${q.map((x, i) => `<i${i === pk ? ' class="pk"' : ''} style="height:${Math.max(2, 100 * x / mx)}%" title="${H.fmt(x)} for sale · ${new Date(t[i] * 1000).toLocaleString()}">${few || i === pk || i === q.length - 1 ? `<em>${kf(x)}</em>` : ''}</i>`).join('')}</div>` : '';
     };
     draw();
   }

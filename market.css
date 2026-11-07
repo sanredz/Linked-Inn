@@ -177,3 +177,15 @@ button.mk-ui:hover { transform: translateY(-1px); }
   .ap-mkp .mk-chart .mk-yl { font-size: 11px; }
   .ap-mkp .mk-ix { padding-left: 0; padding-right: 0; }
 }
+@media (max-width: 520px) {
+  .mk-modal { padding: 0; place-items: stretch; }
+  .mk-card { width: 100%; max-height: 100dvh; height: 100dvh; border-radius: 0; border: 0; padding-bottom: 28px; }
+  .mk-body { padding: 0 10px; }
+  .mk-iplot { margin: 0 -10px 0 -6px; }
+  .mk-bars { gap: 2px; padding-right: 0; height: 46px; margin-top: 30px; }
+  .mk-bars i em { font-size: 9.5px; }
+  .mk-bars i em { letter-spacing: -0.03em; }
+}
+.mk-per { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 10px; padding: 2px 4px 8px; font-size: 12.5px; color: var(--muted, #9b8c6e); }
+.mk-per b { color: var(--gold, #f8d36b); font-weight: normal; }
+.mk-per small { font-size: 11px; opacity: 0.8; }

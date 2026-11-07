@@ -18,8 +18,12 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261107080206">
-<script src="market.js?v=20261107080206"></script>
+<link rel="stylesheet" href="market.css?v=20261107093918">
+<script src="market.js?v=20261107093918"></script>
+<link rel="stylesheet" href="armory.css?v=20261107093918">
+<script src="armory.js?v=20261107093918"></script>
+<link rel="stylesheet" href="duel.css?v=20261107093918">
+<script src="duel.js?v=20261107093918"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -1969,6 +1973,22 @@ body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
   .ap-soon .ap-swill span { font-size: 13.5px; }
   .ap-soon .ap-sbtn a { flex: 1 1 100%; justify-content: center; }
 }
+.ap-wgrid .cell i.ap-pc { font-style: normal; }
+.ap-wleg .ap-pcn { display: none; }
+@media (max-width: 720px) {
+  .ap-wgrid { gap: 3px; --wl: 28px; }
+  .ap-wgrid .ax img.round { width: 24px; height: 24px; }
+  .ap-wgrid .corner { font-size: 0; }
+  .ap-wgrid .cell { height: 32px; font-size: 12.5px; border-radius: 5px; min-width: 0; }
+  .ap-wgrid .cell i.ap-pc { display: none; }
+  .ap-wleg .ap-pcn { display: inline-flex; color: var(--muted, #9b8c6e); }
+  .ap-wleg .ap-pcn::before { display: none; }
+}
+.ap-tkl .ap-tk24 { font: 11px "Friz", serif; font-style: normal; color: #1a1206; background: rgba(0, 0, 0, 0.12); border: 1px solid rgba(90, 61, 12, 0.5); border-radius: 4px; padding: 1px 5px; }
+a.ap-lr { text-decoration: none; color: inherit; border-radius: 8px; } a.ap-lr:hover { background: rgba(248, 211, 107, 0.06); }
+.ar-home .ar-sbox { margin: 14px 0 0; max-width: none; }
+.psearch.ar-home > .in { overflow: visible; }
+.psearch.ar-home { position: relative; z-index: 6; }
 /* shared-header */
 .top .tab { font: 15.5px "Friz", serif; }
 .top .hbtn { font: 13px "Friz", serif; }
@@ -1986,6 +2006,7 @@ body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
   .top .right .hbtn:not(.hbtn ~ .hbtn) { margin-left: auto; }
   .top .right .hbtn img { width: 24px; height: 24px; }
   .top .right .hbtn span.t, .top .hbtn.get { display: none; }
+  .top .right .hbtn[href*="buymeacoffee"] { display: none; }
   .top .right .hbtn .n { font-size: 10.5px; padding: 0 5px; }
   .top .right .realm { order: 3; width: 100%; justify-content: center; }
   .top .tabs { order: 2; width: 100%; margin: 2px 0 0; gap: 2px; justify-content: space-between; }
@@ -2043,6 +2064,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
     </nav>
     <div class="right">
       <div class="realm" id="realm"></div>
+      <a class="hbtn" href="#armory" data-tip="The Armory|Look up any character: gear, stats and model, live."><img src="assets/game/ui/inv_helmet_25.png" alt=""><span class="t">Armory</span></a>
       <button class="hbtn" id="regulars" data-tip="The Regulars|The people who collect the census, by how many crafters they brought in."><img src="assets/game/ui/inv_drink_05.png" alt=""><span class="t">Regulars</span><span class="n" id="regN" hidden></span></button>
       <a class="hbtn" href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener" data-tip="Buy me a coffee|Keeps the census running."><img src="assets/game/ui/inv_drink_04.png" alt=""><span class="t">Buy me a coffee :-)</span></a>
       <a class="hbtn" href="#about" data-tip="About the numbers|Where they come from, how fresh they are and what they cannot see."><img src="assets/game/ui/inv_misc_note_01.png" alt=""><span class="t">About</span></a>
@@ -2101,7 +2123,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261107080206';
+window.LI_V = '20261107093918';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -2144,6 +2166,8 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     patches: { kicker: 'World of Warcraft: Forever', title: 'Patch notes' },
     population: { kicker: 'World of Warcraft: Forever', title: 'Who plays Forever' },
     economy: { kicker: 'World of Warcraft: Forever', title: 'The Auction House' },
+    armory: { kicker: 'World of Warcraft: Forever', title: 'The Armory' },
+    duel: { kicker: 'The Armory', title: 'A Duel' },
   };
   let O = window.LI_OPEN;
   const VOTE_API = 'https://forever-vote.sanredz.workers.dev';
@@ -4487,7 +4511,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const fz = (n, small) => SEASON.fresh ? small : n;
     const warm = (n, need, what) => (SEASON.fresh || n < need) ? `<div class="lz-warm"><img src="${UI('inv_misc_pocketwatch_01')}" alt=""><div><b>Counting</b><div class="lz-wb"><i style="width:${Math.min(100, SEASON.fresh ? 18 : 100 * n / need)}%"></i></div><span>${fmt(SEASON.fresh ? Math.round(need * 0.18) : n)} of ${fmt(need)} ${what} so far. This fills in once there are enough to say something true.</span></div></div>` : '';
     let h = window.LI_NEWS ? '<section class="frame panel s12" id="today"></section>' : '';
-    h += WRAPPED_ON ? wrappedBand('psq') : searchBox('psq');
+    h += BETA_DATA && window.LI_ARMORY ? `<section class="frame psearch ar-home"><div class="in slab"><div class="pt"><b>Look up any character</b><small>Their gear, stats and model, live from the Forever armory.</small></div>${arm().searchHtml('arhome')}</div></section>` : WRAPPED_ON ? wrappedBand('psq') : searchBox('psq');
     const wide = (x) => x.replace('class="frame htile"', 'class="frame htile ap-wide"');
     if (A) { const PA = A.census.regions.all || { chars: 0 }; h += wide(tile('#population', '#dcc6ff', 'assets/game/art/art-nightelves.jpg', UI('achievement_bg_killxenemies_generalsroom'), 'Population', fmt((A.census.known || {}).all || PA.chars), `characters found across every region and ruleset. <b>${fmt((A.census.guildCount || {}).all || 0)}</b> guilds and counting.`, 'Who plays Forever')); }
     if (window.ECON) { const ER = Object.values(ECON.regions); h += wide(tile('#economy', '#ffe08a', 'assets/game/art/econ-undermine.jpg', UI('inv_misc_coin_02'), 'Economy', fmt(ER.reduce((x, r) => x + r.listings, 0)), `auctions up in every auction house right now, from bargains below vendor price to a single gem listed for a million gold.`, 'Visit the auction house')); }
@@ -4568,7 +4592,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const cards = [];
     if (cards.length) h += panel('s12', 'From the archive', 'Pages from events that are over, kept exactly as they ended.', `<div class="arch">${cards.join('')}</div>`, { extra: '<a href="#archive" class="badge" style="text-decoration:none">All of it</a>' });
     document.getElementById('main').innerHTML = h;
-    bindSearch('psq', WRAPPED_ON ? '/wrapped' : '');
+    if (BETA_DATA && window.LI_ARMORY) arm().bind('arhome'); else bindSearch('psq', WRAPPED_ON ? '/wrapped' : '');
     const today = document.getElementById('today');
     if (today) LI_NEWS.home(today);
   }
@@ -4623,7 +4647,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     return out;
   }
   function apLadder(L, all, val) {
-    return `<div class="ap-lad">${L.map((p, i) => { const k = apCls(p.c); return `<div class="ap-lr"><span class="ap-rk">${i + 1}</span>${icoR(apRace(p.r), p.f, 36)}<div class="ap-who"><b style="color:${CC[k] || 'var(--ink)'}">${esc(p.n + ' ' + p.s)}</b><small>Level ${p.lv} ${esc(p.r)} ${esc(p.c)}${p.g ? ` · &lt;${esc(p.g)}&gt;` : ''}</small></div><span class="ap-tag">${esc(p.rs)}${all ? ' · ' + p.rg.toUpperCase() : ''}</span><span class="ap-lv">${val(p)}</span></div>`; }).join('')}</div>`;
+    return `<div class="ap-lad">${L.map((p, i) => { const k = apCls(p.c); return `<${p.slug ? `a href="#armory/${p.rg}/${encodeURIComponent(p.slug)}"` : 'div'} class="ap-lr"><span class="ap-rk">${i + 1}</span>${icoR(apRace(p.r), p.f, 36)}<div class="ap-who"><b style="color:${CC[k] || 'var(--ink)'}">${esc(p.n + ' ' + p.s)}</b><small>Level ${p.lv} ${esc(p.r)} ${esc(p.c)}${p.g ? ` · &lt;${esc(p.g)}&gt;` : ''}</small></div><span class="ap-tag">${esc(p.rs)}${all ? ' · ' + p.rg.toUpperCase() : ''}</span><span class="ap-lv">${val(p)}</span></${p.slug ? 'a' : 'div'}>`; }).join('')}</div>`;
   }
 
   function renderPopulation() {
@@ -4670,7 +4694,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const ccols = cf.map((x) => x.name);
     const rrows = rc.map(([k]) => k);
     const shadeW = (p, t) => p >= 0 ? `rgba(224,102,47,${(0.18 + 0.75 * t).toFixed(2)})` : `rgba(93,132,180,${(0.18 + 0.75 * t).toFixed(2)})`;
-    let grid = `<div class="grid ap-wgrid" style="grid-template-columns:44px repeat(${ccols.length},1fr)"><div class="corner">Race<br>Class</div>${ccols.map((c) => `<div class="ax" data-tip="${esc(c)}|"><img class="round" src="${cls(apCls(c))}" alt="" style="box-shadow:0 0 0 1px #000,0 0 0 2px ${CC[apCls(c)]}"></div>`).join('')}`;
+    let grid = `<div class="grid ap-wgrid" style="grid-template-columns:var(--wl,44px) repeat(${ccols.length},minmax(0,1fr))"><div class="corner">Race<br>Class</div>${ccols.map((c) => `<div class="ax" data-tip="${esc(c)}|"><img class="round" src="${cls(apCls(c))}" alt="" style="box-shadow:0 0 0 1px #000,0 0 0 2px ${CC[apCls(c)]}"></div>`).join('')}`;
     rrows.forEach((r) => {
       const tot = sum(ccols.map((c) => (R.combo[c] || {})[r] || 0));
       const open = ccols.filter((c) => (R.combo[c] || {})[r] >= Math.max(3, tot * 0.004));
@@ -4680,10 +4704,10 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
         const v = (R.combo[c] || {})[r] || 0;
         if (!open.includes(c) || !tot) { grid += '<div class="cell none"></div>'; return; }
         const p = v / tot, d = (p - avg) / avg;
-        grid += `<div class="cell" style="background:${shadeW(d, Math.min(1, Math.abs(d)))}" data-tip="${esc(r)} ${esc(c)}|${Math.round(p * 100)}% of ${esc(r)} characters play ${esc(c)} · ${fmt(v)} characters">${Math.round(p * 100)}%<small>${v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v}</small></div>`;
+        grid += `<div class="cell" style="background:${shadeW(d, Math.min(1, Math.abs(d)))}" data-tip="${esc(r)} ${esc(c)}|${Math.round(p * 100)}% of ${esc(r)} characters play ${esc(c)} · ${fmt(v)} characters"><span>${Math.round(p * 100)}<i class="ap-pc">%</i></span><small>${v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v}</small></div>`;
       });
     });
-    grid += '</div><div class="ap-wleg"><span class="hi">More popular than usual for that race</span><span class="lo">Less popular</span></div>';
+    grid += '</div><div class="ap-wleg"><span class="hi">More popular than usual for that race</span><span class="lo">Less popular</span><span class="ap-pcn">Numbers are % of each race</span></div>';
     h += panel('s7', 'Who plays what', 'For each race, the share of its characters playing each class. Orange means that class is picked more than an even split would give, blue less. Empty squares are pairs the game does not allow.', grid);
 
     const hr = R.hour, hrmax = Math.max(1, ...hr), peak = hr.indexOf(Math.max(...hr));
@@ -4827,7 +4851,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const ESx = R.essentials || [];
     if (ESx.length) {
       const tk = ESx.map((x) => { const it = apItem(x.id, E), d = x.ch; return `<span class="ap-tk" data-gi="${x.id}:0" data-ep="${fmt(x.q)} for sale"><img src="${it.ic}" alt=""><b>${esc(it.n)}</b>${apCoin(x.p)}${d != null ? `<em class="${d > 0 ? 'up' : d < 0 ? 'dn' : ''}">${d > 0 ? '▲' : d < 0 ? '▼' : '■'}${Math.abs(d)}%</em>` : ''}</span>`; }).join('');
-      h += `<div class="ap-ticker s12"><div class="ap-tkl"><img src="${UI('inv_misc_coin_17')}" alt="">Market<small>${RN2}</small></div><div class="ap-tkw"><div class="ap-tkr">${tk}${tk}</div></div></div>`;
+      h += `<div class="ap-ticker s12"><div class="ap-tkl"><img src="${UI('inv_misc_coin_17')}" alt="">Market<em class="ap-tk24">24h</em><small>${RN2}</small></div><div class="ap-tkw"><div class="ap-tkr">${tk}${tk}</div></div></div>`;
     }
     if (window.LI_MARKET) h += panel('s12', 'The market', 'Indexes track a basket of items like a stock index, starting at 100. Click indexes to compare them, or search any item for its full history.', '<div id="mkRoot"></div>', { cls: 'ap-mkp' });
 
@@ -4941,6 +4965,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     document.title = view === 'home' ? 'Life on Azeroth · the WoW: Forever census' : `${v.title} · Life on Azeroth`;
     document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('on', !!(t.dataset.v ? t.dataset.v === view : t.dataset.g && t.dataset.g === GROUP[view])));
     document.querySelectorAll('.ap-ddi').forEach((t) => t.classList.toggle('on', t.dataset.v === view));
+    if (view === 'duel' && DUSEL) document.getElementById('title').textContent = 'A Duel';
     const subEl = document.getElementById('sub'), inCensus = GROUP[view] === 'census';
     subEl.innerHTML = inCensus ? [...document.querySelectorAll('.ap-ddi')].map((a) => `<a class="btn${a.dataset.v === view ? ' on' : ''}" href="${a.getAttribute('href')}"><img src="${a.querySelector('img').getAttribute('src')}" alt="">${a.querySelector('b').firstChild.textContent}</a>`).join('') : '';
     subEl.hidden = !inCensus;
@@ -4948,9 +4973,51 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     if (view === 'news' || view === 'patches') { renderNews(); return; }
     if (view === 'population') { renderPopulation(); return; }
     if (view === 'economy') { renderEconomy(); return; }
+    if (view === 'armory') { renderArmory(); return; }
+    if (view === 'duel') { renderDuel(); return; }
     if (BETA_DATA && SOON[view]) renderSoon(view); else if (view === 'duels') renderDuels(); else if (view === 'life') renderLife(); else if (view === 'open') renderOpen(); else if (view === 'home') renderHome(); else if (view === 'archive') renderArchive(); else if (view === 'about') renderAbout(); else if (view === 'player') renderPlayer(); else renderCrafting();
   }
   let NSEL = '';
+  let ARSEL = { rg: '', slug: '' }, ARINIT = false, DUSEL = null;
+  function renderDuel() {
+    plainHead();
+    document.getElementById('note').textContent = '';
+    arm();
+    const el = document.getElementById('main');
+    if (!DUSEL || !window.LI_DUEL || !/^(us|eu|kr|tw)$/.test(DUSEL.a[0]) || !/^(us|eu|kr|tw)$/.test(DUSEL.b[0])) { location.hash = 'armory'; return; }
+    const key = JSON.stringify(DUSEL);
+    LI_DUEL.page(el, DUSEL.a, DUSEL.b, DUSEL.seed).then((r) => {
+      if (view !== 'duel' || JSON.stringify(DUSEL) !== key || !r || !r.A) return;
+      document.getElementById('title').textContent = `${r.A.c.n} vs ${r.B.c.n}`;
+      document.title = `${r.A.c.n} vs ${r.B.c.n} · A Duel · Life on Azeroth`;
+    });
+  }
+  function arm() {
+    if (!ARINIT && window.LI_ARMORY) { LI_ARMORY.init({ UI, CC, apCls, apRace, icoR }); ARINIT = true; }
+    return window.LI_ARMORY;
+  }
+  function renderArmory() {
+    plainHead();
+    document.getElementById('note').textContent = '';
+    const el = document.getElementById('main');
+    const want = ARSEL.rg + '/' + ARSEL.slug;
+    arm().page(el, ARSEL.rg, ARSEL.slug).then((D) => {
+      if (view !== 'armory' || ARSEL.rg + '/' + ARSEL.slug !== want || !D || !D.c) return;
+      document.getElementById('title').textContent = D.c.n + (D.c.s ? ' ' + D.c.s : '');
+      document.getElementById('kicker').textContent = `The Armory · Level ${D.c.lv} ${D.c.r} ${D.c.c}`;
+      document.title = `${D.c.n}${D.c.s ? ' ' + D.c.s : ''} · The Armory · Life on Azeroth`;
+      if (A && A.census) {
+        const C = A.census, row = { lv: D.c.lv, il: D.c.il, ach: D.c.ach, rg: D.c.rg, slug: D.c.slug, n: D.c.n, s: D.c.s, c: D.c.c, r: D.c.r, f: D.c.f, rs: D.c.rs, g: D.c.g };
+        [D.c.rg, 'all'].forEach((k) => {
+          const L = C.leaders && C.leaders[k];
+          if (!L) return;
+          const i = L.findIndex((x) => x.rg === row.rg && x.slug === row.slug);
+          if (i >= 0) L[i] = row; else if (L.length < 25 || row.lv > L[L.length - 1].lv) L.push(row); else return;
+          L.sort((a, b) => b.lv - a.lv || b.il - a.il).splice(25);
+        });
+      }
+    });
+  }
   function renderNews() {
     plainHead();
     document.getElementById('note').textContent = '';
@@ -4966,6 +5033,21 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
       const [v, id] = want.split('/');
       view = v;
       NSEL = id || '';
+      render();
+      return;
+    }
+    if (window.LI_DUEL) LI_DUEL.stop();
+    if (/^duel\//.test(want)) {
+      const [, ra, sa, rb, sb, sd] = want.split('/');
+      DUSEL = { a: [ra, decodeURIComponent(sa || '')], b: [rb, decodeURIComponent(sb || '')], seed: +sd || 0 };
+      view = 'duel';
+      render();
+      return;
+    }
+    if (/^armory(\/|$)/.test(want)) {
+      const [, rg, slug] = want.split('/');
+      ARSEL = { rg: rg || '', slug: decodeURIComponent(slug || '') };
+      view = 'armory';
       render();
       return;
     }

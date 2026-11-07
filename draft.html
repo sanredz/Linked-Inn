@@ -482,6 +482,13 @@ body.arena #stage { cursor: default; }
   .top .tab span { white-space: nowrap; overflow: hidden; text-overflow: clip; max-width: 100%; }
 }
 @media (max-width: 370px) { .top .brand b { font-size: 18px; } .top .brand .lz-mark { width: 32px; height: 32px; } .top .right .hbtn img { width: 20px; height: 20px; } }
+@media (max-width: 720px) {
+  .top .wrap { position: relative; }
+  .top .tabs .ap-grp { position: static; }
+  .top .ap-grp.open .ap-dd { display: block !important; left: 10px; right: 10px; top: 100%; padding-top: 4px; z-index: 30; }
+  .top .ap-grp.open .ap-ddbox { min-width: 0; }
+  .top .ap-grp.open > .tab { color: var(--gold); border-color: var(--gold-2, #8a6a2c); }
+}
 </style>
 </head>
 <body>
@@ -721,5 +728,15 @@ body.arena #stage { cursor: default; }
 <div id="tip" hidden></div>
 <div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button class="go" id="sheetMain" hidden>Main Hand</button><button class="go" id="sheetOff" hidden>Off Hand</button><button id="sheetClose">Close</button></div></div></div>
 <script type="module" src="draft/app.js?v=20261105154240"></script>
+<script>(() => {
+  const mq = matchMedia('(max-width: 720px)');
+  document.addEventListener('click', (e) => {
+    const g = e.target.closest('.top .ap-grp');
+    const tab = e.target.closest('.top .ap-grp > .tab');
+    document.querySelectorAll('.top .ap-grp.open').forEach((x) => { if (x !== g) x.classList.remove('open'); });
+    if (tab && mq.matches) { e.preventDefault(); g.classList.toggle('open'); return; }
+    if (g && e.target.closest('.ap-ddi')) g.classList.remove('open');
+  });
+})();</script>
 </body>
 </html>

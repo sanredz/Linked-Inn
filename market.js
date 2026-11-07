@@ -189,7 +189,7 @@
     const r = R(), groups = {};
     MKT.defs.forEach((d) => { if (r.idx[d.k]) (groups[d.g] = groups[d.g] || []).push(d); });
     const wait = st.fac !== 'all' && !facOn() ? `<div class="mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(st.fac)} prices start with the next hourly update. Showing every house until then.</span></div>` : '';
-    const rsWait = RSN() && !setOn() ? `<div class="mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(RSN())} indexes are new and fill in over the next couple of hours. Showing every auction house until then.</span></div>` : '';
+    const rsWait = RSN() && !setOn() ? `<div class="mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(RSN())} prices per item have only been recorded since Nov 7, so its indexes need a couple more hourly snapshots. Showing every auction house until then.</span></div>` : '';
     if (!Object.keys(groups).length && st.fac !== 'all' && facOn()) return `<div class="mk-empty mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(st.fac)} indexes need two hourly updates to start. Items already show ${esc(st.fac)} prices.</span></div>`;
     const per = { '6H': 'last 6 hours', '1D': 'last 24 hours', '1W': 'last 7 days', '1M': 'last 30 days', ALL: 'since tracking began' }[st.range];
     const short = { '6H': '6h', '1D': '24h', '1W': '7d', '1M': '30d', ALL: 'all time' }[st.range];

@@ -60,7 +60,7 @@
   const RSN = () => (H && H.rs && H.rs()) || null;
   const lat = (r, id) => {
     const l = r && r.latest && r.latest[id], rs = RSN();
-    if (!l || !rs) return l;
+    if (!l || !rs || r.rsv) return l;
     const v = l[5] && l[5][rs];
     return v ? [v[0], v[1], v[2], v[3], null, l[5]] : null;
   };
@@ -83,7 +83,15 @@
   }
   const facView = {};
   const facOn = () => { const v = st.fac !== 'all' && facView[st.region + ':' + st.fac]; return v && v.t.length && Object.keys(v.latest).length ? v : null; };
-  const R = () => facOn() || MKT.regions[st.region] || { t: [], idx: {}, latest: {}, counts: {} };
+  const SD = {}, setView = {};
+  const setSlug = (n) => n.toLowerCase().replace(/\s+/g, '-');
+  function loadSet(rg, n) {
+    const k = rg + ':' + n;
+    SD[k] = SD[k] || fetch(LIVE + '/market/' + rg + '/rs/' + setSlug(n)).then((r) => r.json()).then((d) => ({ rsv: true, t: (d.state || {}).t || [], idx: (d.state || {}).idx || {}, counts: (d.state || {}).counts || {}, latest: d.latest || {} })).catch(() => null);
+    return SD[k];
+  }
+  const setOn = () => { const n = RSN(); const v = n && setView[st.region + ':' + n]; return v && v.t.length >= 2 && Object.keys(v.idx).length ? v : null; };
+  const R = () => setOn() || facOn() || MKT.regions[st.region] || { t: [], idx: {}, latest: {}, counts: {} };
   const defOf = (k) => MKT.defs.find((d) => d.k === k);
   const shortName = (n) => n.replace(/^Green gear (\d+)–(\d+)$/, 'Green, lvl $1–$2').replace(/ patterns$/, '').replace(/^Blue gear$/, 'Blue and up').replace(/ and /, ' & ');
 
@@ -181,10 +189,11 @@
     const r = R(), groups = {};
     MKT.defs.forEach((d) => { if (r.idx[d.k]) (groups[d.g] = groups[d.g] || []).push(d); });
     const wait = st.fac !== 'all' && !facOn() ? `<div class="mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(st.fac)} prices start with the next hourly update. Showing every house until then.</span></div>` : '';
+    const rsWait = RSN() && !setOn() ? `<div class="mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(RSN())} indexes are new and fill in over the next couple of hours. Showing every auction house until then.</span></div>` : '';
     if (!Object.keys(groups).length && st.fac !== 'all' && facOn()) return `<div class="mk-empty mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(st.fac)} indexes need two hourly updates to start. Items already show ${esc(st.fac)} prices.</span></div>`;
     const per = { '6H': 'last 6 hours', '1D': 'last 24 hours', '1W': 'last 7 days', '1M': 'last 30 days', ALL: 'since tracking began' }[st.range];
     const short = { '6H': '6h', '1D': '24h', '1W': '7d', '1M': '30d', ALL: 'all time' }[st.range];
-    return wait + `<div class="mk-per"><span>Change over the <b>${per}</b></span><small>Follows the chart's time range</small></div><div class="mk-ix mk-ixh" aria-hidden="true"><span></span><span></span><span class="mk-nm">Index</span><span class="mk-spark">Trend</span><span class="mk-vl">Value</span><span class="mk-ch">${short}</span></div>` + Object.entries(groups).map(([g, ds]) => `<div class="mk-grp"><h5>${esc(g)}</h5>${ds.map((d) => {
+    return rsWait + wait + `<div class="mk-per"><span>Change over the <b>${per}</b></span><small>Follows the chart's time range</small></div><div class="mk-ix mk-ixh" aria-hidden="true"><span></span><span></span><span class="mk-nm">Index</span><span class="mk-spark">Trend</span><span class="mk-vl">Value</span><span class="mk-ch">${short}</span></div>` + Object.entries(groups).map(([g, ds]) => `<div class="mk-grp"><h5>${esc(g)}</h5>${ds.map((d) => {
       const v = r.idx[d.k], [, lv] = lastVal(v), ch = change(r.t, v, (RANGES.find((x) => x[0] === st.range) || [])[1]), on = st.series.findIndex((s) => s.kind === 'idx' && s.key === d.k);
       return `<button class="mk-ix${on >= 0 ? ' on' : ''}" data-ix="${d.k}" style="--sc:${on >= 0 ? COLORS[on] : 'transparent'}" title="${esc(d.d)} ${r.counts[d.k] || 0} items."><span class="mk-sw"></span><img src="${H.UI(d.ic)}" alt=""><span class="mk-nm">${esc(shortName(d.n))}</span>${spark(v)}<span class="mk-vl">${lv != null ? lv.toFixed(1) : '–'}</span><span class="mk-ch ${cls(ch)}">${pctTxt(ch)}</span></button>`;
     }).join('')}</div>`).join('');
@@ -360,6 +369,7 @@
       if (!window.MKT) { el.innerHTML = '<div class="mk-empty">Market history is not available right now.</div>'; return; }
       st.region = MKT.regions[region] ? region : (MKT.regions.eu ? 'eu' : Object.keys(MKT.regions)[0]);
       if (st.fac !== 'all' && MKT.live) facView[st.region + ':' + st.fac] = await loadFac(st.region, st.fac);
+      if (RSN() && MKT.live) setView[st.region + ':' + RSN()] = await loadSet(st.region, RSN());
       st.series = st.series.filter((s) => s.kind === 'idx' ? MKT.regions[st.region].idx[s.key] : true);
       if (!st.series.length) st.series = [{ kind: 'idx', key: Object.keys(MKT.regions[st.region].idx)[0] }];
       paint();

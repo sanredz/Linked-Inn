@@ -312,3 +312,7 @@
 .du.three .du-end { top: 76%; }
 .du.three .du-end b { font-size: 40px; }
 @media (max-width: 720px) { .du.three .du-end { top: 74%; } .du.three .du-end b { font-size: 30px; } }
+.du-res > .in { padding: 24px 28px 26px; }
+.du-res .du-rhead { padding: 14px 4px 20px 8px; }
+.du-res .du-crown { left: 38px; top: 2px; z-index: 1; }
+@media (max-width: 720px) { .du-res > .in { padding: 18px 14px 20px; } .du-res .du-rhead { padding: 12px 2px 16px 4px; } .du-res .du-crown { left: 24px; } }

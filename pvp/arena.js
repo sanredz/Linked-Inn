@@ -68,7 +68,7 @@ export class Arena {
     this.last = performance.now();
     this.names = ['', ''];
     this.mats = [[], []];
-    this.swing = [0, 0];
+    this.swingT = [0, 0];
     this.zap = [0, 0];
     this.fresh = [0, 0];
   }
@@ -317,7 +317,7 @@ export class Arena {
 
   reset() {
     this.playing = null;
-    this.swing = [0, 0];
+    this.swingT = [0, 0];
     this.zap = [0, 0];
     this.fresh = [0, 0];
     this.stageA.clearEffects();
@@ -493,7 +493,7 @@ export class Arena {
     if (f.state === 'fear') return 'run';
     if (f.cast) return 'cast';
     const t = this.playing ? this.playing.t : 0;
-    if (i !== undefined && this.swing[i] > t) return 'attack';
+    if (i !== undefined && this.swingT[i] > t) return 'attack';
     if (i !== undefined && this.zap[i] > t) return 'cast';
     if (moving) return 'run';
     return 'idle';
@@ -503,7 +503,7 @@ export class Arena {
     if (!['hit', 'miss', 'dodge', 'parry', 'resist'].includes(e.type) || !e.name || !this.playing) return;
     if (/Sting|Corruption|Agony|Pain|Ignite|Immolate|Flame Shock|Rend|Rip|Rake|Garrote|Deep Wound|Siphon|Drain|Mind Flay|Consecration|Thorns|Retribution Aura|Poison|Bleed|Felhunter|Cat|Pet|Wolf|Bear|Whelp|Skeleton|Hawk/.test(e.name)) return;
     const t = this.playing.t, i = e.side, phys = !e.school || e.school === 'phys' || /Shot|Shoot|Throw/.test(e.name);
-    if (phys) { this.swing[i] = t + 0.6; this.fresh[i] = 1; }
+    if (phys) { this.swingT[i] = t + 0.6; this.fresh[i] = 1; }
     else if (!(this.zap[i] > t)) this.zap[i] = t + 0.45;
   }
 

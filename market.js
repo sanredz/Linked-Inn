@@ -57,6 +57,17 @@
     if (!shardCache[k]) shardCache[k] = fetch('m/' + k + '.json?v=' + (window.MKT ? MKT.built : '')).then((r) => r.json()).catch(() => ({ t: [], i: {} }));
     return shardCache[k];
   }
+  const RSN = () => (H && H.rs && H.rs()) || null;
+  const lat = (r, id) => {
+    const l = r && r.latest && r.latest[id], rs = RSN();
+    if (!l || !rs) return l;
+    const v = l[5] && l[5][rs];
+    return v ? [v[0], v[1], v[2], v[3], null, l[5]] : null;
+  };
+  const rowOf = (sh, id) => {
+    const rs = RSN();
+    return rs ? (sh.rs && sh.rs[rs]) || null : sh.i[id];
+  };
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const icon = (id) => { const c = MKT.cat[id]; const tp = window.ECON && ECON.tips && ECON.tips[id]; const ic = (c && c[2]) || (tp && tp[10]); return ic ? `assets/icons/${ic}.png` : H.UI('inv_misc_questionmark'); };
   const pctTxt = (v) => v == null ? '–' : (v > 0 ? '+' : '') + v.toFixed(Math.abs(v) < 10 ? 1 : 0) + '%';
@@ -105,7 +116,7 @@
   async function seriesData(s) {
     if (s.kind === 'idx') { const x = idxSeries(s.key); return { name: defOf(s.key).n, t: x.t, v: x.v, unit: 'idx' }; }
     const sh = await shard(st.region, s.id);
-    const row = sh.i[s.id];
+    const row = rowOf(sh, s.id);
     return { name: MKT.cat[s.id] ? MKT.cat[s.id][0] : 'Item ' + s.id, t: sh.t, v: row ? row[0].map((x) => x || null) : [], unit: 'coin' };
   }
 
@@ -196,7 +207,7 @@
     const r = R(), words = q.toLowerCase().split(/\s+/).filter(Boolean);
     if (!words.length) return '';
     let hits = Object.entries(MKT.cat).filter(([, c]) => words.every((w) => c[0].toLowerCase().includes(w)))
-      .map(([id, c]) => [+id, c, r.latest[id]]);
+      .map(([id, c]) => [+id, c, lat(r, id)]).filter((x) => !RSN() || x[2]);
     const ql = q.trim().toLowerCase();
     const rank = (n) => { n = n.toLowerCase(); return n === ql ? 0 : n.startsWith(ql) ? 1 : n.split(/\s+/).some((w) => w.startsWith(words[0])) ? 2 : 3; };
     hits.sort((a, b) => rank(a[1][0]) - rank(b[1][0]) || ((b[2] ? b[2][3] : 0) - (a[2] ? a[2][3] : 0)));
@@ -215,9 +226,9 @@
     const c = MKT.cat[id];
     if (!c) return;
     document.querySelectorAll('.mk-modal').forEach((x) => x.remove());
-    const r = rg === st.region ? R() : MKT.regions[rg] || R(), l = r.latest[id];
+    const r = rg === st.region ? R() : MKT.regions[rg] || R(), l = lat(r, id);
     const [sh] = await Promise.all([shard(rg, id), loadTips()]);
-    const row = sh.i[id];
+    const row = rowOf(sh, id);
     const qc = QC[c[1]] || '#fff';
     const recipes = window.LI_MULTI ? Object.values(LI_MULTI.tips) : [];
     const byName = {};
@@ -228,7 +239,7 @@
     if (made) {
       let cost = 0, known = true;
       const rgs = made.reagents.map((g) => {
-        const gi = byName[g.name], gl = gi && r.latest[gi];
+        const gi = byName[g.name], gl = gi && lat(r, gi);
         if (gl) cost += gl[0] * g.count; else known = false;
         return `<${gi ? `button class="mk-rg mk-go" data-open="${gi}"` : 'div class="mk-rg"'}><img src="assets/icons/${g.icon}.png" alt=""><span>${g.count}× ${esc(g.name)}</span><span>${gl ? H.coin(gl[0] * g.count) : '<small>no price</small>'}</span></${gi ? 'button' : 'div'}>`;
       }).join('');
@@ -241,15 +252,15 @@
       const oi = byName[t.name];
       return `<${oi ? `button data-open="${oi}"` : 'span'} class="mk-ui${oi ? ' mk-go' : ''}${k >= 11 && usedIn.length > 12 ? ' mk-more-h' : ''}" style="--qc:${QC[t.q] || '#fff'}" data-tip="${esc(t.name)}|${esc(t.prof)}, skill ${t.skill || '?'}"><img src="assets/icons/${t.icon}.png" alt="${esc(t.name)}"></${oi ? 'button' : 'span'}>`;
     }).join('')}${usedIn.length > 12 ? `<button class="mk-more" data-more>+${usedIn.length - 11}</button>` : ''}</div></div>` : '';
-    const rp = ['us', 'eu', 'kr', 'tw'].filter((x) => MKT.regions[x]).map((x) => [x, MKT.regions[x].latest[id]]);
+    const rp = ['us', 'eu', 'kr', 'tw'].filter((x) => MKT.regions[x]).map((x) => [x, lat(MKT.regions[x], id)]);
     const priced = rp.filter(([, x]) => x && x[0]);
     const minP = Math.min(...priced.map(([, x]) => x[0])), low = priced.length > 1 && priced.filter(([, x]) => x[0] === minP).length === 1 ? priced.find(([, x]) => x[0] === minP)[0] : null;
     const regs = rp.map(([x, v]) => {
       const d = v && l && l[0] && x !== rg ? 100 * (v[0] / l[0] - 1) : null;
       return `<button class="mk-reg${x === rg ? ' on' : ''}" data-rg="${x}"${x === rg ? ' aria-current="true"' : ''}><span class="mk-rn">${x.toUpperCase()}${x === low ? '<em>cheapest</em>' : ''}</span><span class="mk-rp">${v ? H.coin(v[0]) : '<small>not listed</small>'}</span>${d != null ? `<small class="${cls(-d)}">${pctTxt(d)} vs ${rg.toUpperCase()}</small>` : x === rg ? '<small>viewing</small>' : ''}</button>`;
     }).join('');
-    const kin = Object.entries(MKT.cat).filter(([i, x]) => +i !== id && x[3] === c[3] && x[4] === c[4] && r.latest[i])
-      .map(([i, x]) => [+i, x, Math.abs((x[7] || 0) - (c[7] || 0)) * 1000 - (r.latest[i][3] || 0)]).sort((a, b) => a[2] - b[2]).slice(0, 8);
+    const kin = Object.entries(MKT.cat).filter(([i, x]) => +i !== id && x[3] === c[3] && x[4] === c[4] && lat(r, i))
+      .map(([i, x]) => [+i, x, Math.abs((x[7] || 0) - (c[7] || 0)) * 1000 - (lat(r, i)[3] || 0)]).sort((a, b) => a[2] - b[2]).slice(0, 8);
     const kinHtml = kin.length ? `<div class="mk-kin"><h4>Similar on the auction house</h4><div>${kin.map(([i, x]) => `<button class="mk-go" data-open="${i}" style="--qc:${QC[x[1]] || '#fff'}"><img src="${icon(i)}" alt=""><span class="mk-nm">${esc(x[0])}</span><span class="mk-pr">${H.coin(r.latest[i][0])}</span></button>`).join('')}</div></div>` : '';
     const ch24 = l ? l[4] : null;
     const stats = [['inv_misc_coin_02', 'Cheapest now', l ? H.coin(l[1]) : '–'], ['inv_misc_ticket_tarot_stack_01', 'Auctions', l ? H.fmt(l[3]) : '0'], ['inv_misc_bag_10', 'Items for sale', l ? H.fmt(l[2]) : '0'], ['inv_misc_coin_17', 'Vendor pays', c[6] ? H.coin(c[6]) : '–']];
@@ -260,7 +271,7 @@
     m.innerHTML = `<div class="mk-card" role="dialog" aria-label="${esc(c[0])}" style="--qc:${qc}"><button class="mk-x" aria-label="Close">×</button>
       <div class="mk-hero"><div class="mk-hero-ic"><img src="${icon(id)}" alt=""></div>
         <div class="mk-hero-tx"><h3>${esc(c[0])}</h3><div class="mk-chips">${chips.map((x) => `<span>${esc(x)}</span>`).join('')}</div></div>
-        <div class="mk-hero-px"><small>Typical price · ${esc((H.regionName || {})[rg] || rg.toUpperCase())}${rg === st.region && facOn() ? ' · ' + st.fac : ''}</small><b>${l ? H.coin(l[0]) : '<span class="mk-nl">Not listed right now</span>'}</b>${l ? `<span class="mk-pill ${cls(ch24)}">${pctTxt(ch24)} <i>24h</i></span>` : ''}
+        <div class="mk-hero-px"><small>Typical price · ${esc((H.regionName || {})[rg] || rg.toUpperCase())}${RSN() ? ' · ' + esc(RSN()) : ''}${rg === st.region && facOn() ? ' · ' + st.fac : ''}</small><b>${l ? H.coin(l[0]) : '<span class="mk-nl">Not listed right now</span>'}</b>${l ? `<span class="mk-pill ${cls(ch24)}">${pctTxt(ch24)} <i>24h</i></span>` : ''}
           <button class="mk-add" data-cmp="${id}"><img src="${H.UI('inv_misc_note_01')}" alt="">Add to chart</button></div></div>
       <div class="mk-stats">${stats.map(([ic, k, v]) => `<div><img src="${H.UI(ic)}" alt=""><span><small>${k}</small><b class="mk-sv">${v}</b></span></div>`).join('')}</div>
       <div class="mk-body"><div class="mk-left"><div class="mk-chead"><h4>Price history</h4><div class="mk-ranges">${RANGES.map(([k]) => `<button class="${k === st.range ? 'on' : ''}" data-mr="${k}">${k}</button>`).join('')}</div></div>

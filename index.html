@@ -19,12 +19,12 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261107125337">
-<script src="market.js?v=20261107125337"></script>
-<link rel="stylesheet" href="armory.css?v=20261107125337">
-<script src="armory.js?v=20261107125337"></script>
-<link rel="stylesheet" href="duel.css?v=20261107125337">
-<script src="duel.js?v=20261107125337"></script>
+<link rel="stylesheet" href="market.css?v=20261107131107">
+<script src="market.js?v=20261107131107"></script>
+<link rel="stylesheet" href="armory.css?v=20261107131107">
+<script src="armory.js?v=20261107131107"></script>
+<link rel="stylesheet" href="duel.css?v=20261107131107">
+<script src="duel.js?v=20261107131107"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -2126,7 +2126,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261107125337';
+window.LI_V = '20261107131107';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -4957,7 +4957,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     el.innerHTML = h;
     apTimer();
     const mkRoot = document.getElementById('mkRoot');
-    if (mkRoot && window.LI_MARKET) LI_MARKET.mount(mkRoot, { UI, coin: apCoin, coinT: apCoinT, fmt, tipHtml: (id) => gearTip(id + ':0'), regionName: APR }, sel.erg === 'all' ? 'eu' : sel.erg);
+    if (mkRoot && window.LI_MARKET) LI_MARKET.mount(mkRoot, { UI, coin: apCoin, coinT: apCoinT, fmt, tipHtml: (id) => gearTip(id + ':0'), regionName: APR, rs: () => (sel.ers !== 'all' ? sel.ers : null) }, sel.erg === 'all' ? 'eu' : sel.erg);
     el.onclick = (e) => { const g = e.target.closest('[data-gi]'); if (view === 'economy' && g && window.LI_MARKET && window.MKT && !e.target.closest('#mkRoot')) LI_MARKET.open(+g.dataset.gi.split(':')[0]); };
     document.querySelectorAll('#main [data-erg], .bar [data-erg]').forEach((b) => b.onclick = () => { sel.erg = b.dataset.erg; renderKeep(); });
     document.querySelectorAll('.bar [data-ers]').forEach((b) => b.onclick = () => { sel.ers = b.dataset.ers; renderKeep(); });

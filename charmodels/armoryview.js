@@ -103,13 +103,15 @@ export async function mountViewer(el, look, P, opts = {}) {
   size();
   const clock = new THREE.Clock();
   let alive = true;
+  const stop = () => { alive = false; R.setAnimationLoop(null); ro.disconnect(); R.dispose(); R.forceContextLoss(); };
   R.setAnimationLoop(() => {
     if (!alive) return;
+    if (!el.isConnected) { stop(); return; }
     const dt = clock.getDelta();
     if (idleSpin) yaw += dt * 0.12;
     place();
     mix.update(dt);
     R.render(S, C);
   });
-  return { stop() { alive = false; R.setAnimationLoop(null); ro.disconnect(); R.dispose(); }, play };
+  return { stop, play };
 }

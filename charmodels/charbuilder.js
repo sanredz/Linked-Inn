@@ -100,7 +100,7 @@ export async function buildCharacter(a, P) {
   const on = new Set([0]);
   for (const t of new Set(avail.map((x) => Math.floor(x / 100)))) {
     if (t === 17 && groups[t] === undefined) continue;
-    const want = geo[t] !== undefined ? t * 100 + geo[t] : t * 100 + (groups[t] ?? 1);
+    const want = geo[t] !== undefined ? t * 100 + geo[t] : t * 100 + (groups[t] ?? (t === 32 ? 2 : 1));
     if (avail.includes(want)) on.add(want);
   }
   if (groups[0] !== undefined && avail.includes(groups[0])) on.add(groups[0]);

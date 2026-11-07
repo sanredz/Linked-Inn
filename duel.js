@@ -43,8 +43,22 @@
       cls, plan: E.PLANS[cls][plans[Math.floor(r() * plans.length)]],
       stats: { str: S.str || 0, agi: S.agi || 0, sta: S.sta || 0, int: S.int || 0, spi: S.spi || 0, armor: S.arm || 0, ap: S.ap || 0, rap: S.rap || 0, sp: S.sp || 0, crit: S.crit || 0, scrit: S.scrit || 0, hit: S.hit || 0, shit: S.shit || 0, mana: S.pt === 'Mana' ? S.pw || 0 : 0, mp5: 0 },
       main: weapon(G.MAIN_HAND), off: weapon(G.OFF_HAND), bow: weapon(G.RANGED),
-      extra: { boon: { dmg: luck + edge.dmg, taken: edge.taken } },
+      extra: { lvf: Math.max(0.06, Math.min(1, ((D.c.lv || 60) / 60) ** 2)), boon: { dmg: luck + edge.dmg, taken: edge.taken } },
     };
+  }
+
+  const CASTER = { MAGE: 1, WARLOCK: 1, PRIEST: 1 }, HYBRID = { PALADIN: 1, SHAMAN: 1, DRUID: 1, HUNTER: 1 };
+  function spellScale(cls, lv) {
+    const f = Math.max(0.2, Math.min(1, (lv || 60) / 60));
+    return CASTER[cls] ? f - 1 : HYBRID[cls] ? (1 + f) / 2 - 1 : 0;
+  }
+
+  function trueHealth(E, side, D) {
+    const real = (D.stats || {}).hp;
+    if (!(real > 0)) return side;
+    const f = E.makeFighter(side);
+    side.extra.hp = real - (f.hp - (side.extra.hp || 0));
+    return side;
   }
 
   function realHealth(rec, x, A, B) {
@@ -360,8 +374,7 @@
     const r = rng(seed), [ea, eb] = edges(A.c.lv, B.c.lv);
     const arena = ARENAS[seed % ARENAS.length];
     const rec = { events: [], frames: [] };
-    const x = E.fight(sideOf(A, E, r, ea), sideOf(B, E, r, eb), seed, rec);
-    realHealth(rec, x, A, B);
+    const x = E.fight(trueHealth(E, sideOf(A, E, r, ea), A), trueHealth(E, sideOf(B, E, r, eb), B), seed, rec);
     const names = A.c.n === B.c.n ? [full(A), full(B)] : [A.c.n, B.c.n];
     let G3 = null;
     try { G3 = await arena3d(); } catch (e) { G3 = null; }

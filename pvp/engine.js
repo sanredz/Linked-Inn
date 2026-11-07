@@ -111,7 +111,7 @@ export function makeFighter(side) {
     agi: c('agi'), spi: c('spi'), mp5: c('mp5'), main: hand, off: weaponKeep(off), bow: weaponKeep(bow, ref.bdps),
     cd: {}, gcd: 0, swing: 0, swing2: .5, shot: 0, cast: null, channel: null, aura: {}, slows: {}, dr: {}, absorb: (extra.boon && extra.boon.shield) || 0, weakened: 0,
     form: cls === 'PRIEST' || cls === 'DRUID', stealth: !!p.stealth, dots: [], hots: [], lastCast: -9, overpower: 0, fingers: 0, night: 0, charged: 0, pushed: 0, flurry: 0,
-    hold: 0, dealt: 0, healed: 0, absorbed: 0, ccd: 0, kit: new Set(extra.kit || []), crusader: (extra.crusader || 0), ward: null, boon: extra.boon || {}, boonAt: {},
+    lvf: extra.lvf || 1, hold: 0, dealt: 0, healed: 0, absorbed: 0, ccd: 0, kit: new Set(extra.kit || []), crusader: (extra.crusader || 0), ward: null, boon: extra.boon || {}, boonAt: {},
   };
 }
 
@@ -171,6 +171,7 @@ export function fight(a, b, seed, rec) {
   }
 
   function hurt(f, amount, src, school, name, crit, periodic) {
+    amount *= (src && src.lvf) || 1;
     if (on(f, 'block') || amount <= 0) return 0;
     if (f.boon.dodge && !periodic && r() < f.boon.dodge) { say('dodge', f, name); return 0; }
     const S = src.boon, B = f.boon, power = (src.p.power || 1) * (MATCHUP[src.cls]?.[f.cls] || 1) * (1 + (S.dmg || 0)) * (t < 15 ? 1 + (S.opening || 0) : 1) * (f.hp / f.max < .35 ? 1 + (S.execute || 0) : 1) * (src.hp / src.max < .4 ? 1 + (S.rage || 0) : 1) * (1 - (B.taken || 0));
@@ -208,6 +209,7 @@ export function fight(a, b, seed, rec) {
   }
 
   function heal(f, amount, name) {
+    amount *= f.lvf || 1;
     const v = Math.min(f.max - f.hp, amount * healMult(f));
     if (v <= 0) return 0;
     f.hp += v;
@@ -228,7 +230,7 @@ export function fight(a, b, seed, rec) {
     if (x < miss + dodge) { f.overpower = t + 5; say('dodge', f, o.name || 'Melee'); return null; }
     if (x < miss + dodge + parry) { say('parry', f, o.name || 'Melee'); return null; }
     const crit = x < miss + dodge + parry + f.crit + (o.crit || 0);
-    const base = (roll(w) + (f.ap + (on(f, 'crus') ? 200 : 0) + (on(f, 'mighty') ? 120 : 0) - (on(f, 'roar') ? BEAR.roar : 0)) / 14 * (o.normal || w.speed)) * (o.pct ?? 1) + (o.flat || 0);
+    const base = (roll(w) + (f.ap + (on(f, 'crus') ? 200 : 0) + (on(f, 'mighty') ? 120 : 0) - (on(f, 'roar') ? BEAR.roar : 0)) / 14 * (o.normal || w.speed)) * (o.pct ?? 1) / (f.lvf || 1) + (o.flat || 0);
     const dmg = base * (o.hand === 'off' ? f.p.offMult || .5 : 1) * (crit ? 2 + (o.white ? 0 : f.p.crit2) : 1) * (f.p.all || 1) * armorDr(e);
     hurt(e, dmg, f, 'phys', o.name || 'Melee', crit);
     return { crit, dmg };
@@ -239,7 +241,7 @@ export function fight(a, b, seed, rec) {
     if (!w || on(e, 'block') || on(e, 'stoneform')) return null;
     if (x < Math.max(0, BASE_MISS - f.hit)) { say('miss', f, o.name || 'Auto Shot'); return null; }
     const crit = x < BASE_MISS - f.hit + f.crit;
-    const dmg = ((roll(w) + f.rap / 14 * w.speed) * (o.pct ?? 1) + (o.flat || 0)) * (crit ? 2 + f.p.crit2 : 1) * (f.p.all || 1) * armorDr(e);
+    const dmg = ((roll(w) + f.rap / 14 * w.speed) * (o.pct ?? 1) / (f.lvf || 1) + (o.flat || 0)) * (crit ? 2 + f.p.crit2 : 1) * (f.p.all || 1) * armorDr(e);
     hurt(e, dmg, f, 'phys', o.name || 'Auto Shot', crit);
     return { crit, dmg };
   }

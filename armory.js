@@ -32,6 +32,13 @@
     return `<a class="ar-hit${i === 0 ? ' sel' : ''}" href="${link(x.rg, x.slug)}" data-rg="${x.rg}" data-slug="${esc(x.slug)}">${H.icoR(H.apRace(r), fac, 34)}<span class="ar-hn"><b style="color:${H.CC[k] || '#fff'}">${esc(x.n)}${x.s ? ' ' + esc(x.s) : ''}</b><small>Level ${x.lv || '?'} ${esc(r)} ${esc(c)}${x.g ? ` · &lt;${esc(x.g)}&gt;` : ''}</small></span><span class="ar-rg">${x.rg.toUpperCase()}</span></a>`;
   }
 
+  function liveRows(q, first) {
+    const w = q.trim().split(/\s+/);
+    if (w.length !== 2 || w.some((x) => x.length < 2)) return '';
+    const slug = w.join('-').toLowerCase(), nm = w.map((x) => x[0].toUpperCase() + x.slice(1).toLowerCase()).join(' ');
+    return ['us', 'eu', 'kr', 'tw'].map((rg, i) => `<a class="ar-hit${first && i === 0 ? ' sel' : ''}" href="${link(rg, slug)}" data-rg="${rg}" data-slug="${esc(slug)}"><img class="ar-lv" src="${H.UI('inv_misc_book_09')}" alt=""><span class="ar-hn"><b>${esc(nm)}</b><small>Not in the census yet · look up live</small></span><span class="ar-rg">${rg.toUpperCase()}</span></a>`).join('');
+  }
+
   function searchHtml(id, big) {
     return `<div class="ar-sbox${big ? ' big' : ''}"><svg class="ar-sic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><input id="${id}" type="search" placeholder="Search any character, e.g. Vitochie" autocomplete="off" spellcheck="false" aria-label="Search characters"><div class="ar-drop" id="${id}-d"></div></div>`;
   }
@@ -52,7 +59,9 @@
           const r = await fetch(`${API}/find/${encodeURIComponent(q.toLowerCase())}`);
           const d = await r.json();
           if (t !== tok) return;
-          show(d.hits && d.hits.length ? d.hits.map(hitRow).join('') : `<div class="ar-hint">Nobody called “${esc(q)}” yet. Use their first name, then their surname.</div>`);
+          const hits = d.hits || [], qs = q.toLowerCase().replace(/\s+/g, '-');
+          const extra = hits.some((x) => x.slug === qs) ? '' : liveRows(q, !hits.length);
+          show(hits.length || extra ? hits.map(hitRow).join('') + extra : `<div class="ar-hint">Nobody called “${esc(q)}” yet. Type their first name and surname to look them up live.</div>`);
         } catch (e) { if (t === tok) show('<div class="ar-hint">Search is not reachable right now.</div>'); }
       }, 200);
     });
@@ -228,7 +237,7 @@
       return D;
     }
     if (D.missing || D.error) {
-      el.innerHTML = `<section class="frame ar-land s12"><div class="in"><img class="ar-lic" src="${H.UI('inv_misc_questionmark')}" alt=""><h2>${D.error ? 'The armory is not answering' : 'Nobody home'}</h2><p>${D.error ? 'Try again in a minute.' : 'This character could not be found. They may have been renamed, deleted, or asked to be left out.'}</p>${searchHtml('arq', true)}</div></section>`;
+      el.innerHTML = `<section class="frame ar-land s12"><div class="in"><img class="ar-lic" src="${H.UI('inv_misc_questionmark')}" alt=""><h2>${D.error ? 'The armory is not answering' : 'Nobody home'}</h2><p>${D.error ? 'Try again in a minute.' : 'This character could not be found in this region. They may play in another region, have been renamed or deleted, or asked to be left out.'}</p>${searchHtml('arq', true)}</div></section>`;
       bind('arq');
       return D;
     }

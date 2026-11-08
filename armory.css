@@ -14,6 +14,7 @@
 .ar-hn b { font: 17px "Friz", serif; font-weight: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ar-hn small { font-size: 12.5px; color: var(--muted, #9b8c6e); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ar-rg { font: 11px "Friz", serif; color: var(--ink-2, #cbb994); border: 1px solid #4a3a1c; border-radius: 999px; padding: 2px 8px; }
+.ar-lv { width: 34px; height: 34px; border-radius: 6px; flex: none; }
 .ar-hint { padding: 12px; color: var(--muted, #9b8c6e); font-size: 14px; }
 
 .ar-land > .in { padding: 46px 28px 40px; text-align: center; background: radial-gradient(ellipse at 50% 0%, rgba(248, 211, 107, 0.16), transparent 60%), linear-gradient(rgba(10, 8, 5, 0.75), rgba(10, 8, 5, 0.94)), url("assets/game/scenes/dalaran.jpg") center / cover; overflow: visible; }

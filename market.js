@@ -118,7 +118,7 @@
   }
   function fmtTime(t, span) {
     const d = new Date(t * 1000);
-    return span > 3 * 86400 ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    return span > 3 * 86400 ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : span > 18 * 3600 ? d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   }
 
   async function seriesData(s) {

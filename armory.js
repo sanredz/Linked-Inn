@@ -137,7 +137,7 @@
     const chips = [
       [`${c.il}`, 'Item level', 'inv_helmet_25'],
       c.ach ? [c.ach.toLocaleString('en-US'), 'Achievement points', 'achievement_level_30'] : null,
-      [c.rs, c.rg.toUpperCase(), 'inv_bannerpvp_01'],
+      [c.rs, c.rg.toUpperCase(), ({ PvP: 'ability_dualwield', Normal: 'achievement_zone_elwynnforest', Roleplay: 'inv_misc_book_11', 'Roleplay PvP': 'achievement_arena_2v2_7' })[c.rs] || 'achievement_guildperk_everybodysfriend'],
       c.last ? [ago(c.last).replace(' ago', ''), 'Last played', 'inv_misc_pocketwatch_01'] : null,
     ].filter(Boolean).map(([v, l, ic]) => `<div class="ar-chip"><img src="${H.UI(ic)}" alt="" onerror="this.src='${H.UI('inv_misc_questionmark')}'"><span><b>${esc(v)}</b><small>${esc(l)}</small></span></div>`).join('');
     return `<section class="frame ar-sheet s12" style="--cc:${cc};--bg:url('assets/game/${sc}.jpg')"><div class="in">

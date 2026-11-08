@@ -20,12 +20,12 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261108150000">
-<script src="market.js?v=20261108150000"></script>
-<link rel="stylesheet" href="armory.css?v=20261108150000">
-<script src="armory.js?v=20261108150000"></script>
-<link rel="stylesheet" href="duel.css?v=20261108150000">
-<script src="duel.js?v=20261108150000"></script>
+<link rel="stylesheet" href="market.css?v=20261108160000">
+<script src="market.js?v=20261108160000"></script>
+<link rel="stylesheet" href="armory.css?v=20261108160000">
+<script src="armory.js?v=20261108160000"></script>
+<link rel="stylesheet" href="duel.css?v=20261108160000">
+<script src="duel.js?v=20261108160000"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -2079,9 +2079,9 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
       <a class="tab" data-v="home" href="#home"><img src="assets/game/ui/achievement_zone_elwynnforest.png" alt=""><span>Home</span></a>
       <a class="tab" data-v="news" href="#news"><img src="assets/game/ui/inv_misc_note_01.png" alt=""><span>News</span></a>
       <div class="ap-grp">
-        <a class="tab" data-g="census" href="#population"><img src="assets/game/ui/achievement_bg_killxenemies_generalsroom.png" alt=""><span>Census</span><i class="ap-caret"></i></a>
+        <a class="tab" data-g="census" href="#population"><img src="assets/game/ui/achievement_guildperk_everybodysfriend.png" alt=""><span>Census</span><i class="ap-caret"></i></a>
         <div class="ap-dd"><div class="ap-ddbox">
-          <a class="ap-ddi" data-v="population" href="#population"><img src="assets/game/ui/inv_bannerpvp_01.png" alt=""><span><b>Population<i class="ap-new">New</i></b><small>Everyone we can find, in every region</small></span></a>
+          <a class="ap-ddi" data-v="population" href="#population"><img src="assets/game/ui/achievement_guildperk_everybodysfriend.png" alt=""><span><b>Population<i class="ap-new">New</i></b><small>Everyone we can find, in every region</small></span></a>
           <a class="ap-ddi" data-v="crafting" href="#crafting"><img src="assets/game/ui/inv_misc_bag_10.png" alt=""><span><b>Crafting</b><small>Professions and recipes</small></span></a>
           <a class="ap-ddi" data-v="duels" href="#duels"><img src="assets/game/ui/ability_parry.png" alt=""><span><b>Duels</b><small>Who beats who</small></span></a>
           <a class="ap-ddi" data-v="life" href="#life"><img src="assets/game/ui/inv_misc_book_09.png" alt=""><span><b>Life</b><small>Deaths, habits and records</small></span></a>
@@ -2152,7 +2152,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261108150000';
+window.LI_V = '20261108160000';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -2734,7 +2734,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     document.getElementById('note').textContent = `${fmt(L.n)} players`;
     const tot = (k) => L.totals[k] || 0;
     let h = '';
-    h += plaque(UI('achievement_bg_killxenemies_generalsroom'), 'Players', fmt(L.n), 'whose lives we read');
+    h += plaque(UI('achievement_guildperk_everybodysfriend'), 'Players', fmt(L.n), 'whose lives we read');
     h += plaque(UI('spell_shadow_deathscream'), 'Deaths', fmt(tot('deaths')), `${(tot('deaths') / Math.max(1, L.n)).toFixed(1)} each on average`);
     h += plaque(UI('inv_misc_rabbit'), 'Critters slain', fmt(tot('critters')), 'squirrels beware');
     h += plaque(UI('inv_misc_coin_17'), 'Gold earned', gold(tot('goldtotal')), 'all of them together');
@@ -3518,7 +3518,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     document.getElementById('note').textContent = built ? `Updated ${new Date(built * 1000).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : '';
     const LI = '<a href="https://www.curseforge.com/wow/addons/linked-inn-profession-finder" target="_blank" rel="noopener">Linked Inn</a>';
     const src = [
-      ['achievement_bg_killxenemies_generalsroom', 'Census', 'Public character and guild profiles, the same ones anyone can look up. New characters are found all the time and known ones are checked again now and then. All four regions: US, EU, KR and TW.'],
+      ['achievement_guildperk_everybodysfriend', 'Census', 'Public character and guild profiles, the same ones anyone can look up. New characters are found all the time and known ones are checked again now and then. All four regions: US, EU, KR and TW.'],
       ['inv_helmet_25', 'Armory', 'When you look someone up, their profile is fetched from the game right then, so it is as fresh as the game has it.'],
       ['inv_misc_coin_02', 'Economy', 'Every auction house in every region, read about once an hour. Prices are typical prices, the middle of what is listed, not the cheapest single auction.'],
       ['inv_misc_bag_10', 'Crafting and stories', `Professions from the ${LI} addon and from lists players send in, and the Statistics panel anyone can open when comparing achievements.`],
@@ -4550,7 +4550,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     let h = window.LI_NEWS ? '<section class="frame panel s12" id="today"></section>' : '';
     h += BETA_DATA && window.LI_ARMORY ? `<section class="frame psearch ar-home"><div class="in slab"><div class="pt"><b>Look up any character</b><small>Their gear, stats and model, live from the Forever armory.</small></div>${arm().searchHtml('arhome')}</div></section>` : WRAPPED_ON ? wrappedBand('psq') : searchBox('psq');
     const wide = (x) => x.replace('class="frame htile"', 'class="frame htile ap-wide"');
-    if (A) { const PA = A.census.regions.all || { chars: 0 }; h += wide(tile('#population', '#dcc6ff', 'assets/game/art/art-nightelves.jpg', UI('achievement_bg_killxenemies_generalsroom'), 'Population', (apLive ? fmt((A.census.known || {}).all || PA.chars) : '…'), `characters found across every region and ruleset. <b>${fmt((A.census.guildCount || {}).all || 0)}</b> guilds and counting.`, 'Who plays Forever')); }
+    if (A) { const PA = A.census.regions.all || { chars: 0 }; h += wide(tile('#population', '#dcc6ff', 'assets/game/art/art-nightelves.jpg', UI('achievement_guildperk_everybodysfriend'), 'Population', (apLive ? fmt((A.census.known || {}).all || PA.chars) : '…'), `characters found across every region and ruleset. <b>${fmt((A.census.guildCount || {}).all || 0)}</b> guilds and counting.`, 'Who plays Forever')); }
     if (window.ECON) { const ER = Object.values(ECON.regions); h += wide(tile('#economy', '#ffe08a', 'assets/game/art/econ-undermine.jpg', UI('inv_misc_coin_02'), 'Economy', fmt(ER.reduce((x, r) => x + r.listings, 0)), `auctions up in every auction house right now, from bargains below vendor price to a single gem listed for a million gold.`, 'Visit the auction house')); }
     if (BETA_DATA) {
       const st = (v, color, bg, icon, label, line) => tile('#' + v, color, bg, UI(icon), label, 'Coming soon', line, 'Take a look').replace('class="frame htile"', 'class="frame htile ap-tsoon"');
@@ -4638,7 +4638,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   const AP_REG_ART = { all: 'land-badlands', us: 'land-thunderbluff', eu: 'land-tirisfall', kr: 'land-darnassus', tw: 'land-thousandneedles' };
   const AP_CLASS_ART = { WARRIOR: 'art-warriorarms', PALADIN: 'art-paladinholy', HUNTER: 'art-hunterbeastmastery', ROGUE: 'art-roguecombat', PRIEST: 'art-priestholy', SHAMAN: 'art-shamanrestoration', MAGE: 'art-magefire', WARLOCK: 'art-warlocksummoning', DRUID: 'art-druidferalcombat' };
   const AP_CREST = { Human: 'crest-alliance', Dwarf: 'crest-dwarf', 'Night Elf': 'crest-nightelf', Orc: 'crest-orc', Troll: 'crest-troll', Tauren: 'crest-tauren', Undead: 'crest-forsaken' };
-  const AP_RS_ICON = { PvP: 'ability_dualwield', Normal: 'achievement_zone_elwynnforest', Roleplay: 'inv_misc_book_11', 'Roleplay PvP': 'inv_bannerpvp_02' };
+  const AP_RS_ICON = { PvP: 'ability_dualwield', Normal: 'achievement_zone_elwynnforest', Roleplay: 'inv_misc_book_11', 'Roleplay PvP': 'achievement_arena_2v2_7' };
   const AP_FAC = { Alliance: '#4a8fe7', Horde: '#d8443a', Blackwater: '#d9a940' };
   const AP_CAT = { Armor: ['inv_helmet_25', '#7aa0d8'], 'Trade goods': ['inv_stone_04', '#62b98c'], Weapons: ['inv_sword_27', '#d8694a'], Consumables: ['inv_potion_51', '#c77dff'],
     Recipes: ['inv_misc_book_11', '#d9a940'], Miscellaneous: ['inv_misc_gift_01', '#9aa3ad'], Bags: ['inv_misc_bag_07', '#b88a5a'], Reagents: ['inv_misc_dice_01', '#5fc7a8'],
@@ -4693,7 +4693,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     if (!C.regions[sel.rg]) sel.rg = 'all';
     sel.prs = sel.prs || 'all';
     const RSL = ['PvP', 'Normal', 'Roleplay', 'Roleplay PvP'], hasRs = !!C.regions['all|PvP'];
-    document.getElementById('opt').innerHTML = ['all', ...RSL].map((k) => `<button class="btn${sel.prs === k ? ' on' : ''}" data-prs="${esc(k)}"><img src="${UI(k === 'all' ? 'achievement_bg_killxenemies_generalsroom' : AP_RS_ICON[k] || 'inv_misc_questionmark')}" alt="">${k === 'all' ? 'Every ruleset' : esc(k)}</button>`).join('');
+    document.getElementById('opt').innerHTML = ['all', ...RSL].map((k) => `<button class="btn${sel.prs === k ? ' on' : ''}" data-prs="${esc(k)}"><img src="${UI(k === 'all' ? 'achievement_guildperk_everybodysfriend' : AP_RS_ICON[k] || 'inv_misc_questionmark')}" alt="">${k === 'all' ? 'Every ruleset' : esc(k)}</button>`).join('');
     document.getElementById('sep2').hidden = false;
     document.querySelector('.bar').classList.add('ap-ebar');
     const rsKey = (r) => (sel.prs !== 'all' && hasRs ? `${r}|${sel.prs}` : r);
@@ -4705,8 +4705,8 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     let h = window.LI_ARMORY ? `<section class="frame psearch ar-home s12"><div class="in slab"><div class="pt"><b>Find anyone</b><small>Search ${fmt(known('all'))} characters. Opens their gear, stats and model, live.</small></div>${arm().searchHtml('arpop')}</div></section>` : '';
     const onRs = sel.prs !== 'all' && hasRs;
     h += apRegionCards(['all', 'us', 'eu', 'kr', 'tw'].filter((r) => C.regions[r]), sel.rg, 'rg', (r) => onRs ? [fmt(KN[rsKey(r)] || 0), `${sel.prs} characters found`] : [fmt(known(r)), 'characters found']);
-    h += onRs ? plaque(UI(AP_RS_ICON[sel.prs] || 'achievement_bg_killxenemies_generalsroom'), `${sel.prs} characters`, fmt(KN[rsKey(sel.rg)] || 0), 'found in their guild rosters') : plaque(UI('achievement_bg_killxenemies_generalsroom'), 'Characters', fmt(known(sel.rg)), 'found in their guild rosters');
-    h += plaque(UI('inv_bannerpvp_01'), 'Guilds', fmt(gN), 'with a public roster');
+    h += onRs ? plaque(UI(AP_RS_ICON[sel.prs] || 'achievement_guildperk_everybodysfriend'), `${sel.prs} characters`, fmt(KN[rsKey(sel.rg)] || 0), 'found in their guild rosters') : plaque(UI('achievement_guildperk_everybodysfriend'), 'Characters', fmt(known(sel.rg)), 'found in their guild rosters');
+    h += plaque(UI('inv_shirt_guildtabard_01'), 'Guilds', fmt(gN), 'with a public roster');
     h += plaque(UI('inv_misc_pocketwatch_01'), 'Played today', fmt(R.active1), `of the ${fmt(R.profiled)} we looked up`);
     const medLv = (() => { const L = R.levels || [], n = L.reduce((a, b) => a + b, 0); let c = 0; for (let i = 0; i < L.length; i++) { c += L[i]; if (c >= n / 2) return i; } return 0; })();
     h += plaque(UI('achievement_level_30'), 'Typical level', medLv || '–', 'half of everyone is above this level');
@@ -4732,9 +4732,9 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
       const races = Object.entries(R.combo[x.name] || {}).filter(([k]) => k !== '?' && (PF === 'all' || !RACE_FAC[apRace(k)] || RACE_FAC[apRace(k)] === PF)).sort((p, q) => q[1] - p[1]);
       const g = R.gender[x.name] || {}, gt = (g.MALE || 0) + (g.FEMALE || 0);
       const meta = [races[0] ? `Mostly ${esc(races[0][0])}` : '', gt ? `${pct(g.FEMALE || 0, gt)}% female` : ''].filter(Boolean).join(' · ');
-      return `<div class="ap-cc" style="--bg:url('assets/game/${AP_CLASS_ART[x.k]}.jpg');--cc:${CC[x.k]}" data-tip="${CN[x.k]}|${fmt(x.a)} Alliance · ${fmt(x.h)} Horde"><img class="ci" src="${cls(x.k)}" alt=""><span class="rk">#${i + 1}</span><div class="nm">${CN[x.k]}</div><div class="pc">${pct(fv(x), ftot)}%<small>${fmt(fv(x))}</small></div><div class="mt">${meta}</div><div class="fb"><i class="a" style="flex:${x.a}"></i><i class="h" style="flex:${x.h}"></i></div><div class="ap-fn"><span class="a">${pct(x.a, x.a + x.h)}% Alliance</span><span class="h">${pct(x.h, x.a + x.h)}% Horde</span></div></div>`;
+      return `<div class="ap-cc" style="--bg:url('assets/game/${AP_CLASS_ART[x.k]}.jpg');--cc:${CC[x.k]}" data-tip="${CN[x.k]}|${fmt(x.a)} Alliance · ${fmt(x.h)} Horde"><img class="ci" src="${cls(x.k)}" alt=""><span class="rk">#${i + 1}</span><div class="nm">${CN[x.k]}</div><div class="pc">${(100 * fv(x) / Math.max(1, ftot)).toFixed(1)}%<small>${fmt(fv(x))}</small></div><div class="mt">${meta}</div><div class="fb"><i class="a" style="flex:${x.a}"></i><i class="h" style="flex:${x.h}"></i></div><div class="ap-fn"><span class="a">${pct(x.a, x.a + x.h)}% Alliance</span><span class="h">${pct(x.h, x.a + x.h)}% Horde</span></div></div>`;
     }).join('');
-    const pfChips = `<div class="chips ap-pcf">${[['all', 'Both', UI('achievement_bg_killxenemies_generalsroom')], ['Alliance', 'Alliance', 'assets/game/alliance-crest.png'], ['Horde', 'Horde', 'assets/game/horde-crest.png']].map(([k, n, ic]) => `<button class="chip${k === PF ? ' on' : ''}" data-pcf="${k}"><img src="${ic}" alt="">${n}</button>`).join('')}</div>`;
+    const pfChips = `<div class="chips ap-pcf">${[['all', 'Both', UI('achievement_guildperk_everybodysfriend')], ['Alliance', 'Alliance', 'assets/game/alliance-crest.png'], ['Horde', 'Horde', 'assets/game/horde-crest.png']].map(([k, n, ic]) => `<button class="chip${k === PF ? ' on' : ''}" data-pcf="${k}"><img src="${ic}" alt="">${n}</button>`).join('')}</div>`;
     h += panel('s12', 'The classes', PF === 'all' ? 'Every class by how many play it. The thin bar shows the Alliance and Horde split.' : `Every class as a share of all ${PF} characters. The thin bar still shows the Alliance and Horde split.`, `${pfChips}<div class="ap-cards">${cards}</div>`);
 
     const rc = Object.entries(R.race).filter(([k]) => k !== '?').sort((x, y) => y[1] - x[1]);
@@ -4772,7 +4772,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const GW = ['Small bands', '', 'Raid teams', '', 'Big guilds', '', 'Giants'];
     h += panel('s5', 'Guild sizes', 'How many guilds have each number of members.', `<div class="ap-gs">${GS.map((v, i) => `<div class="ap-gsc" data-tip="${GL[i]} members|${fmt(v)} guilds, ${pct(v, gst)}%"><span class="v">${fmt(v)}</span><i style="height:${Math.max(3, 100 * v / gsmax)}%"></i><b>${GL[i]}</b></div>`).join('')}</div><div class="ap-gsx">${GW.map((w) => `<span>${w}</span>`).join('')}</div>`);
     const G = C.guilds[sel.rg] || [], gmax = Math.max(1, ...G.map((g) => g.m));
-    h += panel('s7', 'Biggest guilds', 'By members on the guild roster.', `<div class="rows">${G.slice(0, 12).map((g) => row(AP_FAC[g.f] && g.f !== 'Blackwater' ? ART(`crest-${g.f.toLowerCase()}`) : UI('inv_bannerpvp_01'), g.n, AP_FAC[g.f] || 'inherit', g.m, fmt(g.m), `${g.n}|${g.rs}${all ? ' · ' + APR[g.rg] : ''}`, gmax)).join('')}</div>`);
+    h += panel('s7', 'Biggest guilds', 'By members on the guild roster.', `<div class="rows">${G.slice(0, 12).map((g) => row(AP_FAC[g.f] && g.f !== 'Blackwater' ? ART(`crest-${g.f.toLowerCase()}`) : UI('inv_shirt_guildtabard_01'), g.n, AP_FAC[g.f] || 'inherit', g.m, fmt(g.m), `${g.n}|${g.rs}${all ? ' · ' + APR[g.rg] : ''}`, gmax)).join('')}</div>`);
     const el = document.getElementById('main');
     el.innerHTML = h;
     if (window.LI_ARMORY) arm().bind('arpop');

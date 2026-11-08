@@ -85,6 +85,7 @@ a { color: inherit; }
   background: linear-gradient(rgba(40, 33, 22, 0.9), rgba(20, 16, 11, 0.95)); border: 1px solid #5a4620; box-shadow: inset 0 1px 0 rgba(255, 230, 160, 0.1); white-space: nowrap; }
 .hbtn img { width: 26px; height: 26px; border-radius: 5px; }
 .hbtn:hover { border-color: var(--gold-2); color: var(--gold); }
+#regulars span.t { display: none; } #regulars { padding: 6px 10px 6px 6px; }
 .hbtn .n { font: 12px "Friz", serif; color: #1a1206; background: var(--gold); border-radius: 999px; padding: 1px 7px; }
 .hbtn.get { color: #1a1206; background: linear-gradient(#ffe39a, #d5a548); border-color: #f3cf74; box-shadow: inset 0 1px 0 #fff3c4, 0 2px 8px rgba(0, 0, 0, 0.6); padding: 8px 14px; }
 .hbtn.get:hover { color: #000; }
@@ -3491,32 +3492,39 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   }
   function renderAbout() {
     plainHead();
-    document.getElementById('note').textContent = S ? `Updated ${S.generated}` : '';
-    const D = S.duels['All|Both|even'], L = S.life['All|Both|all'], C = S.craft['All|Both'];
+    const AC = (typeof A !== 'undefined' && A && A.census) || {};
+    const EC = window.ECON || {};
+    const built = (typeof A !== 'undefined' && A && A.built) || EC.built;
+    document.getElementById('note').textContent = built ? `Updated ${new Date(built * 1000).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : '';
     const LI = '<a href="https://www.curseforge.com/wow/addons/linked-inn-profession-finder" target="_blank" rel="noopener">Linked Inn</a>';
     const src = [
-      ['inv_misc_bag_10', 'Crafting', `Professions and recipes of crafters, picked up by the ${LI} addon and from players who send in their lists.`],
-      ['ability_parry', 'Duels', 'Duel results the game announces to everyone nearby, with each fighter\'s class, race, level and gear.'],
-      ['inv_misc_book_09', 'Life', 'The Statistics panel every player has, the same one anyone can open when comparing achievements: deaths, quests, gold, dungeons, hugs.'],
-      ['inv_helmet_25', 'Gear and talents', 'What a character was wearing and their talents, as anyone sees them when inspecting a player.'],
-      ['inv_bannerpvp_02', 'Events', 'Public standings and results, for example the Forever Open tournament on Raider.IO.'],
+      ['achievement_bg_killxenemies_generalsroom', 'Census', 'Public character and guild profiles, the same ones anyone can look up. New characters are found all the time and known ones are checked again now and then. All four regions: US, EU, KR and TW.'],
+      ['inv_helmet_25', 'Armory', 'When you look someone up, their profile is fetched from the game right then, so it is as fresh as the game has it.'],
+      ['inv_misc_coin_02', 'Economy', 'Every auction house in every region, read about once an hour. Prices are typical prices, the middle of what is listed, not the cheapest single auction.'],
+      ['inv_misc_bag_10', 'Crafting and stories', `Professions from the ${LI} addon and from lists players send in, and the Statistics panel anyone can open when comparing achievements.`],
+      ['inv_bannerpvp_02', 'Events', 'Public standings and results, for example the Forever Open on Raider.IO.'],
     ];
-    const left = panel('s12', 'What this is', '', `<p>Hi, I'm <b>sanredz</b>. I play Forever and I make the ${LI} addon. <b>Life on Azeroth</b> is my fan-made census of the game: what people craft, how they duel and how they live, with a page for every character I've come across.</p>
+    const left = panel('s12', 'What this is', '', `<p>Hi, I'm <b>sanredz</b>. I play Forever and I make the ${LI} addon. <b>Life on Azeroth</b> is my fan-made census of WoW: Forever: how many people play and where, what they play, what things cost on the auction house, and a page for every character I've found.</p>
         <p>It's a hobby. No accounts, no ads, no tracking cookies.</p>`)
-      + panel('s12', 'Where the numbers come from', '', `<p>Everything comes from the game itself, the same way any player sees it.</p><div class="lz-src">${src.map(([ic, t, s]) => `<div><img src="${UI(ic)}" alt=""><div><b>${t}</b><span>${s}</span></div></div>`).join('')}</div>`)
+      + panel('s12', 'Where the numbers come from', '', `<p>Everything comes from what the game already shows in public.</p><div class="lz-src">${src.map(([ic, t, s]) => `<div><img src="${UI(ic)}" alt=""><div><b>${t}</b><span>${s}</span></div></div>`).join('')}</div>`)
+      + panel('s12', 'Reading the economy', '', `<ul>
+          <li>Every index starts at <b>100</b> the first hour there is enough to compare, then follows typical prices hour by hour. <b>70</b> means prices are about 30% lower than when tracking began.</li>
+          <li>The ruleset and faction views started later than the overall view, so their history is shorter.</li>
+          <li>Movers only count items with real volume, both now and a day earlier. Gray junk is left out.</li>
+          <li>When an auction disappears it may have sold, expired or been cancelled. The game doesn't say which, so sales are estimates.</li>
+        </ul>`)
       + panel('s12', 'What I can’t see', '', `<ul>
-          <li>Only characters that someone with the addon has walked past. Quiet corners of the world are under-counted.</li>
-          <li>Shares are of the characters I've seen, not of everyone who plays.</li>
-          <li>A character's page is as fresh as the last time someone passed them, so it can be a few days behind.</li>
-          <li>A rank like <b>Top 5%</b> compares you with characters of your own level when there are at least 50 of them, and with everyone otherwise. Your story and card only show off a stat when at least 30 characters are in the comparison.</li>
-          <li>Right after launch some charts say <b>Counting</b> until there are enough characters behind them to be worth showing.</li>
+          <li>Characters nobody has found yet. The population is a floor that grows every hour, not the full player count.</li>
+          <li>A profile only changes when the game updates it, so levels and gear can lag a little behind.</li>
+          <li>A rank like <b>Top 5%</b> compares you with characters of your own level when there are at least 50 of them, and with everyone otherwise.</li>
+          <li>Some charts say <b>Counting</b> until there is enough behind them to be worth showing.</li>
         </ul>`)
       + panel('s12', 'Your name', '', `<p>Names show up only next to a stat, a record or a result, the same names anyone sees in the game. If you want yours off, <a href="https://tally.so/r/Dq29MZ" target="_blank" rel="noopener">ask</a> and I'll take it off. The <a href="privacy.html">privacy page</a> has the details.</p>`);
-    const facts = [['Characters seen', fmt(L.n)], ['Crafters in the census', fmt(C.players)], ['Duels watched', fmt(D.n)], ['Last updated', esc(S.generated)]];
+    const listings = Object.values(EC.regions || {}).reduce((s, r) => s + ((r && r.listings) || 0), 0);
+    const facts = [['Characters known', AC.known && AC.known.all ? fmt(AC.known.all) : '…'], ['Guilds', AC.guildCount && AC.guildCount.all ? fmt(AC.guildCount.all) : '…'], ['Regions', '4'], ['Auctions right now', listings ? fmt(listings) : '…'], ['Forever live since', 'Nov 4, 2026']];
     const right = panel('s12', 'The census so far', '', `<div class="lz-facts">${facts.map(([k, v]) => `<div><span>${k}</span><em>${v}</em></div>`).join('')}</div>`)
       + panel('s12', 'Help it grow', '', `<ul>
-          <li>Play with ${LI} installed. Every crafter you pass counts.</li>
-          <li>Send in your list and join <a href="#" id="abReg">the Regulars</a>.</li>
+          <li>Play with ${LI} installed and send in your list to join <a href="#" id="abReg">the Regulars</a>.</li>
           <li><a href="https://buymeacoffee.com/sanredz" target="_blank" rel="noopener">Buy me a coffee</a> if you'd like to keep it going.</li>
         </ul><p class="optout">Fan-made. Not affiliated with Blizzard Entertainment.</p>`);
     document.getElementById('main').innerHTML = `<div class="lz-ab"><div class="lz-col">${left}</div><div class="lz-col">${right}</div></div>`;

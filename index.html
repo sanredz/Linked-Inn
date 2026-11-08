@@ -20,12 +20,12 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261108160000">
-<script src="market.js?v=20261108160000"></script>
-<link rel="stylesheet" href="armory.css?v=20261108160000">
-<script src="armory.js?v=20261108160000"></script>
-<link rel="stylesheet" href="duel.css?v=20261108160000">
-<script src="duel.js?v=20261108160000"></script>
+<link rel="stylesheet" href="market.css?v=20261108161000">
+<script src="market.js?v=20261108161000"></script>
+<link rel="stylesheet" href="armory.css?v=20261108161000">
+<script src="armory.js?v=20261108161000"></script>
+<link rel="stylesheet" href="duel.css?v=20261108161000">
+<script src="duel.js?v=20261108161000"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -2152,7 +2152,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261108160000';
+window.LI_V = '20261108161000';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -4638,7 +4638,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   const AP_REG_ART = { all: 'land-badlands', us: 'land-thunderbluff', eu: 'land-tirisfall', kr: 'land-darnassus', tw: 'land-thousandneedles' };
   const AP_CLASS_ART = { WARRIOR: 'art-warriorarms', PALADIN: 'art-paladinholy', HUNTER: 'art-hunterbeastmastery', ROGUE: 'art-roguecombat', PRIEST: 'art-priestholy', SHAMAN: 'art-shamanrestoration', MAGE: 'art-magefire', WARLOCK: 'art-warlocksummoning', DRUID: 'art-druidferalcombat' };
   const AP_CREST = { Human: 'crest-alliance', Dwarf: 'crest-dwarf', 'Night Elf': 'crest-nightelf', Orc: 'crest-orc', Troll: 'crest-troll', Tauren: 'crest-tauren', Undead: 'crest-forsaken' };
-  const AP_RS_ICON = { PvP: 'ability_dualwield', Normal: 'achievement_zone_elwynnforest', Roleplay: 'inv_misc_book_11', 'Roleplay PvP': 'achievement_arena_2v2_7' };
+  const AP_RS_ICON = { PvP: 'ability_dualwield', Normal: 'achievement_zone_elwynnforest', Roleplay: 'inv_misc_book_11', 'Roleplay PvP': 'ability_dualwield' };
   const AP_FAC = { Alliance: '#4a8fe7', Horde: '#d8443a', Blackwater: '#d9a940' };
   const AP_CAT = { Armor: ['inv_helmet_25', '#7aa0d8'], 'Trade goods': ['inv_stone_04', '#62b98c'], Weapons: ['inv_sword_27', '#d8694a'], Consumables: ['inv_potion_51', '#c77dff'],
     Recipes: ['inv_misc_book_11', '#d9a940'], Miscellaneous: ['inv_misc_gift_01', '#9aa3ad'], Bags: ['inv_misc_bag_07', '#b88a5a'], Reagents: ['inv_misc_dice_01', '#5fc7a8'],

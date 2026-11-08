@@ -24,7 +24,7 @@
   const CATS = [
     { k: 'classes', label: 'Classes', icon: UI('inv_sword_27'), re: /^class|talent|spec/i },
     { k: 'profs', label: 'Professions', icon: UI('inv_misc_bag_10'), re: /profession|crafting|gathering|recipe/i },
-    { k: 'pvp', label: 'PvP', icon: UI('achievement_arena_2v2_7'), re: /pvp|player versus player|battleground|honor|darkspear|arena/i },
+    { k: 'pvp', label: 'PvP', icon: UI('ability_dualwield'), re: /pvp|player versus player|battleground|honor|darkspear|arena/i },
     { k: 'races', label: 'Races', icon: UI('achievement_zone_elwynnforest'), re: /^race|racial|skyborne/i },
     { k: 'pve', label: 'Dungeons & raids', icon: UI('achievement_dungeon_classicdungeonmaster'), re: /dungeon|raid|creature|encounter|boss|instance|npc/i },
     { k: 'items', label: 'Items', icon: UI('inv_helmet_25'), re: /item|loot|gear|weapon|armor|reward/i },

@@ -2218,6 +2218,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   let VOTE = null, voteErr = '', CHEER = null, cheerErr = '';
   if (!O) document.querySelectorAll('.tab[data-v="open"]').forEach((t) => t.remove());
   let A = window.API_DATA;
+  let apLive = false;
   if (!A) {
     document.querySelectorAll('.tabs [data-v="population"]').forEach((t) => t.remove());
     document.querySelector('.tab[data-g="census"]').setAttribute('href', '#crafting');
@@ -4521,7 +4522,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     let h = window.LI_NEWS ? '<section class="frame panel s12" id="today"></section>' : '';
     h += BETA_DATA && window.LI_ARMORY ? `<section class="frame psearch ar-home"><div class="in slab"><div class="pt"><b>Look up any character</b><small>Their gear, stats and model, live from the Forever armory.</small></div>${arm().searchHtml('arhome')}</div></section>` : WRAPPED_ON ? wrappedBand('psq') : searchBox('psq');
     const wide = (x) => x.replace('class="frame htile"', 'class="frame htile ap-wide"');
-    if (A) { const PA = A.census.regions.all || { chars: 0 }; h += wide(tile('#population', '#dcc6ff', 'assets/game/art/art-nightelves.jpg', UI('achievement_bg_killxenemies_generalsroom'), 'Population', fmt((A.census.known || {}).all || PA.chars), `characters found across every region and ruleset. <b>${fmt((A.census.guildCount || {}).all || 0)}</b> guilds and counting.`, 'Who plays Forever')); }
+    if (A) { const PA = A.census.regions.all || { chars: 0 }; h += wide(tile('#population', '#dcc6ff', 'assets/game/art/art-nightelves.jpg', UI('achievement_bg_killxenemies_generalsroom'), 'Population', (apLive ? fmt((A.census.known || {}).all || PA.chars) : '…'), `characters found across every region and ruleset. <b>${fmt((A.census.guildCount || {}).all || 0)}</b> guilds and counting.`, 'Who plays Forever')); }
     if (window.ECON) { const ER = Object.values(ECON.regions); h += wide(tile('#economy', '#ffe08a', 'assets/game/art/econ-undermine.jpg', UI('inv_misc_coin_02'), 'Economy', fmt(ER.reduce((x, r) => x + r.listings, 0)), `auctions up in every auction house right now, from bargains below vendor price to a single gem listed for a million gold.`, 'Visit the auction house')); }
     if (BETA_DATA) {
       const st = (v, color, bg, icon, label, line) => tile('#' + v, color, bg, UI(icon), label, 'Coming soon', line, 'Take a look').replace('class="frame htile"', 'class="frame htile ap-tsoon"');
@@ -4788,9 +4789,11 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   }
   const AP_LIVE = 'https://forever-live.sanredz.workers.dev/v1';
   function apLiveLoad() {
+    const done = () => { if (!apLive) { apLive = true; if (view === 'home') renderKeep(); } };
     return fetch(AP_LIVE + '/live').then((r) => r.ok ? r.json() : null).then((d) => {
-      if (!d) return;
-      let changed = false;
+      if (!d) { done(); return; }
+      let changed = !apLive;
+      apLive = true;
       if (d.census && (!A || d.census.built > (A.built || 0))) { A = window.API_DATA = { built: d.census.built, census: d.census.census }; changed = true; }
       const E = window.ECON;
       if (d.econ && Object.keys(d.econ.regions || {}).length && (!E || d.econ.taken > (E.taken || 0))) {
@@ -4804,7 +4807,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
         const go = () => { if (typing()) { setTimeout(go, 1500); return; } if (['population', 'economy', 'home'].includes(view)) renderKeep(); };
         go();
       }
-    }).catch(() => {});
+    }).catch(done);
   }
   let apTick = null, apPoll = 0;
   function apTimer() {

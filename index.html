@@ -20,12 +20,12 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261108161000">
-<script src="market.js?v=20261108161000"></script>
-<link rel="stylesheet" href="armory.css?v=20261108161000">
-<script src="armory.js?v=20261108161000"></script>
-<link rel="stylesheet" href="duel.css?v=20261108161000">
-<script src="duel.js?v=20261108161000"></script>
+<link rel="stylesheet" href="market.css?v=20261108200000">
+<script src="market.js?v=20261108200000"></script>
+<link rel="stylesheet" href="armory.css?v=20261108200000">
+<script src="armory.js?v=20261108200000"></script>
+<link rel="stylesheet" href="duel.css?v=20261108200000">
+<script src="duel.js?v=20261108200000"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -2115,6 +2115,8 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   <div class="seg" id="fac"></div>
   <div class="sep" id="sep2"></div>
   <div class="seg" id="opt"></div>
+  <div class="sep" id="sep3" hidden></div>
+  <div class="seg" id="hse"></div>
   <div class="note" id="note"></div>
 </div></div>
 
@@ -2152,7 +2154,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261108161000';
+window.LI_V = '20261108200000';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -2253,7 +2255,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   const sel = { rs: 'All', fac: 'Both', even: true, lvl: 'all', prof: 'all', rq: 'all', q: '', more: 0, metric: 'deaths', h2h: 'fac', wr: 'seen', bsrc: 'seen', bsort: 'rate', pod: 'rate', rare: 'all', tcls: '', tgrp: 'all' };
   try { const saved = JSON.parse(localStorage.getItem('inn-sel') || '{}'); ['rs', 'fac'].forEach((k) => { if (saved[k]) sel[k] = saved[k]; }); } catch (e) {}
   let view = 'crafting';
-  sel.rg = 'all'; sel.etab = 'listed'; sel.erg = 'all'; sel.ers = 'all'; sel.ecat = ''; sel.egc = 'all';
+  sel.rg = 'all'; sel.etab = 'listed'; sel.erg = 'all'; sel.ers = 'all'; sel.eh = 'all'; sel.ecat = ''; sel.egc = 'all';
 
   const cd = document.getElementById('cd');
   const LAUNCH = Date.UTC(2026, 10, 4, 23, 0, 0);
@@ -3409,8 +3411,9 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   }
 
   function plainHead() {
-    ['realm', 'fac', 'opt'].forEach((id) => { document.getElementById(id).innerHTML = ''; });
+    ['realm', 'fac', 'opt', 'hse'].forEach((id) => { document.getElementById(id).innerHTML = ''; });
     document.getElementById('sep2').hidden = true;
+    document.getElementById('sep3').hidden = true;
     document.querySelector('.bar').classList.remove('ap-ebar');
   }
   const BETA_CARD = `<a class="acard lz-ac" href="beta/"><span class="lz-acimg" style="--bg:url('assets/game/scenes/dalaran.jpg')"><img src="${UI('inv_misc_book_11')}" alt=""></span><div><b>The Forever beta</b><span>October 4 to 23, 2026</span><span>Every chart, duel, character page and card, as the beta ended.</span></div></a>`;
@@ -4885,8 +4888,15 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const rsAll = [...new Set(regs.flatMap((r) => Object.keys(E.regions[r].sets || {})))];
     if (sel.ers !== 'all' && !rsAll.includes(sel.ers)) sel.ers = 'all';
     const RSF = sel.ers !== 'all' ? sel.ers : null;
+    if (!['all', 'Alliance', 'Horde', 'Blackwater'].includes(sel.eh)) sel.eh = 'all';
+    const HF = sel.eh !== 'all' ? sel.eh : null;
     const rsWait = RSF && !regs.some((r) => E.regions[r].rs);
     const viewOf = (X) => {
+      if (HF) {
+        const sets = RSF ? [(X.sets || {})[RSF]].filter(Boolean) : Object.values(X.sets || {});
+        const n = sum(sets.map((S) => (S[HF] || {}).n || 0)), v = sum(sets.map((S) => (S[HF] || {}).v || 0));
+        return sets.length ? { ...X, listings: n, market: v } : X;
+      }
       if (!RSF) return X;
       if (X.rs && X.rs[RSF]) return { ...X, ...X.rs[RSF] };
       const S = (X.sets || {})[RSF];
@@ -4895,11 +4905,13 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const EV = { regions: Object.fromEntries(regs.map((r) => [r, viewOf(E.regions[r])])) };
     const ALLR = apEconAll(EV, regs);
     const R = sel.erg === 'all' ? ALLR : EV.regions[sel.erg], RN2 = APR[sel.erg];
-    const RSN = RSF ? ` · ${RSF}` : '';
+    const RSN = (RSF ? ` · ${RSF}` : '') + (HF ? ` · ${HF}` : '');
     const fbtn = (key, v, label, img, extra = '') => `<button class="btn${sel[key] === v ? ' on' : ''}" data-${key}="${esc(v)}">${img ? `<img src="${img}" alt="">` : ''}${label}</button>${extra}`;
     document.getElementById('fac').innerHTML = ['all', ...regs].map((r) => fbtn('erg', r, r === 'all' ? 'All regions' : r.toUpperCase(), r === 'all' ? UI('inv_misc_coin_02') : '')).join('');
     document.getElementById('opt').innerHTML = ['all', ...rsAll].map((k) => fbtn('ers', k, k === 'all' ? 'Every ruleset' : esc(k), UI(k === 'all' ? 'inv_misc_coin_17' : AP_RS_ICON[k] || 'inv_misc_questionmark'))).join('');
     document.getElementById('sep2').hidden = false;
+    document.getElementById('sep3').hidden = false;
+    document.getElementById('hse').innerHTML = [['all', 'Every house', UI('inv_misc_coin_17')], ['Alliance', 'Alliance', 'assets/game/alliance-crest.png'], ['Horde', 'Horde', 'assets/game/horde-crest.png'], ['Blackwater', 'Blackwater', UI('inv_misc_coin_02')]].map(([k, n, ic]) => fbtn('eh', k, n, ic)).join('');
     document.querySelector('.bar').classList.add('ap-ebar');
     document.getElementById('note').textContent = rsWait ? 'Ruleset detail arrives with the next hourly update' : `${fmt(R.listings)} auctions in ${RN2.toLowerCase().replace('all regions', 'every region')}${RSN}`;
     let h = apRegionCards(['all', ...regs], sel.erg, 'erg', (r) => { const X = r === 'all' ? ALLR : EV.regions[r]; return [`${apGold(X.market)} gold`, `in ${fmt(X.listings)} auctions`]; });
@@ -5014,10 +5026,11 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     el.innerHTML = h;
     apTimer();
     const mkRoot = document.getElementById('mkRoot');
-    if (mkRoot && window.LI_MARKET) LI_MARKET.mount(mkRoot, { UI, coin: apCoin, coinT: apCoinT, fmt, tipHtml: (id) => gearTip(id + ':0'), regionName: APR, rs: () => (sel.ers !== 'all' ? sel.ers : null) }, sel.erg);
+    if (mkRoot && window.LI_MARKET) LI_MARKET.mount(mkRoot, { UI, coin: apCoin, coinT: apCoinT, fmt, tipHtml: (id) => gearTip(id + ':0'), regionName: APR, rs: () => (sel.ers !== 'all' ? sel.ers : null), fac: () => (sel.eh !== 'all' ? sel.eh : null) }, sel.erg);
     el.onclick = (e) => { const g = e.target.closest('[data-gi]'); if (view === 'economy' && g && window.LI_MARKET && !e.target.closest('#mkRoot')) LI_MARKET.open(+g.dataset.gi.split(':')[0]); };
     document.querySelectorAll('#main [data-erg], .bar [data-erg]').forEach((b) => b.onclick = () => { sel.erg = b.dataset.erg; renderKeep(); });
     document.querySelectorAll('.bar [data-ers]').forEach((b) => b.onclick = () => { sel.ers = b.dataset.ers; renderKeep(); });
+    document.querySelectorAll('.bar [data-eh]').forEach((b) => b.onclick = () => { sel.eh = b.dataset.eh; renderKeep(); });
     el.querySelectorAll('[data-ecat]').forEach((b) => b.onclick = () => { sel.ecat = sel.ecat === b.dataset.ecat ? '' : b.dataset.ecat; renderKeep(); });
     el.querySelectorAll('[data-etab]').forEach((b) => b.onclick = () => { sel.etab = b.dataset.etab; renderKeep(); });
     el.querySelectorAll('[data-egc]').forEach((b) => b.onclick = () => { sel.egc = b.dataset.egc; renderKeep(); });

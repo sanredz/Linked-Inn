@@ -78,7 +78,19 @@
     });
     return w ? [Math.round(s / w), mn, q, n, cw ? Math.round(10 * cs / cw) / 10 : null] : null;
   };
+  const FACN = () => (H && H.fac && H.fac()) || null;
+  const SETK = { PvP: 0, Normal: 1, Roleplay: 2, 'Roleplay PvP': 3 };
+  const houseKey = () => { const rs = RSN(), f = FACN(); return rs && f && SETK[rs] != null ? SETK[rs] + f[0] : null; };
+  const HD = {}, houseView = {};
+  function loadHouse(rg, k) {
+    const key = rg + ':' + k;
+    HD[key] = HD[key] || fetch(LIVE + '/market/' + rg + '/house/' + k).then((r) => r.json()).then((d) => ({ rsv: true, hv: true, t: (d.state || {}).t || [], idx: (d.state || {}).idx || {}, counts: (d.state || {}).counts || {}, latest: d.latest || {} })).catch(() => null);
+    return HD[key];
+  }
+  const houseOn = () => { const k = houseKey(), v = k && houseView[st.region + ':' + k]; return v && Object.keys(v.latest).length ? v : null; };
   const rowOf = (sh, id) => {
+    const hk = houseKey();
+    if (hk) return (sh.hs && sh.hs[hk]) || null;
     const rs = RSN();
     return rs ? (sh.rs && sh.rs[rs]) || null : sh.i[id];
   };
@@ -105,7 +117,7 @@
     return SD[k];
   }
   const setOn = () => { const n = RSN(); const v = n && setView[st.region + ':' + n]; return v && v.t.length >= 2 && Object.keys(v.idx).length ? v : null; };
-  const R = () => setOn() || facOn() || MKT.regions[st.region] || { t: [], idx: {}, latest: {}, counts: {} };
+  const R = () => houseOn() || setOn() || facOn() || MKT.regions[st.region] || { t: [], idx: {}, latest: {}, counts: {} };
   const defOf = (k) => MKT.defs.find((d) => d.k === k);
   const shortName = (n) => n.replace(/^Green gear (\d+)–(\d+)$/, 'Green, lvl $1–$2').replace(/ patterns$/, '').replace(/^Blue gear$/, 'Blue and up').replace(/ and /, ' & ');
 
@@ -203,11 +215,12 @@
     const r = R(), groups = {};
     MKT.defs.forEach((d) => { if (r.idx[d.k]) (groups[d.g] = groups[d.g] || []).push(d); });
     const wait = st.fac !== 'all' && !facOn() ? `<div class="mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(st.fac)} prices start with the next hourly update. Showing every house until then.</span></div>` : '';
-    const rsWait = RSN() && !setOn() ? `<div class="mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(RSN())} prices per item have only been recorded since Nov 7, so its indexes need a couple more hourly snapshots. Showing every auction house until then.</span></div>` : '';
+    const hWait = houseKey() && houseOn() && Object.values(R().idx).every((v) => !v.some((x) => x != null)) ? `<div class="mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>Prices for the ${esc(RSN())} ${esc(FACN())} auction house are tracked from Nov 8, so its indexes and history fill in hour by hour. Item prices are already live.</span></div>` : '';
+    const rsWait = !houseKey() && RSN() && !setOn() ? `<div class="mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(RSN())} prices per item have only been recorded since Nov 7, so its indexes need a couple more hourly snapshots. Showing every auction house until then.</span></div>` : '';
     if (!Object.keys(groups).length && st.fac !== 'all' && facOn()) return `<div class="mk-empty mk-facwait"><img src="${H.UI('inv_misc_pocketwatch_01')}" alt=""><span>${esc(st.fac)} indexes need two hourly updates to start. Items already show ${esc(st.fac)} prices.</span></div>`;
     const per = { '6H': 'last 6 hours', '1D': 'last 24 hours', '1W': 'last 7 days', '1M': 'last 30 days', ALL: 'since tracking began' }[st.range];
     const short = { '6H': '6h', '1D': '24h', '1W': '7d', '1M': '30d', ALL: 'all time' }[st.range];
-    return rsWait + wait + `<div class="mk-per"><span>Change over the <b>${per}</b></span><small>Follows the chart's time range</small></div><div class="mk-ix mk-ixh" aria-hidden="true"><span></span><span></span><span class="mk-nm">Index</span><span class="mk-spark">Trend</span><span class="mk-vl">Value</span><span class="mk-ch">${short}</span></div>` + Object.entries(groups).map(([g, ds]) => `<div class="mk-grp"><h5>${esc(g)}</h5>${ds.map((d) => {
+    return hWait + rsWait + wait + `<div class="mk-per"><span>Change over the <b>${per}</b></span><small>Follows the chart's time range</small></div><div class="mk-ix mk-ixh" aria-hidden="true"><span></span><span></span><span class="mk-nm">Index</span><span class="mk-spark">Trend</span><span class="mk-vl">Value</span><span class="mk-ch">${short}</span></div>` + Object.entries(groups).map(([g, ds]) => `<div class="mk-grp"><h5>${esc(g)}</h5>${ds.map((d) => {
       const v = r.idx[d.k], [, lv] = lastVal(v), ch = change(r.t, v, (RANGES.find((x) => x[0] === st.range) || [])[1]), on = st.series.findIndex((s) => s.kind === 'idx' && s.key === d.k);
       return `<button class="mk-ix${on >= 0 ? ' on' : ''}" data-ix="${d.k}" style="--sc:${on >= 0 ? COLORS[on] : 'transparent'}" title="${esc(d.d)} ${r.counts[d.k] || 0} items."><span class="mk-sw"></span><img src="${H.UI(d.ic)}" alt=""><span class="mk-nm">${esc(shortName(d.n))}</span>${spark(v)}<span class="mk-vl">${lv != null ? lv.toFixed(1) : '–'}</span><span class="mk-ch ${cls(ch)}">${pctTxt(ch)}</span></button>`;
     }).join('')}</div>`).join('');
@@ -297,7 +310,7 @@
     m.innerHTML = `<div class="mk-card" role="dialog" aria-label="${esc(c[0])}" style="--qc:${qc}"><button class="mk-x" aria-label="Close">×</button>
       <div class="mk-hero"><div class="mk-hero-ic"><img src="${icon(id)}" alt=""></div>
         <div class="mk-hero-tx"><h3>${esc(c[0])}</h3><div class="mk-chips">${chips.map((x) => `<span>${esc(x)}</span>`).join('')}</div></div>
-        <div class="mk-hero-px"><small>${ALL ? 'Average typical price · All regions' : 'Typical price · ' + esc((H.regionName || {})[rg] || rg.toUpperCase())}${RSN() ? ' · ' + esc(RSN()) : ''}${rg === st.region && facOn() ? ' · ' + st.fac : ''}</small><b>${l ? H.coin(l[0]) : '<span class="mk-nl">Not listed right now</span>'}</b>${l ? `<span class="mk-pill ${cls(ch24)}">${pctTxt(ch24)} <i>24h</i></span>` : ''}
+        <div class="mk-hero-px"><small>${ALL ? 'Average typical price · All regions' : 'Typical price · ' + esc((H.regionName || {})[rg] || rg.toUpperCase())}${RSN() ? ' · ' + esc(RSN()) : ''}${!ALL && rg === st.region && FACN() ? ' · ' + esc(FACN()) : ''}</small><b>${l ? H.coin(l[0]) : '<span class="mk-nl">Not listed right now</span>'}</b>${l ? `<span class="mk-pill ${cls(ch24)}">${pctTxt(ch24)} <i>24h</i></span>` : ''}
           ${ALL ? '' : `<button class="mk-add" data-cmp="${id}"><img src="${H.UI('inv_misc_note_01')}" alt="">Add to chart</button>`}</div></div>
       <div class="mk-stats">${stats.map(([ic, k, v]) => `<div><img src="${H.UI(ic)}" alt=""><span><small>${k}</small><b class="mk-sv">${v}</b></span></div>`).join('')}</div>
       <div class="mk-body"><div class="mk-left"><div class="mk-chead"><h4>Price history</h4><div class="mk-ranges">${RANGES.map(([k]) => `<button class="${k === st.range ? 'on' : ''}" data-mr="${k}">${k}</button>`).join('')}</div></div>
@@ -344,7 +357,7 @@
     root.innerHTML = `<div class="mk-term">
       <div class="mk-top"><div class="mk-search"><input type="search" placeholder="Search any item: Copper Ore, Linen Bag, Thunderfury…" value="${esc(st.q)}" aria-label="Search items"><div class="mk-res"></div></div>
         ${MKT.live && FAC_UI ? `<div class="mk-fac" role="group" aria-label="Auction house">${FACS.map(([f, n, ic]) => `<button class="${f === st.fac ? 'on' : ''}" data-fac="${f}"><img src="${facIcon(f, ic)}" alt="">${n}</button>`).join('')}</div>` : ''}
-        <div class="mk-reg-note">${st.all ? 'Indexes for ' : ''}${esc((H.regionName || {})[st.region] || st.region.toUpperCase())}${facOn() ? ' · ' + st.fac : ''} · ${R().t.length} hourly snapshots</div></div>
+        <div class="mk-reg-note">${st.all ? 'Indexes for ' : ''}${esc((H.regionName || {})[st.region] || st.region.toUpperCase())}${RSN() ? ' · ' + esc(RSN()) : ''}${FACN() ? ' · ' + esc(FACN()) : ''} · ${R().t.length} hourly snapshot${R().t.length === 1 ? "" : "s"}</div></div>
       <div class="mk-grid"><div class="mk-side">${indexList()}</div>
         <div class="mk-main"><div class="mk-bar"><div class="mk-legend"></div><div class="mk-ranges">${RANGES.map(([k]) => `<button class="${k === st.range ? 'on' : ''}" data-r="${k}">${k}</button>`).join('')}</div></div><div class="mk-plot"></div>
         <div class="mk-foot">${st.series.length > 1 ? 'Compared as % change from the start of the range.' : 'Index value; every index starts at 100 when its history begins.'}</div></div></div></div>`;
@@ -392,8 +405,10 @@
       if (!window.MKT) { el.innerHTML = '<div class="mk-empty">Market history is not available right now.</div>'; return; }
       st.all = region === 'all';
       st.region = MKT.regions[region] ? region : (MKT.regions.eu ? 'eu' : Object.keys(MKT.regions)[0]);
+      st.fac = !RSN() && FACN() ? FACN() : 'all';
       if (st.fac !== 'all' && MKT.live) facView[st.region + ':' + st.fac] = await loadFac(st.region, st.fac);
       if (RSN() && MKT.live) setView[st.region + ':' + RSN()] = await loadSet(st.region, RSN());
+      if (houseKey() && MKT.live) houseView[st.region + ':' + houseKey()] = await loadHouse(st.region, houseKey());
       st.series = st.series.filter((s) => s.kind === 'idx' ? MKT.regions[st.region].idx[s.key] : true);
       if (!st.series.length) st.series = [{ kind: 'idx', key: Object.keys(MKT.regions[st.region].idx)[0] }];
       paint();

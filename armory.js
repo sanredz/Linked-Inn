@@ -34,7 +34,7 @@
 
   function liveRows(q, first) {
     const w = q.trim().split(/\s+/);
-    if (w.length !== 2 || w.some((x) => x.length < 2)) return '';
+    if (w.length < 2) return '';
     const slug = w.join('-').toLowerCase(), nm = w.map((x) => x[0].toUpperCase() + x.slice(1).toLowerCase()).join(' ');
     return ['us', 'eu', 'kr', 'tw'].map((rg, i) => `<a class="ar-hit${first && i === 0 ? ' sel' : ''}" href="${link(rg, slug)}" data-rg="${rg}" data-slug="${esc(slug)}"><img class="ar-lv" src="${H.UI('inv_misc_book_09')}" alt=""><span class="ar-hn"><b>${esc(nm)}</b><small>Not in the census yet · look up live</small></span><span class="ar-rg">${rg.toUpperCase()}</span></a>`).join('');
   }
@@ -59,8 +59,7 @@
           const r = await fetch(`${API}/find/${encodeURIComponent(q.toLowerCase())}`);
           const d = await r.json();
           if (t !== tok) return;
-          const hits = d.hits || [], qs = q.toLowerCase().replace(/\s+/g, '-');
-          const extra = hits.some((x) => x.slug === qs) ? '' : liveRows(q, !hits.length);
+          const hits = d.hits || [], extra = hits.length ? '' : liveRows(q, true);
           show(hits.length || extra ? hits.map(hitRow).join('') + extra : `<div class="ar-hint">Nobody called “${esc(q)}” yet. Type their first name and surname to look them up live.</div>`);
         } catch (e) { if (t === tok) show('<div class="ar-hint">Search is not reachable right now.</div>'); }
       }, 200);

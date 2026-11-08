@@ -302,7 +302,7 @@
       .map(([i, x]) => [+i, x, Math.abs((x[7] || 0) - (c[7] || 0)) * 1000 - (L(i)[3] || 0)]).sort((a, b) => a[2] - b[2]).slice(0, 8);
     const kinHtml = kin.length ? `<div class="mk-kin"><h4>Similar on the auction house</h4><div>${kin.map(([i, x]) => `<button class="mk-go" data-open="${i}" style="--qc:${QC[x[1]] || '#fff'}"><img src="${icon(i)}" alt=""><span class="mk-nm">${esc(x[0])}</span><span class="mk-pr">${H.coin(L(i)[0])}</span></button>`).join('')}</div></div>` : '';
     const ch24 = l ? l[4] : null;
-    const stats = [['inv_misc_coin_02', 'Cheapest now', l ? H.coin(l[1]) : '–'], ['inv_misc_ticket_tarot_stack_01', 'Auctions', l ? H.fmt(l[3]) : '0'], ['inv_misc_bag_10', 'Items for sale', l ? H.fmt(l[2]) : '0'], ['inv_misc_coin_17', 'Vendor pays', c[6] ? H.coin(c[6]) : '–']];
+    const stats = [['inv_misc_coin_02', 'Cheapest now', l ? H.coin(Math.min(l[1] || l[0], l[0])) : '–'], ['inv_misc_ticket_tarot_stack_01', 'Auctions', l ? H.fmt(l[3]) : '0'], ['inv_misc_bag_10', 'Items for sale', l ? H.fmt(l[2]) : '0'], ['inv_misc_coin_17', 'Vendor pays', c[6] ? H.coin(c[6]) : '–']];
     const chips = [CLASS[c[3]] || 'Item', c[7] ? `Item level ${c[7]}` : '', c[5] ? `Requires level ${c[5]}` : ''].filter(Boolean);
     const tip = H.tipHtml(id);
     const m = document.createElement('div');
@@ -342,7 +342,7 @@
         m.querySelector('.mk-vol').innerHTML = '';
         return;
       }
-      const t = sh.t, med = row ? row[0].map((x) => x || null) : [], mn = row ? row[1].map((x) => x || null) : [];
+      const t = sh.t, med = row ? row[0].map((x) => x || null) : [], mn = row ? row[1].map((x, k) => (x ? Math.min(x, row[0][k] || x) : null)) : [];
       drawChart(m.querySelector('.mk-iplot'), [{ name: 'Typical price', t, v: med, unit: 'coin', color: c[1] >= 2 ? qc : '#f8d36b' }, { name: 'Cheapest', t, v: mn, unit: 'coin', color: '#9aa3ad' }].filter((s) => s.v.filter((x) => x != null).length >= 2), { h: 240, abs: true, fill: true });
       const q = row ? row[2] : [];
       const mx = Math.max(1, ...q);

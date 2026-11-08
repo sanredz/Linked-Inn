@@ -164,3 +164,5 @@ button.ar-slot:hover { border-color: color-mix(in srgb, var(--qc) 60%, transpare
 @keyframes ar-3dpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 @media (prefers-reduced-motion: reduce) { .ar-3dnote { animation: none; } }
 @media (max-width: 720px) { .ar-model.ar-3d { min-height: 440px; } .ar-3dv .cv-anims button { padding: 6px 7px; font-size: 11.5px; } }
+.ar-land { z-index: 5; }
+.ar-land > .in { overflow: visible; }

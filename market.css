@@ -195,3 +195,6 @@ button.mk-ui:hover { transform: translateY(-1px); }
 .mk-ixh .mk-ch { color: var(--gold, #f8d36b); }
 .mk-ixh .mk-spark { display: block; text-align: center; }
 @media (max-width: 520px) { .mk-ixh .mk-spark { display: none; } }
+.mk-rdot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.mk-key .mk-keyn { margin-left: auto; }
+@media (max-width: 1000px) { .mk-right { display: contents; } .mk-right > .mk-tip { order: -1; } }

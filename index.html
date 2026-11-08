@@ -20,12 +20,12 @@
 <meta name="theme-color" content="#0c0b09">
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="news.css">
-<link rel="stylesheet" href="market.css?v=20261108130000">
-<script src="market.js?v=20261108130000"></script>
-<link rel="stylesheet" href="armory.css?v=20261108130000">
-<script src="armory.js?v=20261108130000"></script>
-<link rel="stylesheet" href="duel.css?v=20261108130000">
-<script src="duel.js?v=20261108130000"></script>
+<link rel="stylesheet" href="market.css?v=20261108150000">
+<script src="market.js?v=20261108150000"></script>
+<link rel="stylesheet" href="armory.css?v=20261108150000">
+<script src="armory.js?v=20261108150000"></script>
+<link rel="stylesheet" href="duel.css?v=20261108150000">
+<script src="duel.js?v=20261108150000"></script>
 <script src="news.js"></script>
 <style>
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
@@ -152,6 +152,8 @@ h2 { margin: 0; flex: 1; font: 26px "Morpheus", serif; color: var(--title); text
 .hnote + .snap { margin-left: 0; }
 .chip.normb + .snap { margin-left: 0; }
 .chip.plain { padding-left: 10px; }
+.ap-pcf { margin-bottom: 14px; }
+.ap-pcf .chip img { border-radius: 0; object-fit: contain; }
 
 .plaque .in { display: flex; align-items: center; gap: 16px; padding: 16px 18px; min-height: 104px; }
 .plaque .icon { width: 58px; height: 58px; border-radius: 8px; box-shadow: 0 0 0 1px #000, 0 0 0 3px var(--fr1), 0 4px 10px rgba(0, 0, 0, 0.7); flex: none; }
@@ -1799,6 +1801,24 @@ body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
 .ap-ess .fx .ap-coin b { color: inherit; }
 .ap-ess .fx .w.a { color: #8fbaf5; } .ap-ess .fx .w.h { color: #f08a7e; }
 .ap-mv { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ap-dl { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: center; }
+.ap-dls { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; counter-reset: dl; }
+.ap-dls li { position: relative; display: flex; gap: 12px; align-items: flex-start; padding: 14px 14px 14px 12px; border-radius: 10px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.06); counter-increment: dl; }
+.ap-dls li::before { content: counter(dl); position: absolute; top: -9px; left: -6px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 12px "Friz", serif; color: #1a1206; background: var(--gold); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); }
+.ap-dls img { width: 34px; height: 34px; border-radius: 6px; flex: none; box-shadow: 0 0 0 1px #000; }
+.ap-dls b { display: block; font: 15px "Friz", serif; font-weight: normal; color: var(--ink); margin-bottom: 3px; }
+.ap-dls span { font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+.ap-dls code { font: 12.5px "Friz", serif; color: var(--gold); background: rgba(248, 211, 107, 0.1); padding: 0 5px; border-radius: 4px; }
+.ap-dlc { display: flex; flex-direction: column; gap: 10px; }
+.ap-dlb { display: flex; align-items: center; gap: 12px; padding: 12px 18px 12px 12px; border-radius: 12px; text-decoration: none; color: #1a1206; background: linear-gradient(#ffe39a, #d5a548); border: 1px solid #f3cf74; box-shadow: inset 0 1px 0 #fff3c4, 0 4px 14px rgba(0, 0, 0, 0.6); transition: transform 0.12s, filter 0.12s; }
+.ap-dlb:hover { filter: brightness(1.07); transform: translateY(-1px); }
+.ap-dlb img { width: 38px; height: 38px; border-radius: 8px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6); }
+.ap-dlb b { display: block; font: 17px "Friz", serif; font-weight: normal; }
+.ap-dlb small { font-size: 12px; opacity: 0.75; }
+.ap-dlc p { margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.ap-dlc p b { color: var(--ink-2); font-weight: normal; }
+@media (max-width: 1100px) { .ap-dl { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .ap-dls { grid-template-columns: 1fr; gap: 14px; } }
 .ap-mv h4 { margin: 0 0 6px; font: 17px "Morpheus", serif; font-weight: normal; }
 .ap-up { color: #7ddc8a; } .ap-dn { color: #ef7d6d; }
 .ap-wait { display: flex; gap: 12px; align-items: center; padding: 18px; border-radius: 8px; background: rgba(0, 0, 0, 0.3); border: 1px dashed var(--line); }
@@ -2132,7 +2152,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
 </div>
 
 <script>
-window.LI_V = '20261108130000';
+window.LI_V = '20261108150000';
 window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get('ch'); return c && /^[a-z0-9-]{1,32}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
 (() => {
   const base = window.LI_CH && window.LI_CH !== 'cap' ? 'snap/' + window.LI_CH + '/' : '';
@@ -4705,13 +4725,17 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     h += panel('s12', 'Where everyone is', 'How many characters are at each level right now. Blizzard only lists characters from level 10, so lower levels come from guild rosters alone. Blue is level 60.', `<div class="ap-lvh">${bars}</div><div class="ap-lvx">${axis}</div>`);
 
     const cf = Object.entries(R.classfac).filter(([k]) => CC[apCls(k)]).map(([k, v]) => ({ name: k, k: apCls(k), a: v.Alliance || 0, h: v.Horde || 0, t: sum(Object.values(v)) })).sort((x, y) => y.t - x.t);
-    const cards = cf.map((x, i) => {
-      const races = Object.entries(R.combo[x.name] || {}).filter(([k]) => k !== '?').sort((p, q) => q[1] - p[1]);
+    const PF = sel.pcf === 'Alliance' || sel.pcf === 'Horde' ? sel.pcf : 'all';
+    const fv = (x) => (PF === 'Alliance' ? x.a : PF === 'Horde' ? x.h : x.t);
+    const ftot = PF === 'all' ? R.chars : (R.faction[PF] || 0);
+    const cards = cf.slice().sort((p, q) => fv(q) - fv(p)).map((x, i) => {
+      const races = Object.entries(R.combo[x.name] || {}).filter(([k]) => k !== '?' && (PF === 'all' || !RACE_FAC[apRace(k)] || RACE_FAC[apRace(k)] === PF)).sort((p, q) => q[1] - p[1]);
       const g = R.gender[x.name] || {}, gt = (g.MALE || 0) + (g.FEMALE || 0);
       const meta = [races[0] ? `Mostly ${esc(races[0][0])}` : '', gt ? `${pct(g.FEMALE || 0, gt)}% female` : ''].filter(Boolean).join(' · ');
-      return `<div class="ap-cc" style="--bg:url('assets/game/${AP_CLASS_ART[x.k]}.jpg');--cc:${CC[x.k]}" data-tip="${CN[x.k]}|${fmt(x.a)} Alliance · ${fmt(x.h)} Horde"><img class="ci" src="${cls(x.k)}" alt=""><span class="rk">#${i + 1}</span><div class="nm">${CN[x.k]}</div><div class="pc">${pct(x.t, R.chars)}%<small>${fmt(x.t)}</small></div><div class="mt">${meta}</div><div class="fb"><i class="a" style="flex:${x.a}"></i><i class="h" style="flex:${x.h}"></i></div><div class="ap-fn"><span class="a">${pct(x.a, x.a + x.h)}% Alliance</span><span class="h">${pct(x.h, x.a + x.h)}% Horde</span></div></div>`;
+      return `<div class="ap-cc" style="--bg:url('assets/game/${AP_CLASS_ART[x.k]}.jpg');--cc:${CC[x.k]}" data-tip="${CN[x.k]}|${fmt(x.a)} Alliance · ${fmt(x.h)} Horde"><img class="ci" src="${cls(x.k)}" alt=""><span class="rk">#${i + 1}</span><div class="nm">${CN[x.k]}</div><div class="pc">${pct(fv(x), ftot)}%<small>${fmt(fv(x))}</small></div><div class="mt">${meta}</div><div class="fb"><i class="a" style="flex:${x.a}"></i><i class="h" style="flex:${x.h}"></i></div><div class="ap-fn"><span class="a">${pct(x.a, x.a + x.h)}% Alliance</span><span class="h">${pct(x.h, x.a + x.h)}% Horde</span></div></div>`;
     }).join('');
-    h += panel('s12', 'The classes', 'Every class by how many play it. The thin bar shows the Alliance and Horde split.', `<div class="ap-cards">${cards}</div>`);
+    const pfChips = `<div class="chips ap-pcf">${[['all', 'Both', UI('achievement_bg_killxenemies_generalsroom')], ['Alliance', 'Alliance', 'assets/game/alliance-crest.png'], ['Horde', 'Horde', 'assets/game/horde-crest.png']].map(([k, n, ic]) => `<button class="chip${k === PF ? ' on' : ''}" data-pcf="${k}"><img src="${ic}" alt="">${n}</button>`).join('')}</div>`;
+    h += panel('s12', 'The classes', PF === 'all' ? 'Every class by how many play it. The thin bar shows the Alliance and Horde split.' : `Every class as a share of all ${PF} characters. The thin bar still shows the Alliance and Horde split.`, `${pfChips}<div class="ap-cards">${cards}</div>`);
 
     const rc = Object.entries(R.race).filter(([k]) => k !== '?').sort((x, y) => y[1] - x[1]);
     const ppl = rc.map(([k, v]) => `<div class="ap-ppl" data-tip="${esc(k)}|${fmt(v)} characters"><div class="ap-medal"><img class="por" src="${race(apRace(k))}" alt=""></div><b>${pct(v, R.chars)}%</b><span>${esc(k)}</span><small>${fmt(v)}</small></div>`).join('');
@@ -4755,6 +4779,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     document.querySelectorAll('.bar [data-prs]').forEach((b) => b.onclick = () => { sel.prs = b.dataset.prs; renderKeep(); });
     if (sel.prs !== 'all' && !hasRs) el.insertAdjacentHTML('afterbegin', `<div class="ap-rsnote s12"><img src="${UI('inv_misc_pocketwatch_01')}" alt="">Per-ruleset numbers are still loading. Refresh in a minute.</div>`);
     el.querySelectorAll('[data-rg]').forEach((b) => b.onclick = () => { sel.rg = b.dataset.rg; renderKeep(); });
+    el.querySelectorAll('[data-pcf]').forEach((b) => b.onclick = () => { sel.pcf = b.dataset.pcf; renderKeep(); });
   }
 
   function apEconAll(E, regs) {
@@ -4888,6 +4913,12 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
       h += `<div class="ap-ticker s12"><div class="ap-tkl"><img src="${UI('inv_misc_coin_17')}" alt="">Market<em class="ap-tk24">24h</em><small>${RN2}</small></div><div class="ap-tkw"><div class="ap-tkr">${tk}${tk}</div></div></div>`;
     }
     if (window.LI_MARKET) h += panel('s12', 'The market', 'Indexes track a basket of items like a stock index, starting at 100. Click indexes to compare them, or search any item for its full history.', '<div id="mkRoot"></div>', { cls: 'ap-mkp' });
+    h += panel('s12', 'The market in game', 'Take these indexes and prices into WoW: Forever. A small app keeps an addon up to date, so you can check the auction house without leaving the game.', `<div class="ap-dl"><ol class="ap-dls">
+        <li><img src="${UI('inv_misc_note_01')}" alt=""><div><b>Download the companion</b><span>One small file for Windows. Run it; there is nothing to install.</span></div></li>
+        <li><img src="${UI('inv_misc_bag_10')}" alt=""><div><b>It sets everything up</b><span>It finds your game, adds the Life on Azeroth addon and fetches new prices every hour.</span></div></li>
+        <li><img src="${UI('inv_misc_coin_17')}" alt=""><div><b>Open the Market in game</b><span>Type <code>/reload</code>, then <code>/market</code> or click the coin by your minimap.</span></div></li>
+      </ol><div class="ap-dlc"><a class="ap-dlb" href="https://github.com/sanredz/LifeOnAzeroth-Addon/releases/latest/download/LifeOnAzerothCompanion.exe" rel="noopener"><img src="${UI('inv_misc_coin_17')}" alt=""><span><b>Download for Windows</b><small>Companion app · 350 KB</small></span></a>
+        <p>Windows may warn about an unrecognised app the first time. Click <b>More info</b>, then <b>Run anyway</b>.</p></div></div>`);
 
     const hs = { Alliance: { n: 0, v: 0 }, Horde: { n: 0, v: 0 }, Blackwater: { n: 0, v: 0 } };
     Object.entries(R.sets).forEach(([rs, v]) => { if (sel.ers === 'all' || sel.ers === rs) Object.keys(hs).forEach((f) => { hs[f].n += v[f].n; hs[f].v += v[f].v; }); });
@@ -4983,8 +5014,8 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     el.innerHTML = h;
     apTimer();
     const mkRoot = document.getElementById('mkRoot');
-    if (mkRoot && window.LI_MARKET) LI_MARKET.mount(mkRoot, { UI, coin: apCoin, coinT: apCoinT, fmt, tipHtml: (id) => gearTip(id + ':0'), regionName: APR, rs: () => (sel.ers !== 'all' ? sel.ers : null) }, sel.erg === 'all' ? 'eu' : sel.erg);
-    el.onclick = (e) => { const g = e.target.closest('[data-gi]'); if (view === 'economy' && g && window.LI_MARKET && window.MKT && !e.target.closest('#mkRoot')) LI_MARKET.open(+g.dataset.gi.split(':')[0]); };
+    if (mkRoot && window.LI_MARKET) LI_MARKET.mount(mkRoot, { UI, coin: apCoin, coinT: apCoinT, fmt, tipHtml: (id) => gearTip(id + ':0'), regionName: APR, rs: () => (sel.ers !== 'all' ? sel.ers : null) }, sel.erg);
+    el.onclick = (e) => { const g = e.target.closest('[data-gi]'); if (view === 'economy' && g && window.LI_MARKET && !e.target.closest('#mkRoot')) LI_MARKET.open(+g.dataset.gi.split(':')[0]); };
     document.querySelectorAll('#main [data-erg], .bar [data-erg]').forEach((b) => b.onclick = () => { sel.erg = b.dataset.erg; renderKeep(); });
     document.querySelectorAll('.bar [data-ers]').forEach((b) => b.onclick = () => { sel.ers = b.dataset.ers; renderKeep(); });
     el.querySelectorAll('[data-ecat]').forEach((b) => b.onclick = () => { sel.ecat = sel.ecat === b.dataset.ecat ? '' : b.dataset.ecat; renderKeep(); });

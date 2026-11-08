@@ -64,6 +64,20 @@
     const v = l[5] && l[5][rs];
     return v ? [v[0], v[1], v[2], v[3], null, l[5]] : null;
   };
+  const REG = ['us', 'eu', 'kr', 'tw'];
+  const REGC = { us: '#3987e5', eu: '#f8d36b', kr: '#d95926', tw: '#199e70' };
+  const latAll = (id) => {
+    let n = 0, q = 0, s = 0, w = 0, mn = 0, cs = 0, cw = 0;
+    REG.forEach((x) => {
+      const v = MKT.regions[x] && lat(MKT.regions[x], id);
+      if (!v || !v[0]) return;
+      const k = v[3] || 1;
+      n += v[3] || 0; q += v[2] || 0; s += v[0] * k; w += k;
+      if (v[1] && (!mn || v[1] < mn)) mn = v[1];
+      if (v[4] != null) { cs += v[4] * k; cw += k; }
+    });
+    return w ? [Math.round(s / w), mn, q, n, cw ? Math.round(10 * cs / cw) / 10 : null] : null;
+  };
   const rowOf = (sh, id) => {
     const rs = RSN();
     return rs ? (sh.rs && sh.rs[rs]) || null : sh.i[id];
@@ -213,10 +227,10 @@
   }
 
   function searchResults(q) {
-    const r = R(), words = q.toLowerCase().split(/\s+/).filter(Boolean);
+    const r = R(), words = q.toLowerCase().split(/\s+/).filter(Boolean), L = st.all ? latAll : (i) => lat(r, i);
     if (!words.length) return '';
     let hits = Object.entries(MKT.cat).filter(([, c]) => words.every((w) => c[0].toLowerCase().includes(w)))
-      .map(([id, c]) => [+id, c, lat(r, id)]).filter((x) => !RSN() || x[2]);
+      .map(([id, c]) => [+id, c, L(id)]).filter((x) => !RSN() || x[2]);
     const ql = q.trim().toLowerCase();
     const rank = (n) => { n = n.toLowerCase(); return n === ql ? 0 : n.startsWith(ql) ? 1 : n.split(/\s+/).some((w) => w.startsWith(words[0])) ? 2 : 3; };
     hits.sort((a, b) => rank(a[1][0]) - rank(b[1][0]) || ((b[2] ? b[2][3] : 0) - (a[2] ? a[2][3] : 0)));
@@ -228,15 +242,18 @@
   async function openItem(id, rg) {
     const hideTip = () => { const tp = document.getElementById('tip'); if (tp) tp.style.display = 'none'; };
     hideTip();
-    rg = rg || st.region;
+    rg = rg || (st.all ? 'all' : st.region);
+    const ALL = rg === 'all';
     st.open = id;
     st.q = '';
     if (root) { const res = root.querySelector('.mk-res'), inp = root.querySelector('.mk-search input'); if (res) res.innerHTML = ''; if (inp) { inp.value = ''; inp.blur(); } }
     const c = MKT.cat[id];
     if (!c) return;
     document.querySelectorAll('.mk-modal').forEach((x) => x.remove());
-    const r = rg === st.region ? R() : MKT.regions[rg] || R(), l = lat(r, id);
-    const [sh] = await Promise.all([shard(rg, id), loadTips()]);
+    const r = ALL ? null : rg === st.region ? R() : MKT.regions[rg] || R(), L = ALL ? latAll : (i) => lat(r, i), l = L(id);
+    const regs0 = REG.filter((x) => MKT.regions[x]);
+    const [shs] = await Promise.all([Promise.all((ALL ? regs0 : [rg]).map((x) => shard(x, id))), loadTips()]);
+    const sh = shs[0];
     const row = rowOf(sh, id);
     const qc = QC[c[1]] || '#fff';
     const recipes = window.LI_MULTI ? Object.values(LI_MULTI.tips) : [];
@@ -248,7 +265,7 @@
     if (made) {
       let cost = 0, known = true;
       const rgs = made.reagents.map((g) => {
-        const gi = byName[g.name], gl = gi && lat(r, gi);
+        const gi = byName[g.name], gl = gi && L(gi);
         if (gl) cost += gl[0] * g.count; else known = false;
         return `<${gi ? `button class="mk-rg mk-go" data-open="${gi}"` : 'div class="mk-rg"'}><img src="assets/icons/${g.icon}.png" alt=""><span>${g.count}× ${esc(g.name)}</span><span>${gl ? H.coin(gl[0] * g.count) : '<small>no price</small>'}</span></${gi ? 'button' : 'div'}>`;
       }).join('');
@@ -266,11 +283,11 @@
     const minP = Math.min(...priced.map(([, x]) => x[0])), low = priced.length > 1 && priced.filter(([, x]) => x[0] === minP).length === 1 ? priced.find(([, x]) => x[0] === minP)[0] : null;
     const regs = rp.map(([x, v]) => {
       const d = v && l && l[0] && x !== rg ? 100 * (v[0] / l[0] - 1) : null;
-      return `<button class="mk-reg${x === rg ? ' on' : ''}" data-rg="${x}"${x === rg ? ' aria-current="true"' : ''}><span class="mk-rn">${x.toUpperCase()}${x === low ? '<em>cheapest</em>' : ''}</span><span class="mk-rp">${v ? H.coin(v[0]) : '<small>not listed</small>'}</span>${d != null ? `<small class="${cls(-d)}">${pctTxt(d)} vs ${rg.toUpperCase()}</small>` : x === rg ? '<small>viewing</small>' : ''}</button>`;
+      return `<button class="mk-reg${x === rg ? ' on' : ''}" data-rg="${x}"${x === rg ? ' aria-current="true"' : ''}><span class="mk-rn">${ALL ? `<i class="mk-rdot" style="background:${REGC[x]}"></i>` : ''}${x.toUpperCase()}${x === low ? '<em>cheapest</em>' : ''}</span><span class="mk-rp">${v ? H.coin(v[0]) : '<small>not listed</small>'}</span>${d != null ? `<small class="${cls(-d)}">${pctTxt(d)} vs ${ALL ? 'average' : rg.toUpperCase()}</small>` : x === rg ? '<small>viewing</small>' : ''}</button>`;
     }).join('');
-    const kin = Object.entries(MKT.cat).filter(([i, x]) => +i !== id && x[3] === c[3] && x[4] === c[4] && lat(r, i))
-      .map(([i, x]) => [+i, x, Math.abs((x[7] || 0) - (c[7] || 0)) * 1000 - (lat(r, i)[3] || 0)]).sort((a, b) => a[2] - b[2]).slice(0, 8);
-    const kinHtml = kin.length ? `<div class="mk-kin"><h4>Similar on the auction house</h4><div>${kin.map(([i, x]) => `<button class="mk-go" data-open="${i}" style="--qc:${QC[x[1]] || '#fff'}"><img src="${icon(i)}" alt=""><span class="mk-nm">${esc(x[0])}</span><span class="mk-pr">${H.coin(r.latest[i][0])}</span></button>`).join('')}</div></div>` : '';
+    const kin = Object.entries(MKT.cat).filter(([i, x]) => +i !== id && x[3] === c[3] && x[4] === c[4] && L(i))
+      .map(([i, x]) => [+i, x, Math.abs((x[7] || 0) - (c[7] || 0)) * 1000 - (L(i)[3] || 0)]).sort((a, b) => a[2] - b[2]).slice(0, 8);
+    const kinHtml = kin.length ? `<div class="mk-kin"><h4>Similar on the auction house</h4><div>${kin.map(([i, x]) => `<button class="mk-go" data-open="${i}" style="--qc:${QC[x[1]] || '#fff'}"><img src="${icon(i)}" alt=""><span class="mk-nm">${esc(x[0])}</span><span class="mk-pr">${H.coin(L(i)[0])}</span></button>`).join('')}</div></div>` : '';
     const ch24 = l ? l[4] : null;
     const stats = [['inv_misc_coin_02', 'Cheapest now', l ? H.coin(l[1]) : '–'], ['inv_misc_ticket_tarot_stack_01', 'Auctions', l ? H.fmt(l[3]) : '0'], ['inv_misc_bag_10', 'Items for sale', l ? H.fmt(l[2]) : '0'], ['inv_misc_coin_17', 'Vendor pays', c[6] ? H.coin(c[6]) : '–']];
     const chips = [CLASS[c[3]] || 'Item', c[7] ? `Item level ${c[7]}` : '', c[5] ? `Requires level ${c[5]}` : ''].filter(Boolean);
@@ -280,11 +297,11 @@
     m.innerHTML = `<div class="mk-card" role="dialog" aria-label="${esc(c[0])}" style="--qc:${qc}"><button class="mk-x" aria-label="Close">×</button>
       <div class="mk-hero"><div class="mk-hero-ic"><img src="${icon(id)}" alt=""></div>
         <div class="mk-hero-tx"><h3>${esc(c[0])}</h3><div class="mk-chips">${chips.map((x) => `<span>${esc(x)}</span>`).join('')}</div></div>
-        <div class="mk-hero-px"><small>Typical price · ${esc((H.regionName || {})[rg] || rg.toUpperCase())}${RSN() ? ' · ' + esc(RSN()) : ''}${rg === st.region && facOn() ? ' · ' + st.fac : ''}</small><b>${l ? H.coin(l[0]) : '<span class="mk-nl">Not listed right now</span>'}</b>${l ? `<span class="mk-pill ${cls(ch24)}">${pctTxt(ch24)} <i>24h</i></span>` : ''}
-          <button class="mk-add" data-cmp="${id}"><img src="${H.UI('inv_misc_note_01')}" alt="">Add to chart</button></div></div>
+        <div class="mk-hero-px"><small>${ALL ? 'Average typical price · All regions' : 'Typical price · ' + esc((H.regionName || {})[rg] || rg.toUpperCase())}${RSN() ? ' · ' + esc(RSN()) : ''}${rg === st.region && facOn() ? ' · ' + st.fac : ''}</small><b>${l ? H.coin(l[0]) : '<span class="mk-nl">Not listed right now</span>'}</b>${l ? `<span class="mk-pill ${cls(ch24)}">${pctTxt(ch24)} <i>24h</i></span>` : ''}
+          ${ALL ? '' : `<button class="mk-add" data-cmp="${id}"><img src="${H.UI('inv_misc_note_01')}" alt="">Add to chart</button>`}</div></div>
       <div class="mk-stats">${stats.map(([ic, k, v]) => `<div><img src="${H.UI(ic)}" alt=""><span><small>${k}</small><b class="mk-sv">${v}</b></span></div>`).join('')}</div>
       <div class="mk-body"><div class="mk-left"><div class="mk-chead"><h4>Price history</h4><div class="mk-ranges">${RANGES.map(([k]) => `<button class="${k === st.range ? 'on' : ''}" data-mr="${k}">${k}</button>`).join('')}</div></div>
-        <div class="mk-key"><span><i style="background:${c[1] >= 2 ? qc : '#f8d36b'}"></i>Typical price</span><span><i style="background:#9aa3ad"></i>Cheapest listing</span></div>
+        <div class="mk-key">${ALL ? regs0.map((x) => `<span><i style="background:${REGC[x]}"></i>${x.toUpperCase()}</span>`).join('') + '<span class="mk-keyn">Typical price in each region</span>' : `<span><i style="background:${c[1] >= 2 ? qc : '#f8d36b'}"></i>Typical price</span><span><i style="background:#9aa3ad"></i>Cheapest listing</span>`}</div>
         <div class="mk-iplot"></div><div class="mk-vol"></div>${kinHtml}</div>
         <div class="mk-right">${tip ? `<div class="mk-tip">${tip}</div>` : ''}<div class="mk-box mk-regs"><h4>Price in each region${facOn() ? ' <small>every house</small>' : ''}</h4><div>${regs}</div></div>${madeHtml}${usedHtml}</div></div></div>`;
     document.body.appendChild(m);
@@ -306,6 +323,12 @@
       if (cmp) { if (!st.series.some((s) => s.kind === 'item' && s.id === id) && st.series.length < 5) st.series.push({ kind: 'item', id }); close(); paint(); root.querySelector('.mk-term').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     });
     const draw = () => {
+      if (ALL) {
+        const list = regs0.map((x, k) => { const rw = rowOf(shs[k], id); return { name: x.toUpperCase(), t: shs[k].t, v: rw ? rw[0].map((y) => y || null) : [], unit: 'coin', color: REGC[x] }; }).filter((s) => s.v.filter((y) => y != null).length >= 2);
+        drawChart(m.querySelector('.mk-iplot'), list, { h: 240, abs: true });
+        m.querySelector('.mk-vol').innerHTML = '';
+        return;
+      }
       const t = sh.t, med = row ? row[0].map((x) => x || null) : [], mn = row ? row[1].map((x) => x || null) : [];
       drawChart(m.querySelector('.mk-iplot'), [{ name: 'Typical price', t, v: med, unit: 'coin', color: c[1] >= 2 ? qc : '#f8d36b' }, { name: 'Cheapest', t, v: mn, unit: 'coin', color: '#9aa3ad' }].filter((s) => s.v.filter((x) => x != null).length >= 2), { h: 240, abs: true, fill: true });
       const q = row ? row[2] : [];
@@ -321,7 +344,7 @@
     root.innerHTML = `<div class="mk-term">
       <div class="mk-top"><div class="mk-search"><input type="search" placeholder="Search any item: Copper Ore, Linen Bag, Thunderfury…" value="${esc(st.q)}" aria-label="Search items"><div class="mk-res"></div></div>
         ${MKT.live && FAC_UI ? `<div class="mk-fac" role="group" aria-label="Auction house">${FACS.map(([f, n, ic]) => `<button class="${f === st.fac ? 'on' : ''}" data-fac="${f}"><img src="${facIcon(f, ic)}" alt="">${n}</button>`).join('')}</div>` : ''}
-        <div class="mk-reg-note">${esc((H.regionName || {})[st.region] || st.region.toUpperCase())}${facOn() ? ' · ' + st.fac : ''} · ${R().t.length} hourly snapshots</div></div>
+        <div class="mk-reg-note">${st.all ? 'Indexes for ' : ''}${esc((H.regionName || {})[st.region] || st.region.toUpperCase())}${facOn() ? ' · ' + st.fac : ''} · ${R().t.length} hourly snapshots</div></div>
       <div class="mk-grid"><div class="mk-side">${indexList()}</div>
         <div class="mk-main"><div class="mk-bar"><div class="mk-legend"></div><div class="mk-ranges">${RANGES.map(([k]) => `<button class="${k === st.range ? 'on' : ''}" data-r="${k}">${k}</button>`).join('')}</div></div><div class="mk-plot"></div>
         <div class="mk-foot">${st.series.length > 1 ? 'Compared as % change from the start of the range.' : 'Index value; every index starts at 100 when its history begins.'}</div></div></div></div>`;
@@ -367,6 +390,7 @@
       el.innerHTML = '<div class="mk-empty">Loading the market…</div>';
       await load();
       if (!window.MKT) { el.innerHTML = '<div class="mk-empty">Market history is not available right now.</div>'; return; }
+      st.all = region === 'all';
       st.region = MKT.regions[region] ? region : (MKT.regions.eu ? 'eu' : Object.keys(MKT.regions)[0]);
       if (st.fac !== 'all' && MKT.live) facView[st.region + ':' + st.fac] = await loadFac(st.region, st.fac);
       if (RSN() && MKT.live) setView[st.region + ':' + RSN()] = await loadSet(st.region, RSN());
@@ -374,6 +398,6 @@
       if (!st.series.length) st.series = [{ kind: 'idx', key: Object.keys(MKT.regions[st.region].idx)[0] }];
       paint();
     },
-    open: (id) => openItem(id),
+    open: (id) => load().then(() => { if (window.MKT && H) openItem(id); }),
   };
 })();

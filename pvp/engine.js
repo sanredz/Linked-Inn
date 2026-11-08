@@ -167,6 +167,7 @@ export function fight(a, b, seed, rec) {
     stopCast(f);
     f.stealth = false;
     say('cc', f, kind, dur * scale);
+    if (rec && kind === 'poly') rec.events[rec.events.length - 1].via = group || 'blind';
     return true;
   }
 
@@ -330,7 +331,7 @@ export function fight(a, b, seed, rec) {
     use('nature', t > .1, 'Greater Nature Protection Potion', () => { f.ward = { school: 'nature', left: 800 + r() * 500 }; });
     if (f.gcd > t || !seen(e)) return;
     use('grenade', d <= 30 && !locked(e) && (!!e.cast || d <= 8), 'Thorium Grenade', () => { hurt(e, 300 + r() * 200, f, 'fire', 'Thorium Grenade'); control(e, 'stun', 'stun', 3); gcd(f, 1); });
-    use('sapper', d <= 6, 'Goblin Sapper Charge', () => { hurt(e, 450 + r() * 300, f, 'fire', 'Goblin Sapper Charge'); f.hp -= 375 + r() * 250; gcd(f, 1); });
+    use('sapper', d <= 6, 'Goblin Sapper Charge', () => { hurt(e, 450 + r() * 300, f, 'fire', 'Goblin Sapper Charge'); f.hp -= Math.min(375 + r() * 250, f.max * (.11 + r() * .07)); gcd(f, 1); });
     use('dynamite', d <= 30, 'Dense Dynamite', () => { hurt(e, 340 + r() * 120, f, 'fire', 'Dense Dynamite'); gcd(f, 1); });
   }
 
@@ -343,7 +344,7 @@ export function fight(a, b, seed, rec) {
     if (plan.expectFear && !locked(f) && e.p.kind !== 'melee' && d <= 12 && avail(f, 'berserk')) { f.aura.fearproof = t + 10; f.cd.berserk = t + 30; f.rage = Math.min(100, f.rage + 5); say('buff', f, 'Berserker Rage'); }
     if (breakOut(f)) return;
     meleeTrinket(f);
-    if (avail(f, 'bloodrage') && f.rage < 30) { f.rage = Math.min(100, f.rage + 30); f.hp -= 270; f.cd.bloodrage = t + 60; }
+    if (avail(f, 'bloodrage') && f.rage < 30) { f.rage = Math.min(100, f.rage + 30); f.hp -= Math.min(270, f.max * .077); f.cd.bloodrage = t + 60; }
     if (f.gcd > t || !seen(e)) return;
     if (!f.charged && d >= 8 && d <= 25 && !on(f, 'root') && (plan.opener === 'charge' || e.cast || t > 6)) {
       f.charged = 1;
@@ -812,8 +813,9 @@ export function fight(a, b, seed, rec) {
       return gcd(f);
     }
     if (f.mana < 450 && f.hp > f.max * .45) {
-      f.mana = Math.min(f.maxMana, f.mana + 504);
-      f.hp -= 420;
+      const tap = Math.min(420, f.max * .12);
+      f.mana = Math.min(f.maxMana, f.mana + tap * 1.2);
+      f.hp -= tap;
       return gcd(f);
     }
     if (f.hp < f.max * (plan.drainAt || .4) && f.mana >= 300 && spend(f, 300)) {

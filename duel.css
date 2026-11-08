@@ -88,7 +88,7 @@
 @keyframes du-bob { 50% { transform: translateY(-8px); } }
 .du-fig[data-state="poly"] .du-ren { opacity: 0; }
 .du-fig[data-state="poly"] .du-poly { opacity: 1; }
-.du-fig[data-state="stun"] .du-body { animation: du-wobble 0.9s ease-in-out infinite; }
+.du-fig[data-state="stun"] .du-body, .du-fig[data-state="daze"] .du-body { animation: du-wobble 0.9s ease-in-out infinite; }
 @keyframes du-wobble { 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
 .du-fig[data-state="root"] .du-ren { filter: brightness(1.05) saturate(0.6) hue-rotate(160deg) drop-shadow(0 0 12px #8fd0ff); }
 .du-fig[data-state="root"] .du-body::before { content: ""; position: absolute; left: -15%; right: -15%; bottom: -5%; height: 16%; border-radius: 50%; background: radial-gradient(closest-side, rgba(170, 225, 255, 0.85), rgba(120, 190, 255, 0.25) 70%, transparent); }

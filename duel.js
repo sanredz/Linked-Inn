@@ -4,6 +4,9 @@
   const CALM = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const SCHOOL = { fire: '#ff8a3c', frost: '#8fd0ff', arcane: '#e09bff', shadow: '#b18cff', nature: '#7dff8a', holy: '#ffe680', phys: '#ffffff' };
   const STATE = { stun: 'Stunned', fear: 'Feared', poly: 'Polymorphed', root: 'Rooted', block: 'Immune', stealth: 'Stealthed' };
+  const VIA = { poly: ['Polymorphed', 'spell_nature_polymorph'], scatter: ['Disoriented', 'ability_golemstormbolt'], knock: ['Gouged', 'ability_gouge'], freeze: ['Frozen', 'spell_frost_chainsofice'], blind: ['Blinded', 'spell_shadow_mindsteal'], daze: ['Disoriented', 'ability_golemstormbolt'] };
+  const ccName = (e) => (VIA[e.via] || [])[0] || STATE[e.name] || e.name;
+  const ccIcon = (e) => (VIA[e.via] || [])[1] || STATE_IC[e.name] || 'spell_frost_stun';
   const STATE_IC = { stun: 'spell_frost_stun', fear: 'spell_shadow_possession', poly: 'spell_nature_polymorph', root: 'spell_frost_frostnova', block: 'spell_holy_divineintervention', stealth: 'ability_stealth' };
   const ARENAS = [['scenes/ruinsoflordaeron', 'the Ruins of Lordaeron'], ['art/land-badlands', 'the Badlands'], ['art/land-thousandneedles', 'Thousand Needles'], ['scenes/kalimdor', 'the Barrens'], ['art/land-swamp', 'the Swamp of Sorrows'], ['scenes/easternkingdom', 'Elwynn Forest']];
   const LINES = {
@@ -206,13 +209,14 @@
     rs.querySelector('i').style.width = Math.max(0, Math.min(100, (100 * f.res) / (f.resMax || 100))) + '%';
     const fig = root.querySelector(`.du-fig.${i ? 'b' : 'a'}`);
     if (!fig) return;
-    fig.dataset.state = f.state || '';
+    const fs = f.state === 'poly' && !f.sheep ? 'daze' : f.state;
+    fig.dataset.state = fs || '';
     fig.classList.toggle('shield', !!(f.shield || f.absorb));
     fig.classList.toggle('casting', !!f.cast);
     fig.style.setProperty('--sc', SCHOOL[f.school] || '#ffe2b0');
     const st = fig.querySelector('.du-st');
-    const want = f.state ? `<img src="${AR().RI(STATE_IC[f.state] || 'spell_frost_stun')}" alt="">${STATE[f.state] || f.state}` : '';
-    if (st.dataset.v !== f.state) { st.dataset.v = f.state || ''; st.innerHTML = want; }
+    const want = fs ? `<img src="${AR().RI(ccIcon({ via: fs, name: fs }))}" alt="">${ccName({ via: fs, name: fs })}` : '';
+    if (st.dataset.v !== fs) { st.dataset.v = fs || ''; st.innerHTML = want; }
   }
 
   function castBar(root, i, e, D) {
@@ -252,7 +256,7 @@
     const map = {
       hit: () => (e.amount ? `${ic(e.name)}<b>${esc(who)}</b>'s <span${sc}>${esc(e.name)}</span> hits ${esc(other)} for <em${e.crit ? ' class="cr"' : ''}>${fmt(e.amount)}${e.crit ? ' crit' : ''}</em>` : `${ic(e.name)}<b>${esc(who)}</b> uses <span${sc}>${esc(e.name)}</span>`),
       heal: () => `${ic(e.name)}<b>${esc(who)}</b> heals for <em class="hl">${fmt(e.amount)}</em> with ${esc(e.name)}`,
-      cc: () => `<img src="${AR().RI(STATE_IC[e.name] || 'spell_frost_stun')}" alt=""><b>${esc(who)}</b> is ${(STATE[e.name] || e.name).toLowerCase()} for ${(+e.amount).toFixed(1)}s`,
+      cc: () => `<img src="${AR().RI(ccIcon(e))}" alt=""><b>${esc(who)}</b> is ${ccName(e).toLowerCase()} for ${(+e.amount).toFixed(1)}s`,
       buff: () => `${ic(e.name)}<b>${esc(who)}</b> uses ${esc(e.name)}`,
       move: () => `${ic(e.name)}<b>${esc(who)}</b> uses ${esc(e.name)}`,
       trinket: () => `${ic('PvP Trinket')}<b>${esc(who)}</b> breaks free!`,
@@ -297,7 +301,7 @@
       cb.classList.add('cut');
       fct(root, e.side, 'Interrupted', 'tag', '#ff6a5a');
     } else if (e.type === 'cc') {
-      fct(root, e.side, STATE[e.name] || e.name, 'cc', '#ffd36b');
+      fct(root, e.side, ccName(e), 'cc', '#ffd36b');
     } else if (e.type === 'move') {
       pulse(atk, 'dash', 500);
       fct(root, e.side, esc(e.name), 'tag', '#ffe9b0', spellIcon(e.name, Ds[e.side]));
@@ -540,7 +544,7 @@
           else logLine(root, e, names, Ds);
           if (R.skip) return;
           if (e.type === 'interrupt') { const cb = root.querySelector(`.du-uf.${e.side ? 'b' : 'a'} .du-cb`); cb.classList.remove('go'); cb.classList.add('cut'); call(root, e.side, 'Interrupted!', '#ff6a5a'); }
-          else if (e.type === 'cc') call(root, e.side, `<img src="${AR().RI(STATE_IC[e.name] || 'spell_frost_stun')}" alt="">${STATE[e.name] || e.name}`, '#ffd36b');
+          else if (e.type === 'cc') call(root, e.side, `<img src="${AR().RI(ccIcon(e))}" alt="">${ccName(e)}`, '#ffd36b');
           else if (e.type === 'buff' || e.type === 'move' || e.type === 'trinket') call(root, e.side, `<img src="${spellIcon(e.type === 'trinket' ? 'PvP Trinket' : e.name, Ds[e.side])}" alt="">${esc(e.type === 'trinket' ? 'Breaks free!' : e.name)}`, '#9fe0ff');
           else if (e.type === 'hit' && e.crit && e.amount) { call(1 - e.side === 0 ? root : root, e.side, `<img src="${spellIcon(e.name, Ds[e.side])}" alt="">${esc(e.name)} crit!`, '#ffe14d'); if (!CALM) pulse(stageEl, 'flashing', 260); }
         },

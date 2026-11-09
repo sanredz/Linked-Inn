@@ -1579,6 +1579,19 @@ body[data-view="economy"] { --accent: #ffcc4d; --art: url("assets/game/art-rogue
 .ap-lvh i { flex: 1; min-height: 2px; border-radius: 3px 3px 1px 1px; background: linear-gradient(var(--bar1, var(--gold)), var(--bar0, #8a6a2a)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3); }
 .ap-lvh i:hover { filter: brightness(1.35); }
 .ap-lvh i.cap { background: linear-gradient(#9fd3ff, #3a6fb0); }
+.ap-lvh i.fa, .ap-lvm i.fa { background: linear-gradient(#5d9ef0, #234f8f); }
+.ap-lvh i.fh { background: linear-gradient(#e2584c, #7d1f17); }
+.ap-lvm { position: relative; padding-top: 10px; }
+.ap-lvm .u, .ap-lvm .d { display: flex; gap: 2px; height: 120px; }
+.ap-lvm .u { align-items: flex-end; border-bottom: 1px solid rgba(255, 255, 255, 0.25); padding-bottom: 1px; }
+.ap-lvm .d { align-items: flex-start; padding-top: 1px; }
+.ap-lvm i { flex: 1; min-height: 1px; }
+.ap-lvm .u i { border-radius: 3px 3px 0 0; }
+.ap-lvm .d i { border-radius: 0 0 3px 3px; background: linear-gradient(#7d1f17, #e2584c); }
+.ap-lvm i:hover { filter: brightness(1.35); }
+.ap-lvm .ta, .ap-lvm .th { position: absolute; right: 2px; font: 12px "Friz", serif; }
+.ap-lvm .ta { top: 10px; color: #7fb4f5; }
+.ap-lvm .th { bottom: 0; color: #ef8a80; }
 .ap-lvx { display: grid; grid-template-columns: repeat(60, 1fr); gap: 2px; margin-top: 6px; font: 12px "Friz", serif; color: var(--muted); }
 .ap-lvx span { text-align: center; white-space: nowrap; }
 .ap-fleg { display: flex; justify-content: space-between; margin: 8px 2px 16px; font-size: 13px; color: var(--ink-2); }
@@ -4742,10 +4755,24 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     h += panel('s12', 'The faction war', 'Alliance against Horde on every ruleset. The line in the middle is an even split.',
       `<div class="ap-war"><div class="ap-side a"><img src="${ART('crest-alliance')}" alt=""><b>${pct(fa, ft)}%</b><span>Alliance</span></div><div class="ap-tugs">${tugs}</div><div class="ap-side h"><img src="${ART('crest-horde')}" alt=""><b>${pct(fh, ft)}%</b><span>Horde</span></div></div>`);
 
-    const lv = R.levels.slice(1), lmax = Math.max(1, ...lv);
-    const bars = lv.map((v, i) => `<i${i === 59 ? ' class="cap"' : ''} style="height:${Math.max(1, 100 * v / lmax)}%" data-tip="Level ${i + 1}|${fmt(v)} characters"></i>`).join('');
+    const LF = R.levfac || {}, hasLF = !!(LF.Alliance && LF.Horde);
+    const PL = hasLF && (sel.plf === 'Alliance' || sel.plf === 'Horde' || sel.plf === 'both') ? sel.plf : (hasLF ? 'both' : 'all');
+    const LA = hasLF ? LF.Alliance.slice(1) : [], LH = hasLF ? LF.Horde.slice(1) : [];
+    const lv = PL === 'Alliance' ? LA : PL === 'Horde' ? LH : R.levels.slice(1), lmax = Math.max(1, ...lv);
+    const mmax = Math.max(1, ...LA, ...LH);
+    const tipBoth = (i, side) => { const a = LA[i] || 0, ho = LH[i] || 0, t = Math.max(1, a + ho); return `Level ${i + 1}|${fmt(a)} Alliance · ${fmt(ho)} Horde\n${side === 'h' ? `${pct(ho, t)}% Horde` : `${pct(a, t)}% Alliance`}`; };
+    const bars = PL === 'both'
+      ? `<div class="ap-lvm"><div class="u">${LA.map((v, i) => `<i class="fa" style="height:${Math.max(1, 100 * v / mmax)}%" data-tip="${tipBoth(i, 'a')}"></i>`).join('')}</div><div class="d">${LH.map((v, i) => `<i class="fh" style="height:${Math.max(1, 100 * v / mmax)}%" data-tip="${tipBoth(i, 'h')}"></i>`).join('')}</div><span class="ta">Alliance</span><span class="th">Horde</span></div>`
+      : lv.map((v, i) => {
+        const fc = PL === 'Alliance' ? 'fa' : PL === 'Horde' ? 'fh' : (i === 59 ? 'cap' : '');
+        return `<i class="${fc}" style="height:${Math.max(1, 100 * v / lmax)}%" data-tip="Level ${i + 1}|${fmt(v)} ${PL === 'all' ? '' : PL + ' '}characters"></i>`;
+      }).join('');
     const axis = [1, 10, 20, 30, 40, 50, 60].map((n) => `<span style="grid-column:${n}">${n}</span>`).join('');
-    h += panel('s12', 'Where everyone is', 'How many characters are at each level right now. Blizzard only lists characters from level 10, so lower levels come from guild rosters alone. Blue is level 60.', `<div class="ap-lvh">${bars}</div><div class="ap-lvx">${axis}</div>`);
+    const plChips = hasLF ? `<div class="chips ap-pcf">${[['both', 'Both', UI('achievement_guildperk_everybodysfriend')], ['Alliance', 'Alliance', 'assets/game/alliance-crest.png'], ['Horde', 'Horde', 'assets/game/horde-crest.png']].map(([k, n, ic]) => `<button class="chip${k === PL ? ' on' : ''}" data-plf="${k}"><img src="${ic}" alt="">${n}</button>`).join('')}</div>` : '';
+    const lvSub = PL === 'both' ? 'How many characters are at each level right now: Alliance above the line, Horde below, on the same scale. Blizzard only lists characters from level 10, so lower levels come from guild rosters alone.'
+      : PL === 'all' ? 'How many characters are at each level right now. Blizzard only lists characters from level 10, so lower levels come from guild rosters alone. Blue is level 60.'
+      : `How many ${PL} characters are at each level right now. Blizzard only lists characters from level 10, so lower levels come from guild rosters alone.`;
+    h += panel('s12', 'Where everyone is', lvSub, `${plChips}${PL === 'both' ? bars : `<div class="ap-lvh">${bars}</div>`}<div class="ap-lvx">${axis}</div>`);
 
     const cf = Object.entries(R.classfac).filter(([k]) => CC[apCls(k)]).map(([k, v]) => ({ name: k, k: apCls(k), a: v.Alliance || 0, h: v.Horde || 0, t: sum(Object.values(v)) })).sort((x, y) => y.t - x.t);
     const PF = sel.pcf === 'Alliance' || sel.pcf === 'Horde' ? sel.pcf : 'all';
@@ -4804,6 +4831,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     if (sel.prs !== 'all' && !hasRs) el.insertAdjacentHTML('afterbegin', `<div class="ap-rsnote s12"><img src="${UI('inv_misc_pocketwatch_01')}" alt="">Per-ruleset numbers are still loading. Refresh in a minute.</div>`);
     el.querySelectorAll('[data-rg]').forEach((b) => b.onclick = () => { sel.rg = b.dataset.rg; renderKeep(); });
     el.querySelectorAll('[data-pcf]').forEach((b) => b.onclick = () => { sel.pcf = b.dataset.pcf; renderKeep(); });
+    el.querySelectorAll('[data-plf]').forEach((b) => b.onclick = () => { sel.plf = b.dataset.plf; renderKeep(); });
   }
 
   function apEconAll(E, regs) {

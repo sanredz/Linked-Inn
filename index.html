@@ -4643,7 +4643,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   const AP_CREST = { Human: 'crest-alliance', Dwarf: 'crest-dwarf', 'Night Elf': 'crest-nightelf', Orc: 'crest-orc', Troll: 'crest-troll', Tauren: 'crest-tauren', Undead: 'crest-forsaken' };
   const AP_RS_ICON = { PvP: 'ability_dualwield', Normal: 'achievement_zone_elwynnforest', Roleplay: 'inv_misc_book_11', 'Roleplay PvP': 'ability_dualwield' };
   const AP_FAC = { Alliance: '#4a8fe7', Horde: '#d8443a', Blackwater: '#d9a940' };
-  const AP_CAT = { Armor: ['inv_helmet_25', '#7aa0d8'], 'Trade goods': ['inv_stone_04', '#62b98c'], Weapons: ['inv_sword_27', '#d8694a'], Consumables: ['inv_potion_51', '#c77dff'],
+  const AP_CAT = { Armor: ['inv_helmet_25', '#7aa0d8'], 'Trade goods': ['inv_crate_01', '#62b98c'], Weapons: ['inv_sword_27', '#d8694a'], Consumables: ['inv_potion_51', '#c77dff'],
     Recipes: ['inv_misc_book_11', '#d9a940'], Miscellaneous: ['inv_misc_gift_01', '#9aa3ad'], Bags: ['inv_misc_bag_07', '#b88a5a'], Reagents: ['inv_misc_dice_01', '#5fc7a8'],
     Gems: ['spell_shadow_soulgem', '#e070b0'], Ammo: ['ability_hunter_snipershot', '#c9b99a'], Quivers: ['inv_misc_bag_10', '#a08060'], Keys: ['inv_misc_key_14', '#e0c060'], 'Quest items': ['inv_misc_note_01', '#e0d0a0'] };
   const QI = { POOR: 0, COMMON: 1, UNCOMMON: 2, RARE: 3, EPIC: 4, LEGENDARY: 5 };
@@ -4964,7 +4964,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
 
     const ES = R.essentials || [];
     if (ES.length) {
-      const GROUPS = [['Ore and bars', 'inv_stone_04', [2770, 2771, 2772, 3858, 10620, 2840, 3576]], ['Cloth', 'inv_misc_bag_10', [2589, 2592, 4306, 4338, 14047]], ['Leather', 'inv_misc_bag_07', [2318, 2319, 4234, 4304, 8170]], ['Herbs', 'inv_potion_51', [2447, 765, 2449, 785, 2450, 3356, 3820]], ['Dust and stone', 'spell_shadow_soulgem', [10940, 10938, 2835, 2836]]];
+      const GROUPS = [['Ore and bars', 'inv_ore_copper_01', [2770, 2771, 2772, 3858, 10620, 2840, 3576]], ['Cloth', 'inv_fabric_linen_01', [2589, 2592, 4306, 4338, 14047]], ['Leather', 'inv_misc_leatherscrap_07', [2318, 2319, 4234, 4304, 8170]], ['Herbs', 'inv_misc_flower_02', [2447, 765, 2449, 785, 2450, 3356, 3820]], ['Dust and stone', 'inv_enchant_dustarcane', [10940, 10938, 2835, 2836]]];
       const byId = Object.fromEntries(ES.map((x) => [x.id, x]));
       const AC = 'assets/game/alliance-crest.png', HC = 'assets/game/horde-crest.png';
       const sh = Math.round(((R.movers || {}).span || 0) / 3600), since = sh >= 20 && sh <= 28 ? 'about a day ago' : `${sh} hours ago`;
@@ -4986,7 +4986,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     }
 
     const FG = R.fgaps || {};
-    const CATS = [['all', 'Everything', 'inv_misc_coin_02'], ['trade', 'Trade goods', 'inv_stone_04'], ['cons', 'Consumables', 'inv_potion_51'], ['gear', 'Gear', 'inv_sword_27'], ['recipe', 'Recipes', 'inv_misc_book_11'], ['other', 'Other', 'inv_misc_gift_01']];
+    const CATS = [['all', 'Everything', 'inv_misc_coin_02'], ['trade', 'Trade goods', 'inv_crate_01'], ['cons', 'Consumables', 'inv_potion_51'], ['gear', 'Gear', 'inv_sword_27'], ['recipe', 'Recipes', 'inv_misc_book_11'], ['other', 'Other', 'inv_misc_gift_01']];
     const allG = Object.values(FG).flat().sort((x, y) => y.x - x.x).slice(0, 15);
     const pickG = (sel.egc === 'all' ? (allG.length ? allG : (R.gaps || [])) : (FG[sel.egc] || [])).filter((x) => !RSF || x.rs === RSF);
     if (allG.length || (R.gaps || []).length) {
@@ -5013,7 +5013,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     }
 
     const S = R.sold || {};
-    const TABS = [['listed', 'Most auctions', 'inv_misc_bag_10'], ['mats', 'Biggest piles', 'inv_stone_04']];
+    const TABS = [['listed', 'Most auctions', 'inv_misc_bag_10'], ['mats', 'Biggest piles', 'inv_crate_01']];
     if (!TABS.some((t) => t[0] === sel.etab)) sel.etab = 'listed';
     const HELP = { listed: 'The items with the most separate auctions up right now.', mats: 'Trade goods by how many are for sale, stacks counted.', sold: `Auctions that disappeared before running out since the last update: most of them sold. ${fmt(S.n || 0)} items.` };
     const list = sel.etab === 'sold' ? (S.top || []) : (R[sel.etab] || []);

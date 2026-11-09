@@ -1820,6 +1820,7 @@ body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
 .ap-dls code { font: 12.5px "Friz", serif; color: var(--gold); background: rgba(248, 211, 107, 0.1); padding: 0 5px; border-radius: 4px; }
 .ap-dlc { display: flex; flex-direction: column; gap: 10px; }
 .ap-dlb { display: flex; align-items: center; gap: 12px; padding: 12px 18px 12px 12px; border-radius: 12px; text-decoration: none; color: #1a1206; background: linear-gradient(#ffe39a, #d5a548); border: 1px solid #f3cf74; box-shadow: inset 0 1px 0 #fff3c4, 0 4px 14px rgba(0, 0, 0, 0.6); transition: transform 0.12s, filter 0.12s; }
+.ap-dlb.alt { color: var(--gold); background: rgba(0, 0, 0, 0.45); border-color: #8a6a2a; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5); }
 .ap-dlb:hover { filter: brightness(1.07); transform: translateY(-1px); }
 .ap-dlb img { width: 38px; height: 38px; border-radius: 8px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6); }
 .ap-dlb b { display: block; font: 17px "Friz", serif; font-weight: normal; }
@@ -4948,11 +4949,11 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
       h += `<div class="ap-ticker s12"><div class="ap-tkl"><img src="${UI('inv_misc_coin_17')}" alt="">Market<em class="ap-tk24">24h</em><small>${RN2}</small></div><div class="ap-tkw"><div class="ap-tkr">${tk}${tk}</div></div></div>`;
     }
     if (window.LI_MARKET) h += panel('s12', 'The market', 'Indexes track a basket of items like a stock index, starting at 100. Click indexes to compare them, or search any item for its full history.', '<div id="mkRoot"></div>', { cls: 'ap-mkp' });
-    h += panel('s12', 'The market in game', 'Take these indexes and prices into WoW: Forever. A small app keeps an addon up to date, so you can check the auction house without leaving the game.', `<div class="ap-dl"><ol class="ap-dls">
-        <li><img src="${UI('inv_misc_note_01')}" alt=""><div><b>Download the companion</b><span>One small file for Windows. Run it; there is nothing to install.</span></div></li>
-        <li><img src="${UI('inv_misc_bag_10')}" alt=""><div><b>It sets everything up</b><span>It finds your game, adds the Life on Azeroth addon and fetches new prices every hour.</span></div></li>
+    h += panel('s12', 'The market in game', 'Take these indexes and prices into WoW: Forever. The addon shows them in game and a small app keeps its prices fresh, so you can check the auction house without leaving the game.', `<div class="ap-dl"><ol class="ap-dls">
+        <li><img src="${UI('inv_misc_bag_10')}" alt=""><div><b>Get the addon</b><span>From CurseForge, so it keeps itself up to date.</span></div></li>
+        <li><img src="${UI('inv_misc_note_01')}" alt=""><div><b>Run the companion</b><span>One small file for Windows. It sits in your tray and fetches new prices every hour.</span></div></li>
         <li><img src="${UI('inv_misc_coin_17')}" alt=""><div><b>Open the Market in game</b><span>Type <code>/reload</code>, then <code>/market</code> or click the coin by your minimap.</span></div></li>
-      </ol><div class="ap-dlc"><a class="ap-dlb" href="https://github.com/sanredz/LifeOnAzeroth-Addon/releases/latest/download/LifeOnAzerothCompanion.exe" rel="noopener"><img src="${UI('inv_misc_coin_17')}" alt=""><span><b>Download for Windows</b><small>Companion app · 350 KB</small></span></a>
+      </ol><div class="ap-dlc"><a class="ap-dlb alt" href="https://www.curseforge.com/wow/addons/lifeonazeroth-market" target="_blank" rel="noopener"><img src="${UI('inv_misc_bag_10')}" alt=""><span><b>Get the addon</b><small>On CurseForge</small></span></a><a class="ap-dlb" href="https://github.com/sanredz/LifeOnAzeroth-Addon/releases/latest/download/LifeOnAzerothCompanion.exe" rel="noopener"><img src="${UI('inv_misc_coin_17')}" alt=""><span><b>Download for Windows</b><small>Companion app · 350 KB</small></span></a>
         <p>Windows may warn about an unrecognised app the first time. Click <b>More info</b>, then <b>Run anyway</b>.</p></div></div>`);
 
     const hs = { Alliance: { n: 0, v: 0 }, Horde: { n: 0, v: 0 }, Blackwater: { n: 0, v: 0 } };

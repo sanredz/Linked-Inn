@@ -1692,6 +1692,15 @@ body[data-view="economy"] { --art: url("assets/game/art/econ-undermine.jpg"); }
 .ap-house .gv { margin-top: 8px; font: 17px "Friz", serif; color: #ffd76a; text-shadow: 0 1px 0 #000; }
 .ap-rsc { margin-bottom: 14px; }
 .bar.ap-ebar .btn { padding: 5px 12px; font-size: 13.5px; } .bar.ap-ebar .btn img { width: 18px; height: 18px; }
+.ap-msel { display: none; gap: 6px; width: 100%; }
+.ap-ms { position: relative; flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 24px 0 8px; border-radius: 999px; border: 1px solid #5a4620; background: rgba(0, 0, 0, 0.45); color: var(--ink-2); font: 13px "Friz", serif; }
+.ap-ms img { width: 18px; height: 18px; border-radius: 4px; flex: none; object-fit: contain; }
+.ap-ms span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ap-ms i { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 10px; color: var(--muted); pointer-events: none; }
+.ap-ms select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
+.ap-ms.on { border-color: var(--gold-2); background: rgba(90, 66, 24, 0.5); color: var(--gold); }
+.ap-ms.on i { color: var(--gold); }
+@media (max-width: 720px) { .bar.ap-ebar #fac, .bar.ap-ebar #opt, .bar.ap-ebar #hse, .bar.ap-ebar .sep { display: none !important; } .bar.ap-ebar .ap-msel { display: flex; flex: 1 1 100%; } .bar.ap-ebar .wrap { overflow: visible !important; flex-wrap: wrap !important; row-gap: 8px; } .bar.ap-ebar #sub { max-width: 100%; overflow-x: auto; scrollbar-width: none; } .bar.ap-ebar #sub::-webkit-scrollbar { display: none; } .ap-ms { max-width: 220px; } }
 @media (max-width: 720px) { .bar.ap-ebar .wrap { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-left: 12px; padding-right: 12px; } .bar.ap-ebar .wrap::-webkit-scrollbar { display: none; } .bar.ap-ebar .seg { flex-wrap: nowrap; flex: none; } .bar.ap-ebar .btn { white-space: nowrap; flex: none; } .bar.ap-ebar .sep { display: block; flex: none; height: 24px; } }
 .ap-tree { position: relative; height: 400px; border-radius: 8px; overflow: hidden; }
 .ap-tile { position: absolute; padding: 10px 12px; overflow: hidden; border: 2px solid #0b0906; border-radius: 8px; cursor: pointer; text-align: left; font: inherit; color: var(--ink);
@@ -2117,6 +2126,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   <div class="seg" id="opt"></div>
   <div class="sep" id="sep3" hidden></div>
   <div class="seg" id="hse"></div>
+  <div class="ap-msel" id="msel"></div>
   <div class="note" id="note"></div>
 </div></div>
 
@@ -3410,8 +3420,13 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     draw();
   }
 
+  const AP_RS_SHORT = { 'Roleplay PvP': 'RP-PvP', Roleplay: 'RP' };
+  function apMsel(key, opts) {
+    const cur = opts.find((o) => o[0] === sel[key]) || opts[0];
+    return `<label class="ap-ms${sel[key] && sel[key] !== 'all' ? ' on' : ''}"><img src="${cur[3]}" alt=""><span>${esc(cur[2])}</span><i>&#9660;</i><select data-msel="${key}" aria-label="${esc(opts[0][1])}">${opts.map((o) => `<option value="${esc(o[0])}"${o[0] === (sel[key] || 'all') ? ' selected' : ''}>${esc(o[1])}</option>`).join('')}</select></label>`;
+  }
   function plainHead() {
-    ['realm', 'fac', 'opt', 'hse'].forEach((id) => { document.getElementById(id).innerHTML = ''; });
+    ['realm', 'fac', 'opt', 'hse', 'msel'].forEach((id) => { document.getElementById(id).innerHTML = ''; });
     document.getElementById('sep2').hidden = true;
     document.getElementById('sep3').hidden = true;
     document.querySelector('.bar').classList.remove('ap-ebar');
@@ -4696,6 +4711,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     if (!C.regions[sel.rg]) sel.rg = 'all';
     sel.prs = sel.prs || 'all';
     const RSL = ['PvP', 'Normal', 'Roleplay', 'Roleplay PvP'], hasRs = !!C.regions['all|PvP'];
+    document.getElementById('msel').innerHTML = apMsel('prs', [['all', 'Every ruleset', 'Rulesets', UI('achievement_guildperk_everybodysfriend')], ...RSL.map((k) => [k, k, AP_RS_SHORT[k] || k, UI(AP_RS_ICON[k] || 'inv_misc_questionmark')])]);
     document.getElementById('opt').innerHTML = ['all', ...RSL].map((k) => `<button class="btn${sel.prs === k ? ' on' : ''}" data-prs="${esc(k)}"><img src="${UI(k === 'all' ? 'achievement_guildperk_everybodysfriend' : AP_RS_ICON[k] || 'inv_misc_questionmark')}" alt="">${k === 'all' ? 'Every ruleset' : esc(k)}</button>`).join('');
     document.getElementById('sep2').hidden = false;
     document.querySelector('.bar').classList.add('ap-ebar');
@@ -4779,6 +4795,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const el = document.getElementById('main');
     el.innerHTML = h;
     if (window.LI_ARMORY) arm().bind('arpop');
+    document.querySelectorAll('#msel select').forEach((s) => s.onchange = () => { sel[s.dataset.msel] = s.value; renderKeep(); });
     document.querySelectorAll('.bar [data-prs]').forEach((b) => b.onclick = () => { sel.prs = b.dataset.prs; renderKeep(); });
     if (sel.prs !== 'all' && !hasRs) el.insertAdjacentHTML('afterbegin', `<div class="ap-rsnote s12"><img src="${UI('inv_misc_pocketwatch_01')}" alt="">Per-ruleset numbers are still loading. Refresh in a minute.</div>`);
     el.querySelectorAll('[data-rg]').forEach((b) => b.onclick = () => { sel.rg = b.dataset.rg; renderKeep(); });
@@ -4911,6 +4928,9 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     document.getElementById('opt').innerHTML = ['all', ...rsAll].map((k) => fbtn('ers', k, k === 'all' ? 'Every ruleset' : esc(k), UI(k === 'all' ? 'inv_misc_coin_17' : AP_RS_ICON[k] || 'inv_misc_questionmark'))).join('');
     document.getElementById('sep2').hidden = false;
     document.getElementById('sep3').hidden = false;
+    document.getElementById('msel').innerHTML = apMsel('erg', [['all', 'All regions', 'Regions', UI('inv_misc_coin_02')], ...regs.map((r) => [r, APR[r] || r.toUpperCase(), r.toUpperCase(), UI('inv_misc_coin_02')])])
+      + apMsel('ers', [['all', 'Every ruleset', 'Rulesets', UI('inv_misc_coin_17')], ...rsAll.map((k) => [k, k, AP_RS_SHORT[k] || k, UI(AP_RS_ICON[k] || 'inv_misc_questionmark')])])
+      + apMsel('eh', [['all', 'Every house', 'Houses', UI('inv_misc_coin_17')], ['Alliance', 'Alliance', 'Alliance', 'assets/game/alliance-crest.png'], ['Horde', 'Horde', 'Horde', 'assets/game/horde-crest.png'], ['Blackwater', 'Blackwater', 'Blackwater', UI('inv_misc_coin_02')]]);
     document.getElementById('hse').innerHTML = [['all', 'Every house', UI('inv_misc_coin_17')], ['Alliance', 'Alliance', 'assets/game/alliance-crest.png'], ['Horde', 'Horde', 'assets/game/horde-crest.png'], ['Blackwater', 'Blackwater', UI('inv_misc_coin_02')]].map(([k, n, ic]) => fbtn('eh', k, n, ic)).join('');
     document.querySelector('.bar').classList.add('ap-ebar');
     document.getElementById('note').textContent = rsWait ? 'Ruleset detail arrives with the next hourly update' : `${fmt(R.listings)} auctions in ${RN2.toLowerCase().replace('all regions', 'every region')}${RSN}`;
@@ -5030,6 +5050,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     el.onclick = (e) => { const g = e.target.closest('[data-gi]'); if (view === 'economy' && g && window.LI_MARKET && !e.target.closest('#mkRoot')) LI_MARKET.open(+g.dataset.gi.split(':')[0]); };
     document.querySelectorAll('#main [data-erg], .bar [data-erg]').forEach((b) => b.onclick = () => { sel.erg = b.dataset.erg; renderKeep(); });
     document.querySelectorAll('.bar [data-ers]').forEach((b) => b.onclick = () => { sel.ers = b.dataset.ers; renderKeep(); });
+    document.querySelectorAll('#msel select').forEach((s) => s.onchange = () => { sel[s.dataset.msel] = s.value; renderKeep(); });
     document.querySelectorAll('.bar [data-eh]').forEach((b) => b.onclick = () => { sel.eh = b.dataset.eh; renderKeep(); });
     el.querySelectorAll('[data-ecat]').forEach((b) => b.onclick = () => { sel.ecat = sel.ecat === b.dataset.ecat ? '' : b.dataset.ecat; renderKeep(); });
     el.querySelectorAll('[data-etab]').forEach((b) => b.onclick = () => { sel.etab = b.dataset.etab; renderKeep(); });

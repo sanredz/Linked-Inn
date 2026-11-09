@@ -4711,7 +4711,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     if (!C.regions[sel.rg]) sel.rg = 'all';
     sel.prs = sel.prs || 'all';
     const RSL = ['PvP', 'Normal', 'Roleplay', 'Roleplay PvP'], hasRs = !!C.regions['all|PvP'];
-    document.getElementById('msel').innerHTML = apMsel('prs', [['all', 'Every ruleset', 'Rulesets', UI('achievement_guildperk_everybodysfriend')], ...RSL.map((k) => [k, k, AP_RS_SHORT[k] || k, UI(AP_RS_ICON[k] || 'inv_misc_questionmark')])]);
+    document.getElementById('msel').innerHTML = apMsel('prs', [['all', 'Every ruleset', 'Rulesets', UI('inv_scroll_03')], ...RSL.map((k) => [k, k, AP_RS_SHORT[k] || k, UI(AP_RS_ICON[k] || 'inv_misc_questionmark')])]);
     document.getElementById('opt').innerHTML = ['all', ...RSL].map((k) => `<button class="btn${sel.prs === k ? ' on' : ''}" data-prs="${esc(k)}"><img src="${UI(k === 'all' ? 'achievement_guildperk_everybodysfriend' : AP_RS_ICON[k] || 'inv_misc_questionmark')}" alt="">${k === 'all' ? 'Every ruleset' : esc(k)}</button>`).join('');
     document.getElementById('sep2').hidden = false;
     document.querySelector('.bar').classList.add('ap-ebar');
@@ -4924,14 +4924,14 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const R = sel.erg === 'all' ? ALLR : EV.regions[sel.erg], RN2 = APR[sel.erg];
     const RSN = (RSF ? ` · ${RSF}` : '') + (HF ? ` · ${HF}` : '');
     const fbtn = (key, v, label, img, extra = '') => `<button class="btn${sel[key] === v ? ' on' : ''}" data-${key}="${esc(v)}">${img ? `<img src="${img}" alt="">` : ''}${label}</button>${extra}`;
-    document.getElementById('fac').innerHTML = ['all', ...regs].map((r) => fbtn('erg', r, r === 'all' ? 'All regions' : r.toUpperCase(), r === 'all' ? UI('inv_misc_coin_02') : '')).join('');
-    document.getElementById('opt').innerHTML = ['all', ...rsAll].map((k) => fbtn('ers', k, k === 'all' ? 'Every ruleset' : esc(k), UI(k === 'all' ? 'inv_misc_coin_17' : AP_RS_ICON[k] || 'inv_misc_questionmark'))).join('');
+    document.getElementById('fac').innerHTML = ['all', ...regs].map((r) => fbtn('erg', r, r === 'all' ? 'All regions' : r.toUpperCase(), r === 'all' ? UI('inv_misc_map02') : '')).join('');
+    document.getElementById('opt').innerHTML = ['all', ...rsAll].map((k) => fbtn('ers', k, k === 'all' ? 'Every ruleset' : esc(k), UI(k === 'all' ? 'inv_scroll_03' : AP_RS_ICON[k] || 'inv_misc_questionmark'))).join('');
     document.getElementById('sep2').hidden = false;
     document.getElementById('sep3').hidden = false;
-    document.getElementById('msel').innerHTML = apMsel('erg', [['all', 'All regions', 'Regions', UI('inv_misc_coin_02')], ...regs.map((r) => [r, APR[r] || r.toUpperCase(), r.toUpperCase(), UI('inv_misc_coin_02')])])
-      + apMsel('ers', [['all', 'Every ruleset', 'Rulesets', UI('inv_misc_coin_17')], ...rsAll.map((k) => [k, k, AP_RS_SHORT[k] || k, UI(AP_RS_ICON[k] || 'inv_misc_questionmark')])])
-      + apMsel('eh', [['all', 'Every house', 'Houses', UI('inv_misc_coin_17')], ['Alliance', 'Alliance', 'Alliance', 'assets/game/alliance-crest.png'], ['Horde', 'Horde', 'Horde', 'assets/game/horde-crest.png'], ['Blackwater', 'Blackwater', 'Blackwater', UI('inv_misc_coin_02')]]);
-    document.getElementById('hse').innerHTML = [['all', 'Every house', UI('inv_misc_coin_17')], ['Alliance', 'Alliance', 'assets/game/alliance-crest.png'], ['Horde', 'Horde', 'assets/game/horde-crest.png'], ['Blackwater', 'Blackwater', UI('inv_misc_coin_02')]].map(([k, n, ic]) => fbtn('eh', k, n, ic)).join('');
+    document.getElementById('msel').innerHTML = apMsel('erg', [['all', 'All regions', 'Regions', UI('inv_misc_map02')], ...regs.map((r) => [r, APR[r] || r.toUpperCase(), r.toUpperCase(), UI('inv_misc_coin_02')])])
+      + apMsel('ers', [['all', 'Every ruleset', 'Rulesets', UI('inv_scroll_03')], ...rsAll.map((k) => [k, k, AP_RS_SHORT[k] || k, UI(AP_RS_ICON[k] || 'inv_misc_questionmark')])])
+      + apMsel('eh', [['all', 'Every house', 'Houses', UI('inv_misc_coin_01')], ['Alliance', 'Alliance', 'Alliance', 'assets/game/alliance-crest.png'], ['Horde', 'Horde', 'Horde', 'assets/game/horde-crest.png'], ['Blackwater', 'Blackwater', 'Blackwater', UI('inv_misc_coin_02')]]);
+    document.getElementById('hse').innerHTML = [['all', 'Every house', UI('inv_misc_coin_01')], ['Alliance', 'Alliance', 'assets/game/alliance-crest.png'], ['Horde', 'Horde', 'assets/game/horde-crest.png'], ['Blackwater', 'Blackwater', UI('inv_misc_coin_02')]].map(([k, n, ic]) => fbtn('eh', k, n, ic)).join('');
     document.querySelector('.bar').classList.add('ap-ebar');
     document.getElementById('note').textContent = rsWait ? 'Ruleset detail arrives with the next hourly update' : `${fmt(R.listings)} auctions in ${RN2.toLowerCase().replace('all regions', 'every region')}${RSN}`;
     let h = apRegionCards(['all', ...regs], sel.erg, 'erg', (r) => { const X = r === 'all' ? ALLR : EV.regions[r]; return [`${apGold(X.market)} gold`, `in ${fmt(X.listings)} auctions`]; });

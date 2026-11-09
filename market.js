@@ -92,7 +92,7 @@
     const hk = houseKey();
     if (hk) return (sh.hs && sh.hs[hk]) || null;
     const rs = RSN();
-    return rs ? (sh.rs && sh.rs[rs]) || null : sh.i[id];
+    return rs ? (sh.rs && (sh.rs[rs] || sh.rs[String(SETK[rs])])) || null : sh.i[id];
   };
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const icon = (id) => { const c = MKT.cat[id]; const tp = window.ECON && ECON.tips && ECON.tips[id]; const ic = (c && c[2]) || (tp && tp[10]); return ic ? `assets/icons/${ic}.png` : H.UI('inv_misc_questionmark'); };

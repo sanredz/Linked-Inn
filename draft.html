@@ -481,7 +481,10 @@ body.arena #stage { cursor: default; }
   .top .tab img { width: 28px; height: 28px; }
   .top .tab span { white-space: nowrap; overflow: hidden; text-overflow: clip; max-width: 100%; }
 }
-@media (max-width: 370px) { .top .brand b { font-size: 18px; } .top .brand .lz-mark { width: 32px; height: 32px; } .top .right .hbtn img { width: 20px; height: 20px; } .top .right .hbtn.hbtn:not(.get) { padding: 3px; } .top .wrap { gap: 4px; } }
+@media (max-width: 370px) { .top .brand b { font-size: 18px; } .top .brand .lz-mark { width: 32px; height: 32px; } .top .right .hbtn img { width: 20px; height: 20px; } }
+footer .lz-mob { display: none; }
+@media (max-width: 720px) { .top .right .hbtn:not([href*="buymeacoffee"]) { display: none; } .top .right .hbtn.hbtn[href*="buymeacoffee"] { margin-left: auto; padding: 4px 10px 4px 4px; gap: 6px; } .top .right .hbtn[href*="buymeacoffee"]::after { content: "Buy me a coffee"; font: 12.5px "Friz", serif; white-space: nowrap; } footer .lz-mob { display: inline; } }
+@media (max-width: 340px) { .top .right .hbtn[href*="buymeacoffee"]::after { content: "Coffee"; } }
 @media (max-width: 720px) {
   .top .wrap { position: relative; }
   .top .tabs .ap-grp { position: static; }

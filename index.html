@@ -2052,7 +2052,10 @@ a.ap-lr { text-decoration: none; color: inherit; border-radius: 8px; } a.ap-lr:h
   .top .tab img { width: 28px; height: 28px; }
   .top .tab span { white-space: nowrap; overflow: hidden; text-overflow: clip; max-width: 100%; }
 }
-@media (max-width: 370px) { .top .brand b { font-size: 18px; } .top .brand .lz-mark { width: 32px; height: 32px; } .top .right .hbtn img { width: 20px; height: 20px; } .top .right .hbtn.hbtn:not(.get) { padding: 3px; } .top .wrap { gap: 4px; } }
+@media (max-width: 370px) { .top .brand b { font-size: 18px; } .top .brand .lz-mark { width: 32px; height: 32px; } .top .right .hbtn img { width: 20px; height: 20px; } }
+footer .lz-mob { display: none; }
+@media (max-width: 720px) { .top .right .hbtn:not([href*="buymeacoffee"]) { display: none; } .top .right .hbtn.hbtn[href*="buymeacoffee"] { margin-left: auto; padding: 4px 10px 4px 4px; gap: 6px; } .top .right .hbtn[href*="buymeacoffee"]::after { content: "Buy me a coffee"; font: 12.5px "Friz", serif; white-space: nowrap; } footer .lz-mob { display: inline; } }
+@media (max-width: 340px) { .top .right .hbtn[href*="buymeacoffee"]::after { content: "Coffee"; } }
 @media (max-width: 720px) {
   .top .wrap { position: relative; }
   .top .tabs .ap-grp { position: static; }
@@ -2134,6 +2137,7 @@ if (!me && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]dev/.t
   <span><b class="lz-fb">Life on Azeroth</b> · a fan-made census of World of Warcraft: Forever, by sanredz</span>
   <span id="updated" style="margin-left:auto"></span>
   <i class="lz-sep"></i>
+  <a href="#" class="lz-mob" id="regF">The Regulars</a>
   <a href="#about">About the numbers</a>
   <a href="#archive">Archive</a>
   <a href="privacy.html">Privacy</a>
@@ -5313,6 +5317,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   const CREDITS = M.credits || [];
   if (CREDITS.length) { const n = document.getElementById('regN'); n.textContent = CREDITS.length; n.hidden = false; }
   const veil = document.getElementById('veil');
+  document.getElementById('regF').onclick = (e) => { e.preventDefault(); document.getElementById('regulars').click(); };
   document.getElementById('regulars').onclick = () => {
     document.getElementById('plaques').innerHTML = CREDITS.length ? CREDITS.map((c, i) => `<div class="plq"><div class="rank">${i + 1}</div>
       <div class="who"><b>${esc(c.name)}</b><div>${(c.sides || []).map((s) => `${esc(s.realm || '')} ${esc(s.faction || '')}`).join(' · ')}</div></div>

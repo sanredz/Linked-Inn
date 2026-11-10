@@ -3,7 +3,7 @@ export const WAR = {
   start: 0,
   goals: [
     { id: 'mc', name: 'Damage to Ragnaros', need: 78000000, icon: 133066 },
-    { id: 'zg', name: 'Damage to Hakkar', need: 33000000, icon: 134353 },
+    { id: 'zg', name: 'Damage to Hakkar', need: 33000000, icon: 134085 },
     { id: 'forge', name: 'Legendaries forged', need: 18, icon: 135349 },
   ],
 };

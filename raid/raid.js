@@ -6,7 +6,8 @@ import { RaidScene } from './scene.js';
 import { resultHtml } from '../pvp/arena.js';
 import { CLASS_COLOR } from '../draft/core.js';
 import { bindName, heroName, nameField, nameOk } from '../pvp/name.js';
-import { CLASS_NAME, DRAFT_PICKS, FORGE, INGOT, INGOTS, collect, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, receivers, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js';
+import { goalsHtml, loadWar } from '../gates.js';
+import { HEROIC, CLASS_NAME, DRAFT_PICKS, FORGE, INGOT, INGOTS, SCEPTER, SHARDS, collect, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, receivers, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js';
 
 const KEY = 'raidRun', WHO = 'gauntletWho';
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
@@ -244,15 +245,25 @@ function compare(o) {
   box.querySelector('[data-yes]').onclick = () => { box.remove(); chooseItem({ ...o, to: aimOf(o) }); };
 }
 
-const hintOf = (m) => (m.id === INGOT ? `Needed to forge Sulfuras, Hand of Ragnaros. Collect ${INGOTS} of them and the Eye of Sulfuras.` : FORGE[17182].needs.includes(m.id) ? `Needed to forge Sulfuras, Hand of Ragnaros, along with ${INGOTS} Sulfuron Ingots. Once you have it, deal ${num(FORGE[17182].score)} damage to Ragnaros.` : FORGE[19019].needs.includes(m.id) ? `Needed to forge Thunderfury. Find both Bindings, then deal ${num(FORGE[19019].score)} damage to Ragnaros.` : '');
+const hintOf = (m) => (SHARDS.includes(m.id) ? `One of three Scepter Shards. Find all three, then deal ${num(FORGE[SCEPTER].score)} damage to Ossirian to forge the Scepter of the Shifting Sands.` : m.id === INGOT ? `Needed to forge Sulfuras, Hand of Ragnaros. Collect ${INGOTS} of them and the Eye of Sulfuras.` : FORGE[17182].needs.includes(m.id) ? `Needed to forge Sulfuras, Hand of Ragnaros, along with ${INGOTS} Sulfuron Ingots. Once you have it, deal ${num(FORGE[17182].score)} damage to Ragnaros.` : FORGE[19019].needs.includes(m.id) ? `Needed to forge Thunderfury. Find both Bindings, then deal ${num(FORGE[19019].score)} damage to Ragnaros.` : '');
 const mountHtml = (m, tag = 'Dropped this run') => { const hint = hintOf(m); return `<div class="rmount" ${hint ? `tabindex="0" data-hint="${esc(hint)}"` : ''}><img src="assets/icons/${m.icon}.png" alt=""><span><small>${tag}</small><b>${esc(m.name)}</b></span></div>`; };
 
-const LIVE = ['mc', 'zg'], SOON = [['aq20', "Ruins of Ahn'Qiraj"]];
+const TEST = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || /^(life-preview|azeroth-preview)\./.test(location.hostname) || new URLSearchParams(location.search).has('early');
+const heroicText = (id) => {
+  const r = RAIDS[id] || {}, h = r.heroic || HEROIC, n = 2 + (r.bonusSpoils || 0);
+  return `${Math.round((h.damage - 1) * 100)}% harder hits, ${Math.round((h.health - 1) * 100)}% more health. Pick ${n} spoils instead of ${n - 1}, with better item levels.`;
+};
+const UPCOMING = [['aq20', "Ruins of Ahn'Qiraj"]];
+let war = null;
+const opened = (id) => !!(war && war.raid === id && war.open);
+const LIVE = () => ['mc', 'zg', ...UPCOMING.map(([id]) => id).filter(opened)], SOON = () => UPCOMING.filter(([id]) => !opened(id));
+const PLAYABLE = () => [...LIVE(), ...(TEST || (war && war.early) ? SOON().map(([id]) => id) : [])];
+loadWar().then((w) => { war = w; if (root && !run) render(); });
 
 function introHtml() {
   const saved = load();
-  const open = LIVE.map((id) => `<button class="rraid live ${id}" data-act="begin" data-raid="${id}"><i class="rraidart" style="background-image:url(assets/draft/arena/raid-${id}.jpg)"></i><span class="rraidsay"><b class="rraidname">${RAIDS[id].name}</b><span class="rraidtext">${RAIDS[id].blurb}</span><span class="rraidgo">Begin the raid</span></span></button>`).join('');
-  const soon = SOON.map(([id, name]) => `<div class="rraid soon" aria-disabled="true"><i class="rraidart" style="background-image:url(assets/draft/arena/raid-${id}.jpg)"></i><div class="rraidsay"><h3>${name}</h3><p>Coming soon</p></div></div>`).join('');
+  const open = LIVE().map((id) => `<button class="rraid live ${id}" data-act="begin" data-raid="${id}"><i class="rraidart" style="background-image:url(assets/draft/arena/raid-${id}.jpg)"></i><span class="rraidsay"><b class="rraidname">${RAIDS[id].name}</b><span class="rraidtext">${RAIDS[id].blurb}</span><span class="rraidgo">Begin the raid</span></span></button>`).join('');
+  const soon = SOON().map(([id, name]) => `<div class="rraid soon ${id}" aria-disabled="true"><i class="rraidart" style="background-image:url(assets/draft/arena/raid-${id}.jpg)"></i><div class="rraidsay"><h3>${name}</h3>${RAIDS[id] ? `<span class="rraidtext">${RAIDS[id].blurb}</span>` : ''}${war && war.raid === id ? `<div class="rsoon"><small>The gates open when all three are reached</small>${goalsHtml(war.goals)}</div>` : '<p>Coming soon</p>'}${(TEST || (war && war.early)) && RAIDS[id] ? `<button class="gmini rearly" data-act="begin" data-raid="${id}">Play early (test only)</button>` : ''}</div></div>`).join('');
   return `<div class="rraids">${open}${soon}</div>${saved ? '<button class="gresume" data-act="resume">Continue your run</button>' : ''}<ul class="rrules"><li>Draft a tank, a healer and a damage dealer</li><li>Each hero starts in their class Dungeon Set and gets ${DRAFT_PICKS} picks</li><li>Every boss killed drops a choice of new gear</li><li>One wipe ends the run</li></ul>`;
 }
 
@@ -273,7 +284,7 @@ function classHtml() {
   shownRole = run.at;
   const banners = classes.map((c, i) => `<button class="rbanner ${c === chosenCls ? 'on' : ''} ${c === chosenCls && fresh ? 'fresh' : ''}" data-cls="${c}" style="--cc:${CLASS_COLOR[c]};--i:${i}"><span class="rbannerface"><i class="rbannerart" style="background-image:url(${artOf(role, c)})"></i><img src="assets/classes/${c}.png" alt=""><b>${CLASS_NAME[c]}</b></span></button>`).join('');
   const tabs = specs.length > 1 ? `<div class="rspecpick ${spec ? '' : 'need'}"><small>Choose a spec</small><div class="rpickspecs">${specs.map((s) => `<button class="${s.id === chosenSpec ? 'on' : ''}" data-spec="${s.id}" aria-pressed="${s.id === chosenSpec}">${esc(s.name)}</button>`).join('')}</div></div>` : `<small class="rpickspec">${esc(spec.name)}</small>`;
-  return `<div class="rpicker ${enter ? 'enter' : ''}" style="--cc:${CLASS_COLOR[chosenCls]}"><i class="rpickart" style="background-image:url(${artOf(role, chosenCls)})"></i><div class="rembers">${'<i></i>'.repeat(12)}</div><div class="rpickhead"><small>Hero ${run.at + 1} of ${ROLES.length}</small><h3>Choose your ${role === 'dps' ? 'damage dealer' : ROLE_NAME[role].toLowerCase()}</h3>${run.at ? '' : nameField()}</div><div class="rbanners ${classes.length > 3 ? 'many' : ''}">${banners}</div><div class="rpickinfo ${fresh ? 'fresh' : ''}"><h4>${CLASS_NAME[chosenCls]}</h4>${tabs}${spec ? `<p class="rblurb">${esc(spec.blurb)}</p>` : ''}${chosenSpec === 'fire' && run.raid === 'mc' ? '<p class="rwarn">Molten Core is a fire raid. Baron Geddon and Ragnaros are immune, and others resist fire.</p>' : ''}<div class="rseal"><i></i><div><small>${choice ? esc(choice.label) : 'Party bonus'}</small><b>${esc(bonus.n)}</b><span>${esc(bonus.text)}</span>${dup ? `<em class="rnostack">Does not stack with your ${esc(CLASS_NAME[dup.cls])}'s ${esc(dup.n)}.</em>` : ''}${choices}</div></div></div><button class="rforge" data-act="hero" ${spec ? '' : 'data-nospec disabled'} ${run.at || !spec ? '' : `data-named ${nameOk() ? '' : 'disabled'}`}><span>${spec ? `Draft your ${CLASS_NAME[chosenCls]}` : 'Choose a spec first'}</span></button></div>${routeHtml()}`;
+  return `<div class="rpicker ${enter ? 'enter' : ''}" style="--cc:${CLASS_COLOR[chosenCls]}"><i class="rpickart" style="background-image:url(${artOf(role, chosenCls)})"></i><div class="rembers">${'<i></i>'.repeat(12)}</div><div class="rpickhead"><small>Hero ${run.at + 1} of ${ROLES.length}</small><h3>Choose your ${role === 'dps' ? 'damage dealer' : ROLE_NAME[role].toLowerCase()}</h3>${run.at ? '' : nameField()}</div><div class="rbanners ${classes.length > 3 ? 'many' : ''}">${banners}</div><div class="rpickinfo ${fresh ? 'fresh' : ''}"><h4>${CLASS_NAME[chosenCls]}</h4>${tabs}${spec ? `<p class="rblurb">${esc(spec.blurb)}</p>` : ''}${chosenSpec === 'fire' && run.raid === 'mc' ? '<p class="rwarn">Molten Core is a fire raid. Baron Geddon and Ragnaros are immune, and others resist fire.</p>' : ''}${run.raid === 'aq20' && role === 'dps' && chosenSpec && !CASTER_BUILD.test(chosenSpec) && !/^(bm|mm)$/.test(chosenSpec) ? '<p class="rwarn">Ayamiss flies above melee reach until 70% health. Melee only land about half of their damage on her until she lands.</p>' : ''}<div class="rseal"><i></i><div><small>${choice ? esc(choice.label) : 'Party bonus'}</small><b>${esc(bonus.n)}</b><span>${esc(bonus.text)}</span>${dup ? `<em class="rnostack">Does not stack with your ${esc(CLASS_NAME[dup.cls])}'s ${esc(dup.n)}.</em>` : ''}${choices}</div></div></div><button class="rforge" data-act="hero" ${spec ? '' : 'data-nospec disabled'} ${run.at || !spec ? '' : `data-named ${nameOk() ? '' : 'disabled'}`}><span>${spec ? `Draft your ${CLASS_NAME[chosenCls]}` : 'Choose a spec first'}</span></button></div>${routeHtml()}`;
 }
 
 function draftHtml() {
@@ -296,7 +307,7 @@ function bossHtml() {
   const twist = twistFor(run, boss), size = boss.endless ? 'Cannot be killed' : `${num(bossHealth(boss, twist))} health, enrages at ${Math.round(enrageTime(boss, twist))}s`;
   return `<div class="gpanel rboss-card"><div class="rtitle"><div><small>Boss ${run.boss + 1} of ${RAIDS[run.raid].bosses.length}</small><h3>${esc(boss.name)}</h3></div>${boss.endless ? '<span class="rverdict bad">Final Stand</span>' : `<span class="rverdict ${tone}">${word}</span>`}</div><p>${esc(boss.tip)}</p>${twist ? `<div class="rtwist ${twist.tone}"><b>${esc(twist.name)}</b><span>${esc(twist.text)}</span></div>` : ''}
     <div class="rtests ${boss.endless ? '' : ''}"><div><b>Survive</b><span>Tank takes ${num(f.tank)} a second, biggest hit ${num(f.biggest)}</span></div><div><b>Heal</b><span>Healer restores ${num(f.heal)} a second${f.oom ? ', runs out of mana' : ''}</span></div><div><b>Burn</b><span>${boss.endless ? `${num(f.dps)} DPS, every point scores` : `${num(f.dps)} DPS against ${size}`}</span></div></div>
-    <div class="rpulls ${boss.endless ? 'one' : ''}"><button class="gbtn big" data-act="pull">${boss.endless ? 'Begin the Final Stand' : 'Pull'}</button>${boss.endless ? '' : `<button class="gbtn big heroic" data-act="heroic"><b>Heroic</b><small>22% harder hits, 15% more health. Pick 2 spoils, with better item levels.</small></button>`}</div></div>`;
+    <div class="rpulls ${boss.endless ? 'one' : ''}"><button class="gbtn big" data-act="pull">${boss.endless ? 'Begin the Final Stand' : 'Pull'}</button>${boss.endless ? '' : `<button class="gbtn big heroic" data-act="heroic"><b>Heroic</b><small>${heroicText(run.raid)}</small></button>`}</div></div>`;
 }
 
 function spoilsHtml() {
@@ -342,7 +353,7 @@ function rowDetail(r) {
 
 function boardHtml() {
   const last = RAIDS[boardRaid].bosses.at(-1).name.split(' ')[0];
-  const head = `<div class="rboardhead"><h3>Leaderboard <em>highest damage to ${esc(last)}</em></h3><div class="rboardtabs">${[...LIVE.map((id) => [id, RAIDS[id].name]), ...SOON].map(([id, name]) => `<button class="gmini ${id === boardRaid ? 'on' : ''}" data-board="${id}"${RAIDS[id] ? '' : ' disabled'}>${name}</button>`).join('')}</div></div>`;
+  const head = `<div class="rboardhead"><h3>Leaderboard <em>highest damage to ${esc(last)}</em></h3><div class="rboardtabs">${[...LIVE().map((id) => [id, RAIDS[id].name]), ...SOON()].map(([id, name]) => `<button class="gmini ${id === boardRaid ? 'on' : ''}" data-board="${id}"${RAIDS[id] && (opened(id) || TEST || (war && war.early)) ? '' : ' disabled'}>${name}</button>`).join('')}</div></div>`;
   if (!board) return `${head}<p>The board could not be reached.</p>`;
   const filtered = boardFind.trim() || ROLES.some((r) => boardPick[r]), count = boardCount ? `<p class="rboardcount">${filtered ? `${num(boardCount.matched)} of ${num(boardCount.total)}` : num(boardCount.total)} ${boardCount.total === 1 ? 'run' : 'runs'}</p>` : '';
   if (!board.length) return `${head}${count}<p>${filtered ? 'No runs match these filters.' : `Nobody has reached ${esc(last)} yet.`}</p>`;
@@ -440,7 +451,7 @@ function finished(result, why, after, boss) {
   const title = result.won ? 'Victory' : boss.endless ? num(result.score) : 'Wipe';
   const dealt = result.totals.reduce((n, h) => n + h.dealt, 0), share = (h) => Math.round(h).toLocaleString('en-US');
   const kept = keptDrops(), drop = (result.won || boss.endless) && boss.drop && kept.list.includes(boss.drop);
-  scene.banner(resultHtml({ title, stats: boss.endless ? [['Final Stand', `Damage to ${RAIDS[run.raid].finale || 'Ragnaros'}`], [Math.round(result.time), 'Seconds survived']] : [[Math.round(result.time), 'Seconds'], [share(dealt), 'Damage dealt'], result.won ? [run.boss, `of ${RAIDS[run.raid].bosses.length} bosses`] : [`${Math.round(result.health * 100)}%`, 'Boss health left']], note: boss.endless ? '' : esc(why), extra: breakdownHtml(result) + (drop ? mountHtml(boss.drop, boss.drop.kind === 'mount' ? 'A rare mount dropped!' : boss.drop.id === INGOT ? `Sulfuron Ingot ${kept.have[INGOT]} of ${INGOTS}` : 'A legendary relic dropped!') : ''), action: result.won ? 'Claim spoils' : 'See your run' }), `result ${result.won || boss.endless ? 'win' : 'lose'}`);
+  scene.banner(resultHtml({ title, stats: boss.endless ? [['Final Stand', `Damage to ${RAIDS[run.raid].finale || 'Ragnaros'}`], [Math.round(result.time), 'Seconds survived']] : [[Math.round(result.time), 'Seconds'], [share(dealt), 'Damage dealt'], result.won ? [run.boss, `of ${RAIDS[run.raid].bosses.length} bosses`] : [`${Math.round(result.health * 100)}%`, 'Boss health left']], note: boss.endless ? '' : esc(why), extra: breakdownHtml(result) + (drop ? mountHtml(boss.drop, boss.drop.kind === 'mount' ? 'A rare mount dropped!' : SHARDS.includes(boss.drop.id) ? 'A Scepter Shard dropped!' : boss.drop.id === 21220 ? 'A rare trophy dropped!' : boss.drop.id === INGOT ? `Sulfuron Ingot ${kept.have[INGOT]} of ${INGOTS}` : 'A legendary relic dropped!') : ''), action: result.won ? 'Claim spoils' : 'See your run' }), `result ${result.won || boss.endless ? 'win' : 'lose'}`);
   root.querySelector('[data-next]').onclick = () => {
     run.step = after;
     offers = null;
@@ -483,7 +494,7 @@ async function loadBoard() {
 }
 
 async function begin(raid = 'mc') {
-  if (!LIVE.includes(raid)) return;
+  if (!PLAYABLE().includes(raid)) return;
   let seed, sig = '';
   try {
     const r = await fetch(`${API}/raid/start`, { method: 'POST' });

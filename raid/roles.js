@@ -108,6 +108,11 @@ function stamp(pool, i, h, bonuses) {
 export function makeParty(pool, heroes, iterations = 12, extra = [], raid) {
   const bonuses = [...partyBonuses(heroes), ...extra.map((all) => ({ all }))], fx = { armor: 0, melee: 1, leech: 0 };
   for (const b of bonuses) { fx.armor = Math.max(fx.armor, (b.fx && b.fx.armor) || 0); fx.melee *= (b.fx && b.fx.melee) || 1; fx.leech += (b.fx && b.fx.leech) || 0; }
+  const dealer = heroes.find((h) => h && h.role === 'dps');
+  if (heroes.every((h) => h && h.v >= 7)) {
+    fx.leech *= 1.5;
+    if (dealer && /^enh/.test(dealer.build)) fx.storm = .2;
+  }
   return heroes.map((h, i) => ({ ...makeHero(pool, { ...h, picks: stamp(pool, i, h, bonuses), seed: 7, raid }, iterations), fx }));
 }
 

@@ -3,7 +3,7 @@ import { Arena, CALM } from '../pvp/arena.js';
 import { Stage } from '../draft/stage.js';
 import { MILESTONES, tierOf } from './bosses.js';
 
-const SIZE = { jeklik: 4.6, venoxis: 5.6, marli: 3.8, mandokir: 5.4, grilek: 5.4, hazzarah: 5.4, renataki: 5.4, wushoolay: 5.4, gahzranka: 7.6, thekal: 4.2, arlokk: 4.2, jindo: 5, hakkar: 10.5, lucifron: 5, magmadar: 4.6, gehennas: 5, garr: 5.4, geddon: 6.4, shazzrah: 5, sulfuron: 5.4, golemagg: 7.5, majordomo: 4.6, ragnaros: 11 };
+const SIZE = { jeklik: 4.6, venoxis: 5.6, marli: 3.8, mandokir: 5.4, grilek: 5.4, hazzarah: 5.4, renataki: 5.4, wushoolay: 5.4, gahzranka: 7.6, thekal: 4.2, arlokk: 4.2, jindo: 5, hakkar: 10.5, lucifron: 5, magmadar: 4.6, gehennas: 5, garr: 5.4, geddon: 6.4, shazzrah: 5, sulfuron: 5.4, golemagg: 7.5, majordomo: 4.6, ragnaros: 11, kurinnaxx: 5.8, rajaxx: 4.4, moam: 6.6, buru: 6, ayamiss: 6.4, ossirian: 9 };
 const TONE = { fire: 0xff7a2a, frost: 0x7fd4ff, arcane: 0xd27dff, shadow: 0x9a5cff, nature: 0x7dff8a, holy: 0xffe680, phys: 0xffffff };
 const COLOR = { fire: '#ff8a3c', frost: '#8fd0ff', arcane: '#d59bff', shadow: '#b18cff', nature: '#7dff8a', holy: '#ffe680', phys: '#ffffff' };
 const TIME = 3, BOSS_Z = -6, CAST = /^(moon|ele|shadow|shadowd|shock|fire|frost|arcane|afflic|demo|destro)$/;
@@ -295,7 +295,7 @@ export class RaidScene extends Arena {
       this.swing(m.stage, m.trail && !m.dead && !!this.playing && !m.form, dt);
     }
     const b = this.bossRig.root.position;
-    if (this.bossRune) this.glyph(this.bossRune, (this.bossCast || 0) > t, this.scenery.set === 'jungle' ? 0x8fe36a : 0xff6a2a, b.x, b.z + 1, Math.min(3.4, this.size * .5), dt);
+    if (this.bossRune) this.glyph(this.bossRune, (this.bossCast || 0) > t, this.scenery.set === 'jungle' ? 0x8fe36a : this.scenery.set === 'ahnqiraj' ? 0xffc46a : 0xff6a2a, b.x, b.z + 1, Math.min(3.4, this.size * .5), dt);
   }
 
   loop() {

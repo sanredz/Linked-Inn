@@ -12,6 +12,8 @@ const ZONES = {
     kinds: { tree: [20, 20, 60, 9, 15], bush: [60, 11, 50, .6, 1.1], grass: [900, 1, 42, .5, .95], rock: [24, 13, 58, 1.5, 4.5], prop: [7, 21, 27, 0, 0] } },
   molten: { floor: 'terrain_rock', alt: 'terrain_dirt', sky: [0x1a0603, 0x6a1c08], fog: 0x3a1206, hills: 12, worn: .5, mote: 0xffa040, lava: 1,
     kinds: { rock: [26, 20, 60, 7, 16], bush: [14, 16, 50, 1.5, 4], grass: [120, 6, 40, .3, .6], prop: [2, 21, 27, 0, 0] } },
+  ahnqiraj: { floor: 'terrain_sand', alt: 'terrain_dirt', sky: [0x7a5a2c, 0xf2cf8e], fog: 0xc9a466, hills: 7, worn: .45, mote: 0xffdc9a, models: 'barrens',
+    kinds: { rock: [34, 14, 60, 2, 7], bush: [10, 16, 50, 1, 2], grass: [160, 4, 40, .4, .8], prop: [3, 21, 27, 0, 0] } },
 };
 const PROP_H = { 189810: 1.9, 189795: 1.4, 189705: .9, 189915: 1.1, 190535: 1.05, 190543: .85, 201593: 1.5, 201594: 1.4, 189200: 4.2, 190599: 2.6, 190271: 6, 190274: 5, 190277: 3.4, 190280: 5.5, 190313: 3, 190333: 1.6, 197835: 1.6, 197109: 4, 189178: 8 };
 const SWAY = { tree: .0035, pine: .004, bush: .02, grass: .09, rock: 0, prop: 0 };
@@ -141,7 +143,7 @@ export class Scenery {
   }
 
   async build(name) {
-    const def = ZONES[name], man = (await this.manifest)[name] || {}, group = new THREE.Group(), r = rnd(name.length * 7919 + 13);
+    const def = ZONES[name], man = (await this.manifest)[def.models || name] || {}, group = new THREE.Group(), r = rnd(name.length * 7919 + 13);
     group.add(this.ground(def));
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0), s3 = new THREE.Vector3(), p3 = new THREE.Vector3();
     for (const [kind, [count, inner, outer, low, high]] of Object.entries(def.kinds)) {

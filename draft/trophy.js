@@ -6,6 +6,7 @@ const HOME = { target: new THREE.Vector3(-2.2, 1.5, 0), yaw: 1.4, pitch: .13, di
 const SPOTS = {
   19019: { at: [-4.4, 0, -2.8], theme: 'storm', look: 1.2, clear: 2 },
   17182: { at: [-4.4, 0, 2.8], theme: 'fire', look: 1.7, clear: 2 },
+  21175: { at: [-4.9, 0, 0], theme: 'sand', look: 1.4, clear: 2, up: 1 },
   19872: { at: [-.4, 0, -3.9], yaw: .93, look: 1.15, clear: 2, y: 1.9, dist: 6.8 },
   19902: { at: [-.4, 0, 3.9], yaw: 2.21, look: 2.75, clear: 2, y: 1.1, dist: 5.2 },
 };
@@ -33,6 +34,7 @@ function ghost(root) {
 const THEME = {
   storm: { light: 0x7fc8ff, glow: '#9fdcff', spark: 0xbfe8ff },
   fire: { light: 0xff7a2a, glow: '#ffb15a', spark: 0xffa040 },
+  sand: { light: 0xffcf6a, glow: '#ffe2a0', spark: 0xffd98a },
 };
 const FIRE = new THREE.Vector3(-6.4, 1.6, .06), HEARTH = new THREE.Vector3(-7.7, .25, .05);
 const SEEN = 'trophySeen', MUTE = 'trophyMute';
@@ -276,7 +278,7 @@ class Hall {
       if (axis === 'x') hold.rotation.z = tip > 0 ? Math.PI / 2 : -Math.PI / 2;
       else if (axis === 'z') hold.rotation.x = tip > 0 ? -Math.PI / 2 : Math.PI / 2;
       else if (tip > 0) hold.rotation.x = Math.PI;
-      blade.add(hold);
+      if (spot.up) { const flip = new THREE.Group(); flip.rotation.x = Math.PI; flip.add(hold); blade.add(flip); } else blade.add(hold);
       if (!x.have) ghost(w);
     }
     entry.look = { yaw: spot.look, pitch: .1, dist: 4.6, y: 2.3 };

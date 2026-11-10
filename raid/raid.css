@@ -301,6 +301,19 @@ body.raidrun .banner[data-screen="raid"] { display: none; }
 .rraidsay p, .rraidtext { margin: 0 0 4px; font-size: 14.5px; color: #e6d9bc; text-shadow: 0 1px 4px #000; }
 .rraid.soon h3 { color: #a8a096; }
 .rraid.soon p { color: #8f8a80; letter-spacing: .04em; }
+.rraid.soon.aq20 { border-color: #9a7a36; box-shadow: 0 0 22px rgba(232, 196, 106, .18); }
+.rraid.soon.aq20 .rraidart { filter: sepia(.35) saturate(.7) brightness(.78); }
+.rraid.soon.aq20 h3 { color: #ecd7a0; }
+.rsoon { display: grid; gap: 3px; margin: 2px 0 4px; }
+.rraid.soon .rsoon small { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #d9b874; }
+.rearly { justify-self: start; }
+.rraid .gates-goals span { flex-wrap: wrap; column-gap: 6px; row-gap: 0; font-size: 12.5px; }
+.rraid .gates-goals li { grid-template-columns: 28px minmax(0, 1fr); gap: 8px; }
+.rraid .gates-goals img { width: 28px; height: 28px; }
+.rraid.live.aq20 { border-color: #e2bf6a; box-shadow: 0 0 22px rgba(232, 196, 106, .32), inset 0 0 0 1px rgba(255, 232, 170, .22); }
+.rraid.live.aq20:hover { border-color: #fff0c4; box-shadow: 0 10px 26px rgba(0, 0, 0, .6), 0 0 34px rgba(240, 200, 110, .55), inset 0 0 0 1px rgba(255, 240, 200, .5); }
+.rraid.live.aq20 .rraidgo { color: #ffe3a0; text-shadow: 0 2px 3px #000, 0 0 14px rgba(240, 200, 110, .55); }
+.rraid.live.aq20 .rraidgo::after { background: linear-gradient(90deg, #e2bf6a, transparent); }
 .rrules { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 14px; margin: 0; padding: 4px 2px; list-style: none; font-size: 13.5px; color: #c9b99a; }
 .rrules li { padding-left: 10px; border-left: 2px solid #6d5222; }
 @media (max-width: 600px) {
@@ -326,6 +339,7 @@ body.raidrun .banner[data-screen="raid"] { display: none; }
   .rraid { min-height: 190px; }
   .rraid.live { min-height: 260px; }
   .rraid.soon { min-height: 130px; }
+  .rraid.soon.aq20 { min-height: 210px; }
   .rraidsay h3, .rraidname { font-size: 28px; }
   .rrules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

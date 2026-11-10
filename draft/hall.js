@@ -3,7 +3,7 @@ import { seasonOf } from './seasons.js';
 
 const CLASSES = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];
 const CLASS_NAME = Object.fromEntries(CLASSES.map((c) => [c, c[0] + c.slice(1).toLowerCase()]));
-const RAID_NAME = { mc: 'Molten Core', zg: "Zul'Gurub" }, FINAL = { mc: 'Ragnaros', zg: 'Hakkar' };
+const RAID_NAME = { mc: 'Molten Core', zg: "Zul'Gurub", aq20: "Ruins of Ahn'Qiraj" }, FINAL = { mc: 'Ragnaros', zg: 'Hakkar', aq20: 'Ossirian' };
 const TOP = 10;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const num = (n) => Math.round(n || 0).toLocaleString('en-US');

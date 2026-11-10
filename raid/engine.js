@@ -1,7 +1,8 @@
-import { rng, hash, FIGHT } from '../draft/core.js';
+import { rng, hash, FIGHT, BUILDS } from '../draft/core.js';
 import { SCALE } from './bosses.js';
 
 const STEP = .1, MAX_TIME = 420, DUMMY_ARMOR = 3731, ARMOR_K = 400 + 85 * 60, CRUSH = 15, DUMMY_RESIST = .94, SWAP = .7, STAND_DAMAGE = .8, STAND_AVOID = .1, STAND_AGILE = .25, STAND_TAKEN = .85, FALLEN_BASE = 1.5, FALLEN_RAMP = .3;
+const CAST_SPELLS = new Set(Object.values(BUILDS).flat().flatMap((b) => b.kit.abilities.filter((a) => a.cast).map((a) => a.n)));
 const dr = (armor) => armor / (armor + ARMOR_K);
 const resisted = (res, school) => Math.min(.75, Math.max(res, 0) / 315 * .75) * (school === 'phys' ? 0 : 1);
 
@@ -27,7 +28,10 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
   const adds = boss.adds ? Array.from({ length: boss.adds.count }, (_, i) => ({ i, hp: boss.adds.health * SCALE.health, max: boss.adds.health * SCALE.health, swing: 1 + i * .4, healAt: 6 + i * 3 })) : [];
   const curses = [], delayed = [], timers = boss.abilities.map((a) => ({ a, next: a.first ?? 0, used: false }));
   const fx = heroes[0].fx || {}, mult = factors(boss, fx), events = [], frames = [];
-  let t = 0, fell = 0, fury = 1, score = 0, hots = [], burns = [], enraged = false, pulseAt = 3;
+  let t = 0, fell = 0, fury = 1, score = 0, hots = [], burns = [], enraged = false, pulseAt = 3, landed = !boss.air, weakAt = -1;
+  const weakOff = boss.weak ? Math.floor(r() * boss.weak.schools.length) : 0;
+  const weakNow = () => boss.weak.schools[(Math.floor(t / boss.weak.every) + weakOff) % boss.weak.schools.length];
+  const flying = () => !landed && b.hp / b.max > boss.air;
   const say = (e) => events.push({ t: Math.round(t * 10) / 10, ...e });
   const curse = (key, base) => curses.reduce((v, c) => (c.until > t && c.fx[key] ? v * c.fx[key] : v), base);
   const buff = (key, base) => b.buffs.reduce((v, x) => (x.until > t && x.fx[key] ? v * x.fx[key] : v), base);
@@ -47,7 +51,7 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
   const die = (h, by) => { h.dead = true; h.hp = 0; h.killedBy = by; h.dots = []; h.casting = null; say({ k: 'death', i: h.i, by }); if (boss.levelUp) { b.enraged.damage += boss.levelUp.damage; say({ k: 'boss', n: boss.levelUp.n }); } if (h === tank) { fell = t; if (!dps.dead) say({ k: 'save', i: dps.i, n: 'Takes the boss' }); } };
   const hurt = (h, raw, school, n, opts = {}) => {
     if (h.dead) return;
-    let v = raw * (school === 'phys' ? SCALE.melee * (opts.spike ? SCALE.spike : 1) : SCALE.damage) * fury * ramp(SCALE.rampDamage) * (tw.damage || 1);
+    let v = raw * (school === 'phys' ? SCALE.melee * (opts.spike ? SCALE.spike : 1) : SCALE.damage) * fury * ramp(SCALE.rampDamage) * (tw.damage || 1) * (boss.hit || 1);
     if (school === 'phys') v *= opts.noArmor ? 1 : 1 - dr(h.armor);
     else {
       v *= 1 - resisted(h.res[school] || 0, school);
@@ -98,7 +102,13 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
     if (hasBuff('vanish')) return;
     let amount = v * (h.power || 1) * mult(school) * (school === 'phys' ? (tw.physTaken || 1) * (h.melee ? fx.melee || 1 : 1) : tw.magicTaken || 1);
     if (school !== 'phys') amount = buff('magicTaken', amount);
+    amount = buff('allTaken', amount);
+    if (CAST_SPELLS.has(n)) amount /= curse('castTime', 1);
+    if (boss.air && flying() && (h.melee || h === tank)) amount *= boss.airHit || 0;
+    if (boss.weak && school !== 'phys' && school === weakNow()) amount *= boss.weak.up;
     amount *= (m.damage || 1) * (m.opening && t < 20 ? m.opening : 1) * (m.execute && b.hp / b.max < .3 ? m.execute : 1) * (h === tank ? m.tankDamage || 1 : 1) * (h === dps && tank.dead ? STAND_DAMAGE : 1);
+    if (school === 'shadow' && fx.weave) amount *= 1 + fx.weave * Math.min(1, t / 15);
+    if (school === 'nature' && fx.storm && h.role === 'dps') amount *= 1 + fx.storm;
     if (school === 'shadow' && fx.leech) for (const x of alive()) x.hp = Math.min(x.max, x.hp + amount * fx.leech / 3);
     const add = adds.find((a) => a.hp > 0 && !boss.adds.unkillable);
     if (hasBuff('reflectSpells') && school !== 'phys') { hurt(h, v * .07, school, 'Reflected', {}); amount *= .6; }
@@ -112,6 +122,7 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
         if (d) {
           for (const x of pick(d.to)) hurt(x, between(d.dmg), d.school, d.n);
           if (d.enrage) { b.enraged.speed += d.enrage.speed; b.enraged.damage += d.enrage.damage; }
+          if (d.bossDamage && !boss.endless) b.hp = Math.max(1, b.hp - b.max * d.bossDamage);
         }
       }
     } else if (b.shield > 0) {
@@ -135,6 +146,7 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
     if (a.dispel) { hots = []; say({ k: 'boss', n: a.n }); return; }
     if (a.hinder) { if (dps.melee && !dps.dead) dps.knocked = t + a.dur; say({ k: 'boss', n: a.n }); return; }
     if (a.shield) { b.hp = b.max; b.shield = a.shield * SCALE.health; say({ k: 'boss', n: a.n }); return; }
+    if (a.halve) { say({ k: 'boss', n: a.n }); for (const h of pick(a.to)) { const v = h.hp * a.halve; h.hp -= v; h.took += v; say({ k: 'hit', i: h.i, n: a.n, v: Math.round(v), school: 'phys' }); } return; }
     if (a.wave) { b.ticks.push({ ...a.wave, school: 'phys', to: 'tank', next: t + a.wave.every, until: t + a.wave.every * a.wave.ticks }); say({ k: 'boss', n: a.n }); return; }
     say({ k: 'boss', n: a.n });
     if (a.curse) curses.push({ fx: a.curse, until: t + a.dur });
@@ -159,7 +171,7 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
   };
   const think = (h) => {
     if (h.dead || h.casting || h.gone > t || h.silenced > t || h.stunned > t) return;
-    const k = h.k, live = alive(), hurtMost = live.reduce((m, x) => (x.hp / x.max < m.hp / m.max ? x : m), live[0]), missing = hurtMost.max - hurtMost.hp, cost = (s) => curse('cost', s.cost * k.cost * (tw.cost || 1) * (m.cost || 1)), castTime = (s) => s.cast / (m.castSpeed || 1);
+    const k = h.k, live = alive(), hurtMost = live.reduce((m, x) => (x.hp / x.max < m.hp / m.max ? x : m), live[0]), missing = hurtMost.max - hurtMost.hp, cost = (s) => curse('cost', s.cost * k.cost * (tw.cost || 1) * (m.cost || 1)), castTime = (s) => s.cast / (m.castSpeed || 1) * curse('castTime', 1);
     const wounded = live.filter((x) => x.hp / x.max < .8).length;
     const healPower = curse('heal', 1);
     let s = null, target = hurtMost;
@@ -210,6 +222,8 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
       if (!enraged) { enraged = true; say({ k: 'boss', n: 'Enrage' }); }
       fury = 1 + (Math.floor((t - enrageAt) / 5) + 1) * .15;
     }
+    if (boss.air && !landed && !flying()) { landed = true; say({ k: 'boss', n: 'Lands' }); }
+    if (boss.weak) { const w = weakNow(); if (w !== weakAt) { weakAt = w; say({ k: 'boss', n: `Weakness: ${w[0].toUpperCase()}${w.slice(1)}` }); } }
     if (tw.pulse && t >= pulseAt) { pulseAt = t + tw.pulse.every; for (const h of alive()) hurt(h, between(tw.pulse.dmg), tw.pulse.school, tw.pulse.n); }
     for (const x of timers) {
       if (x.a.once && x.used) continue;
@@ -221,7 +235,7 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
     for (const x of delayed) if (x.at <= t && !x.done) { x.done = true; if (!x.h.dead) hurt(x.h, between(x.a.dmg), x.a.school, x.a.n); }
     for (const x of burns) if (x.next <= t && x.left > 0) { x.next = t + x.every; x.left--; healer.curMana = Math.max(0, healer.curMana - x.per * SCALE.damage); }
     burns = burns.filter((x) => x.left > 0);
-    if (b.swing <= t && hasBuff('vanish')) b.swing = t + .5;
+    if (b.swing <= t && (hasBuff('vanish') || (boss.air && flying()))) b.swing = t + .5;
     else if (b.swing <= t) { b.swing = t + boss.melee[2] * SCALE.spike / (buff('speed', 1) * (1 + b.enraged.speed) * (tw.speed || 1)); swingBoss(boss.melee, 'Melee'); }
     for (const a of adds) {
       if (a.hp <= 0) continue;

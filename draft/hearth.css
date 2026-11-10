@@ -248,6 +248,7 @@ img.sq { transform: scale(1.22); }
 .hforgego.big { padding: 12px 22px; font-size: 16px; }
 .hforge { --fc: #ff8000; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; padding: 16px 18px; border: 1px solid var(--fc); border-radius: 12px; background: radial-gradient(120% 160% at 0% 50%, color-mix(in srgb, var(--fc) 30%, transparent), rgba(0, 0, 0, .55) 70%); box-shadow: 0 0 26px color-mix(in srgb, var(--fc) 30%, transparent), inset 0 1px 0 rgba(255, 255, 255, .06); animation: hready 2.4s ease-in-out infinite; }
 .hforge.storm { --fc: #4fb8ff; }
+.hforge.sand { --fc: #e8c46a; }
 .hforgeicon img { display: block; width: 58px; height: 58px; border-radius: 10px; border: 2px solid #ff8000; box-shadow: 0 0 20px rgba(255, 128, 0, .7); }
 .hforgesay { flex: 1; display: grid; min-width: 0; }
 .hforgesay small { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--fc); }

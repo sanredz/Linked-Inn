@@ -189,7 +189,7 @@ async function forge(id) {
 }
 
 function sparks(canvas, theme) {
-  const g = canvas.getContext('2d'), dots = [], hue = theme === 'storm' ? [190, 215] : [18, 42];
+  const g = canvas.getContext('2d'), dots = [], hue = theme === 'storm' ? [190, 215] : theme === 'sand' ? [36, 50] : [18, 42];
   let on = true, t0 = performance.now();
   const size = () => { canvas.width = innerWidth * devicePixelRatio; canvas.height = innerHeight * devicePixelRatio; };
   size();
@@ -221,7 +221,7 @@ function sparks(canvas, theme) {
 
 function modeCard(m) {
   const s = sv(), feats = FEATS.filter((f) => f.mode === m.id), n = feats.filter((f) => got.has(f.id)).length;
-  const line = m.id === 'gear' ? `${num(s.gear.runs)} runs · best ${s.gear.best ? s.gear.best.toFixed(1) : '-'}` : m.id === 'arena' ? `${num(s.arena.runs)} runs · best ${s.arena.best}/10` : `${num(s.raids[m.id].runs)} runs · best ${s.raids[m.id].best} bosses`;
+  const line = m.id === 'gear' ? `${num(s.gear.runs)} runs · best ${s.gear.best ? s.gear.best.toFixed(1) : '-'}` : m.id === 'arena' ? `${num(s.arena.runs)} runs · best ${s.arena.best}/10` : `${num((s.raids[m.id] || {}).runs)} runs · best ${(s.raids[m.id] || {}).best || 0} bosses`;
   return `<button class="hmode" data-tab="${m.id}" style="background-image:url(${m.art})"><span><b>${m.name}</b><small>${line}</small></span><em>${n}/${feats.length}</em></button>`;
 }
 
@@ -243,8 +243,8 @@ function tabHtml() {
     const a = s.arena;
     return `<div class="htiles">${tile(num(a.runs), 'Runs')}${tile(num(a.fights), 'Duels')}${tile(num(a.wins), 'Wins')}${tile(`${a.best}/10`, 'Best run', 'gold')}${tile(num(a.tens), '10-win runs')}</div>${feats}`;
   }
-  const r = s.raids[tab], final = tab === 'mc' ? 'Ragnaros' : 'Hakkar';
-  return `<div class="htiles">${tile(num(r.runs), 'Runs')}${tile(`${r.best}/9`, 'Most bosses')}${tile(num(r.finales), `Reached ${final}`)}${tile(r.score ? num(r.score) : '-', `Best on ${final}`, 'gold')}</div>${feats}<h3 class="hh3">Collection</h3>${collectionHtml(tab)}`;
+  const r = s.raids[tab] || { runs: 0, best: 0, finales: 0, score: 0 }, final = { mc: 'Ragnaros', zg: 'Hakkar', aq20: 'Ossirian' }[tab] || 'the final boss', last = tab === 'aq20' ? 5 : 9;
+  return `<div class="htiles">${tile(num(r.runs), 'Runs')}${tile(`${r.best}/${last}`, 'Most bosses')}${tile(num(r.finales), `Reached ${final}`)}${tile(r.score ? num(r.score) : '-', `Best on ${final}`, 'gold')}</div>${feats}<h3 class="hh3">Collection</h3>${collectionHtml(tab)}`;
 }
 
 const headHtml = () => {

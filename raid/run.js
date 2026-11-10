@@ -65,7 +65,7 @@ export function worth(pool, hero, id) {
 }
 
 const DUAL_WIELD = /^(fury|furyd|mut|combat|enh|enhd)$/;
-const STARTER_ILVL = 60, STARTER_RANK = .35, HANDS = 6;
+const STARTER_ILVL = 60, STARTER_RANK = .35, HANDS = 7;
 const DUNGEON_SET = { MAGE: 181, PRIEST: 182, WARLOCK: 183, ROGUE: 184, DRUID: 185, HUNTER: 186, SHAMAN: 187, PALADIN: 188, WARRIOR: 189 };
 const SET_SLOT = { 1: 'head', 3: 'shoulder', 5: 'chest', 20: 'chest', 9: 'wrist', 10: 'hands', 6: 'waist', 7: 'legs', 8: 'feet' };
 
@@ -247,12 +247,13 @@ export function skipSpoils(run) {
 }
 
 const luck = (run) => modsOf(run.boons).jackpot || 1;
+const paceOf = (run) => (RAIDS[run.raid] && RAIDS[run.raid].pace) || 1;
 
 function spoilItem(pool, run, hero, slot, r, taken, floor, rarity = 0) {
   const names = new Set([...Object.values(hero.picks), ...taken].map((i) => pool.items[i][0])), worn = hero.picks[slot] ? pool.items[hero.picks[slot]][1] : 0, now = worth(pool, hero, hero.picks[slot]), wild = floor < .7;
   const main = hero.picks.main && pool.items[hero.picks.main];
   if (slot === 'off' && main && main[3] === 17) return 0;
-  const base = SPOIL_FLOOR + run.boss * SPOIL_RISE + (run.heroic ? HEROIC_BUMP : 0), mean = base + SPOIL_MEAN + run.boss * SPOIL_DRIFT;
+  const at = run.boss * paceOf(run), base = SPOIL_FLOOR + at * SPOIL_RISE + (run.heroic ? HEROIC_BUMP : 0), mean = base + SPOIL_MEAN + at * SPOIL_DRIFT;
   const bag = ['g', 'b', 'c', 'e', 't', 'l'].flatMap((t) => list(pool, hero, slot, t, wild)).filter((i) => {
     const it = pool.items[i];
     return it[2] >= base && it[1] >= Math.max(worn, rarity) && !names.has(it[0]) && worth(pool, hero, i) > now * floor && !(slot === 'main' && hero.role === 'tank' && it[3] === 17 && hero.cls !== 'DRUID') && !(slot === 'main' && hero.picks.off && it[3] === 17);
@@ -317,7 +318,7 @@ export function finishBoss(run, result, heroic = false) {
   run.results.push({ boss: result.boss, won: result.won, time: result.time, score: result.score, heroic, ...(result.totals && { dealt: result.totals.map((h) => Math.round(h.dealt)) }) });
   run.score = result.score;
   run.heroic = heroic;
-  if (result.won) { run.boss++; run.step = 'spoils'; run.spoilsLeft = heroic ? 2 : 1; return; }
+  if (result.won) { run.boss++; run.step = 'spoils'; run.spoilsLeft = (heroic ? 2 : 1) + ((RAIDS[run.raid] && RAIDS[run.raid].bonusSpoils) || 0); return; }
   run.over = true;
   run.step = 'over';
 }
@@ -334,10 +335,11 @@ export const fightSeed = (run) => run.seed + run.boss * 131 + 1;
 export const effectiveTwist = (run, boss, heroic) => {
   const t = twistFor(run, boss);
   if (!heroic) return t;
-  return { ...(t || {}), damage: ((t && t.damage) || 1) * HEROIC.damage, health: ((t && t.health) || 1) * HEROIC.health };
+  const h = (RAIDS[run.raid] && RAIDS[run.raid].heroic) || HEROIC;
+  return { ...(t || {}), damage: ((t && t.damage) || 1) * h.damage, health: ((t && t.health) || 1) * h.health };
 };
 
-export const modsFor = (run) => modsOf(run.boons, killed(run));
+export const modsFor = (run) => modsOf(run.boons, killed(run) * paceOf(run));
 
 export function resolveFight(run, heroes, heroic) {
   const boss = currentBoss(run), result = fight(heroes, boss, fightSeed(run), effectiveTwist(run, boss, heroic), modsFor(run));
@@ -390,7 +392,8 @@ export const currentBoss = (run) => bossAt(run, run.boss);
 export const killed = (run) => run.results.filter((r) => r.won).length;
 export const dropsOf = (run) => run.results.map((r, i) => { const b = bossAt(run, i); return b && (r.won || b.endless) && b.drop; }).filter((m, i) => m && rng(hash(run.seed, 'mount', i))() < m.chance);
 export const INGOT = 17203, INGOTS = 8;
-export const FORGE = { 19019: { needs: [18563, 18564], trial: 'mc', score: 120000 }, 17182: { needs: [17204], ingots: INGOTS, trial: 'mc', score: 125000 } };
+export const SCEPTER = 21175, SHARDS = [21138, 21139, 21137];
+export const FORGE = { 19019: { needs: [18563, 18564], trial: 'mc', score: 120000 }, 17182: { needs: [17204], ingots: INGOTS, trial: 'mc', score: 125000 }, [SCEPTER]: { needs: SHARDS, trial: 'aq20', score: 110000 } };
 const trialMet = (run, need) => run.results.some((r, i) => { const b = bossAt(run, i); return b && b.endless && (r.score || 0) >= need; });
 
 export function collect(runs, base = {}) {
@@ -406,5 +409,5 @@ export function collect(runs, base = {}) {
     for (const [id, f] of Object.entries(FORGE)) if (!trial[id] && run.raid === f.trial && f.needs.every((n) => have[n]) && trialMet(run, f.score)) trial[id] = true;
   }
   const paired = !!(have[18563] && have[18564]);
-  return { have, kept, trial, ready: { 19019: paired && !!trial[19019], 17182: !!have[17204] && (have[INGOT] || 0) >= INGOTS && !!trial[17182] }, paired };
+  return { have, kept, trial, ready: { 19019: paired && !!trial[19019], 17182: !!have[17204] && (have[INGOT] || 0) >= INGOTS && !!trial[17182], [SCEPTER]: SHARDS.every((n) => have[n]) && !!trial[SCEPTER] }, paired };
 }

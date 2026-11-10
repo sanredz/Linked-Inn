@@ -6,6 +6,7 @@ export const MODES = [
   { id: 'arena', name: 'Arena Draft', art: 'assets/draft/arena/card-gauntlet.jpg' },
   { id: 'mc', name: 'Molten Core', art: 'assets/draft/arena/raid-mc.jpg', raid: 1 },
   { id: 'zg', name: "Zul'Gurub", art: 'assets/draft/arena/raid-zg.jpg', raid: 1 },
+  { id: 'aq20', name: "Ruins of Ahn'Qiraj", art: 'assets/draft/arena/raid-aq20.jpg', raid: 1 },
 ];
 
 export const TIERS = { bronze: '#c98a4f', silver: '#cfd6e0', gold: '#f8d36b', legend: '#ff8a1e' };
@@ -46,6 +47,16 @@ export const FEATS = [
   { id: 'zg_raptor', mode: 'zg', tier: 'gold', name: 'Swift Razzashi Raptor', text: 'Bloodlord Mandokir dropped his raptor.', icon: 132253, test: (s) => drop(s, 'zg', 19872) >= 1 },
   { id: 'zg_tiger', mode: 'zg', tier: 'gold', name: 'Swift Zulian Tiger', text: 'High Priest Thekal dropped his tiger.', icon: 132242, test: (s) => drop(s, 'zg', 19902) >= 1 },
   { id: 'zg_stable', mode: 'zg', tier: 'legend', name: 'Zandalari Stable', text: "Collect both of Zul'Gurub's mounts.", icon: 132253, test: (s) => drop(s, 'zg', 19872) >= 1 && drop(s, 'zg', 19902) >= 1 },
+  { id: 'aq20_first', mode: 'aq20', tier: 'bronze', name: 'Into the Ruins', text: "Start a Ruins of Ahn'Qiraj run.", test: (s) => raid(s, 'aq20').runs >= 1 },
+  { id: 'aq20_half', mode: 'aq20', tier: 'silver', name: 'Sand in Your Boots', text: "Kill three Ruins of Ahn'Qiraj bosses in one run.", test: (s) => raid(s, 'aq20').best >= 3, value: (s) => `Your best: ${raid(s, 'aq20').best || 0} bosses` },
+  { id: 'aq20_heroic', mode: 'aq20', tier: 'silver', name: 'Unbowed', text: "Kill three Ruins of Ahn'Qiraj bosses on Heroic in one run.", test: (s) => raid(s, 'aq20').heroics >= 3, value: (s) => `Your best: ${raid(s, 'aq20').heroics || 0} Heroic kills in a run` },
+  { id: 'aq20_final', mode: 'aq20', tier: 'gold', name: 'The Unscarred', text: 'Reach Ossirian.', test: (s) => raid(s, 'aq20').finales >= 1 },
+  { id: 'aq20_bane', mode: 'aq20', tier: 'legend', name: "Unscarred's Bane", text: 'Deal 150,000 damage to Ossirian.', test: (s) => raid(s, 'aq20').score >= 150000, value: (s) => (raid(s, 'aq20').score ? `Your best: ${raid(s, 'aq20').score.toLocaleString('en-US')} damage` : '') },
+  { id: 'aq20_red', mode: 'aq20', tier: 'gold', name: 'Red Scepter Shard', text: 'General Rajaxx dropped the Red Scepter Shard.', icon: 134130, test: (s) => drop(s, 'aq20', 21138) >= 1 },
+  { id: 'aq20_blue', mode: 'aq20', tier: 'gold', name: 'Blue Scepter Shard', text: 'Moam dropped the Blue Scepter Shard.', icon: 134133, test: (s) => drop(s, 'aq20', 21137) >= 1 },
+  { id: 'aq20_green', mode: 'aq20', tier: 'gold', name: 'Green Scepter Shard', text: 'Ayamiss the Hunter dropped the Green Scepter Shard.', icon: 134106, test: (s) => drop(s, 'aq20', 21139) >= 1 },
+  { id: 'aq20_scepter', mode: 'aq20', tier: 'legend', name: 'Scarab Lord', text: 'Forge the Scepter of the Shifting Sands.', icon: 133062, test: (s) => forged(s, 21175) },
+  { id: 'aq20_head', mode: 'aq20', tier: 'legend', name: 'The Fall of Ossirian', text: 'Ossirian dropped his head.', icon: 132192, test: (s) => drop(s, 'aq20', 21220) >= 1 },
 ];
 
 const CLASS_LIST = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];
@@ -63,8 +74,8 @@ export const LADDERS = [
   { id: 'g_runs', mode: 'gear', name: 'Gear Drafts', now: (s) => `${s.gear.runs} runs`, steps: climb((s) => s.gear.runs, [['g_first', 1], ['g_25', 25], ['g_100', 100]]) },
   { id: 'g_board', mode: 'gear', name: 'Leaderboard', now: (s) => (s.gear.rank ? `#${s.gear.rank.toLocaleString('en-US')}` : ''), steps: [{ id: 'g_top100', mark: 'Top 100', prog: rankProg(100, 1000) }, { id: 'g_top10', mark: 'Top 10', prog: rankProg(10, 100) }] },
   { id: 'a_run', mode: 'arena', name: 'Best Arena run', now: (s) => `${s.arena.best} wins`, steps: climb((s) => s.arena.best, [['a_first', 1], ['a_five', 5], ['a_ten', 10]]) },
-  ...[['mc', 'Ragnaros'], ['zg', 'Hakkar']].map(([r, boss]) => ({ id: `${r}_way`, mode: r, name: `Road to ${boss}`, now: (s) => `${raid(s, r).best || 0} bosses`, steps: [
-    ...climb((s) => raid(s, r).best, [[`${r}_half`, 5, '5 bosses'], [`${r}_final`, 8, boss]]),
+  ...[['mc', 'Ragnaros', 5, 8], ['zg', 'Hakkar', 5, 8], ['aq20', 'Ossirian', 3, 5]].map(([r, boss, half, last]) => ({ id: `${r}_way`, mode: r, name: `Road to ${boss}`, now: (s) => `${raid(s, r).best || 0} bosses`, steps: [
+    ...climb((s) => raid(s, r).best, [[`${r}_half`, half, `${half} bosses`], [`${r}_final`, last, boss]]),
     ...climb((s) => raid(s, r).score, [[`${r}_bane`, 150000, short(150000)]]),
   ] })),
 ];
@@ -102,6 +113,11 @@ export const RELICS = [
   { id: 17204, name: 'Eye of Sulfuras', icon: 134124, raid: 'mc', from: 'Ragnaros' },
   { id: 17203, name: 'Sulfuron Ingot', icon: 135824, raid: 'mc', from: 'Golemagg the Incinerator', stack: 8 },
   { id: 17182, name: 'Sulfuras, Hand of Ragnaros', short: 'Sulfuras', icon: 133066, raid: 'mc', forged: [17204, 17203], theme: 'fire' },
+  { id: 21138, name: 'Red Scepter Shard', icon: 134130, raid: 'aq20', from: 'General Rajaxx' },
+  { id: 21137, name: 'Blue Scepter Shard', icon: 134133, raid: 'aq20', from: 'Moam' },
+  { id: 21139, name: 'Green Scepter Shard', icon: 134106, raid: 'aq20', from: 'Ayamiss the Hunter' },
+  { id: 21175, name: 'The Scepter of the Shifting Sands', short: 'the Scepter', icon: 133062, raid: 'aq20', forged: [21138, 21137, 21139], theme: 'sand' },
+  { id: 21220, name: 'Head of Ossirian the Unscarred', icon: 132192, raid: 'aq20', from: 'Ossirian the Unscarred' },
 ];
 
 const LOCKED = { ragnaros: 'mc_final', onyxia: 'mc_bane', kelthuzad: 'a_ten', arthas: 'a_flawless', illidan: 'g_classes', medivh: 'g_100', voljin: 'zg_final', grom: 'a_three', bolvar: 'mc_tf', gallywix: 'g_top100', moira: 'zg_bane', mekkatorque: 'mc_eye' };
@@ -127,6 +143,7 @@ export function forgeSteps(stats, item) {
   const n = (id) => count(stats, id);
   const trial = (id) => !!(stats.forge && stats.forge[id] && (stats.forge[id].trial || stats.forge[id].ready));
   if (item.id === 19019) return [['Left Binding of the Windseeker', n(18563) > 0], ['Right Binding of the Windseeker', n(18564) > 0], ['Deal 120,000 damage to Ragnaros with both Bindings', trial(19019)]];
+  if (item.id === 21175) return [['Red Scepter Shard', n(21138) > 0], ['Blue Scepter Shard', n(21137) > 0], ['Green Scepter Shard', n(21139) > 0], ['Deal 110,000 damage to Ossirian with all three Shards', trial(21175)]];
   if (item.id === 17182) return [['Eye of Sulfuras', n(17204) > 0], [`Sulfuron Ingots ${Math.min(n(17203), 8)} of 8`, n(17203) >= 8], ['Deal 125,000 damage to Ragnaros with the Eye', trial(17182)]];
   return [];
 }

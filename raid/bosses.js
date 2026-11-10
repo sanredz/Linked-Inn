@@ -21,6 +21,8 @@ const FIRE = 'fire', SHADOW = 'shadow', ARCANE = 'arcane', PHYS = 'phys', NATURE
 
 export const ZG_MILESTONES = [[10000, 'Whisper'], [25000, 'Hex'], [40000, 'Bloodletter'], [60000, 'Voodoo'], [80000, 'Soulreaver'], [100000, "Loa's Chosen"], [120000, 'Gurubashi Legend'], [150000, "Soulflayer's Bane"]];
 
+export const AQ_MILESTONES = [[10000, 'Sandgrain'], [25000, 'Dune Walker'], [40000, 'Scarab'], [60000, 'Sandstorm'], [80000, 'Obsidian'], [100000, 'Crystal Breaker'], [120000, 'Qiraji Slayer'], [150000, "Unscarred's Bane"]];
+
 export const RAIDS = {
   mc: {
     id: 'mc',
@@ -282,6 +284,82 @@ export const RAIDS = {
       },
     ],
   },
+  aq20: {
+    id: 'aq20',
+    name: "Ruins of Ahn'Qiraj",
+    blurb: 'Six bosses of sand and stone. Fewer fights, richer spoils. Ossirian never falls.',
+    theme: { floor: 'terrain_sand', wall: 'terrain_sand', fog: 0x2a1d0a, light: 0xffc46a, set: 'desert', zone: 'ahnqiraj' },
+    finale: 'Ossirian',
+    milestones: AQ_MILESTONES,
+    pace: 1.8,
+    enrage: .86,
+    hit: 1.16,
+    bonusSpoils: 1,
+    bosses: [
+      {
+        id: 'kurinnaxx', short: 'Kurinnaxx', name: 'Kurinnaxx', model: 15742, health: 430000, enrageBy: .78, armor: 3795, resist: { arcane: 140, fire: 140, frost: 140 }, melee: [1700, 2250, 2],
+        tip: 'Sand-hardened scales turn spells aside, but steel bites deep. Every Mortal Wound cuts the healing on your tank a little more, and he enrages at the end.',
+        abilities: [
+          { n: 'Mortal Wound', first: 5, every: [6, 7], school: PHYS, dmg: [600, 800], to: 'tank', curse: { heal: .9 }, dur: 15 },
+          { n: 'Sand Trap', first: 10, every: [12, 15], school: NATURE, dmg: [800, 1000], to: 'random', stun: 3 },
+          { n: 'Wide Slash', first: 8, every: [10, 13], school: PHYS, dmg: [900, 1100], to: 'melee' },
+          { n: 'Enrage', below: .3, once: 1, boss: { speed: 1.3, damage: 1.2 }, dur: 999 },
+        ],
+      },
+      {
+        id: 'rajaxx', short: 'Rajaxx', name: 'General Rajaxx', model: 15376, health: 560000, enrageBy: .95, armor: 3795, melee: [1750, 2300, 2], drop: { id: 21138, kind: 'relic', name: 'Red Scepter Shard', icon: 134130, chance: .06 },
+        tip: 'His captains come first. Thundercrash then takes half of everyone\'s health at once, so keep the whole party topped up.',
+        adds: { n: 'Qiraji Captain', count: 3, health: 42000, melee: [950, 1250, 2], armor: 3795 },
+        abilities: [
+          { n: 'Thundercrash', first: 18, every: [26, 30], halve: .5, to: 'party' },
+          { n: 'Disarm', first: 9, every: [18, 22], hinder: 1, dur: 3 },
+          { n: 'Frenzy', below: .4, once: 1, boss: { speed: 1.25 }, dur: 999 },
+        ],
+      },
+      {
+        id: 'moam', short: 'Moam', name: 'Moam', model: 15392, health: 760000, enrageBy: 1.26, armor: 5200, resist: { arcane: 186 }, melee: [1850, 2450, 2.2], drop: { id: 21137, kind: 'relic', name: 'Blue Scepter Shard', icon: 134133, chance: .06 },
+        tip: 'A stone giant with the thickest hide in the Ruins, so spells beat steel. He drains your healer, turns to stone while his Mana Fiends blast the party, and erupts with all the mana he stole.',
+        abilities: [
+          { n: 'Drain Mana', first: 6, every: [6, 6], burn: { per: 200, every: 1, ticks: 1 } },
+          { n: 'Stone Form', first: 30, every: [42, 46], boss: { vanish: 1 }, dur: 10, tick: { n: 'Mana Fiend', every: 2, school: ARCANE, dmg: [500, 640], to: 'party' } },
+          { n: 'Arcane Eruption', first: 75, every: [75, 75], cast: 1, school: ARCANE, dmg: [2200, 2600], to: 'party' },
+        ],
+      },
+      {
+        id: 'buru', short: 'Buru', name: 'Buru the Gorger', model: 15654, health: 700000, enrageBy: .88, armor: 3795, resist: { arcane: 140, fire: 140, frost: 140 }, melee: [1900, 2500, 2.2],
+        tip: 'His carapace shrugs off spells, so weapons do the work. Hit his eggs first: each one that bursts tears a chunk out of Buru. At the end he sheds his shell, takes more damage and spreads Creeping Plague.',
+        adds: { n: 'Buru Egg', count: 4, health: 36000, melee: [0, 0, 999], armor: 0, death: { n: 'Egg Burst', school: NATURE, dmg: [500, 700], to: 'party', bossDamage: .06 } },
+        abilities: [
+          { n: 'Dismember', first: 6, every: [8, 10], school: PHYS, dot: { n: 'Dismember', school: PHYS, per: 280, every: 2, ticks: 6 }, to: 'tank' },
+          { n: 'Gorge', first: 12, every: [15, 18], school: PHYS, dmg: [1500, 1800], to: 'dps' },
+          { n: 'Full Speed', below: .2, once: 1, boss: { speed: 1.3, damage: 1.25, allTaken: 1.4 }, dur: 999, tick: { n: 'Creeping Plague', every: 2, school: NATURE, dmg: [300, 380], to: 'party' } },
+        ],
+      },
+      {
+        id: 'ayamiss', short: 'Ayamiss', name: 'Ayamiss the Hunter', model: 15431, health: 620000, enrageBy: 1.1, armor: 3795, resist: { nature: -40 }, melee: [1600, 2100, 1.6], air: .7, airHit: .65, drop: { id: 21139, kind: 'relic', name: 'Green Scepter Shard', icon: 134106, chance: .06 },
+        tip: 'She stays in the air until 70% health. Melee only catch her on her dives, while spells and arrows hit her freely. Paralyze feeds a hero to her larva unless your healer keeps them alive.',
+        abilities: [
+          { n: 'Stinger Spray', first: 4, every: [6, 8], school: NATURE, dmg: [560, 700], to: 'party' },
+          { n: 'Poison Stinger', first: 2, every: [3, 5], cast: .5, school: NATURE, dmg: [800, 1000], to: 'random' },
+          { n: 'Paralyze', first: 14, every: [22, 26], stun: 8, to: 'random', school: NATURE, dmg: [2400, 2800], delay: 8 },
+          { n: 'Frenzy', below: .2, once: 1, boss: { speed: 1.5 }, dur: 999 },
+        ],
+      },
+      {
+        id: 'ossirian', name: 'Ossirian the Unscarred', model: 15432, health: 1099230, armor: 4691, resist: { fire: 140, frost: 140, nature: 110, shadow: 90, arcane: 140 }, melee: [2050, 2700, 2.6], endless: 1, drop: { id: 21220, kind: 'relic', name: 'Head of Ossirian the Unscarred', icon: 132192, chance: .05 },
+        weak: { every: 20, schools: [FIRE, FROST, NATURE, SHADOW, ARCANE], up: 2.6 },
+        tip: 'The Final Stand. The Strength of Ossirian shrugs off magic, except the one school his crystal weakens, and that school changes every 20 seconds. His Curse of Tongues slows every spellcaster, healer included. Deal as much damage as you can before the sands bury you.',
+        fury: { after: 45, every: 15, damage: .08 },
+        abilities: [
+          { n: 'War Stomp', first: 18, every: [20, 25], school: PHYS, dmg: [800, 1000], to: 'party', stun: 1 },
+          { n: 'Cyclone', first: 10, every: [14, 18], school: PHYS, dmg: [1200, 1500], to: 'random', stun: 2 },
+          { n: 'Curse of Tongues', first: 6, every: [30, 30], curse: { castTime: 1.4 }, dur: 12 },
+          { n: 'Sandstorm', first: 30, every: [32, 36], tick: { n: 'Sandstorm', every: 2, school: NATURE, dmg: [380, 460], to: 'party' }, dur: 8 },
+          { n: 'Crushing Blow', first: 8, every: [10, 14], school: PHYS, dmg: [2160, 2640], to: 'tank', dot: { n: 'Sand Wound', school: PHYS, per: 450, every: 1, ticks: 8 } },
+        ],
+      },
+    ],
+  },
 };
 
-for (const raid of Object.values(RAIDS)) raid.bosses.forEach((b, i) => { b.step = i; for (const v of b.variants || []) v.step = i; });
+for (const raid of Object.values(RAIDS)) raid.bosses.forEach((b, i) => { b.step = Math.round(i * (raid.pace || 1)); if (raid.enrage && !b.endless) b.enrageBy = (b.enrageBy || 1) * raid.enrage; if (raid.hit && !b.endless) b.hit = raid.hit; for (const v of b.variants || []) v.step = b.step; });

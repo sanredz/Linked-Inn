@@ -1,0 +1,28 @@
+.gates { position: fixed; left: 18px; bottom: 18px; z-index: 900; width: min(360px, calc(100vw - 32px)); box-sizing: border-box; padding: 18px 18px 16px; color: #f1e4c4; font: 14px/1.4 "Friz", system-ui, sans-serif; background: radial-gradient(130% 90% at 50% 0%, rgba(232, 196, 106, .2), rgba(0, 0, 0, 0) 60%), linear-gradient(#1c140a, #0e0a05); border: 1px solid #b08a3e; border-radius: 12px; box-shadow: 0 14px 40px rgba(0, 0, 0, .7), 0 0 28px rgba(232, 196, 106, .22), inset 0 1px 0 rgba(255, 230, 170, .12); opacity: 0; transform: translateY(16px); transition: opacity .3s ease, transform .3s ease; }
+.gates.in { opacity: 1; transform: none; }
+.gates small { display: block; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #d9b874; }
+.gates h2 { margin: 4px 30px 6px 0; font: 26px/1.1 "Morpheus", serif; font-weight: normal; color: #ffdc8f; text-shadow: 0 2px 6px #000; }
+.gates p { margin: 0 0 12px; font-size: 13px; color: #cdbf9e; }
+.gates-x { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; padding: 0; font: 22px/1 system-ui, sans-serif; color: #b9a882; background: none; border: 0; border-radius: 6px; cursor: pointer; }
+.gates-x:hover, .gates-x:focus-visible { color: #fff0c8; background: rgba(255, 255, 255, .06); }
+.gates-goals { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.gates-goals li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px; align-items: center; }
+.gates-goals img { width: 32px; height: 32px; border-radius: 6px; border: 1px solid #6d5222; }
+.gates-goals li.done img { border-color: #ffd76a; box-shadow: 0 0 10px rgba(255, 215, 106, .55); }
+.gates-goals span { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; font-size: 13px; }
+.gates-goals b { font-weight: normal; color: #f1e4c4; }
+.gates-goals em { font-style: normal; color: #d9b874; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gates-goals li.done em { color: #ffd76a; }
+.gates-bar { display: block; height: 7px; overflow: hidden; border-radius: 4px; background: rgba(255, 255, 255, .08); }
+.gates-bar > i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #a77a22, #ffd76a); }
+.gates-go { display: block; margin-top: 14px; padding: 11px; text-align: center; font: 16px "Morpheus", serif; color: #1a1208; text-decoration: none; background: linear-gradient(#ffd98a, #c9952e); border: 1px solid #ffe6a8; border-radius: 8px; box-shadow: 0 0 14px rgba(255, 200, 90, .35); }
+.gates-go:hover, .gates-go:focus-visible { filter: brightness(1.08); }
+.rsoon .gates-goals { margin-top: 8px; }
+.rraid.soon .rsoon small { display: block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #d9b874; }
+@media (max-width: 600px) {
+  .gates { left: 12px; right: 12px; bottom: 84px; width: auto; padding: 16px 14px 14px; }
+  .gates h2 { font-size: 23px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gates { transition: none; }
+}

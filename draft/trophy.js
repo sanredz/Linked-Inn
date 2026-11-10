@@ -6,7 +6,7 @@ const HOME = { target: new THREE.Vector3(-2.2, 1.5, 0), yaw: 1.4, pitch: .13, di
 const SPOTS = {
   19019: { at: [-4.4, 0, -2.8], theme: 'storm', look: 1.2, clear: 2 },
   17182: { at: [-4.4, 0, 2.8], theme: 'fire', look: 1.7, clear: 2 },
-  21175: { at: [-4.9, 0, 0], theme: 'sand', look: 1.4, clear: 2, up: 1 },
+  21175: { at: [-2.4, 0, 0], theme: 'sand', look: 1.45, clear: 2, up: 1 },
   19872: { at: [-.4, 0, -3.9], yaw: .93, look: 1.15, clear: 2, y: 1.9, dist: 6.8 },
   19902: { at: [-.4, 0, 3.9], yaw: 2.21, look: 2.75, clear: 2, y: 1.1, dist: 5.2 },
 };

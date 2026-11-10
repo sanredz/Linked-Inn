@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { buildCharacter } from './charbuilder.js';
 
-const SCENE = { 1: 'scenes/easternkingdom', 2: 'art/land-orccamp', 3: 'scenes/oldironforge', 4: 'art/land-darnassus', 5: 'art/land-tirisfall', 6: 'art/land-thunderbluff', 7: 'scenes/gnomeregan', 8: 'scenes/darkspearislands' };
+const SCENE = { 1: 'scenes/easternkingdom', 2: 'art/land-orccamp', 3: 'scenes/oldironforge', 4: 'art/land-darnassus', 5: 'art/land-tirisfall', 6: 'art/land-thunderbluff', 7: 'scenes/gnomeregan', 8: 'scenes/darkspearislands', 95: 'scenes/zephrasisle', 96: 'scenes/zephrasisle' };
 const ANIMS = [['idle', 'Idle'], ['ready1h', 'Ready'], ['attack1h', 'Attack'], ['cast', 'Cast'], ['roar', 'Roar'], ['run', 'Run']];
 
 export async function mountViewer(el, look, P, opts = {}) {

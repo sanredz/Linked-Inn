@@ -2207,6 +2207,7 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = (n) => Math.round(n).toLocaleString('en-US');
   const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+  const pct1 = (a, b) => (b ? (100 * a / b) : 0).toFixed(1);
   const gold = (c) => { const g = c / 10000; return g >= 100 ? fmt(g) + 'g' : g >= 1 ? g.toFixed(1).replace(/\.0$/, '') + 'g' : Math.round(c / 100) + 's'; };
   const med = (arr) => { if (!arr.length) return null; const s = arr.slice().sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
   const sum = (arr) => arr.reduce((a, b) => a + b, 0);
@@ -4750,17 +4751,17 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const fa = R.faction.Alliance || 0, fh = R.faction.Horde || 0, ft = Math.max(1, fa + fh);
     const tugs = Object.entries(R.rsfac).filter(([k]) => k !== '?').sort((x, y) => sum(Object.values(y[1])) - sum(Object.values(x[1]))).map(([rs, v]) => {
       const a = v.Alliance || 0, ho = v.Horde || 0, t = Math.max(1, a + ho);
-      return `<div class="ap-tug" data-tip="${esc(rs)}|${fmt(a)} Alliance · ${fmt(ho)} Horde"><span class="l">${pct(a, t)}%</span><div class="ap-tugbar"><i class="a" style="flex:${a}"></i><i class="h" style="flex:${ho}"></i><em>${esc(rs)}${t < 3000 ? ` <small style="opacity:.75;font:11px Friz,serif">· ${fmt(t)} found so far</small>` : ''}</em></div><span class="r">${pct(ho, t)}%</span></div>`;
+      return `<div class="ap-tug" data-tip="${esc(rs)}|${fmt(a)} Alliance · ${fmt(ho)} Horde"><span class="l">${pct1(a, t)}%</span><div class="ap-tugbar"><i class="a" style="flex:${a}"></i><i class="h" style="flex:${ho}"></i><em>${esc(rs)}${t < 3000 ? ` <small style="opacity:.75;font:11px Friz,serif">· ${fmt(t)} found so far</small>` : ''}</em></div><span class="r">${pct1(ho, t)}%</span></div>`;
     }).join('');
     h += panel('s12', 'The faction war', 'Alliance against Horde on every ruleset. The line in the middle is an even split.',
-      `<div class="ap-war"><div class="ap-side a"><img src="${ART('crest-alliance')}" alt=""><b>${pct(fa, ft)}%</b><span>Alliance</span></div><div class="ap-tugs">${tugs}</div><div class="ap-side h"><img src="${ART('crest-horde')}" alt=""><b>${pct(fh, ft)}%</b><span>Horde</span></div></div>`);
+      `<div class="ap-war"><div class="ap-side a"><img src="${ART('crest-alliance')}" alt=""><b>${pct1(fa, ft)}%</b><span>Alliance</span></div><div class="ap-tugs">${tugs}</div><div class="ap-side h"><img src="${ART('crest-horde')}" alt=""><b>${pct1(fh, ft)}%</b><span>Horde</span></div></div>`);
 
     const LF = R.levfac || {}, hasLF = !!(LF.Alliance && LF.Horde);
     const PL = hasLF && (sel.plf === 'Alliance' || sel.plf === 'Horde' || sel.plf === 'both') ? sel.plf : (hasLF ? 'both' : 'all');
     const LA = hasLF ? LF.Alliance.slice(1) : [], LH = hasLF ? LF.Horde.slice(1) : [];
     const lv = PL === 'Alliance' ? LA : PL === 'Horde' ? LH : R.levels.slice(1), lmax = Math.max(1, ...lv);
     const mmax = Math.max(1, ...LA, ...LH);
-    const tipBoth = (i, side) => { const a = LA[i] || 0, ho = LH[i] || 0, t = Math.max(1, a + ho); return `Level ${i + 1}|${fmt(a)} Alliance · ${fmt(ho)} Horde\n${side === 'h' ? `${pct(ho, t)}% Horde` : `${pct(a, t)}% Alliance`}`; };
+    const tipBoth = (i, side) => { const a = LA[i] || 0, ho = LH[i] || 0, t = Math.max(1, a + ho); return `Level ${i + 1}|${fmt(a)} Alliance · ${fmt(ho)} Horde\n${side === 'h' ? `${pct1(ho, t)}% Horde` : `${pct1(a, t)}% Alliance`}`; };
     const bars = PL === 'both'
       ? `<div class="ap-lvm"><div class="u">${LA.map((v, i) => `<i class="fa" style="height:${Math.max(1, 100 * v / mmax)}%" data-tip="${tipBoth(i, 'a')}"></i>`).join('')}</div><div class="d">${LH.map((v, i) => `<i class="fh" style="height:${Math.max(1, 100 * v / mmax)}%" data-tip="${tipBoth(i, 'h')}"></i>`).join('')}</div><span class="ta">Alliance</span><span class="th">Horde</span></div>`
       : lv.map((v, i) => {
@@ -4781,14 +4782,14 @@ window.LI_CH = (() => { try { const c = new URLSearchParams(location.search).get
     const cards = cf.slice().sort((p, q) => fv(q) - fv(p)).map((x, i) => {
       const races = Object.entries(R.combo[x.name] || {}).filter(([k]) => k !== '?' && (PF === 'all' || !RACE_FAC[apRace(k)] || RACE_FAC[apRace(k)] === PF)).sort((p, q) => q[1] - p[1]);
       const g = R.gender[x.name] || {}, gt = (g.MALE || 0) + (g.FEMALE || 0);
-      const meta = [races[0] ? `Mostly ${esc(races[0][0])}` : '', gt ? `${pct(g.FEMALE || 0, gt)}% female` : ''].filter(Boolean).join(' · ');
-      return `<div class="ap-cc" style="--bg:url('assets/game/${AP_CLASS_ART[x.k]}.jpg');--cc:${CC[x.k]}" data-tip="${CN[x.k]}|${fmt(x.a)} Alliance · ${fmt(x.h)} Horde"><img class="ci" src="${cls(x.k)}" alt=""><span class="rk">#${i + 1}</span><div class="nm">${CN[x.k]}</div><div class="pc">${(100 * fv(x) / Math.max(1, ftot)).toFixed(1)}%<small>${fmt(fv(x))}</small></div><div class="mt">${meta}</div><div class="fb"><i class="a" style="flex:${x.a}"></i><i class="h" style="flex:${x.h}"></i></div><div class="ap-fn"><span class="a">${pct(x.a, x.a + x.h)}% Alliance</span><span class="h">${pct(x.h, x.a + x.h)}% Horde</span></div></div>`;
+      const meta = [races[0] ? `Mostly ${esc(races[0][0])}` : '', gt ? `${pct1(g.FEMALE || 0, gt)}% female` : ''].filter(Boolean).join(' · ');
+      return `<div class="ap-cc" style="--bg:url('assets/game/${AP_CLASS_ART[x.k]}.jpg');--cc:${CC[x.k]}" data-tip="${CN[x.k]}|${fmt(x.a)} Alliance · ${fmt(x.h)} Horde"><img class="ci" src="${cls(x.k)}" alt=""><span class="rk">#${i + 1}</span><div class="nm">${CN[x.k]}</div><div class="pc">${(100 * fv(x) / Math.max(1, ftot)).toFixed(1)}%<small>${fmt(fv(x))}</small></div><div class="mt">${meta}</div><div class="fb"><i class="a" style="flex:${x.a}"></i><i class="h" style="flex:${x.h}"></i></div><div class="ap-fn"><span class="a">${pct1(x.a, x.a + x.h)}% Alliance</span><span class="h">${pct1(x.h, x.a + x.h)}% Horde</span></div></div>`;
     }).join('');
     const pfChips = `<div class="chips ap-pcf">${[['all', 'Both', UI('achievement_guildperk_everybodysfriend')], ['Alliance', 'Alliance', 'assets/game/alliance-crest.png'], ['Horde', 'Horde', 'assets/game/horde-crest.png']].map(([k, n, ic]) => `<button class="chip${k === PF ? ' on' : ''}" data-pcf="${k}"><img src="${ic}" alt="">${n}</button>`).join('')}</div>`;
     h += panel('s12', 'The classes', PF === 'all' ? 'Every class by how many play it. The thin bar shows the Alliance and Horde split.' : `Every class as a share of all ${PF} characters. The thin bar still shows the Alliance and Horde split.`, `${pfChips}<div class="ap-cards">${cards}</div>`);
 
     const rc = Object.entries(R.race).filter(([k]) => k !== '?').sort((x, y) => y[1] - x[1]);
-    const ppl = rc.map(([k, v]) => `<div class="ap-ppl" data-tip="${esc(k)}|${fmt(v)} characters"><div class="ap-medal"><img class="por" src="${race(apRace(k))}" alt=""></div><b>${pct(v, R.chars)}%</b><span>${esc(k)}</span><small>${fmt(v)}</small></div>`).join('');
+    const ppl = rc.map(([k, v]) => `<div class="ap-ppl" data-tip="${esc(k)}|${fmt(v)} characters"><div class="ap-medal"><img class="por" src="${race(apRace(k))}" alt=""></div><b>${pct1(v, R.chars)}%</b><span>${esc(k)}</span><small>${fmt(v)}</small></div>`).join('');
     h += panel('s12', 'The peoples of Azeroth', 'Every race by how many play it.', `<div class="ap-peoples">${ppl}</div>`);
 
     const ccols = cf.map((x) => x.name);

@@ -9,6 +9,7 @@ const json = (u) => { if (!cache.has(u)) cache.set(u, fetch(u).then((r) => (r.ok
 const image = (u) => new Promise((ok) => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => ok(i); i.onerror = () => ok(null); i.src = u; });
 
 export function bodyOf(race, sex) {
+  if (race === 95 || race === 96) return { model: 218 + sex, body: `skyborne${sex ? 'female' : 'male'}_hd` };
   const r = BODY[race];
   return r ? { model: (race - 1) * 2 + 1 + sex, body: `${r}${sex ? 'female' : 'male'}_hd` } : null;
 }

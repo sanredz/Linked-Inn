@@ -58,11 +58,13 @@
     return shardCache[k];
   }
   const RSN = () => (H && H.rs && H.rs()) || null;
+  const RSI = { PvP: '0', Normal: '1', Roleplay: '2', 'Roleplay PvP': '3' };
   const lat = (r, id) => {
     const l = r && r.latest && r.latest[id], rs = RSN();
     if (!l || !rs || r.rsv) return l;
-    const v = l[5] && l[5][rs];
-    return v ? [v[0], v[1], v[2], v[3], null, l[5]] : null;
+    const k = RSI[rs], v = l[5] && (l[5][rs] || l[5][k]);
+    const ch = l[6] && l[6][k] != null ? l[6][k] : null;
+    return v ? [v[0], v[1], v[2], v[3], ch, l[5]] : null;
   };
   const REG = ['us', 'eu', 'kr', 'tw'];
   const REGC = { us: '#3987e5', eu: '#f8d36b', kr: '#d95926', tw: '#199e70' };

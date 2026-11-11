@@ -96,6 +96,58 @@
     const rs = RSN();
     return rs ? (sh.rs && (sh.rs[rs] || sh.rs[String(SETK[rs])])) || null : sh.i[id];
   };
+  const SELL = {};
+  const loadSell = (rg, id) => {
+    const k = rg + ':' + id;
+    SELL[k] = SELL[k] || fetch(LIVE + '/sell/' + rg + '/' + id).then((r) => r.json()).then((d) => d[id] || {}).catch(() => ({}));
+    return SELL[k];
+  };
+  const sellKeys = (hk) => {
+    if (hk) return (k) => k === hk;
+    const rs = RSN(), f = FACN();
+    const s = rs && SETK[rs] != null ? String(SETK[rs]) : null;
+    return (k) => (!s || k[0] === s) && (!f || k[1] === f[0]);
+  };
+  const STEPN = ['under 70%', '70–90%', '90–100%', '100–110%', '110–125%', '125–150%', 'over 150%'];
+  function balance(m) {
+    const L = m.querySelector('.mk-left'), R = m.querySelector('.mk-right'), kin = m.querySelector('.mk-kin > div');
+    if (!L || !R || !kin || !kin.isConnected) return;
+    const items = [...kin.children];
+    items.forEach((x) => { x.style.display = ''; });
+    kin.parentElement.style.display = '';
+    if (R.getBoundingClientRect().top > L.getBoundingClientRect().top + 4) return;
+    const cols = Math.max(1, Math.round(kin.getBoundingClientRect().width / Math.max(1, (items[0] || kin).getBoundingClientRect().width)));
+    let shown = items.length;
+    while (shown > cols && L.offsetHeight - R.offsetHeight > 30) {
+      const keep = Math.ceil(shown / cols) * cols - cols;
+      items.forEach((x, i) => { x.style.display = i >= keep ? 'none' : ''; });
+      shown = keep;
+    }
+  }
+  async function fillSell(box, rgs, id, local) {
+    const per = await Promise.all(rgs.map((x) => loadSell(x, id)));
+    const ok = sellKeys(local ? houseKey() : null), L = 4 + 2 * STEPN.length, c = new Array(L).fill(0);
+    per.forEach((m) => Object.entries(m).forEach(([k, v]) => { if (ok(k)) for (let j = 0; j < L; j++) c[j] += v[j] || 0; }));
+    if (!box.isConnected) return;
+    const S = STEPN.length, sold = c.slice(4, 4 + S), exp = c.slice(4 + S, 4 + 2 * S);
+    const n = c[0] + c[1] + c[2] + c[3], s0 = c[0] + c[1], p0 = n ? Math.round(100 * s0 / n) : null;
+    const rows = STEPN.map((lab, k) => {
+      const m = sold[k] + exp[k], p = m ? Math.round(100 * sold[k] / m) : null;
+      return `<div class="mk-lr${m ? '' : ' mk-l0'}"><span>${lab}</span><i class="mk-sb"><i style="width:${p || 0}%"></i></i><b>${p == null ? '–' : p + '%'}</b><small>${m ? H.fmt(sold[k]) + '/' + H.fmt(m) : ''}</small></div>`;
+    });
+    const ts = sold.reduce((a, x) => a + x, 0);
+    const nA = c[0] + c[2], nB = c[1] + c[3];
+    let mid = '';
+    if (nA && nB) {
+      const pa = Math.round(100 * c[0] / nA), pb = Math.round(100 * c[1] / nB), d = pa - pb;
+      mid = `<p class="mk-lm">${d > 0 ? `Priced above typical, it sells <b>${d} points less often</b> (${pb}% vs ${pa}%).` : `Priced above typical, it sells <b>just as often</b> (${pb}% vs ${pa}%).`}</p>`;
+    }
+    const head = n ? `<div class="mk-sl"><span>Overall</span><b>${p0}%</b><i class="mk-sb"><i style="width:${p0}%"></i></i><small>${H.fmt(s0)} of ${H.fmt(n)} sold</small></div>` : '';
+    const band = (lab, sd, e) => { const m = sd + e, p = m ? Math.round(100 * sd / m) : null; return `<div class="mk-sl"><span>${lab}</span><b>${p == null ? '–' : p + '%'}</b><i class="mk-sb"><i style="width:${p || 0}%"></i></i><small>${m ? `${H.fmt(sd)} of ${H.fmt(m)} sold` : 'none ended yet'}</small></div>`; };
+    const ladder = ts + exp.reduce((a, x) => a + x, 0) ? `<div class="mk-lh"><span>Listed at</span><span>sold</span></div>${rows.join('')}${mid}` : band('At or below typical price', c[0], c[2]) + band('Above typical price', c[1], c[3]);
+    box.innerHTML = `<h4>Does it sell? <small>last 7 days</small><i class="mk-qh" tabindex="0" role="note" aria-label="Share of finished auctions that sold instead of running out, by how their price compared with the typical price on the same auction house in the last hour they were listed. A cancelled auction counts as sold." data-hint="Share of finished auctions that sold instead of running out, by how their price compared with the typical price on the same auction house in the last hour they were listed. A cancelled auction counts as sold.">?</i></h4>${n ? head + ladder : '<p class="mk-sn">No auctions of this have ended in the last 7 days.</p>'}`;
+    box.hidden = false;
+  }
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const icon = (id) => { const c = MKT.cat[id]; const tp = window.ECON && ECON.tips && ECON.tips[id]; const ic = (c && c[2]) || (tp && tp[10]); return ic ? `assets/icons/${ic}.png` : H.UI('inv_misc_questionmark'); };
   const pctTxt = (v) => v == null ? '–' : (v > 0 ? '+' : '') + v.toFixed(Math.abs(v) < 10 ? 1 : 0) + '%';
@@ -312,14 +364,16 @@
     m.innerHTML = `<div class="mk-card" role="dialog" aria-label="${esc(c[0])}" style="--qc:${qc}"><button class="mk-x" aria-label="Close">×</button>
       <div class="mk-hero"><div class="mk-hero-ic"><img src="${icon(id)}" alt=""></div>
         <div class="mk-hero-tx"><h3>${esc(c[0])}</h3><div class="mk-chips">${chips.map((x) => `<span>${esc(x)}</span>`).join('')}</div></div>
-        <div class="mk-hero-px"><small>${ALL ? 'Average typical price · All regions' : 'Typical price · ' + esc((H.regionName || {})[rg] || rg.toUpperCase())}${RSN() ? ' · ' + esc(RSN()) : ''}${!ALL && rg === st.region && FACN() ? ' · ' + esc(FACN()) : ''}</small><b>${l ? H.coin(l[0]) : '<span class="mk-nl">Not listed right now</span>'}</b>${l ? `<span class="mk-pill ${cls(ch24)}">${pctTxt(ch24)} <i>24h</i></span>` : ''}
+        <div class="mk-hero-px"><small>${ALL ? 'Average typical price · All regions' : 'Typical price · ' + esc((H.regionName || {})[rg] || rg.toUpperCase())}${RSN() ? ' · ' + esc(RSN()) : ''}${!ALL && rg === st.region && FACN() ? ' · ' + esc(FACN()) : ''}<i class="mk-qh" tabindex="0" role="note" aria-label="The middle price per item of everything listed right now: half the listings are cheaper, half are dearer. A few silly prices barely move it." data-hint="The middle price per item of everything listed right now: half the listings are cheaper, half are dearer. A few silly prices barely move it.">?</i></small><b>${l ? H.coin(l[0]) : '<span class="mk-nl">Not listed right now</span>'}</b>${l ? `<span class="mk-pill ${cls(ch24)}">${pctTxt(ch24)} <i>24h</i></span>` : ''}
           ${ALL ? '' : `<button class="mk-add" data-cmp="${id}"><img src="${H.UI('inv_misc_note_01')}" alt="">Add to chart</button>`}</div></div>
       <div class="mk-stats">${stats.map(([ic, k, v]) => `<div><img src="${H.UI(ic)}" alt=""><span><small>${k}</small><b class="mk-sv">${v}</b></span></div>`).join('')}</div>
       <div class="mk-body"><div class="mk-left"><div class="mk-chead"><h4>Price history</h4><div class="mk-ranges">${RANGES.map(([k]) => `<button class="${k === st.range ? 'on' : ''}" data-mr="${k}">${k}</button>`).join('')}</div></div>
         <div class="mk-key">${ALL ? regs0.map((x) => `<span><i style="background:${REGC[x]}"></i>${x.toUpperCase()}</span>`).join('') + '<span class="mk-keyn">Typical price in each region</span>' : `<span><i style="background:${c[1] >= 2 ? qc : '#f8d36b'}"></i>Typical price</span><span><i style="background:#9aa3ad"></i>Cheapest listing</span>`}</div>
         <div class="mk-iplot"></div><div class="mk-vol"></div>${kinHtml}</div>
-        <div class="mk-right">${tip ? `<div class="mk-tip">${tip}</div>` : ''}<div class="mk-box mk-regs"><h4>Price in each region${facOn() ? ' <small>every house</small>' : ''}</h4><div>${regs}</div></div>${madeHtml}${usedHtml}</div></div></div>`;
+        <div class="mk-right">${tip ? `<div class="mk-tip">${tip}</div>` : ''}<div class="mk-box mk-sell" hidden></div>${madeHtml}${usedHtml}</div></div></div>`;
     document.body.appendChild(m);
+    balance(m);
+    fillSell(m.querySelector('.mk-sell'), ALL ? regs0 : [rg], id, !ALL && rg === st.region).then(() => balance(m));
     hideTip();
     const close = () => { m.remove(); st.open = null; document.removeEventListener('keydown', onKey); };
     const onKey = (e) => { if (e.key === 'Escape') close(); };

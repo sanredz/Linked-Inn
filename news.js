@@ -361,6 +361,14 @@
       .trim();
   }
 
+  const NL_DRAWBACK = /^(loses?|lost|consumes?|consumed|costs?|requires?|breaks?|broken|fails?|cancels?|cancell?ed|interrupts?|interrupted|shares?|incurs?|expires?|wastes?|wasted|drains?|limited|restricted|suffers?|dispell?ed|dispellable|resisted|dodged|parried|blocked|prevents?|ends?|locks?)$/i;
+  const NL_BENEFIT = /^(grants?|increases?|deals?|generates?|stacks?|benefits?|applies|apply|affects?|works?|provides?|gives?|heals?|restores?|refunds?|procs?|causes?|hits?|crits?|usable|castable|scales?|ignores?|awards?|activates?)$/i;
+  function noLonger(rest) {
+    if (/^no longer (?:triggers?|incurs?|on|affected by) (?:a |the )?global cooldown\b/i.test(rest)) return 'buff';
+    const m = /^no longer\s+(?:can\s+)?(?:be\s+|is\s+|are\s+|has\s+|have\s+)?(?:a\s+|an\s+|the\s+)?([a-z]+)/i.exec(rest), w = m ? m[1] : '';
+    if (/^(cooldown|cost|penalty|cap|limit|requirement)$/i.test(w)) return 'buff';
+    return NL_DRAWBACK.test(w) ? 'buff' : NL_BENEFIT.test(w) ? 'nerf' : 'rem';
+  }
   function digestLine(text) {
     const t = text.replace(/\s+/g, ' ').trim();
     if (/^developers?['’`]?s?['’`]? notes?:?/i.test(t)) return { type: 'note', short: t.replace(/^developers?['’`]?s?['’`]? notes?:?\s*/i, ''), text: t, kids: [] };
@@ -379,7 +387,8 @@
     let type = 'change', chip = '', from = null, to = null;
     if (/^(fixed|resolved|corrected|addressed)\b/i.test(t) || /\b(now correctly|will now correctly|no longer incorrectly|should no longer|should now)\b/i.test(t)) type = 'fix';
     else if (forcedNew || /^(new|added|introduced|this is a new)\b/i.test(rest) || /^(new|added)\b/i.test(t) || /\b(has|have) (a|an) new\b/i.test(t)) type = 'new';
-    else if (/^(removed|this (talent|spell|ability) (is|has been) removed)\b/i.test(rest) || (/^no longer\b/i.test(rest) && !/\binstead\b/i.test(t)) || (t.length < 90 && /\bremoved\.?$/i.test(t))) type = 'rem';
+    else if (/^no longer\b/i.test(rest) && !/\binstead\b/i.test(t)) type = noLonger(rest);
+    else if (/^(removed|this (talent|spell|ability) (is|has been) removed)\b/i.test(rest) || (t.length < 90 && /\bremoved\.?$/i.test(t))) type = 'rem';
     if ((m = RE_WAS.exec(t))) { to = m[1]; from = m[2]; }
     else if ((m = RE_UP.exec(t))) { to = m[1]; from = m[3]; }
     else if ((m = RE_PLACE.exec(t))) { to = m[1]; from = m[2]; }

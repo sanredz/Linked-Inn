@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.3] - 2026-11-13
+
+- Fixed: Linked Inn could close the bags of Bagnon and other bag addons while
+  it looked up professions in the background. Those lookups are now completely
+  silent to the rest of your UI; only your own profession opening and closing
+  reaches other addons.
+
 ## [1.6.2] - 2026-11-07
 
 - Fixed: after opening a profession, the game could block Linked Inn with

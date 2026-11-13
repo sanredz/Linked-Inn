@@ -728,7 +728,7 @@ for _ = 1, 300 do
 end
 check(loads == 1, "the professions window is loaded before the first automatic read", loads)
 check(#alphas == 0 or math.max(table.unpack(alphas)) == 0, "the profession window stays invisible during automatic reads", alphas[1])
-check(#alphas > 0 and clickable == nil, "while hidden it's shrunk to a speck and ignores the mouse, so it never blocks your clicks", clickable)
+check(clickable == nil, "it is never shown for a read, and if it ever were it would be a speck that ignores the mouse", clickable)
 check(not ProfessionsFrame:IsShown() or (ProfessionsFrame:GetScale() == 1 and ProfessionsFrame:IsMouseEnabled()), "afterwards its size and mouse are as before")
 ProfessionsFrame:Show()
 check(ProfessionsFrame:GetAlpha() ~= 0 and ProfessionsFrame:GetScale() == 1 and ProfessionsFrame:IsMouseEnabled(), "opening it yourself shows it normally", ProfessionsFrame:GetScale())
@@ -834,6 +834,7 @@ do
 		if e.m:find("open it again", 1, true) then asked = true end
 	end
 	check(not ProfessionsFrame:IsShown() and asked, "Linked Inn never shows Blizzard's window itself; an open it muted asks you to open it again")
+	Advance(1.5)
 	check(W.UIHears() and not W.trade, "and the window is unmuted and the empty session closed")
 	W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
 	Fire("TRADE_SKILL_SHOW")
@@ -1892,7 +1893,13 @@ do
 	for _, f in ipairs({ GetFramesRegisteredForEvent("TRADE_SKILL_SHOW") }) do
 		if f == ProfessionsFrame then listens = true end
 	end
-	check(listens, "a read that answers with no recipes never leaves the profession window deaf")
+	check(not listens, "after a read the window stays muted, so no late answer can reach it")
+	Fire("UNIT_SPELLCAST_SENT", "player", "", "cast-1", 2656)
+	listens = false
+	for _, f in ipairs({ GetFramesRegisteredForEvent("TRADE_SKILL_SHOW") }) do
+		if f == ProfessionsFrame then listens = true end
+	end
+	check(listens, "a read that answers with no recipes never leaves the profession window deaf to your own cast")
 	check(LI.Reader.Idle(true), "and it doesn't stay stuck")
 	ProfessionsFrame:UnregisterEvent("TRADE_SKILL_SHOW")
 end
@@ -2078,8 +2085,16 @@ do
 	check(not W.UIHears(), "a read that got no answer keeps the window muted for late replies")
 	SetItemRef("trade:Player-1-CCC:2259:171", "[Alchemy]", "LeftButton")
 	check(W.UIHears(), "clicking a profession link unmutes it at once")
-	Advance(80)
-	check(W.UIHears(), "and with nothing being read it stays unmuted")
+	local sent = #W.hyperlinks
+	for _ = 1, 80 do
+		Advance(1)
+		if #W.hyperlinks == sent and not W.UIHears() then
+			check(false, "it stays unmuted until the next background read")
+			break
+		end
+		if #W.hyperlinks > sent then break end
+	end
+	check(#W.hyperlinks == sent or not W.UIHears(), "and the next background read mutes it before it is sent")
 end
 
 do
@@ -2114,7 +2129,7 @@ do
 	for _, d in ipairs(drawn) do
 		if d then seen = true end
 	end
-	check(#drawn > 0 and not seen, "a reply that comes after the window is unmuted again is hidden before it's ever drawn", #drawn)
+	check(#drawn == 0, "a reply over a minute late never reaches Blizzard's window at all, so it is never drawn", #drawn)
 	check(not ProfessionsFrame:IsShown() and not W.trade, "and closed again")
 	check(ProfessionsFrame:GetAlpha() == 1 and ProfessionsFrame:GetScale() == 1, "with the window restored for next time")
 	W.autoWorks, W.replyDelay = false, nil
@@ -3939,6 +3954,60 @@ do
 	ProfessionsFrame:UnregisterEvent("TRADE_SKILL_SHOW")
 	ProfessionsFrame:UnregisterEvent("TRADE_SKILL_LIST_UPDATE")
 	W.ownTrade, W.openedLines, W.replyDelay = nil, nil, nil
+end
+
+do
+	Setup()
+	Boot()
+	Advance(5)
+	ProfessionsFrame_LoadUI()
+	local EVENTS = { "TRADE_SKILL_SHOW", "TRADE_SKILL_CLOSE", "TRADE_SKILL_LIST_UPDATE", "TRADE_SKILL_DATA_SOURCE_CHANGING", "TRADE_SKILL_DATA_SOURCE_CHANGED", "TRADE_SKILL_NAME_UPDATE", "TRADE_SKILL_DETAILS_UPDATE" }
+	local got = {}
+	local bags = CreateFrame("Frame")
+	for _, e in ipairs(EVENTS) do bags:RegisterEvent(e) end
+	bags:SetScript("OnEvent", function(_, e) got[#got + 1] = e end)
+	W.autoWorks = true
+	W.linkData["trade:Player-1-AAA:3908:197"] = { linkedName = "Anna Smith", prof = TAILORING, recipes = TAILOR_RECIPES }
+	W.linkData["trade:Player-1-CCC:2259:171"] = { linkedName = "Cora Vale", prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-AAA", 3908, 197, "Tailoring"), "Anna Smith-TestRealm", "Player-1-AAA", "Trade - City")
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-CCC", 2259, 171, "Alchemy"), "Cora Vale-TestRealm", "Player-1-CCC", "Trade - City")
+	Advance(15)
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-BBB", 3908, 197, "Tailoring"), "Bob Stone-TestRealm", "Player-1-BBB", "Trade - City")
+	Advance(10)
+	W.replyDelay = 70
+	W.linkData["trade:Player-1-DDD:3908:197"] = { linkedName = "Dan Slow", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-DDD", 3908, 197, "Tailoring"), "Dan Slow-TestRealm", "Player-1-DDD", "Trade - City")
+	Advance(90)
+	W.replyDelay = 1
+	W.linkData["trade:Player-1-EEE:3908:197"] = { linkedName = "Eve Quick", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-EEE", 3908, 197, "Tailoring"), "Eve Quick-TestRealm", "Player-1-EEE", "Trade - City")
+	for _ = 1, 40 do
+		Advance(0.1)
+		if W.hyperlinks[#W.hyperlinks] == "trade:Player-1-EEE:3908:197" then break end
+	end
+	Advance(0.3)
+	GetMouseFoci = function() return { UIParent } end
+	Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
+	GetMouseFoci = nil
+	Advance(15)
+	W.autoWorks, W.replyDelay = false, nil
+	check(LI.crafters["Anna Smith-TestRealm"].profs.tailoring.recipes and LI.crafters["Cora Vale-TestRealm"].profs.alchemy.recipes, "background reads, a no-reply, a reply over a minute late and a click mid-read all ran")
+	check(#got == 0, "a bag addon like Bagnon never hears a single profession event from any of it, so it never opens or closes your bags", table.concat(got, ","))
+	Fire("UNIT_SPELLCAST_SENT", "player", "", "cast-1", 2656)
+	W.trade = { linked = false, prof = ALCHEMY, recipes = ALCHEMY_RECIPES }
+	Fire("TRADE_SKILL_SHOW")
+	Advance(0.5)
+	check(got[1] == "TRADE_SKILL_SHOW", "your own profession still reaches it", got[1])
+	C_TradeSkillUI.CloseTradeSkill()
+	check(got[#got] == "TRADE_SKILL_CLOSE", "and so does closing it", got[#got])
+	Advance(3)
+	local mark = #got
+	W.autoWorks = true
+	W.linkData["trade:Player-1-FFF:3908:197"] = { linkedName = "Fay After", prof = TAILORING, recipes = TAILOR_RECIPES }
+	Say("CHAT_MSG_CHANNEL", TradeLink("Player-1-FFF", 3908, 197, "Tailoring"), "Fay After-TestRealm", "Player-1-FFF", "Trade - City")
+	Advance(15)
+	W.autoWorks = false
+	check(LI.crafters["Fay After-TestRealm"].profs.tailoring.recipes and #got == mark, "and reads after that are silent again", table.concat(got, ",", mark + 1))
 end
 
 print(string.format("\n%d passed, %d failed, %d errors", pass, fail, #W.errors))

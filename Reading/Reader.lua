@@ -29,6 +29,7 @@ local restUntil = 0
 local lateAt = -60
 local UserFrame
 local AfterCollect
+local CloseSession
 local userShown = false
 
 local queue = {}
@@ -53,7 +54,6 @@ local USER_CLICK = 5
 local OWN_TIMEOUT = 4
 local OWN_LATE = 60
 local INPUT_WINDOW = 1.5
-local QUIET_GIVE_UP = 25
 local ownAsked = {}
 local userInputAt = -60
 local lastSentAt = -60
@@ -372,9 +372,7 @@ end
 local function CloseHidden()
 	if concealed or ours then
 		ours = false
-		if C_TradeSkillUI and C_TradeSkillUI.CloseTradeSkill then
-			LI.Try(C_TradeSkillUI.CloseTradeSkill)
-		end
+		CloseSession()
 		Reveal()
 	end
 end
@@ -454,13 +452,12 @@ EndScan = function(force)
 end
 
 local silenced
-local QUIET_EVENTS = { "TRADE_SKILL_SHOW" }
-local QUIET_HOLD = 60
-local holdUntil = 0
+local QUIET_EVENTS = { "TRADE_SKILL_SHOW", "TRADE_SKILL_CLOSE", "TRADE_SKILL_LIST_UPDATE", "TRADE_SKILL_DATA_SOURCE_CHANGING", "TRADE_SKILL_DATA_SOURCE_CHANGED", "TRADE_SKILL_NAME_UPDATE", "TRADE_SKILL_DETAILS_UPDATE" }
 local quietTries, quietWorks, quietOff = 0, 0, false
+local restoreAfterClose = false
 
 local function Silence(startup)
-	if quietOff or not GetFramesRegisteredForEvent then
+	if not GetFramesRegisteredForEvent then
 		return
 	end
 	if not startup then
@@ -490,16 +487,28 @@ local function Unsilence()
 end
 Reader.Unsilence = Unsilence
 
-local function Hold()
-	if not silenced then
-		return
-	end
-	holdUntil = Now() + QUIET_HOLD
-	LI.After(QUIET_HOLD + 0.1, function()
-		if not pending and Now() >= holdUntil then
+local function Restore()
+	if restoreAfterClose then
+		restoreAfterClose = false
+		if not pending then
 			Unsilence()
 		end
-	end)
+	end
+end
+
+CloseSession = function()
+	local api = C_TradeSkillUI
+	if not (api and api.CloseTradeSkill) then
+		return
+	end
+	if not silenced and not FrameShown() then
+		Silence(true)
+		restoreAfterClose = silenced ~= nil
+	end
+	LI.Try(api.CloseTradeSkill)
+	if restoreAfterClose then
+		LI.After(1, Restore)
+	end
 end
 
 function Reader.SilentReads()
@@ -524,15 +533,6 @@ local function Finish(job, outcome)
 		if LI.db then
 			LI.db.quietOk = true
 		end
-	end
-	if not quietOff and quietWorks == 0 and quietTries >= QUIET_GIVE_UP and not (LI.db and LI.db.quietOk) then
-		quietOff = true
-		LI.Log("Quiet reading got no answers; reading with the hidden window instead")
-	end
-	if quietOff then
-		Unsilence()
-	else
-		Hold()
 	end
 	if job.probe then
 		pending = nil
@@ -646,7 +646,6 @@ local function Yield(why)
 	end
 	pending = nil
 	lastDone = Now()
-	Hold()
 	local again = {}
 	for k, v in pairs(job) do
 		again[k] = v
@@ -663,7 +662,6 @@ end
 local function UserOpened()
 	ours = false
 	userShown = true
-	local api = C_TradeSkillUI
 	ownAt = Now()
 	local missed = silenced ~= nil
 	Unsilence()
@@ -674,9 +672,7 @@ local function UserOpened()
 			AfterCollect(function()
 				if tradeOpen and userShown and not FrameShown() then
 					ours = false
-					if api and api.CloseTradeSkill then
-						LI.Try(api.CloseTradeSkill)
-					end
+					CloseSession()
 					LI.Log("Your profession opened while reading was muted; asked you to open it again")
 					LI.Print("Linked Inn was reading a profession in the background. Please open your profession again.")
 				end
@@ -693,9 +689,8 @@ local function ClearForUser()
 	end
 	ours = false
 	Yield("Stepped aside for your click")
-	local api = C_TradeSkillUI
-	if hidden and api and api.CloseTradeSkill then
-		LI.Try(api.CloseTradeSkill)
+	if hidden then
+		CloseSession()
 	end
 	Reveal()
 	restUntil = math.max(restUntil, Now() + REST)
@@ -1028,7 +1023,6 @@ function Reader.CancelBackground()
 		lastDone = Now()
 		ours = true
 		CloseHidden()
-		Hold()
 		dropped = dropped + 1
 	end
 	if scanRun then
@@ -1346,9 +1340,7 @@ Store = function(api, base, name, linked, linkedName, profKey, list)
 				end
 				LI.Log(string.format("Read %s's %s automatically (%d recipes)", LI.ShortName(key), name, count))
 			end
-			if api.CloseTradeSkill then
-				LI.Try(api.CloseTradeSkill)
-			end
+			CloseSession()
 			Reveal()
 			Finish(job, "ok")
 		else
@@ -1622,7 +1614,13 @@ LI.On("GLOBAL_MOUSE_DOWN", function()
 	end
 end)
 LI.On("UNIT_SPELLCAST_SENT", function(unit, _, _, spell)
-	if LI.Safe(unit) == "player" and ProfessionSpell(LI.Safe(spell)) then
+	if LI.Safe(unit) ~= "player" then
+		return
+	end
+	local id = LI.Safe(spell)
+	if id == nil then
+		Unsilence()
+	elseif ProfessionSpell(id) then
 		userInputAt = Now()
 		Unsilence()
 		ClearForUser()
@@ -1648,7 +1646,6 @@ end)
 
 LI.On("PLAYER_LOGIN", function()
 	Silence(true)
-	Hold()
 end)
 
 LI.On("PLAYER_LOGOUT", function()
@@ -1666,6 +1663,9 @@ LI.On("TRADE_SKILL_CLOSE", function()
 	userShown = false
 	tradeOpen = false
 	ours = false
+	if restoreAfterClose then
+		LI.After(0, Restore)
+	end
 	LI.After(0.01, function()
 		Kick()
 	end)

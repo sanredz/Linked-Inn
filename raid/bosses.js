@@ -292,13 +292,14 @@ export const RAIDS = {
     finale: 'Ossirian',
     milestones: AQ_MILESTONES,
     pace: 1.8,
-    enrage: .86,
-    hit: 1.16,
+    enrage: .82,
+    hit: 1.25,
     bonusSpoils: 1,
+    spoils: 4,
     bosses: [
       {
-        id: 'kurinnaxx', short: 'Kurinnaxx', name: 'Kurinnaxx', model: 15742, health: 430000, enrageBy: .78, armor: 3795, resist: { arcane: 140, fire: 140, frost: 140 }, melee: [1700, 2250, 2],
-        tip: 'Sand-hardened scales turn spells aside, but steel bites deep. Every Mortal Wound cuts the healing on your tank a little more, and he enrages at the end.',
+        id: 'kurinnaxx', short: 'Kurinnaxx', name: 'Kurinnaxx', model: 15742, health: 430000, enrageBy: .78, armor: 3795, resist: { arcane: 210, fire: 210, frost: 210 }, melee: [1700, 2250, 2],
+        tip: 'Sand-hardened scales turn Fire, Frost and Arcane aside, while steel, Shadow and Nature bite deep. Every Mortal Wound cuts the healing on your tank a little more, and he enrages at the end.',
         abilities: [
           { n: 'Mortal Wound', first: 5, every: [6, 7], school: PHYS, dmg: [600, 800], to: 'tank', curse: { heal: .9 }, dur: 15 },
           { n: 'Sand Trap', first: 10, every: [12, 15], school: NATURE, dmg: [800, 1000], to: 'random', stun: 3 },
@@ -317,7 +318,7 @@ export const RAIDS = {
         ],
       },
       {
-        id: 'moam', short: 'Moam', name: 'Moam', model: 15392, health: 760000, enrageBy: 1.26, armor: 5200, resist: { arcane: 186 }, melee: [1850, 2450, 2.2], drop: { id: 21137, kind: 'relic', name: 'Blue Scepter Shard', icon: 134133, chance: .06 },
+        id: 'moam', short: 'Moam', name: 'Moam', model: 15392, health: 760000, enrageBy: 1.26, armor: 6000, resist: { arcane: 186 }, melee: [1850, 2450, 2.2], drop: { id: 21137, kind: 'relic', name: 'Blue Scepter Shard', icon: 134133, chance: .06 },
         tip: 'A stone giant with the thickest hide in the Ruins, so spells beat steel. He drains your healer, turns to stone while his Mana Fiends blast the party, and erupts with all the mana he stole.',
         abilities: [
           { n: 'Drain Mana', first: 6, every: [6, 6], burn: { per: 200, every: 1, ticks: 1 } },
@@ -326,8 +327,8 @@ export const RAIDS = {
         ],
       },
       {
-        id: 'buru', short: 'Buru', name: 'Buru the Gorger', model: 15654, health: 700000, enrageBy: .88, armor: 3795, resist: { arcane: 140, fire: 140, frost: 140 }, melee: [1900, 2500, 2.2],
-        tip: 'His carapace shrugs off spells, so weapons do the work. Hit his eggs first: each one that bursts tears a chunk out of Buru. At the end he sheds his shell, takes more damage and spreads Creeping Plague.',
+        id: 'buru', short: 'Buru', name: 'Buru the Gorger', model: 15654, health: 700000, enrageBy: .88, armor: 3795, resist: { fire: 190, shadow: 140, arcane: 140 }, melee: [1900, 2500, 2.2],
+        tip: 'His carapace shrugs off Fire and Shadow, so weapons, Frost and Nature do the work. Hit his eggs first: each one that bursts tears a chunk out of Buru. At the end he sheds his shell, takes more damage and spreads Creeping Plague.',
         adds: { n: 'Buru Egg', count: 4, health: 36000, melee: [0, 0, 999], armor: 0, death: { n: 'Egg Burst', school: NATURE, dmg: [500, 700], to: 'party', bossDamage: .06 } },
         abilities: [
           { n: 'Dismember', first: 6, every: [8, 10], school: PHYS, dot: { n: 'Dismember', school: PHYS, per: 280, every: 2, ticks: 6 }, to: 'tank' },

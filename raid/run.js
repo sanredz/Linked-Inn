@@ -34,7 +34,7 @@ function fits(pool, hero, id, wild = false) {
   if (style === 'spell') return !it[8];
   return !(it[8] && FERAL.test(hero.build)) && !it[12].some((l) => /\bspells?\b|healing/i.test(l));
 }
-const FLOORS = [1.01, 1.01, .85, .6];
+const FLOORS = [1.01, 1.01, .85, .6, .9, .7];
 const SPOIL_RARITY = 4, SPOIL_FLOOR = 62, SPOIL_RISE = 1.6, SPOIL_MEAN = 5, SPOIL_DRIFT = .9, SPOIL_SPREAD = 7, SPOIL_TAIL = .015, HEROIC_BUMP = 4;
 const DRAFT_TIERS = [['b', .62], ['c', .1], ['e', .24], ['t', .04]];
 const JACKPOT = .025, JACKPOT_TIERS = [['e', .5], ['t', .4], ['l', .1]], DRAFT_CAP = 68;
@@ -283,9 +283,9 @@ function guarantee(pool, run, out, taken, r) {
 
 function rollSpoils(pool, run) {
   const r = rng(hash(run.seed, 'spoils', run.boss, run.rolled)), out = [], taken = [];
-  const order = shuffled([0, 1, 2, 0, 1, 2], r);
+  const order = shuffled([0, 1, 2, 0, 1, 2], r), cap = (RAIDS[run.raid] && RAIDS[run.raid].spoils) || SPOILS;
   for (const who of order) {
-    if (out.length >= SPOILS) break;
+    if (out.length >= cap) break;
     const hero = run.heroes[who], used = out.filter((o) => o.hero === who).map((o) => o.slot);
     for (const slot of shuffled(SLOTS, r)) {
       if (used.includes(slot)) continue;
@@ -393,7 +393,7 @@ export const killed = (run) => run.results.filter((r) => r.won).length;
 export const dropsOf = (run) => run.results.map((r, i) => { const b = bossAt(run, i); return b && (r.won || b.endless) && b.drop; }).filter((m, i) => m && rng(hash(run.seed, 'mount', i))() < m.chance);
 export const INGOT = 17203, INGOTS = 8;
 export const SCEPTER = 21175, SHARDS = [21138, 21139, 21137];
-export const FORGE = { 19019: { needs: [18563, 18564], trial: 'mc', score: 120000 }, 17182: { needs: [17204], ingots: INGOTS, trial: 'mc', score: 125000 }, [SCEPTER]: { needs: SHARDS, trial: 'aq20', score: 110000 } };
+export const FORGE = { 19019: { needs: [18563, 18564], trial: 'mc', score: 120000 }, 17182: { needs: [17204], ingots: INGOTS, trial: 'mc', score: 125000 }, [SCEPTER]: { needs: SHARDS, trial: 'aq20', score: 125000 } };
 const trialMet = (run, need) => run.results.some((r, i) => { const b = bossAt(run, i); return b && b.endless && (r.score || 0) >= need; });
 
 export function collect(runs, base = {}) {

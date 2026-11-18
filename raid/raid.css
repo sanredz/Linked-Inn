@@ -45,6 +45,7 @@
 .rblurb { margin: 0; font-size: 15px; color: #e6d9bc; }
 .roffers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
 .roffers.three, .roffers.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.roffers.six { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .roffer[data-look] { cursor: pointer; }
 .roffer { display: flex; flex-direction: column; gap: 5px; min-width: 0; padding: 9px; border-radius: 8px; border: 1px solid #5a4620; background: linear-gradient(rgba(30, 22, 14, .95), rgba(10, 8, 6, .95)); transition: border-color .1s, box-shadow .1s; }
 .roffer:hover { border-color: #f8d36b; box-shadow: 0 0 14px rgba(248, 211, 107, .28); }
@@ -385,6 +386,7 @@ body.raidrun .banner[data-screen="raid"] { display: none; }
 .rcast[hidden] { display: none; }
 @media (max-width: 860px) {
   .rmain { grid-template-columns: minmax(0, 1fr); }
+  .roffers.six { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rstage { order: 2; }
   #raid[data-step="fight"] .rstage { order: 0; }
 }
@@ -394,7 +396,7 @@ body.raidrun .banner[data-screen="raid"] { display: none; }
   .rhero img, .rhero > em { width: 30px; height: 30px; }
   .rline { font-size: 11px; gap: 0 6px; }
   .rladder i { width: 24px; height: 24px; font-size: 12px; }
-  .roffers, .roffers.three, .roffers.four { grid-template-columns: minmax(0, 1fr); }
+  .roffers, .roffers.three, .roffers.four, .roffers.six { grid-template-columns: minmax(0, 1fr); }
   .rsides, .rsides.three { grid-template-columns: minmax(0, 1fr); }
   .rpickspecs { gap: 6px; }
   .rpickspecs button { min-height: 50px; padding: 6px 2px; font: 14px/1.15 "Friz", serif; }

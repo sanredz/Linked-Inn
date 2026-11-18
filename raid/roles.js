@@ -26,7 +26,7 @@ export const TUNE = {
 };
 export const TUNE3 = { tank: { WARRIOR: { taken: .8 }, PALADIN: { taken: .8 } } };
 export const TUNE4 = { heal: { SHAMAN: { heal: 1.2 } } };
-export const RAID_TUNE = { mc: { surv: 1.3, fury: 1.22, destro: 1.25, mut: 1.22, ret: 1.22, fire: 1.04, ele: 1.18, arms: 1.1, enh: 1.06, demo: 1.1, shock: 1.08, bm: 1.07, afflic: 1.05, combat: 1.04, shadow: 1.04 } };
+export const RAID_TUNE = { aq20: { ele: 1.2, moon: 1.05, surv: 1.2, mm: 1.06, bm: 1.1, ret: 1.16, fury: 1.2, shock: 1.12, enh: 1.02, arms: 1.12, shadow: 1.12, destro: 1.08, frost: .94, arcane: .94, fire: .97, cat: .92, combat: .96 }, mc: { surv: 1.3, fury: 1.22, destro: 1.25, mut: 1.22, ret: 1.22, fire: 1.04, ele: 1.18, arms: 1.1, enh: 1.06, demo: 1.1, shock: 1.08, bm: 1.07, afflic: 1.05, combat: 1.04, shadow: 1.04 } };
 const tuned = (table, role, h) => (h.v >= 2 ? { ...table[h.cls], ...TUNE[role][h.cls], ...(h.v >= 3 && TUNE3[role] && TUNE3[role][h.cls]), ...(h.v >= 4 && TUNE4[role] && TUNE4[role][h.cls]) } : table[h.cls]);
 
 const TARGET_DPS = 285, EVENNESS = .8;

@@ -7,6 +7,7 @@ import { resultHtml } from '../pvp/arena.js';
 import { CLASS_COLOR } from '../draft/core.js';
 import { bindName, heroName, nameField, nameOk } from '../pvp/name.js';
 import { goalsHtml, loadWar } from '../gates.js';
+import { shouldShow, playOpening } from './aqopen.js';
 import { HEROIC, CLASS_NAME, DRAFT_PICKS, FORGE, INGOT, INGOTS, SCEPTER, SHARDS, collect, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, receivers, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js';
 
 const KEY = 'raidRun', WHO = 'gauntletWho';
@@ -258,7 +259,15 @@ let war = null;
 const opened = (id) => !!(war && war.raid === id && war.open);
 const LIVE = () => ['mc', 'zg', ...UPCOMING.map(([id]) => id).filter(opened)], SOON = () => UPCOMING.filter(([id]) => !opened(id));
 const PLAYABLE = () => [...LIVE(), ...(TEST || (war && war.early) ? SOON().map(([id]) => id) : [])];
-loadWar().then((w) => { war = w; if (root && !run) render(); });
+loadWar().then((w) => { war = w; warDone = true; if (root && !run) render(); maybeOpening(); });
+let openingShown = false, warDone = false;
+function maybeOpening() {
+  const forced = new URLSearchParams(location.search).has('aqopen');
+  if (openingShown || !root || !warDone || (!forced && (!war || !shouldShow(war)))) return;
+  openingShown = true;
+  if (!document.querySelector('link[href$="aqopen.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/aqopen.css">');
+  setTimeout(() => playOpening(war || { goals: [] }, { onEnter: () => { const b = root && root.querySelector('[data-act="begin"][data-raid="aq20"]'); if (b) b.click(); } }), 500);
+}
 
 function introHtml() {
   const saved = load();
@@ -313,7 +322,7 @@ function bossHtml() {
 function spoilsHtml() {
   offers = offers || spoilOffers(pool, run);
   const boon = boonOffer(pool, run), b = boon && boonById(boon);
-  return `<div class="gpanel"><div class="rtitle"><div><h3>Spoils <em>${run.spoilsLeft > 1 ? `choose ${run.spoilsLeft} of these` : 'choose 1'}</em></h3></div><button class="gmini" data-act="reroll" ${run.rerolls ? '' : 'disabled'}>Reroll (${run.rerolls} left)</button></div> <div class="roffers four">${b ? `<div class="roffer rboon"><div class="rlook"><span class="rtxt"><small>Boon for this run</small><b>${esc(b.name)}</b><span class="rboontext">${esc(b.text)}</span></span></div><button class="gmini rtake" data-boon="${b.id}">Take</button></div>` : ''}${offers.map((o) => offerHtml(o, true)).join('')}</div><button class="gskip" data-act="pass">${run.spoilsLeft > 1 ? 'Take nothing' : 'Done'}</button></div>`;
+  return `<div class="gpanel"><div class="rtitle"><div><h3>Spoils <em>${run.spoilsLeft > 1 ? `choose ${run.spoilsLeft} of these` : 'choose 1'}</em></h3></div><button class="gmini" data-act="reroll" ${run.rerolls ? '' : 'disabled'}>Reroll (${run.rerolls} left)</button></div> <div class="roffers ${offers.length + (b ? 1 : 0) > 4 ? 'six' : 'four'}">${b ? `<div class="roffer rboon"><div class="rlook"><span class="rtxt"><small>Boon for this run</small><b>${esc(b.name)}</b><span class="rboontext">${esc(b.text)}</span></span></div><button class="gmini rtake" data-boon="${b.id}">Take</button></div>` : ''}${offers.map((o) => offerHtml(o, true)).join('')}</div><button class="gskip" data-act="pass">${run.spoilsLeft > 1 ? 'Take nothing' : 'Done'}</button></div>`;
 }
 
 function bossTable() {
@@ -579,5 +588,6 @@ export async function openRaid(data, host) {
   render();
   showHero();
   loadBoard();
+  maybeOpening();
   window.raid = { scene, get run() { return run; }, set run(v) { run = v; }, render };
 }

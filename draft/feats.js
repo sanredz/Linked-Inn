@@ -143,7 +143,7 @@ export function forgeSteps(stats, item) {
   const n = (id) => count(stats, id);
   const trial = (id) => !!(stats.forge && stats.forge[id] && (stats.forge[id].trial || stats.forge[id].ready));
   if (item.id === 19019) return [['Left Binding of the Windseeker', n(18563) > 0], ['Right Binding of the Windseeker', n(18564) > 0], ['Deal 120,000 damage to Ragnaros with both Bindings', trial(19019)]];
-  if (item.id === 21175) return [['Red Scepter Shard', n(21138) > 0], ['Blue Scepter Shard', n(21137) > 0], ['Green Scepter Shard', n(21139) > 0], ['Deal 110,000 damage to Ossirian with all three Shards', trial(21175)]];
+  if (item.id === 21175) return [['Red Scepter Shard', n(21138) > 0], ['Blue Scepter Shard', n(21137) > 0], ['Green Scepter Shard', n(21139) > 0], ['Deal 125,000 damage to Ossirian with all three Shards', trial(21175)]];
   if (item.id === 17182) return [['Eye of Sulfuras', n(17204) > 0], [`Sulfuron Ingots ${Math.min(n(17203), 8)} of 8`, n(17203) >= 8], ['Deal 125,000 damage to Ragnaros with the Eye', trial(17182)]];
   return [];
 }

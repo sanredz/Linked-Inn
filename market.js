@@ -297,10 +297,10 @@
     const r = R(), words = q.toLowerCase().split(/\s+/).filter(Boolean), L = st.all ? latAll : (i) => lat(r, i);
     if (!words.length) return '';
     let hits = Object.entries(MKT.cat).filter(([, c]) => words.every((w) => c[0].toLowerCase().includes(w)))
-      .map(([id, c]) => [+id, c, L(id)]).filter((x) => !RSN() || x[2]);
+      .map(([id, c]) => [+id, c, L(id)]);
     const ql = q.trim().toLowerCase();
     const rank = (n) => { n = n.toLowerCase(); return n === ql ? 0 : n.startsWith(ql) ? 1 : n.split(/\s+/).some((w) => w.startsWith(words[0])) ? 2 : 3; };
-    hits.sort((a, b) => rank(a[1][0]) - rank(b[1][0]) || ((b[2] ? b[2][3] : 0) - (a[2] ? a[2][3] : 0)));
+    hits.sort((a, b) => rank(a[1][0]) - rank(b[1][0]) || (b[2] ? 1 : 0) - (a[2] ? 1 : 0) || ((b[2] ? b[2][3] : 0) - (a[2] ? a[2][3] : 0)));
     hits.splice(8);
     if (!hits.length) return '<div class="mk-none">No item by that name on the auction house.</div>';
     return hits.map(([id, c, l]) => `<button class="mk-hit" data-open="${id}" style="--qc:${QC[c[1]] || '#fff'}"><img src="${icon(id)}" alt=""><span class="mk-nm">${esc(c[0])}</span><span class="mk-pr">${l ? H.coin(l[0]) : '<small>not listed now</small>'}</span><span class="mk-ch ${cls(l && l[4])}">${l ? pctTxt(l[4]) : ''}</span></button>`).join('');

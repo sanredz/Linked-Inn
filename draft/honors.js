@@ -1,17 +1,4 @@
-export const HONORS = [
-  {
-    id: 'vanguard', share: '0073307c04d784a9', who: 'Shacross', title: 'Vanguard of the War Effort', short: 'Vanguard', theme: 'crimson', icon: 135955,
-    line: 'No hero struck harder at Ragnaros and Hakkar. The road to Ahn\'Qiraj was cut by this hand more than any other.',
-    facts: [['14.4M', 'damage toward the war effort'], ['149', 'final stands'], ['#1', 'on the Molten Core board']],
-    at: 'Bestowed in the Classic season',
-  },
-  {
-    id: 'tireless', share: '28939f233dab6176', who: 'Soule', title: 'the Tireless', short: 'Tireless', theme: 'azure', icon: 134376,
-    line: 'Walked into the Inn and never sat down. A hundred runs through every mode in the first two days.',
-    facts: [['100', 'runs in two days'], ['71', 'raids fought'], ['21', 'runs in a single evening']],
-    at: 'Bestowed in the Classic season',
-  },
-];
+export const HONORS = [];
 
 const PREVIEW = /^(localhost|127\.0\.0\.1|azeroth-preview\.pages\.dev|[\w-]+\.azeroth-preview\.pages\.dev)$/.test(location.hostname);
 const forced = () => { if (!PREVIEW) return null; const q = new URLSearchParams(location.search).get('honor'); return q && HONORS.find((h) => h.id === q) || null; };

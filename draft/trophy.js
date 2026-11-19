@@ -442,7 +442,7 @@ class Hall {
 
 let open = null;
 
-export async function openTrophyHall(items) {
+export async function openTrophyHall(items, extra = '') {
   if (open) return;
   const box = document.createElement('div');
   box.className = 'troph';
@@ -455,6 +455,7 @@ export async function openTrophyHall(items) {
     link.href = new URL('./trophy.css', import.meta.url).href;
     document.head.append(link);
   }
+  if (extra) box.insertAdjacentHTML('beforeend', extra);
   document.body.append(box);
   document.body.classList.add('trophyopen');
   const hall = new Hall(box, items), sound = new Sounds(), mute = box.querySelector('.trsound');

@@ -1,0 +1,92 @@
+.hon-medal { --m1: #fff1c4; --m2: #e4b356; --m3: #9a6a1e; --m4: #4a2f08; --r1: #b3261e; --r2: #6e120c; --glow: rgba(255, 190, 90, 0.55); position: relative; display: inline-block; flex: none; width: 96px; height: 128px; }
+.hon-medal.azure { --r1: #2a6fd6; --r2: #12306e; --glow: rgba(120, 180, 255, 0.55); }
+.hon-medal.crimson { --r1: #b3261e; --r2: #5e0d08; --glow: rgba(255, 120, 70, 0.55); }
+.hon-ribbon { position: absolute; left: 50%; top: 52px; width: 64px; height: 76px; transform: translateX(-50%); }
+.hon-ribbon::before, .hon-ribbon::after { content: ''; position: absolute; top: 0; width: 30px; height: 76px; background: linear-gradient(90deg, var(--r2), var(--r1) 30%, #fff3 45%, var(--r1) 60%, var(--r2)); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); }
+.hon-ribbon::before { left: 0; transform: skewX(12deg); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%); }
+.hon-ribbon::after { right: 0; transform: skewX(-12deg); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%); }
+.hon-disc { position: absolute; left: 0; top: 0; width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(from 210deg, var(--m4), var(--m2), var(--m1), var(--m2), var(--m3), var(--m4), var(--m2), var(--m1), var(--m3), var(--m4)); box-shadow: 0 0 0 2px #2a1a06, 0 8px 22px rgba(0, 0, 0, 0.6), 0 0 34px var(--glow); }
+.hon-disc::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, rgba(60, 36, 8, 0.55) 0deg 3deg, transparent 3deg 10deg); -webkit-mask: radial-gradient(circle, transparent 66%, #000 67%); mask: radial-gradient(circle, transparent 66%, #000 67%); }
+.hon-ring { position: absolute; inset: 15px; border-radius: 50%; background: radial-gradient(circle at 40% 30%, var(--m1), var(--m2) 45%, var(--m3) 80%, var(--m4)); box-shadow: inset 0 0 0 2px rgba(60, 36, 8, 0.7), inset 0 3px 8px rgba(255, 255, 255, 0.35), inset 0 -6px 12px rgba(40, 20, 0, 0.5); }
+.hon-disc img { position: relative; width: 48px; height: 48px; border-radius: 50%; clip-path: circle(42%); transform: scale(1.18); filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6)); }
+.hon-medal.sm { width: 60px; height: 80px; } .hon-medal.sm .hon-disc { width: 60px; height: 60px; } .hon-medal.sm .hon-ring { inset: 9px; } .hon-medal.sm .hon-disc img { width: 30px; height: 30px; } .hon-medal.sm .hon-ribbon { top: 32px; width: 40px; height: 48px; } .hon-medal.sm .hon-ribbon::before, .hon-medal.sm .hon-ribbon::after { width: 19px; height: 48px; }
+.hon-medal.xs { width: 22px; height: 28px; vertical-align: middle; } .hon-medal.xs .hon-disc { width: 22px; height: 22px; box-shadow: 0 0 0 1px #2a1a06, 0 0 10px var(--glow); } .hon-medal.xs .hon-disc::before { display: none; } .hon-medal.xs .hon-ring { inset: 3px; } .hon-medal.xs .hon-disc img { width: 12px; height: 12px; } .hon-medal.xs .hon-ribbon { top: 12px; width: 16px; height: 16px; } .hon-medal.xs .hon-ribbon::before, .hon-medal.xs .hon-ribbon::after { width: 8px; height: 16px; box-shadow: none; }
+.hon-medal.xl { width: 200px; height: 264px; } .hon-medal.xl .hon-disc { width: 200px; height: 200px; } .hon-medal.xl .hon-ring { inset: 30px; } .hon-medal.xl .hon-disc::before { inset: 9px; } .hon-medal.xl .hon-disc img { width: 100px; height: 100px; } .hon-medal.xl .hon-ribbon { top: 110px; width: 132px; height: 154px; } .hon-medal.xl .hon-ribbon::before, .hon-medal.xl .hon-ribbon::after { width: 62px; height: 154px; }
+
+.hon-title { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; padding: 3px 10px 3px 5px; border-radius: 999px; font: 13px "Friz", Georgia, serif; letter-spacing: 0.3px; color: #ffd98a; background: linear-gradient(90deg, rgba(120, 30, 20, 0.55), rgba(40, 14, 8, 0.2)); box-shadow: inset 0 0 0 1px rgba(255, 150, 90, 0.45), 0 0 16px rgba(255, 120, 60, 0.18); cursor: pointer; }
+.hon-title.azure { color: #cfe4ff; background: linear-gradient(90deg, rgba(30, 70, 140, 0.55), rgba(10, 20, 50, 0.2)); box-shadow: inset 0 0 0 1px rgba(130, 180, 255, 0.5), 0 0 16px rgba(90, 150, 255, 0.2); }
+.hon-title b { font-weight: normal; text-shadow: 0 1px 2px #000; }
+.hwho .hon-title { display: flex; width: fit-content; margin: 2px 0 5px; }
+
+.hon-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin: 4px 0 18px; }
+.hon-card { position: relative; display: flex; align-items: center; gap: 16px; padding: 14px 18px 12px 14px; border-radius: 14px; text-align: left; color: #f3e7cf; cursor: pointer; border: 0; overflow: hidden; background: radial-gradient(ellipse at 0% 50%, rgba(255, 120, 60, 0.22), transparent 60%), linear-gradient(135deg, #2a110b, #140806); box-shadow: inset 0 0 0 1px rgba(255, 150, 90, 0.45), 0 0 30px rgba(255, 110, 50, 0.15); }
+.hon-card.azure { background: radial-gradient(ellipse at 0% 50%, rgba(90, 150, 255, 0.24), transparent 60%), linear-gradient(135deg, #0e1a33, #070b16); box-shadow: inset 0 0 0 1px rgba(130, 180, 255, 0.5), 0 0 30px rgba(90, 150, 255, 0.15); }
+.hon-card::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.12), transparent); animation: honShine 5s ease-in-out infinite; }
+.hon-card small { display: block; font: 10px "Friz", serif; letter-spacing: 3px; text-transform: uppercase; color: #c99a3b; }
+.hon-card.azure small { color: #8fb6ee; }
+.hon-card b { display: block; font: 22px/1.1 "Morpheus", serif; color: #ffd98a; margin: 3px 0 4px; }
+.hon-card.azure b { color: #d6e8ff; }
+.hon-card em { display: block; font: italic 12.5px/1.4 Georgia, serif; color: #c9b99a; }
+
+.hon-plaques { position: absolute; top: 92px; left: 16px; z-index: 5; display: grid; gap: 8px; pointer-events: none; }
+.hon-plaque { display: flex; align-items: center; gap: 10px; padding: 7px 14px 7px 9px; border-radius: 6px; background: linear-gradient(180deg, #5a3a1a, #2e1c0a); box-shadow: inset 0 0 0 1px #c99a3b, inset 0 0 0 3px #2a1a06, inset 0 0 0 4px rgba(201, 154, 59, 0.5), 0 6px 18px rgba(0, 0, 0, 0.6); animation: honPlaque 1s ease 2.8s both; }
+.hon-plaque small { display: block; font: 9px "Friz", serif; letter-spacing: 2px; text-transform: uppercase; color: #c99a3b; }
+.hon-plaque b { display: block; font: 16px "Morpheus", serif; color: #ffe2a0; text-shadow: 0 1px 2px #000; }
+
+.hon-reveal { position: fixed; inset: 0; z-index: 9500; display: grid; place-items: center; overflow-x: hidden; overflow-y: auto; padding: 24px 16px; color: #f3e7cf; font-family: "Friz", Georgia, serif; background: radial-gradient(ellipse at 50% 40%, rgba(70, 22, 10, 0.92), rgba(10, 4, 2, 0.97) 70%); opacity: 0; transition: opacity 0.7s ease; }
+.hon-reveal.azure { background: radial-gradient(ellipse at 50% 40%, rgba(16, 34, 76, 0.94), rgba(3, 6, 14, 0.97) 70%); }
+.hon-reveal.on { opacity: 1; }
+.hon-reveal.out { opacity: 0; }
+.hon-motes { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.hon-motes i { position: absolute; bottom: -10px; width: calc(4px * var(--s)); height: calc(4px * var(--s)); border-radius: 50%; background: #ffd98a; box-shadow: 0 0 8px #ffb84a; opacity: 0; animation: honMote linear infinite; }
+.hon-reveal.azure .hon-motes i { background: #d6e8ff; box-shadow: 0 0 8px #7fb2ff; }
+.hon-burst { position: absolute; left: 50%; top: 34%; width: 160vmax; height: 160vmax; margin: -80vmax 0 0 -80vmax; pointer-events: none; opacity: 0; background: repeating-conic-gradient(from 0deg, rgba(255, 210, 130, 0.16) 0deg 3deg, transparent 3deg 12deg); -webkit-mask: radial-gradient(circle, #000, transparent 45%); mask: radial-gradient(circle, #000, transparent 45%); }
+.hon-reveal.azure .hon-burst { background: repeating-conic-gradient(from 0deg, rgba(160, 200, 255, 0.16) 0deg 3deg, transparent 3deg 12deg); }
+.hon-reveal.on .hon-burst { animation: honBurst 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.9s forwards, honSpin 80s linear infinite; }
+.hon-stage { position: relative; display: grid; justify-items: center; text-align: center; max-width: 620px; }
+.hon-kicker { font-size: 12px; letter-spacing: 7px; text-transform: uppercase; color: #c99a3b; opacity: 0; }
+.hon-reveal.azure .hon-kicker { color: #8fb6ee; }
+.hon-drop { margin: 18px 0 6px; opacity: 0; transform: translateY(-140px) rotateY(540deg) scale(0.6); }
+.hon-for { margin: 6px 0 0; font: 15px "Friz", serif; letter-spacing: 4px; text-transform: uppercase; color: #e8d9b8; opacity: 0; }
+.hon-name { margin: 2px 0 10px; font: clamp(38px, 8vw, 68px)/1 "Morpheus", serif; color: #ffe2a0; text-shadow: 0 0 40px rgba(255, 160, 60, 0.6), 0 4px 0 #2a1406, 0 8px 18px #000; opacity: 0; }
+.hon-reveal.azure .hon-name { color: #e2eeff; text-shadow: 0 0 40px rgba(110, 170, 255, 0.65), 0 4px 0 #0a1430, 0 8px 18px #000; }
+.hon-line { max-width: 480px; margin: 0 0 18px; font: italic 17px/1.5 Georgia, serif; color: #e8d9b8; opacity: 0; }
+.hon-facts { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 16px; }
+.hon-facts div { min-width: 120px; padding: 10px 14px; border-radius: 10px; background: rgba(0, 0, 0, 0.35); box-shadow: inset 0 0 0 1px rgba(255, 210, 130, 0.25); opacity: 0; }
+.hon-reveal.azure .hon-facts div { box-shadow: inset 0 0 0 1px rgba(150, 190, 255, 0.3); }
+.hon-facts b { display: block; font: 26px "Morpheus", serif; color: #ffd98a; }
+.hon-reveal.azure .hon-facts b { color: #d6e8ff; }
+.hon-facts span { font-size: 11px; color: #c9b99a; }
+.hon-where { margin: 0 0 16px; font-size: 12px; color: #a8987c; opacity: 0; }
+.hon-ok { padding: 13px 34px; border: 0; border-radius: 10px; cursor: pointer; font: 20px "Morpheus", serif; color: #fff1cf; background: linear-gradient(#9a4a20, #5a2008); box-shadow: 0 0 0 1px #000, inset 0 0 0 1px #f8d36b, 0 0 30px rgba(255, 140, 60, 0.4); opacity: 0; }
+.hon-reveal.azure .hon-ok { background: linear-gradient(#2a5aa8, #102a5e); box-shadow: 0 0 0 1px #000, inset 0 0 0 1px #bcd6ff, 0 0 30px rgba(110, 170, 255, 0.45); }
+.hon-reveal.on .hon-kicker { animation: honUp 1s ease 0.3s forwards; }
+.hon-reveal.on .hon-drop { animation: honDrop 1.5s cubic-bezier(0.25, 1.4, 0.4, 1) 0.6s forwards; }
+.hon-reveal.on .hon-drop .hon-disc { animation: honGlint 3s ease-in-out 2.2s infinite; }
+.hon-reveal.on .hon-for { animation: honUp 0.9s ease 1.9s forwards; }
+.hon-reveal.on .hon-name { animation: honTitle 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 2.1s forwards; }
+.hon-reveal.on .hon-line { animation: honUp 1s ease 2.9s forwards; }
+.hon-reveal.on .hon-facts div { animation: honUp 0.8s ease calc(3.3s + var(--i) * 0.18s) forwards; }
+.hon-reveal.on .hon-where { animation: honUp 0.8s ease 4s forwards; }
+.hon-reveal.on .hon-ok { animation: honUp 0.8s ease 4.3s forwards; }
+
+@keyframes honUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes honDrop { 0% { opacity: 0; transform: translateY(-140px) rotateY(540deg) scale(0.6); } 60% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+@keyframes honTitle { from { opacity: 0; transform: scale(1.3); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes honBurst { from { opacity: 0; transform: scale(0.3); } to { opacity: 1; transform: scale(1); } }
+@keyframes honSpin { to { rotate: 360deg; } }
+@keyframes honMote { 0% { opacity: 0; transform: translateY(0); } 10% { opacity: 0.9; } 90% { opacity: 0.6; } 100% { opacity: 0; transform: translateY(-105vh) translateX(30px); } }
+@keyframes honGlint { 0%, 100% { filter: none; } 50% { filter: brightness(1.25); } }
+@keyframes honShine { 0%, 60% { left: -60%; } 100% { left: 130%; } }
+@keyframes honPlaque { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 640px) {
+  .hon-medal.xl { width: 150px; height: 198px; } .hon-medal.xl .hon-disc { width: 150px; height: 150px; } .hon-medal.xl .hon-ring { inset: 22px; } .hon-medal.xl .hon-disc img { width: 76px; height: 76px; } .hon-medal.xl .hon-ribbon { top: 82px; width: 100px; height: 116px; } .hon-medal.xl .hon-ribbon::before, .hon-medal.xl .hon-ribbon::after { width: 47px; height: 116px; }
+  .hon-line { font-size: 15px; }
+  .hon-facts div { min-width: 96px; padding: 8px 10px; }
+  .hon-facts b { font-size: 21px; }
+  .hon-plaques { top: 84px; left: 10px; }
+  .hon-plaque b { font-size: 14px; }
+  .hon-kicker { letter-spacing: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { .hon-reveal *, .hon-card::after { animation-duration: 0.01s !important; animation-delay: 0s !important; } }

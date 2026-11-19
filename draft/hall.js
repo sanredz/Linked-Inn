@@ -80,7 +80,7 @@ function body(key) {
 }
 
 function card(key) {
-  const b = BOARDS[key], toggle = key === 'raid' ? `<div class="hraid" role="group" aria-label="Raid">${[['all', 'Both'], ...data.raids.map((r) => [r, RAID_NAME[r] || r])].map(([id, n]) => `<button class="${raidPick === id ? 'on' : ''}" data-raid="${id}">${esc(n)}</button>`).join('')}</div>` : '<div class="hslot"></div>';
+  const b = BOARDS[key], toggle = key === 'raid' ? `<div class="hraid" role="group" aria-label="Raid">${[['all', data.raids.length > 2 ? 'All' : 'Both'], ...data.raids.map((r) => [r, RAID_NAME[r] || r])].map(([id, n]) => `<button class="${raidPick === id ? 'on' : ''}" data-raid="${id}">${esc(n)}</button>`).join('')}</div>` : '<div class="hslot"></div>';
   return `<article class="hcard" data-board="${key}"><header class="hctop" style="background-image:url(${b.art})"><b>${b.title}</b><small>${typeof b.blurb === 'function' ? b.blurb() : b.blurb}</small></header>${toggle}<div class="hfind"><input type="search" maxlength="20" placeholder="Find a player" aria-label="Find a player on the ${b.title} board" value="${esc(finds[key] || '')}" autocomplete="off"></div><div class="hcbody">${body(key)}</div></article>`;
 }
 
@@ -104,9 +104,15 @@ export async function mountHall(host, opts) {
   me = opts.me || me;
   colors = opts.colors || colors;
   ensureStyle();
-  const r = await fetch(`${opts.API}/hall${opts.season ? `?season=${encodeURIComponent(opts.season)}` : ''}`).catch(() => null);
+  const [r, w] = await Promise.all([
+    fetch(`${opts.API}/hall${opts.season ? `?season=${encodeURIComponent(opts.season)}` : ''}`).catch(() => null),
+    fetch(`${opts.API}/war`).then((x) => (x.ok ? x.json() : null)).catch(() => null),
+  ]);
   if (!r || !r.ok) return;
   data = await r.json();
+  const shut = w ? (w.open || w.early ? '' : w.raid) : 'aq20';
+  data.raids = (data.raids || []).filter((id) => id !== shut);
+  if (raidPick !== 'all' && !data.raids.includes(raidPick)) raidPick = 'all';
   draw();
 }
 

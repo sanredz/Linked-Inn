@@ -362,7 +362,7 @@ function rowDetail(r) {
 
 function boardHtml() {
   const last = RAIDS[boardRaid].bosses.at(-1).name.split(' ')[0];
-  const head = `<div class="rboardhead"><h3>Leaderboard <em>highest damage to ${esc(last)}</em></h3><div class="rboardtabs">${[...LIVE().map((id) => [id, RAIDS[id].name]), ...SOON()].map(([id, name]) => `<button class="gmini ${id === boardRaid ? 'on' : ''}" data-board="${id}"${RAIDS[id] && (opened(id) || TEST || (war && war.early)) ? '' : ' disabled'}>${name}</button>`).join('')}</div></div>`;
+  const head = `<div class="rboardhead"><h3>Leaderboard <em>highest damage to ${esc(last)}</em></h3><div class="rboardtabs">${[...LIVE().map((id) => [id, RAIDS[id].name]), ...SOON()].map(([id, name]) => `<button class="gmini ${id === boardRaid ? 'on' : ''}" data-board="${id}"${RAIDS[id] && (LIVE().includes(id) || TEST || (war && war.early)) ? '' : ' disabled'}>${name}</button>`).join('')}</div></div>`;
   if (!board) return `${head}<p>The board could not be reached.</p>`;
   const filtered = boardFind.trim() || ROLES.some((r) => boardPick[r]), count = boardCount ? `<p class="rboardcount">${filtered ? `${num(boardCount.matched)} of ${num(boardCount.total)}` : num(boardCount.total)} ${boardCount.total === 1 ? 'run' : 'runs'}</p>` : '';
   if (!board.length) return `${head}${count}<p>${filtered ? 'No runs match these filters.' : `Nobody has reached ${esc(last)} yet.`}</p>`;

@@ -90,3 +90,16 @@
   .hon-kicker { letter-spacing: 4px; }
 }
 @media (prefers-reduced-motion: reduce) { .hon-reveal *, .hon-card::after { animation-duration: 0.01s !important; animation-delay: 0s !important; } }
+.hon-medal.sand { --r1: #c9952e; --r2: #5e3f0c; --glow: rgba(255, 200, 110, 0.55); }
+.hon-title.sand { color: #ffe9bd; background: linear-gradient(90deg, rgba(140, 95, 25, 0.55), rgba(50, 32, 8, 0.2)); box-shadow: inset 0 0 0 1px rgba(255, 205, 120, 0.5), 0 0 16px rgba(255, 190, 90, 0.2); }
+.hon-card.sand { background: radial-gradient(ellipse at 0% 50%, rgba(255, 190, 90, 0.24), transparent 60%), linear-gradient(135deg, #2a1c08, #120b03); box-shadow: inset 0 0 0 1px rgba(255, 205, 120, 0.5), 0 0 30px rgba(255, 190, 90, 0.15); }
+.hon-card.sand small { color: #e8c27a; }
+.hon-card.sand b { color: #ffe6b0; }
+.hon-reveal.sand { background: radial-gradient(ellipse at 50% 40%, rgba(70, 46, 12, 0.94), rgba(14, 9, 3, 0.97) 70%); }
+.hon-reveal.sand .hon-motes i { background: #ffe6b0; box-shadow: 0 0 8px #ffc96b; }
+.hon-reveal.sand .hon-burst { background: repeating-conic-gradient(from 0deg, rgba(255, 215, 140, 0.16) 0deg 3deg, transparent 3deg 12deg); }
+.hon-reveal.sand .hon-kicker { color: #e8c27a; }
+.hon-reveal.sand .hon-name { color: #fff0cc; text-shadow: 0 0 40px rgba(255, 190, 90, 0.65), 0 4px 0 #2e1d05, 0 8px 18px #000; }
+.hon-reveal.sand .hon-facts div { box-shadow: inset 0 0 0 1px rgba(255, 210, 130, 0.3); }
+.hon-reveal.sand .hon-facts b { color: #ffe6b0; }
+.hon-reveal.sand .hon-ok { background: linear-gradient(#a8741e, #5e3c0a); box-shadow: 0 0 0 1px #000, inset 0 0 0 1px #ffe0a0, 0 0 30px rgba(255, 190, 90, 0.45); }

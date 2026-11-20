@@ -97,6 +97,7 @@ export function hearthBar(el) {
   const p = portraitOf(), n = got.size;
   el.innerHTML = `<button class="hb" data-hearth><span class="hbface"><img class="${sq(p)}" src="${p.src}" alt=""></span><span class="hbwho"><small>Your Hearth</small><b>${esc(heroName())}</b></span><span class="hbbadges"><i style="--p:${n / badgeTotal(got)}"></i><b>${n}</b><small>of ${badgeTotal(got)} badges</small></span>${RELICS.some((x) => forgeReady(data.stats, x)) ? '<span class="hbforge">Forge ready</span>' : ''}<span class="hbgo">Open</span></button>`;
   el.hidden = false;
+  innFab();
 }
 
 const modeOf = (f) => MODES.find((m) => m.id === f.mode) || ANY;
@@ -150,6 +151,20 @@ function collectionHtml(raid) {
 
 const TROPHIES = [...RELICS.filter((x) => x.forged || x.id === 21220), ...MOUNTS];
 const day = (at) => { const d = new Date(at); return d.toLocaleDateString('en-US', d.getFullYear() === new Date().getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' }); };
+
+function innFab() {
+  let b = document.querySelector('.innfab');
+  if (!b) {
+    b = document.createElement('button');
+    b.className = 'innfab';
+    b.onclick = () => import('./trophy.js').then((m) => m.openTrophyHall(trophyItems(), plaqueHtml(myHonors())));
+    document.body.append(b);
+  }
+  const n = TROPHIES.filter((x) => owned(data.stats, x)).length;
+  b.setAttribute('aria-label', `Enter the Lion's Pride Inn, ${n} of ${TROPHIES.length} trophies`);
+  b.title = "The Lion's Pride Inn";
+  b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V10l9-6 9 6v11h-5v-6a4 4 0 0 0-8 0v6Z"/><path class="f" d="M12 21c-1.8 0-2.7-1.2-2.7-2.5 0-1.5 1.4-2.2 1.6-3.8.9.6 1.4 1.4 1.5 2.2.4-.4.6-.9.6-1.5 1 .8 1.7 1.9 1.7 3.1 0 1.4-1 2.5-2.7 2.5Z"/></svg>Inn`;
+}
 
 function trophyDoor() {
   const s = data.stats, have = TROPHIES.filter((x) => owned(s, x)).length;

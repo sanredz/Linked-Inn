@@ -56,11 +56,12 @@
 .banner3d small { display: block; color: #c9b99a; margin: 3px 0; }
 .banner3d p { margin: 6px 0; font-size: 17px; }
 .banner3d .gbtn { margin-top: 10px; }
-.banner3d.result { inset: 0; display: grid; place-items: center; padding: 12px; overflow: hidden; transform: none; background: radial-gradient(70% 80% at 50% 45%, rgba(10, 6, 3, .62), rgba(6, 3, 2, .92)); animation: bresultin .4s ease-out; }
+.banner3d.result { inset: 0; display: grid; justify-items: center; align-items: start; padding: 12px; overflow: hidden auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #6d5222 transparent; transform: none; background: radial-gradient(70% 80% at 50% 45%, rgba(10, 6, 3, .62), rgba(6, 3, 2, .92)); animation: bresultin .4s ease-out; }
 .banner3d.result.lose { background: radial-gradient(70% 80% at 50% 45%, rgba(44, 8, 6, .66), rgba(10, 2, 2, .94)); }
 @keyframes bresultin { from { opacity: 0; } }
 .pane:has(.banner3d.result:not([hidden])) :is(.gctl, .rctl) { display: none !important; }
-.bresult { position: relative; display: grid; justify-items: center; gap: 10px; width: min(520px, 100%); }
+.bresult { position: relative; display: grid; justify-items: center; gap: 10px; width: min(520px, 100%); margin-block: auto; }
+.banner3d.result .bresult > .rforge { position: sticky; bottom: 0; z-index: 2; }
 .brays { position: absolute; left: 50%; top: 34px; z-index: -1; width: 620px; height: 620px; margin: -310px 0 0 -310px; pointer-events: none; background: repeating-conic-gradient(rgba(248, 211, 107, .13) 0 9deg, transparent 9deg 24deg); -webkit-mask-image: radial-gradient(closest-side, #000 18%, transparent); mask-image: radial-gradient(closest-side, #000 18%, transparent); animation: brays 26s linear infinite; }
 .lose .brays { background: radial-gradient(closest-side, rgba(224, 72, 50, .3), transparent); animation: none; }
 @keyframes brays { to { transform: rotate(360deg); } }

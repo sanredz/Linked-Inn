@@ -9,7 +9,9 @@ const SPOTS = {
   21175: { at: [-2.4, 0, 0], theme: 'sand', look: 1.45, clear: 2, up: 1 },
   19872: { at: [-.4, 0, -3.9], yaw: .93, look: 1.15, clear: 2, y: 1.9, dist: 6.8 },
   19902: { at: [-.4, 0, 3.9], yaw: 2.21, look: 2.75, clear: 2, y: 1.1, dist: 5.2 },
+  21220: { at: [-6.74, 4.12, .05], look: 1.5, clear: 0, y: 4.1, dist: 3.4 },
 };
+const HEAD = { model: 'assets/raid/gear/ossirian.glb', cut: 6.3, scale: .56, tilt: .22, at: [.54, -.5, 0] };
 const SWING = 1.15;
 const pulse = { value: 0 };
 const veil = new THREE.MeshBasicMaterial({ colorWrite: false });
@@ -20,14 +22,16 @@ spirit.onBeforeCompile = (sh) => {
     float rim = pow(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 3.2);
     gl_FragColor = vec4(vec3(1.0, .76, .4) * (.035 + rim * (.55 + .18 * pulse)), 1.0);`);
 };
-function ghost(root) {
+function ghost(root, planes) {
+  const mats = planes ? [veil.clone(), spirit.clone()] : [veil, spirit];
+  if (planes) { mats[1].onBeforeCompile = spirit.onBeforeCompile; for (const mt of mats) mt.clippingPlanes = planes; }
   root.traverse((m) => {
     if (!m.isMesh) return;
     const g = m.geometry, n = g.index ? g.index.count : g.attributes.position.count;
     g.clearGroups();
     g.addGroup(0, n, 0);
     g.addGroup(0, n, 1);
-    m.material = [veil, spirit];
+    m.material = mats;
     m.renderOrder = 10;
   });
 }
@@ -132,6 +136,7 @@ class Hall {
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.15;
+    this.renderer.localClippingEnabled = true;
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0d0805);
     this.scene.fog = new THREE.Fog(0x120a05, 14, 34);
@@ -247,8 +252,9 @@ class Hall {
     const entry = { x, group, spot, look: null };
     this.spots.push(entry);
     if (x.kind === 'weapon') await this.weapon(entry);
+    else if (x.kind === 'head') await this.head(entry);
     else await this.mount(entry);
-    group.traverse((m) => { if (m.isMesh) { m.userData.trophy = entry; this.pick.push(m); } });
+    group.traverse((m) => { if (m.isMesh && !m.userData.skip) { m.userData.trophy = entry; this.pick.push(m); } });
   }
 
   async weapon(entry) {
@@ -309,6 +315,41 @@ class Hall {
       }
       pos.needsUpdate = true;
     });
+  }
+
+  async head(entry) {
+    const { x, group, spot } = entry;
+    const board = new THREE.Mesh(new THREE.CylinderGeometry(.66, .7, .1, 40), new THREE.MeshStandardMaterial({ color: 0x4a2a12, roughness: .8 }));
+    board.rotation.z = Math.PI / 2;
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(.67, .035, 8, 64), new THREE.MeshStandardMaterial({ color: 0xb08a3e, roughness: .4, metalness: .6 }));
+    ring.rotation.y = Math.PI / 2;
+    ring.position.x = .06;
+    group.add(board, ring);
+    entry.look = { yaw: spot.look, pitch: .12, dist: spot.dist, y: spot.y };
+    const g = await this.load(HEAD.model);
+    if (!g) return;
+    const body = g.scene, idle = g.animations.find((a) => a.name === 'idle');
+    if (idle) { const mixer = new THREE.AnimationMixer(body); mixer.clipAction(idle).play(); mixer.update(.4); }
+    const hold = new THREE.Group(), turn = new THREE.Group();
+    hold.position.fromArray(HEAD.at);
+    hold.rotation.z = HEAD.tilt;
+    turn.rotation.y = Math.PI / 2;
+    body.scale.setScalar(HEAD.scale);
+    body.position.y = -HEAD.cut * HEAD.scale;
+    turn.add(body);
+    hold.add(turn);
+    group.add(hold);
+    group.updateMatrixWorld(true);
+    const planes = [new THREE.Plane(new THREE.Vector3(0, 1, 0), -HEAD.cut).applyMatrix4(body.matrixWorld)];
+    body.traverse((m) => { if (!m.isMesh) return; m.frustumCulled = false; m.userData.skip = true; for (const mt of [].concat(m.material)) mt.clippingPlanes = planes; });
+    if (!x.have) { ghost(body, planes); return; }
+    const cap = new THREE.MeshBasicMaterial({ color: 0x4a2c14, side: THREE.BackSide, clippingPlanes: planes }), skins = [];
+    body.traverse((m) => { if (m.isMesh) skins.push(m); });
+    for (const m of skins) { const c = m.clone(); c.material = cap; c.userData.skip = true; m.parent.add(c); }
+    const light = new THREE.SpotLight(0xffe0b0, 14, 5, .6, .6, 1.3);
+    light.position.set(2.6, 1.4, 0);
+    light.target = hold;
+    group.add(light);
   }
 
   async mount(entry) {
@@ -395,7 +436,7 @@ class Hall {
     const el = this.box.querySelector('.trcard');
     if (!entry) { el.classList.remove('show'); return; }
     const x = entry.x;
-    el.innerHTML = `<img src="assets/icons/${x.icon}.png" alt=""><span><small>${x.kind === 'weapon' ? 'Legendary' : 'Mount'}</small><b class="${x.have ? '' : 'dim'}">${esc(x.have ? x.name : 'Not yet yours')}</b><em>${esc(x.line)}</em></span>`;
+    el.innerHTML = `<img src="assets/icons/${x.icon}.png" alt=""><span><small>${x.kind === 'weapon' ? 'Legendary' : x.kind === 'head' ? 'Trophy' : 'Mount'}</small><b class="${x.have ? '' : 'dim'}">${esc(x.have ? x.name : 'Not yet yours')}</b><em>${esc(x.line)}</em></span>`;
     el.classList.add('show');
   }
 

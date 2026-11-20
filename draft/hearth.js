@@ -148,7 +148,7 @@ function collectionHtml(raid) {
   }).join('')}</div>`;
 }
 
-const TROPHIES = [...RELICS.filter((x) => x.forged), ...MOUNTS];
+const TROPHIES = [...RELICS.filter((x) => x.forged || x.id === 21220), ...MOUNTS];
 const day = (at) => { const d = new Date(at); return d.toLocaleDateString('en-US', d.getFullYear() === new Date().getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' }); };
 
 function trophyDoor() {
@@ -159,11 +159,11 @@ function trophyDoor() {
 function trophyItems() {
   const s = data.stats;
   return TROPHIES.map((x) => {
-    const have = owned(s, x), mount = MOUNTS.includes(x), row = !mount && ctx.gear.items[x.id];
-    const done = !mount && s.forge && s.forge[x.id] && s.forge[x.id].done;
-    const got = mount && s.found && s.found[x.id];
-    const line = mount ? (have ? `Dropped by ${x.from}${got ? ` · ${day(got)}` : ''}` : `Drops from ${x.from}`) : have ? `Forged ${day(done)}` : forgeReady(s, x) ? 'Ready for the forge' : 'Not yet forged';
-    return { id: x.id, kind: mount ? 'mount' : 'weapon', name: x.name, icon: x.icon, have, line, model: mount ? `assets/raid/gear/${x.model}.glb` : row && row.m ? `assets/draft/gear/${row.m}` : '', scale: x.scale };
+    const have = owned(s, x), mount = MOUNTS.includes(x), drop = mount || !x.forged, row = !drop && ctx.gear.items[x.id];
+    const done = !drop && s.forge && s.forge[x.id] && s.forge[x.id].done;
+    const got = drop && s.found && s.found[x.id];
+    const line = drop ? (have ? `Dropped by ${x.from}${got ? ` · ${day(got)}` : ''}` : `Drops from ${x.from}`) : have ? `Forged ${day(done)}` : forgeReady(s, x) ? 'Ready for the forge' : 'Not yet forged';
+    return { id: x.id, kind: mount ? 'mount' : drop ? 'head' : 'weapon', name: x.name, icon: x.icon, have, line, model: mount ? `assets/raid/gear/${x.model}.glb` : row && row.m ? `assets/draft/gear/${row.m}` : '', scale: x.scale };
   });
 }
 

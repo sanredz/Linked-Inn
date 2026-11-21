@@ -413,7 +413,7 @@ export function makeWorld(ctx) {
     }).join('')}</ul>`;
   }
 
-  const openInn = (id) => import('../draft/hearth.js?v=20261121153838').then((m) => m.openInn(id)).catch(() => {});
+  const openInn = (id) => import('../draft/hearth.js?v=20261121220804').then((m) => m.openInn(id)).catch(() => {});
 
   function toOver() {
     run.step = 'over';

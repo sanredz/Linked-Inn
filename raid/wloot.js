@@ -69,7 +69,7 @@ function card(d, i, n, keys) {
       <small class="wlkick">${esc(d.from)} dropped</small>
       <div class="wlglow"><i class="wlrays"></i><i class="wlring"></i><i class="wlring two"></i><img src="assets/icons/${d.icon}.png" alt=""></div>
       <b class="wlrarity">${esc(d.rarity)} ${kind}</b>
-      <h2>${esc(d.name)}</h2>
+      <h2 data-text="${esc(d.name)}">${esc(d.name)}</h2>
       <p>${esc(d.text)}</p>
       ${where}
       <div class="wlgo">${key ? '' : '<button class="wlsee">See it in the Inn</button>'}<button class="wlnext ${key ? 'solo' : ''}">${i < n - 1 ? 'Next' : 'Continue'}</button></div>
@@ -127,16 +127,77 @@ function tableHtml(o) {
   return `<ul class="wtable">${o.loot.map((l) => `<li class="${o.have[l.id] ? 'have' : ''}" style="--r:${COLOR[l.rarity]}"><img src="assets/icons/${l.icon}.png" alt=""><span><b>${esc(l.name)}</b><small>${esc(l.rarity)}</small></span><i>${o.have[l.id] ? '✓' : ''}</i></li>`).join('')}${o.full ? `<li class="keyrow" style="--r:${COLOR.Mythic}"><img src="assets/icons/${o.key.icon}.png" alt=""><span><b>${esc(o.key.name)}</b><small>Mythic · unlocked</small></span><i></i></li>` : ''}</ul>`;
 }
 
+let chestGlb = null;
+async function chestModel(cv, tint) {
+  try {
+    const THREE = await import('three');
+    const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+    chestGlb ||= fetch('assets/raid/gear/chest_treasure.glb').then((r) => r.arrayBuffer());
+    const buf = await Promise.race([chestGlb, wait(2500).then(() => null)]);
+    if (!buf) return null;
+    const g = await new GLTFLoader().parseAsync(buf.slice(0), 'assets/raid/gear/');
+    const r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
+    r.setPixelRatio(Math.min(2, devicePixelRatio));
+    r.outputColorSpace = THREE.SRGBColorSpace;
+    const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(28, 1, .05, 50);
+    scene.add(new THREE.HemisphereLight(0xffe6c0, 0x1a0c04, 1.3));
+    const key = new THREE.DirectionalLight(0xffd8a0, 2.4); key.position.set(-1.5, 3, 3); scene.add(key);
+    const rim = new THREE.DirectionalLight(0xff9a50, 1.6); rim.position.set(2.5, 2, -3); scene.add(rim);
+    const root = new THREE.Group(), body = g.scene;
+    body.traverse((o) => { if (o.isMesh) { o.frustumCulled = false; if (o.material.map) o.material.map.colorSpace = THREE.SRGBColorSpace; } });
+    const box = new THREE.Box3().setFromObject(body), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+    body.position.set(-c.x, -box.min.y, -c.z);
+    root.add(body);
+    root.rotation.y = -Math.PI / 2 + .35;
+    scene.add(root);
+    const h = size.y, inner = new THREE.PointLight(new THREE.Color(tint), 0, h * 2.2, 2);
+    inner.position.set(0, h * .62, 0); root.add(inner);
+    const d = Math.max(size.x, size.z, h) * 2.25;
+    cam.position.set(0, d * .52, d); cam.lookAt(0, h * .42, 0);
+    const mix = new THREE.AnimationMixer(body), clip = g.animations.find((a) => a.name === 'open');
+    const fit = () => { const w = cv.clientWidth, hh = cv.clientHeight; if (!w || !hh) return; r.setSize(w, hh, false); cam.aspect = w / hh; cam.updateProjectionMatrix(); };
+    fit(); addEventListener('resize', fit);
+    let run = true, last = performance.now(), jolt = 0, hop = 0, want = 0, t = 0, drop = 0;
+    const loop = (now) => {
+      if (!run) return;
+      const dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
+      mix.update(dt);
+      drop = Math.min(1, drop + dt * 2.4);
+      const fall = 1 - Math.pow(1 - drop, 3);
+      jolt *= Math.pow(.02, dt); hop *= Math.pow(.004, dt);
+      root.position.y = (1 - fall) * h * 1.6 + Math.abs(Math.sin(t * 30)) * hop * h * .06;
+      root.rotation.z = Math.sin(t * 38) * jolt * .07;
+      root.rotation.y = -Math.PI / 2 + .35 + Math.sin(t * .6) * .06;
+      inner.intensity += (want - inner.intensity) * Math.min(1, dt * 6);
+      r.render(scene, cam);
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+    return {
+      shake(color, lv) { inner.color.set(color); jolt = 1; hop = 1; want = .8 + lv * .35; setTimeout(() => { want *= .4; }, 260); },
+      open(color, lv) {
+        inner.color.set(color);
+        if (clip) { const a = mix.clipAction(clip); a.setLoop(THREE.LoopOnce); a.clampWhenFinished = true; a.timeScale = 1.25; a.reset().play(); }
+        jolt = .6; want = lv < 0 ? .3 : 2.2 + lv * .7;
+      },
+      stop() { run = false; removeEventListener('resize', fit); r.dispose(); },
+    };
+  } catch { return null; }
+}
+
 async function chest(level, o) {
   const host = document.createElement('div'), empty = level < 0, color = empty ? '#8f8478' : LADDER[level];
   host.innerHTML = `<div class="wcz ${empty ? 'empty' : `l${level}`}" style="--rc:${LADDER[0]}" role="dialog" aria-modal="true" aria-label="${esc(o.title)}">
     <div class="wczflash"></div><i class="wczrays"></i><div class="wczash">${'<i></i>'.repeat(16)}</div>
-    <div class="wczbox"><div class="wczglow"></div><div class="wczlid"><i></i></div><div class="wczbase"><b></b></div></div>
+    <div class="wczstage"><canvas class="wczmodel"></canvas><div class="wczbox"><div class="wczglow"></div><div class="wczlid"><i></i></div><div class="wczbase"><b></b></div></div></div>
     <div class="wczsay"><small>${esc(o.title)}</small><b>Searching the remains…</b></div>
     <button class="wczskip">Skip</button>
   </div>`;
   const box = host.firstElementChild, say = box.querySelector('.wczsay b');
   document.body.append(box);
+  requestAnimationFrame(() => box.classList.add('in'));
+  const model = await chestModel(box.querySelector('.wczmodel'), empty ? '#a89a88' : LADDER[0]);
+  if (model) box.classList.add('three');
   let skip = false;
   box.querySelector('.wczskip').onclick = () => { skip = true; };
   requestAnimationFrame(() => box.classList.add('in'));
@@ -146,6 +207,7 @@ async function chest(level, o) {
     for (let i = 0; i < steps && !skip; i++) {
       const lv = empty ? -1 : Math.min(level, Math.max(0, i - 1));
       box.style.setProperty('--rc', lv < 0 ? '#a89a88' : LADDER[lv]);
+      if (model) model.shake(lv < 0 ? '#a89a88' : LADDER[lv], lv < 0 ? 0 : lv);
       box.classList.remove('shake');
       void box.offsetWidth;
       box.classList.add('shake');
@@ -155,12 +217,13 @@ async function chest(level, o) {
     }
   }
   box.style.setProperty('--rc', color);
+  if (model) model.open(color, empty ? -1 : level);
   box.classList.add('open');
   say.textContent = empty ? 'Only ash and embers this time' : level >= 5 ? 'The Dark Portal answers' : `${['A common find', 'An uncommon find', 'A rare find', 'An epic find', 'A legendary find'][level]}!`;
   sound(empty ? 'ash' : 'loot', Math.max(0, level));
   await wait(empty ? 1500 : 1300);
   box.classList.add('out');
-  setTimeout(() => box.remove(), 320);
+  setTimeout(() => { if (model) model.stop(); box.remove(); }, 320);
 }
 
 export async function walkout(o) {
@@ -174,7 +237,7 @@ export async function walkout(o) {
     sound('slain');
     await panel(`<small class="wlkick">${esc(o.from)}</small><div class="wfullring">${o.loot.map((l, i) => `<img src="assets/icons/${l.icon}.png" alt="" style="--i:${i};--n:${o.loot.length};--r:${COLOR[l.rarity]}">`).join('')}<img class="wfullkey" src="assets/icons/${o.key.icon}.png" alt=""></div><b class="wlrarity">Collection complete</b><h2>Every treasure is yours</h2><p>You own all ${o.loot.length} of ${esc(o.from)}'s collectibles. From now on each kill has a chance to drop a ${esc(o.key.name)}, which lets you face any world boss again, even on a day you already have.</p><div class="wlgo"><button class="wlnext solo">Continue</button></div>`, 'wfull', '#ffd76a');
   } else if (!items.length) {
-    await panel(`<small class="wlkick">${esc(o.from)}'s hoard</small><b class="wlrarity">Empty this time</b><h2>Only ash and embers</h2><p>${o.full ? `You own every collectible. Each kill now has a chance at a key.` : `You have ${o.owned} of ${o.loot.length}. Every kill rolls for each one you are missing.`}</p>${tableHtml(o)}<div class="wlgo"><button class="wlnext solo">Continue</button></div>`, 'wempty', '#a89a88');
+    await panel(`<small class="wlkick">${esc(o.from)}'s hoard</small><b class="wlrarity">Empty this time</b><h2 data-text="Only ash and embers">Only ash and embers</h2><p>${o.full ? `You own every collectible. Each kill now has a chance at a key.` : `You have ${o.owned} of ${o.loot.length}. Every kill rolls for each one you are missing.`}</p>${tableHtml(o)}<div class="wlgo"><button class="wlnext solo">Continue</button></div>`, 'wempty', '#a89a88');
   }
   return how;
 }

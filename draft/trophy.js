@@ -2,7 +2,13 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const ROOT = 'assets/draft/hall/';
-const HOME = { target: new THREE.Vector3(-2.2, 1.5, 0), yaw: 1.4, pitch: .13, dist: 9 };
+const AREAS = [
+  { id: 'hall', name: 'The Common Room', note: 'Legendaries, mounts and raid trophies', home: { target: [-2.2, 1.5, 0], yaw: 1.4, pitch: .13, dist: 9 }, swing: 1.15 },
+  { id: 'cellar', name: 'The Cellar', note: 'World Boss trophies', home: { target: [2.2, -4.3, -33.4], yaw: 0, pitch: .1, dist: 7.2 }, swing: .42, min: 3, max: 7.4, wide: 72 },
+];
+const AREA = Object.fromEntries(AREAS.map((a) => [a.id, a]));
+const homeOf = (id) => { const h = AREA[id].home; return { target: new THREE.Vector3(...h.target), yaw: h.yaw, pitch: h.pitch, dist: h.dist }; };
+const HOME = homeOf('hall');
 const SPOTS = {
   19019: { at: [-4.4, 0, -2.8], theme: 'storm', look: 1.2, clear: 2 },
   17182: { at: [-4.4, 0, 2.8], theme: 'fire', look: 1.7, clear: 2 },
@@ -10,9 +16,18 @@ const SPOTS = {
   19872: { at: [-.4, 0, -3.9], yaw: .93, look: 1.15, clear: 2, y: 1.9, dist: 6.8 },
   19902: { at: [-.4, 0, 3.9], yaw: 2.21, look: 2.75, clear: 2, y: 1.1, dist: 5.2 },
   21220: { at: [-6.74, 4.12, .05], look: 1.5, clear: 0, y: 4.1, dist: 3.4 },
+  990205: { at: [2.2, -3.05, -36.6], yaw: -Math.PI / 2, look: 0, clear: 2.6, y: -3.1, dist: 4.4, size: 1.4 },
+  990201: { at: [-2.7, -3.0, -36.66], look: 0, clear: 1.2, y: -3.1, dist: 4.4 },
+  17112: { at: [7.1, -3.7, -36.6], look: 0, clear: 1.2, y: -3.7, dist: 4.2 },
+  990204: { at: [-1.5, -6.73, -34.1], yaw: .85, look: .2, clear: 2.4, y: -5.1, dist: 5.6 },
+  990202: { at: [6.1, -6.73, -34.2], look: -.15, clear: 2.2, y: -5.3, dist: 3.4 },
 };
-const HEAD = { model: 'assets/raid/gear/ossirian.glb', cut: 6.3, scale: .56, tilt: .22, at: [.54, -.5, 0] };
-const SWING = 1.15;
+const HEADS = {
+  21220: { model: 'assets/raid/gear/ossirian.glb', cut: 6.3, scale: .56, tilt: .22, at: [.54, -.5, 0] },
+  990205: { model: 'assets/raid/gear/kazzak.glb', cut: 5.9, scale: .37, tilt: .2, at: [.5, -.36, 0], half: 1.9, back: -.4, top: 8.8, ring: 0x3a8a2a, glow: 0x7dff5a },
+};
+const KIND = { weapon: 'Legendary', head: 'Trophy', mount: 'Mount', trophy: 'Trophy', painting: 'Painting', jar: 'Curio', rack: 'Weapon', steed: 'Mount' };
+const RARITY = { Common: '#ffffff', Uncommon: '#1eff00', Rare: '#0070dd', Epic: '#a335ee', Legendary: '#ff8000' };
 const pulse = { value: 0 };
 const veil = new THREE.MeshBasicMaterial({ colorWrite: false });
 const spirit = new THREE.MeshStandardMaterial({ color: 0x000000, transparent: true, depthWrite: false, depthFunc: THREE.LessEqualDepth, blending: THREE.AdditiveBlending });
@@ -42,6 +57,7 @@ const THEME = {
 };
 const FIRE = new THREE.Vector3(-6.4, 1.6, .06), HEARTH = new THREE.Vector3(-7.7, .25, .05);
 const SEEN = 'trophySeen', MUTE = 'trophyMute';
+const areaOf = (x) => x.area || 'hall';
 
 class Sounds {
   constructor() {
@@ -142,6 +158,7 @@ class Hall {
     this.scene.fog = new THREE.Fog(0x120a05, 14, 34);
     this.camera = new THREE.PerspectiveCamera(46, 1, .1, 120);
     this.clock = new THREE.Clock();
+    this.area = 'hall';
     this.view = { target: HOME.target.clone(), yaw: HOME.yaw - .9, pitch: .55, dist: 17 };
     this.want = { target: HOME.target.clone(), yaw: HOME.yaw, pitch: HOME.pitch, dist: HOME.dist };
     this.idle = 0;
@@ -195,10 +212,51 @@ class Hall {
       this.scene.add(p);
     }
     this.embers();
+    this.cellar();
     await Promise.all(this.items.map((x) => this.place(x)));
   }
 
   load(url) { return this.loader.loadAsync(url).catch(() => null); }
+
+  cellar() {
+    const lamp = new THREE.PointLight(0xffb070, 16, 13, 1.4);
+    lamp.position.set(2.2, -1.4, -31.5);
+    const fill = new THREE.PointLight(0xff9a50, 6, 10, 1.6);
+    fill.position.set(2.2, -2.4, -25.5);
+    this.scene.add(lamp, fill);
+    const owned = this.items.some((x) => areaOf(x) === 'cellar' && x.have);
+    const wax = new THREE.MeshStandardMaterial({ color: 0xe8dcc0, roughness: .7 }), iron = new THREE.MeshStandardMaterial({ color: 0x2a2018, metalness: .6, roughness: .5 });
+    const flames = [];
+    for (const x of [.15, 4.25]) {
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(.08, .08, .34), iron);
+      arm.position.set(x, -3.95, -36.52);
+      const cup = new THREE.Mesh(new THREE.CylinderGeometry(.11, .08, .06, 12), iron);
+      cup.position.set(x, -3.9, -36.38);
+      const candle = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .26, 10), wax);
+      candle.position.set(x, -3.74, -36.38);
+      const flame = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(owned ? '#9dff6a' : '#ffb04a'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+      flame.position.set(x, -3.52, -36.38);
+      flame.userData.k = Math.random() * 9;
+      const glow = new THREE.PointLight(owned ? 0x8dff5a : 0xffa04a, 1.6, 3.2, 1.6);
+      glow.position.set(x, -3.45, -36.1);
+      this.scene.add(arm, cup, candle, flame, glow);
+      flames.push([flame, glow]);
+    }
+    this.fx.push((t) => { for (const [f, l] of flames) { const k = f.userData.k, h = .9 + Math.sin(t * 9 + k) * .12 + Math.sin(t * 17 + k * 2) * .06; f.scale.set(.2 * h, .36 * h, 1); l.intensity = 1.4 * h; } });
+    if (!owned) return;
+    const n = 30, motes = sparks(n, 0x8dff5a, .05);
+    this.scene.add(motes);
+    const seed = motes.userData.seed, pos = motes.geometry.attributes.position;
+    this.fx.push((t) => {
+      for (let i = 0; i < n; i++) { const k = (t * (.04 + seed[i] * .05) + seed[i]) % 1; pos.setXYZ(i, -3.5 + seed[i] * 11 + Math.sin(t * .4 + seed[i] * 30) * .4, -6.6 + k * 5.6, -36.2 + ((seed[i] * 7.3) % 1) * 4); }
+      pos.needsUpdate = true;
+      motes.material.opacity = .55;
+    });
+    const fel = new THREE.PointLight(0x6dff4a, 1.6, 6, 1.8);
+    fel.position.set(2.2, -4.6, -35.9);
+    this.scene.add(fel);
+    this.fx.push((t) => { fel.intensity = 1.5 + Math.sin(t * 2.3) * .4 + Math.sin(t * 7.1) * .15; });
+  }
 
   dress(o) {
     o.traverse((m) => {
@@ -248,11 +306,15 @@ class Hall {
     const group = new THREE.Group();
     group.position.fromArray(spot.at);
     group.rotation.y = spot.yaw || 0;
+    group.scale.setScalar(spot.size || 1);
     this.scene.add(group);
     const entry = { x, group, spot, look: null };
     this.spots.push(entry);
     if (x.kind === 'weapon') await this.weapon(entry);
-    else if (x.kind === 'head') await this.head(entry);
+    else if (x.kind === 'head' || x.kind === 'trophy') await this.head(entry);
+    else if (x.kind === 'painting') await this.painting(entry);
+    else if (x.kind === 'jar') await this.jar(entry);
+    else if (x.kind === 'rack') await this.rack(entry);
     else await this.mount(entry);
     group.traverse((m) => { if (m.isMesh && !m.userData.skip) { m.userData.trophy = entry; this.pick.push(m); } });
   }
@@ -318,10 +380,10 @@ class Hall {
   }
 
   async head(entry) {
-    const { x, group, spot } = entry;
+    const { x, group, spot } = entry, HEAD = { ...HEADS[x.id], ...((window.HEADTUNE || {})[x.id] || {}) };
     const board = new THREE.Mesh(new THREE.CylinderGeometry(.66, .7, .1, 40), new THREE.MeshStandardMaterial({ color: 0x4a2a12, roughness: .8 }));
     board.rotation.z = Math.PI / 2;
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(.67, .035, 8, 64), new THREE.MeshStandardMaterial({ color: 0xb08a3e, roughness: .4, metalness: .6 }));
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(.67, .035, 8, 64), new THREE.MeshStandardMaterial({ color: HEAD.ring || 0xb08a3e, roughness: .4, metalness: .6, ...(HEAD.ring && { emissive: HEAD.ring, emissiveIntensity: .35 }) }));
     ring.rotation.y = Math.PI / 2;
     ring.position.x = .06;
     group.add(board, ring);
@@ -340,7 +402,11 @@ class Hall {
     hold.add(turn);
     group.add(hold);
     group.updateMatrixWorld(true);
-    const planes = [new THREE.Plane(new THREE.Vector3(0, 1, 0), -HEAD.cut).applyMatrix4(body.matrixWorld)];
+    const planes = [new THREE.Plane(new THREE.Vector3(0, 1, 0), -HEAD.cut)];
+    if (HEAD.half) planes.push(new THREE.Plane(new THREE.Vector3(1, 0, 0), HEAD.half), new THREE.Plane(new THREE.Vector3(-1, 0, 0), HEAD.half));
+    if (HEAD.back != null) planes.push(new THREE.Plane(new THREE.Vector3(0, 0, 1), -HEAD.back));
+    if (HEAD.top) planes.push(new THREE.Plane(new THREE.Vector3(0, -1, 0), HEAD.top));
+    for (const p of planes) p.applyMatrix4(body.matrixWorld);
     body.traverse((m) => { if (!m.isMesh) return; m.frustumCulled = false; m.userData.skip = true; for (const mt of [].concat(m.material)) mt.clippingPlanes = planes; });
     if (!x.have) { ghost(body, planes); return; }
     const cap = new THREE.MeshBasicMaterial({ color: 0x4a2c14, side: THREE.BackSide, clippingPlanes: planes }), skins = [];
@@ -350,10 +416,126 @@ class Hall {
     light.position.set(2.6, 1.4, 0);
     light.target = hold;
     group.add(light);
+    if (HEAD.glow) { const g = new THREE.PointLight(HEAD.glow, 1, 2.6, 1.6); g.position.set(.9, .2, 0); group.add(g); this.fx.push((t) => { g.intensity = .9 + Math.sin(t * 2.7) * .3; }); }
+  }
+
+  frameBox(w, h, depth, color) {
+    const wood = new THREE.MeshStandardMaterial({ color, roughness: .55, metalness: .25 }), out = new THREE.Group(), bar = .14;
+    for (const [sx, sy, px, py] of [[w + bar * 2, bar, 0, h / 2 + bar / 2], [w + bar * 2, bar, 0, -h / 2 - bar / 2], [bar, h, -w / 2 - bar / 2, 0], [bar, h, w / 2 + bar / 2, 0]]) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, depth), wood);
+      m.position.set(px, py, 0);
+      out.add(m);
+    }
+    return out;
+  }
+
+  plate(text, w = .9) {
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 96;
+    const g = c.getContext('2d'), grad = g.createLinearGradient(0, 0, 0, 96);
+    grad.addColorStop(0, '#f3d27a'); grad.addColorStop(.5, '#b8862e'); grad.addColorStop(1, '#7a5418');
+    g.fillStyle = grad; g.fillRect(0, 0, 512, 96);
+    g.strokeStyle = '#4a3010'; g.lineWidth = 6; g.strokeRect(6, 6, 500, 84);
+    g.fillStyle = '#2a1806'; g.font = '44px Morpheus, Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, 256, 52, 470);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, w * 96 / 512, .03), new THREE.MeshStandardMaterial({ map: tex, metalness: .5, roughness: .45 }));
+    m.userData.skip = true;
+    return m;
+  }
+
+  async painting(entry) {
+    const { x, group, spot } = entry, w = 2.7, h = 1.8;
+    group.add(this.frameBox(w, h, .12, 0xb08a3e));
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ color: 0x1a0f08, roughness: 1 }));
+    back.position.z = -.02;
+    group.add(back);
+    entry.look = { yaw: spot.look, pitch: .02, dist: spot.dist, y: spot.y };
+    if (!x.have) { const sheen = new THREE.Mesh(new THREE.PlaneGeometry(w, h), spirit); sheen.position.z = .01; sheen.renderOrder = 10; group.add(sheen); return; }
+    const tex = await new THREE.TextureLoader().loadAsync(ROOT + 'blasted.webp').catch(() => null);
+    if (!tex) return;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    const art = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: tex, roughness: .9 }));
+    art.position.z = .01;
+    group.add(art);
+    const lip = this.frameBox(w - .06, h - .06, .05, 0x2a1806);
+    lip.scale.setScalar(.985);
+    lip.position.z = .03;
+    group.add(lip);
+    const tag = this.plate(x.name);
+    tag.position.set(0, -h / 2 - .26, .06);
+    group.add(tag);
+    const light = new THREE.SpotLight(0xffe2b8, 18, 6, .5, .7, 1.2);
+    light.position.set(0, 1.9, 1.8);
+    light.target = art;
+    group.add(light);
+  }
+
+  async jar(entry) {
+    const { x, group, spot } = entry, stone = new THREE.MeshStandardMaterial({ color: this.stoneMap ? 0xb8a890 : 0x4a3d30, map: this.stoneMap || null, roughness: .85 }), trim = new THREE.MeshStandardMaterial({ color: 0xb08a3e, roughness: .4, metalness: .6 });
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(.42, .5, 1.05, 24), stone);
+    base.position.y = .52;
+    const lip = new THREE.Mesh(new THREE.CylinderGeometry(.5, .46, .08, 24), trim);
+    lip.position.y = 1.08;
+    const glass = new THREE.Mesh(new THREE.CylinderGeometry(.34, .34, .92, 32, 1, true), new THREE.MeshStandardMaterial({ color: 0xbfffd0, transparent: true, opacity: .16, roughness: .05, metalness: .1, side: THREE.DoubleSide, depthWrite: false }));
+    glass.position.y = 1.58;
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(.37, .37, .08, 24), trim);
+    cap.position.y = 2.07;
+    const knob = new THREE.Mesh(new THREE.SphereGeometry(.07, 12, 8), trim);
+    knob.position.y = 2.16;
+    group.add(base, lip, glass, cap, knob);
+    glass.userData.skip = true;
+    entry.look = { yaw: spot.look, pitch: .12, dist: spot.dist, y: spot.y };
+    const g = await this.load('assets/raid/gear/imp.glb');
+    if (!g) return;
+    const imp = g.scene, box = new THREE.Box3().setFromObject(imp), k = .72 / Math.max(.1, box.max.y - box.min.y);
+    imp.scale.setScalar(k);
+    imp.position.y = 1.13;
+    imp.rotation.y = .3;
+    group.add(imp);
+    const mixer = new THREE.AnimationMixer(imp), idle = g.animations.find((a) => a.name === 'idle');
+    if (idle) mixer.clipAction(idle).play();
+    mixer.update(.3);
+    if (!x.have) { ghost(imp); return; }
+    this.fx.push((t, dt) => { mixer.update(dt); imp.rotation.y = .3 + Math.sin(t * .6) * .5; });
+    const glow = new THREE.PointLight(0xff8a3a, 2.4, 2.4, 1.6);
+    glow.position.y = 1.6;
+    group.add(glow);
+    this.fx.push((t) => { glow.intensity = 2 + Math.sin(t * 5.3) * .6 + Math.sin(t * 13) * .3; });
+  }
+
+  async rack(entry) {
+    const { x, group, spot } = entry;
+    const board = new THREE.Mesh(new THREE.BoxGeometry(3.1, 1.25, .1), new THREE.MeshStandardMaterial({ color: 0x1c0f07, roughness: .9 }));
+    board.position.z = .02;
+    group.add(board, this.frameBox(3.1, 1.25, .14, 0xb08a3e));
+    for (const px of [-.85, .85]) { const peg = new THREE.Mesh(new THREE.CylinderGeometry(.045, .045, .34, 10), new THREE.MeshStandardMaterial({ color: 0xb08a3e, metalness: .6, roughness: .4 })); peg.rotation.x = Math.PI / 2; peg.position.set(px, -.28, .2); group.add(peg); }
+    entry.look = { yaw: spot.look, pitch: .02, dist: spot.dist, y: spot.y };
+    const g = x.model ? await this.load(x.model) : null;
+    if (!g) return;
+    const w = g.scene, box = new THREE.Box3().setFromObject(w), size = box.getSize(new THREE.Vector3()), mid = box.getCenter(new THREE.Vector3()), long = Math.max(size.x, size.y, size.z), k = 2.45 / long;
+    w.position.sub(mid).multiplyScalar(k);
+    w.scale.setScalar(k);
+    const hold = new THREE.Group(), turn = new THREE.Group(), axis = size.x === long ? 'x' : size.y === long ? 'y' : 'z';
+    turn.add(w);
+    if (axis === 'y') turn.rotation.z = Math.PI / 2;
+    else if (axis === 'z') turn.rotation.y = Math.PI / 2;
+    hold.add(turn);
+    hold.rotation.z = .1;
+    hold.position.z = .3;
+    group.add(hold);
+    if (!x.have) { ghost(w); return; }
+    const light = new THREE.SpotLight(0xffe2b8, 8, 5, .55, .8, 1.3);
+    light.position.set(0, 1.6, 1.6);
+    light.target = hold;
+    group.add(light);
   }
 
   async mount(entry) {
     const { x, group } = entry;
+    if (x.kind === 'steed' && x.have) { const fel = new THREE.PointLight(0x6dff4a, 4, 5, 1.6); fel.position.set(0, .5, 0); group.add(fel); this.fx.push((t) => { fel.intensity = 3.4 + Math.sin(t * 3.1) * 1.1; }); }
     const plinth = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.6, .16, 48), new THREE.MeshStandardMaterial({ color: this.stoneMap ? 0xa89880 : 0x3a2e22, map: this.stoneMap || null, roughness: .9 }));
     plinth.position.y = .08;
     const ring = new THREE.Mesh(new THREE.TorusGeometry(1.44, .03, 8, 64), new THREE.MeshStandardMaterial({ color: 0xb08a3e, roughness: .4, metalness: .6 }));
@@ -387,22 +569,45 @@ class Hall {
     c.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY }; moved = 0; c.setPointerCapture(e.pointerId); });
     c.addEventListener('pointermove', (e) => {
       if (!drag) return;
-      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y, swing = this.swingOf();
       moved += Math.abs(dx) + Math.abs(dy);
       drag = { x: e.clientX, y: e.clientY };
-      this.want.yaw = Math.max(this.center - SWING, Math.min(this.center + SWING, this.want.yaw - dx * .006));
+      this.want.yaw = Math.max(this.center - swing, Math.min(this.center + swing, this.want.yaw - dx * .006));
       this.want.pitch = Math.max(-.05, Math.min(.75, this.want.pitch + dy * .004));
       this.idle = 0;
     });
     c.addEventListener('pointerup', (e) => { if (drag && moved < 6) this.tap(e); drag = null; });
     c.addEventListener('pointercancel', () => { drag = null; });
-    c.addEventListener('wheel', (e) => { e.preventDefault(); this.want.dist = Math.max(3, Math.min(12, this.want.dist * (1 + Math.sign(e.deltaY) * .1))); this.idle = 0; }, { passive: false });
+    c.addEventListener('wheel', (e) => { e.preventDefault(); this.want.dist = this.clampDist(this.want.dist * (1 + Math.sign(e.deltaY) * .1)); this.idle = 0; }, { passive: false });
     c.addEventListener('touchmove', (e) => {
       if (e.touches.length !== 2) { pinch = null; return; }
       const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      if (pinch) this.want.dist = Math.max(3, Math.min(12, this.want.dist * pinch / d));
+      if (pinch) this.want.dist = this.clampDist(this.want.dist * pinch / d);
       pinch = d;
     }, { passive: true });
+  }
+
+  swingOf() { const a = AREA[this.area]; return a.swing * (a.wide && this.camera.aspect < 1 ? 1.9 : 1); }
+
+  fovFor(id) {
+    const want = AREA[id].wide;
+    if (!want || this.focus) return this.baseFov || 46;
+    const v = 2 * Math.atan(Math.tan(want * Math.PI / 360) / Math.max(.4, this.camera.aspect)) * 180 / Math.PI;
+    return Math.max(this.baseFov || 46, Math.min(84, v));
+  }
+
+  clampDist(d) { const a = AREA[this.area]; return Math.max(a.min || 3, Math.min(a.max || 12, d)); }
+
+  enter(id, snap) {
+    if (!AREA[id]) return;
+    this.area = id;
+    const h = homeOf(id);
+    this.focus = null;
+    this.want = h;
+    this.center = h.yaw;
+    this.idle = 0;
+    if (snap) this.view = { target: h.target.clone(), yaw: h.yaw, pitch: h.pitch, dist: h.dist };
+    if (this.onArea) this.onArea(id);
   }
 
   tap(e) {
@@ -415,7 +620,9 @@ class Hall {
   }
 
   go(entry) {
-    if (!entry || !entry.look) { if (entry) this.card(entry); return; }
+    if (!entry) return;
+    if (areaOf(entry.x) !== this.area) { this.travel(areaOf(entry.x), () => this.go(entry)); return; }
+    if (!entry.look) { this.card(entry); return; }
     const l = entry.look, w = entry.group.position;
     this.focus = entry;
     this.want = { target: new THREE.Vector3(w.x, l.y, w.z), yaw: l.yaw, pitch: l.pitch, dist: l.dist };
@@ -426,9 +633,21 @@ class Hall {
 
   home() {
     this.focus = null;
-    this.want = { target: HOME.target.clone(), yaw: HOME.yaw, pitch: HOME.pitch, dist: HOME.dist };
-    this.center = HOME.yaw;
+    this.want = homeOf(this.area);
+    this.center = this.want.yaw;
     this.card(null);
+  }
+
+  travel(id, then) {
+    if (id === this.area) { if (then) then(); else this.home(); return; }
+    clearTimeout(this.traveling);
+    this.card(null);
+    this.box.classList.add('swap');
+    this.traveling = setTimeout(() => {
+      this.enter(id, true);
+      this.box.classList.remove('swap');
+      if (then) setTimeout(then, 140);
+    }, this.still ? 0 : 380);
   }
 
   card(entry) {
@@ -436,7 +655,7 @@ class Hall {
     const el = this.box.querySelector('.trcard');
     if (!entry) { el.classList.remove('show'); return; }
     const x = entry.x;
-    el.innerHTML = `<img src="assets/icons/${x.icon}.png" alt=""><span><small>${x.kind === 'weapon' ? 'Legendary' : x.kind === 'head' ? 'Trophy' : 'Mount'}</small><b class="${x.have ? '' : 'dim'}">${esc(x.have ? x.name : 'Not yet yours')}</b><em>${esc(x.line)}</em></span>`;
+    el.innerHTML = `<img src="assets/icons/${x.icon}.png" alt=""><span><small>${x.rarity ? `${x.rarity} ${KIND[x.kind] || ''}` : KIND[x.kind] || 'Trophy'}</small><b class="${x.have ? '' : 'dim'}" ${x.rarity && x.have ? `style="color:${RARITY[x.rarity]}"` : ''}>${esc(x.have ? x.name : 'Not yet yours')}</b><em>${esc(x.line)}</em></span>`;
     el.classList.add('show');
   }
 
@@ -444,7 +663,8 @@ class Hall {
     const w = this.box.clientWidth || 1, h = this.box.clientHeight || 1;
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
-    this.camera.fov = w < h ? 58 : 46;
+    this.baseFov = w < h ? 58 : 46;
+    this.camera.fov = this.fovFor(this.area);
     this.reach = w < h ? Math.min(1.35, 1 + (h / w - 1) * .4) : 1;
     this.camera.updateProjectionMatrix();
   }
@@ -452,13 +672,15 @@ class Hall {
   frame() {
     const dt = Math.min(.05, this.clock.getDelta()), t = this.clock.elapsedTime;
     this.idle += dt;
-    if (this.idle > 4 && !this.still) this.want.yaw = this.center + Math.sin((this.idle - 4) * .12) * SWING * .55;
+    if (this.idle > 4 && !this.still) this.want.yaw = this.center + Math.sin((this.idle - 4) * .12) * this.swingOf() * .55;
     const v = this.view, w = this.want, k = 1 - Math.exp(-dt * 2.6);
     v.target.lerp(w.target, k);
     v.yaw += (w.yaw - v.yaw) * k;
     v.pitch += (w.pitch - v.pitch) * k;
     v.dist += (w.dist - v.dist) * k;
-    const d = v.dist * (this.reach || 1);
+    const fov = this.fovFor(this.area);
+    if (Math.abs(this.camera.fov - fov) > .05) { this.camera.fov += (fov - this.camera.fov) * k; this.camera.updateProjectionMatrix(); }
+    const d = v.dist * (this.area === 'hall' || this.focus ? this.reach || 1 : 1);
     this.camera.position.set(v.target.x + Math.sin(v.yaw) * Math.cos(v.pitch) * d, v.target.y + Math.sin(v.pitch) * d, v.target.z + Math.cos(v.yaw) * Math.cos(v.pitch) * d);
     this.camera.lookAt(v.target);
     pulse.value = Math.sin(t * 1.4);
@@ -483,12 +705,14 @@ class Hall {
 
 let open = null;
 
-export async function openTrophyHall(items, extra = '') {
+export async function openTrophyHall(items, extra = '', opts = {}) {
   if (open) return;
   const box = document.createElement('div');
   box.className = 'troph';
-  const have = items.filter((x) => x.have).length;
-  box.innerHTML = `<canvas></canvas><div class="trveil"><b>Lighting the hearth</b></div><header class="trtop"><span><small>Your Trophy Hall</small><b>The Lion's Pride Inn</b><em>${have} of ${items.length} trophies</em></span><span class="trbtns"><button class="trsound" aria-label="Sound"></button><button class="trclose" aria-label="Close">✕</button></span></header><div class="trcard"></div><nav class="trdots">${items.map((x) => `<button data-go="${x.id}" class="${x.have ? 'have' : ''}" title="${esc(x.have ? x.name : 'Not yet yours')}"><img src="assets/icons/${x.icon}.png" alt=""></button>`).join('')}</nav>`;
+  const have = items.filter((x) => x.have).length, areas = AREAS.filter((a) => a.id === 'hall' || items.some((x) => areaOf(x) === a.id));
+  const locked = opts.locked || {}, shut = (x) => !!locked[areaOf(x)];
+  const tally = (id) => { const list = items.filter((x) => areaOf(x) === id); return `${list.filter((x) => x.have).length}/${list.length}`; };
+  box.innerHTML = `<canvas></canvas><div class="trveil"><b>Lighting the hearth</b></div><div class="trswap"></div><header class="trtop"><span><small>Your Trophy Hall</small><b>The Lion's Pride Inn</b><em>${have} of ${items.length} trophies</em></span><span class="trbtns"><button class="trsound" aria-label="Sound"></button><button class="trclose" aria-label="Close">✕</button></span></header>${areas.length > 1 ? `<nav class="trareas">${areas.map((a) => `${locked[a.id] ? `<button data-area="${a.id}" class="locked" aria-disabled="true" title="Locked"><b><svg class="trchain" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 10V7a3.5 3.5 0 0 1 7 0v3M6 10h12v10H6Z"/></svg>${esc(a.name)}</b><small>Sealed</small></button>` : `<button data-area="${a.id}" class="${a.id === 'hall' ? 'on' : ''}" title="${esc(a.note)}"><b>${esc(a.name)}</b><small>${tally(a.id)}</small></button>`}`).join('')}</nav>` : ''}<div class="trcard"></div><nav class="trdots">${items.map((x) => `<button data-go="${x.id}" data-in="${areaOf(x)}" class="${x.have ? 'have' : ''} ${areaOf(x) === 'hall' ? '' : 'away'} ${shut(x) ? 'shut' : ''}" title="${esc(x.have ? x.name : 'Not yet yours')}"><img src="assets/icons/${x.icon}.png" alt=""></button>`).join('')}</nav>`;
   if (!document.querySelector('link[data-trophy]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -511,6 +735,20 @@ export async function openTrophyHall(items, extra = '') {
   document.addEventListener('keydown', key);
   box.querySelector('.trclose').onclick = close;
   for (const b of box.querySelectorAll('[data-go]')) b.onclick = () => hall.go(hall.spots.find((s) => s.x.id === +b.dataset.go));
+  hall.onArea = (id) => {
+    for (const b of box.querySelectorAll('[data-area]')) b.classList.toggle('on', b.dataset.area === id);
+    for (const b of box.querySelectorAll('[data-in]')) b.classList.toggle('away', b.dataset.in !== id);
+  };
+  const sealedNote = (id) => {
+    box.querySelector('.trsealed')?.remove();
+    const n = document.createElement('div');
+    n.className = 'trsealed';
+    n.innerHTML = `<b>The cellar door is chained shut</b><span>${esc(locked[id])}</span>`;
+    box.append(n);
+    setTimeout(() => n.classList.add('out'), 3800);
+    setTimeout(() => n.remove(), 4400);
+  };
+  for (const b of box.querySelectorAll('[data-area]')) b.onclick = () => (locked[b.dataset.area] ? sealedNote(b.dataset.area) : hall.travel(b.dataset.area));
   window.trophyHall = hall;
   await hall.build();
   if (open !== hall) return;
@@ -519,7 +757,7 @@ export async function openTrophyHall(items, extra = '') {
   box.querySelector('.trveil').classList.add('gone');
   let seen = [];
   try { seen = JSON.parse(localStorage.getItem(SEEN) || '[]'); } catch {}
-  const fresh = hall.spots.find((s) => s.x.have && !seen.includes(s.x.id));
+  const fresh = (opts.focus && hall.spots.find((s) => s.x.id === opts.focus && !shut(s.x))) || hall.spots.find((s) => s.x.have && !shut(s.x) && !seen.includes(s.x.id));
   try { localStorage.setItem(SEEN, JSON.stringify(items.filter((x) => x.have).map((x) => x.id))); } catch {}
-  if (fresh) setTimeout(() => { if (open === hall) { hall.go(fresh); box.querySelector('.trcard').classList.add('new'); } }, 2600);
+  if (fresh) setTimeout(() => { if (open === hall) { hall.go(fresh); box.querySelector('.trcard').classList.add('new'); } }, opts.focus ? 1400 : 2600);
 }

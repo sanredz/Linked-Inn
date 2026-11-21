@@ -9,7 +9,7 @@ const read = (k) => { try { return localStorage.getItem(k) || ''; } catch { retu
 const face = (m) => (/^hero:\w+$/.test(m.icon || '') ? `assets/draft/arena/boons/${m.icon.slice(5)}.jpg` : /^class:[A-Z]+$/.test(m.icon || '') ? `assets/classes/${m.icon.slice(6)}.png` : m.cls ? `assets/classes/${esc(m.cls)}.png` : '');
 const clock = (at) => new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-let fab, box, list, input, note, here, room = 1, ws = null, open = false, retry = 0, retryTimer = 0, unread = 0, named = false, mod = false, seen = new Set(), me = '';
+let fab, box, list, input, note, here, whoBox, whoList = [], room = 1, ws = null, open = false, retry = 0, retryTimer = 0, unread = 0, named = false, mod = false, seen = new Set(), me = '';
 
 function style() {
   const link = document.createElement('link');
@@ -45,6 +45,14 @@ function add(msgs, fresh) {
   if (!list.children.length) list.innerHTML = '<p class="chatempty">No one has said anything yet. Be the first!</p>';
   if (near || !fresh) list.scrollTop = list.scrollHeight;
   if (fresh && !open) { unread += msgs.length; badge(); }
+}
+
+function drawWho() {
+  if (!whoBox) return;
+  here.classList.toggle('modwho', mod);
+  if (!mod) { whoBox.hidden = true; return; }
+  const named = whoList.filter((p) => p.named), rest = whoList.length - named.length;
+  whoBox.innerHTML = `<b>Online in this channel</b><ul>${whoList.map((p) => `<li class="${p.named ? '' : 'anon'}">${face(p) ? `<img src="${face(p)}" alt="">` : '<i class="noicon"></i>'}<span style="color:${p.named ? CLASS_COLOR[p.cls] || '#e8d5a8' : '#8f8170'}">${esc(p.guest ? 'Unnamed visitor' : p.name)}</span>${p.tabs > 1 ? `<small>${p.tabs} tabs</small>` : ''}</li>`).join('')}</ul><small>${named.length} named${rest ? `, ${rest} unnamed` : ''} · only you can see this</small>`;
 }
 
 function badge() {
@@ -91,7 +99,8 @@ function connect() {
   ws.onmessage = (e) => {
     let d;
     try { d = JSON.parse(e.data); } catch { return; }
-    if (d.t === 'hello') { retry = 0; named = d.named; mod = !!d.mod; channels(d.online); footer(); say(''); list.innerHTML = ''; seen = new Set(); add(d.list, false); }
+    if (d.t === 'hello') { retry = 0; named = d.named; mod = !!d.mod; channels(d.online); footer(); say(''); list.innerHTML = ''; seen = new Set(); add(d.list, false); drawWho(); }
+    if (d.t === 'who') { whoList = d.list || []; drawWho(); }
     if (d.t === 'msg') add([d.m], true);
     if (d.t === 'online') { here.textContent = `${d.online} here`; channels(d.online); }
     if (d.t === 'del') for (const id of d.ids) list.querySelector(`[data-id="${id}"]`)?.remove();
@@ -145,6 +154,11 @@ export function mountChat() {
   input = box.querySelector('input');
   note = box.querySelector('.chatnote');
   here = box.querySelector('.chathere');
+  whoBox = document.createElement('div');
+  whoBox.className = 'chatwho';
+  whoBox.hidden = true;
+  box.querySelector('header').after(whoBox);
+  here.addEventListener('click', () => { if (mod) whoBox.hidden = !whoBox.hidden; });
   fab.onclick = () => toggle(!open);
   list.addEventListener('click', (e) => { const b = e.target.closest('.chatmod'); if (b) menu(b.closest('li')); else if (!e.target.closest('.chatmenu')) box.querySelector('.chatmenu')?.remove(); });
   box.querySelector('.chatroom').onchange = (e) => {

@@ -3,6 +3,7 @@ import { ANY, FEATS, LADDERS, MODES, MOUNTS, PORTRAIT, PORTRAITS, RELICS, TIERS,
 import { askName, claimName, heroName, nameOk } from '../pvp/name.js';
 import { SEASON, SEASONS, seasonOf } from './seasons.js';
 import { honorsOf, titleHtml, honorCards, unseen, revealHonor, plaqueHtml, HONORS } from './honors.js';
+import { LOOT, KEY } from '../raid/worldloot.js';
 
 const WHO = 'gauntletWho', CLASSES = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];
 const CLASS_NAME = Object.fromEntries(CLASSES.map((c) => [c, c[0] + c.slice(1).toLowerCase()]));
@@ -36,6 +37,9 @@ function showcase(st) {
     r.drops[it.id] = Math.max(r.drops[it.id] || 0, it.stack || 1);
   }
   st.forge.ingots = Math.max(st.forge.ingots || 0, 8);
+  st.world = st.world || {};
+  for (const it of LOOT) { const w = st.world[it.boss] = st.world[it.boss] || { tries: 0, kills: 0, best: 0, drops: {} }; w.drops = w.drops || {}; w.drops[it.id] = 1; st.found[it.id] = st.found[it.id] || now; }
+  st.attune = { kazzak: { forged: now } };
 }
 let ctx = null, data = null, got = new Set(), gotIn = {}, view = '', tab = 'overview', root = null, stage = null, showing = '', mountRoot = null, mountMixer = null, heroRig = null, busy = Promise.resolve();
 
@@ -146,10 +150,15 @@ function collectionHtml(raid) {
     const say = into ? `Forged into ${esc(into.short)}` : x.stack ? (have ? `${n} of ${x.stack} · from ${esc(x.from)}` : `Drops from ${esc(x.from)}`) : have ? (x.forged ? 'Legendary · forged' : `From ${esc(x.from)}`) : x.forged ? (ready ? 'Ready for the forge' : 'Forged from') : `Drops from ${esc(x.from)}`;
     const button = ready ? `<button class="hforgego" data-forge="${x.id}">Forge</button>` : have && mount ? `<button class="hride ${riding ? 'on' : ''}" data-ride="${riding ? 0 : x.id}">${riding ? 'Riding' : 'Ride'}</button>` : '';
     return `<div class="hc ${have ? 'on' : 'off'} ${x.forged ? 'forged' : ''} ${into ? 'used' : ''} ${ready ? 'ready' : ''}"><span class="hcicon"><img src="assets/icons/${x.icon}.png" alt=""></span><span class="hcsay"><b>${have || ready ? esc(x.name) : 'Undiscovered'}</b><small>${say}</small>${steps}</span>${button}</div>`;
-  }).join('')}</div>`;
+  }).join('')}${raid ? '' : LOOT.map((x) => {
+    const have = has(s, x), r = WORLD_RARITY[x.rarity];
+    return `<div class="hc hcworld ${have ? 'on' : 'off'}" style="--r:${r}"><span class="hcicon"><img src="assets/icons/${x.icon}.png" alt=""></span><span class="hcsay"><b>${have ? esc(x.name) : 'Undiscovered'}</b><small>${have ? `${esc(x.rarity)} · from ${esc(x.from)}` : `${esc(x.rarity)} drop from ${esc(x.from)}`}</small></span>${have ? `<button class="hride" data-inn="${x.id}">View</button>` : ''}</div>`;
+  }).join('')}${!raid && s.keys ? `<div class="hc hcworld on" style="--r:#3dffb0"><span class="hcicon"><img src="assets/icons/${KEY.icon}.png" alt=""></span><span class="hcsay"><b>${esc(KEY.name)} × ${s.keys}</b><small>Mythic · use it from the World Boss card</small></span></div>` : ''}</div>`;
 }
+const WORLD_RARITY = { Common: '#e8dcc0', Uncommon: '#1eff00', Rare: '#3a9bff', Epic: '#b45cff', Legendary: '#ff8000' };
 
-const TROPHIES = [...RELICS.filter((x) => x.forged || x.id === 21220), ...MOUNTS];
+const TROPHIES = [...RELICS.filter((x) => x.forged || x.id === 21220), ...MOUNTS, ...LOOT];
+const has = (s, x) => (x.boss ? !!(s.world && s.world[x.boss] && s.world[x.boss].drops && s.world[x.boss].drops[x.id]) : owned(s, x));
 const day = (at) => { const d = new Date(at); return d.toLocaleDateString('en-US', d.getFullYear() === new Date().getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' }); };
 
 function innFab() {
@@ -157,23 +166,27 @@ function innFab() {
   if (!b) {
     b = document.createElement('button');
     b.className = 'innfab';
-    b.onclick = () => import('./trophy.js').then((m) => m.openTrophyHall(trophyItems(), plaqueHtml(myHonors())));
+    b.onclick = () => import('./trophy.js').then((m) => m.openTrophyHall(trophyItems(), plaqueHtml(myHonors()), innOpts()));
     document.body.append(b);
   }
-  const n = TROPHIES.filter((x) => owned(data.stats, x)).length;
+  const n = TROPHIES.filter((x) => has(data.stats, x)).length;
   b.setAttribute('aria-label', `Enter the Lion's Pride Inn, ${n} of ${TROPHIES.length} trophies`);
   b.title = "The Lion's Pride Inn";
   b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V10l9-6 9 6v11h-5v-6a4 4 0 0 0-8 0v6Z"/><path class="f" d="M12 21c-1.8 0-2.7-1.2-2.7-2.5 0-1.5 1.4-2.2 1.6-3.8.9.6 1.4 1.4 1.5 2.2.4-.4.6-.9.6-1.5 1 .8 1.7 1.9 1.7 3.1 0 1.4-1 2.5-2.7 2.5Z"/></svg>Inn`;
 }
 
 function trophyDoor() {
-  const s = data.stats, have = TROPHIES.filter((x) => owned(s, x)).length;
-  return `<button class="htrophy" data-trophy><span class="htrophyart">${TROPHIES.map((x) => `<img class="${owned(s, x) ? 'on' : ''}" src="assets/icons/${x.icon}.png" alt="">`).join('')}</span><span class="htrophysay"><small>Your Trophy Hall</small><b>The Lion's Pride Inn</b><em>${have ? `${have} of ${TROPHIES.length} trophies on display` : 'Your legendaries and mounts will be shown here'}</em></span><i>Enter</i></button>`;
+  const s = data.stats, have = TROPHIES.filter((x) => has(s, x)).length;
+  return `<button class="htrophy" data-trophy><span class="htrophyart">${TROPHIES.map((x) => `<img class="${has(s, x) ? 'on' : ''}" src="assets/icons/${x.icon}.png" alt="">`).join('')}</span><span class="htrophysay"><small>Your Trophy Hall</small><b>The Lion's Pride Inn</b><em>${have ? `${have} of ${TROPHIES.length} trophies on display` : 'Your legendaries, mounts and trophies will be shown here'}</em></span><i>Enter</i></button>`;
 }
 
 function trophyItems() {
   const s = data.stats;
   return TROPHIES.map((x) => {
+    if (x.boss) {
+      const have = has(s, x), got = have && s.found && s.found[x.id];
+      return { id: x.id, kind: x.kind, area: 'cellar', name: x.name, icon: x.icon, have, rarity: x.rarity, text: x.text, line: have ? `Dropped by ${x.from}${got ? ` · ${day(got)}` : ''}` : `${x.rarity} drop from ${x.from}`, model: x.kind === 'steed' ? `assets/raid/gear/${x.model}.glb` : x.model ? `assets/draft/gear/${x.model}` : '', scale: x.scale };
+    }
     const have = owned(s, x), mount = MOUNTS.includes(x), drop = mount || !x.forged, row = !drop && ctx.gear.items[x.id];
     const done = !drop && s.forge && s.forge[x.id] && s.forge[x.id].done;
     const got = drop && s.found && s.found[x.id];
@@ -342,7 +355,8 @@ function bindBody() {
   }
   for (const b of root.querySelectorAll('[data-ride]')) b.onclick = () => save({ ride: +b.dataset.ride });
   for (const b of root.querySelectorAll('[data-forge]')) b.onclick = () => { b.disabled = true; forge(+b.dataset.forge).finally(() => { b.disabled = false; }); };
-  for (const b of root.querySelectorAll('[data-trophy]')) b.onclick = () => import('./trophy.js').then((m) => m.openTrophyHall(trophyItems(), plaqueHtml(myHonors())));
+  for (const b of root.querySelectorAll('[data-inn]')) b.onclick = () => openInn(+b.dataset.inn);
+  for (const b of root.querySelectorAll('[data-trophy]')) b.onclick = () => import('./trophy.js').then((m) => m.openTrophyHall(trophyItems(), plaqueHtml(myHonors()), innOpts()));
   for (const b of root.querySelectorAll('[data-more]')) b.onclick = () => { expanded[b.dataset.more] = !expanded[b.dataset.more]; drawBody(); };
 }
 
@@ -499,6 +513,20 @@ async function mount(ride) {
   stage.rig = root3;
   const mixer = mountMixer;
   stage.fx.push((dt) => { if (mountMixer !== mixer) return true; mixer.update(dt); return false; });
+}
+
+const CELLAR_SHUT = 'Something stirs beneath the floorboards. Break the seals to open the cellar.';
+function innOpts() {
+  const a = data && data.stats && data.stats.attune && data.stats.attune.kazzak;
+  return a && !a.forged ? { locked: { cellar: CELLAR_SHUT } } : {};
+}
+
+export async function openInn(focus) {
+  if (!ctx) return;
+  try { await loadHearth(); } catch {}
+  if (!data) return;
+  const m = await import('./trophy.js');
+  m.openTrophyHall(trophyItems(), plaqueHtml(myHonors()), { ...innOpts(), focus });
 }
 
 export async function openHearth(host) {

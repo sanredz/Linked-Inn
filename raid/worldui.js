@@ -69,7 +69,7 @@ export function makeWorld(ctx) {
       <span class="wbsay"><small class="wbkick">World Boss · Sealed</small><b class="wbname wbglitch" data-text="${esc(SCRAMBLE(b.name))}" aria-label="A sealed world boss">${esc(SCRAMBLE(b.name))}</b><span class="wbwhis">“${esc(said)}”</span>
       <span class="wbprog"><b>${a.steps}</b> of 6 seals broken</span>
       <ul class="wbsigils">${pieces}${light}</ul>
-      ${a.ready ? `<button class="wbbreak" data-act="worldforge" data-raid="${b.id}">Break the seals</button>` : '<span class="wbhint">Quest pieces drop from the final boss of each raid. The Light trials need three Paladins.</span>'}</span></div>${prev}</div>`;
+      ${a.ready ? `<button class="wbbreak" data-act="worldforge" data-raid="${b.id}">Break the seals</button>` : '<span class="wbhint">Quest pieces drop from the final boss of each raid. The Light trials need three Paladins. Once he is free, rare raid consumables help you fight him.</span>'}</span></div>${prev}</div>`;
   }
 
   async function sealAct(id, how) {
@@ -115,10 +115,12 @@ export function makeWorld(ctx) {
       const go = done ? said : `<span class="wbgo">${mid ? 'Continue your attempt' : 'Begin the hunt'}</span>`;
       const side = done ? `<span class="wbtally wbwait"><small>Returns in</small><b data-wbleft="${st.next}">${clockOf(st.next)}</b><small>at ${localTime(st.next)}</small></span>` : `<span class="wbtally"><b>${num(st ? st.kills || 0 : 0)}</b><small>${st && st.kills === 1 ? 'kill' : 'kills'}</small></span>`;
       const chip = done ? '' : `<span class="wbstate ${mid ? 'live' : 'ready'}"><b>${mid ? 'Under way' : 'Ready'}</b><small>${mid ? 'Pick up where you left off' : 'One attempt today'}</small></span>`;
+      const satN = Object.values((st && st.satchel) || {}).reduce((n, x) => n + x, 0);
+      const sat = `<span class="wbsat">${satN ? `Satchel: ${satN} consumable${satN === 1 ? '' : 's'}. One per hero, picked before the pull.` : 'Rare consumables from raids can help here: one per hero, picked before the pull.'}</span>`;
       const pips = st && st.total ? `<span class="wbset">${b.loot.map((l) => `<i class="${(st.have || []).includes(l.id) ? 'on' : ''}" title="${esc(l.name)}"></i>`).join('')}<small>${st.owned} of ${st.total} collected</small></span>` : '';
       const keyBtn = done && st && st.done && st.keys > 0 ? `<button class="wbkeybtn" data-act="worldkey" data-raid="${b.id}"><img src="assets/icons/${DARK_KEY.icon}.png" alt="">Use a ${esc(DARK_KEY.name)} <small>(${st.keys} held)</small></button>` : '';
       const reset = st && st.early ? `<span class="wbprevs">${done ? `<button class="wbprev" data-act="worldreset" data-raid="${b.id}">Reset lockout (preview only)</button>` : ''}${st.attune ? `<button class="wbprev" data-act="worldseal" data-how="reset" data-raid="${b.id}">Reset attunement (preview only)</button>` : ''}<button class="wbprev" data-act="worldseal" data-how="stock" data-raid="${b.id}">Fill satchel (preview)</button><button class="wbprev" data-act="worldseal" data-how="unstock" data-raid="${b.id}">Empty satchel (preview)</button></span>` : '';
-      return `<div class="wbwrap"><button class="wbcard ${done ? 'locked' : ''} ${today && today.won ? 'slain' : ''}" data-act="world" data-raid="${b.id}" ${done ? 'aria-disabled="true"' : ''}><i class="wbart" style="background-image:url(assets/draft/arena/raid-${b.id}.jpg)"></i><span class="wbsay"><small class="wbkick">World Boss · ${esc(b.zone)}</small><b class="wbname">${esc(b.name)}</b><span class="wbtext">${esc(b.blurb)}</span>${pips}${chip}${go}</span>${side}</button>${keyBtn}${reset}</div>`;
+      return `<div class="wbwrap"><button class="wbcard ${done ? 'locked' : ''} ${today && today.won ? 'slain' : ''}" data-act="world" data-raid="${b.id}" ${done ? 'aria-disabled="true"' : ''}><i class="wbart" style="background-image:url(assets/draft/arena/raid-${b.id}.jpg)"></i><span class="wbsay"><small class="wbkick">World Boss · ${esc(b.zone)}</small><b class="wbname">${esc(b.name)}</b><span class="wbtext">${esc(b.blurb)}</span>${pips}${sat}${chip}${go}</span>${side}</button>${keyBtn}${reset}</div>`;
     }).join('');
   }
 

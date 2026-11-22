@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Inn stats</title>
+<style>
+:root { color-scheme: dark; }
+body { margin: 0; background: #0b0806; color: #f0e4cc; font: 15px/1.45 system-ui, sans-serif; }
+main { max-width: 760px; margin: 0 auto; padding: 16px 16px 40px; }
+h1 { margin: 0; font-size: 20px; color: #ffd76a; }
+h2 { margin: 22px 0 8px; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; color: #c9a24a; }
+.at { color: #8f8170; font-size: 13px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-top: 12px; }
+.tile { padding: 10px 12px; border: 1px solid #3a2c18; border-radius: 10px; background: #140d07; }
+.tile b { display: block; font-size: 22px; color: #ffe6b0; }
+.tile small { color: #a89c88; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { padding: 7px 6px; text-align: left; border-bottom: 1px solid #241a0e; }
+th { color: #a89c88; font-weight: 500; font-size: 12px; }
+td.n { text-align: right; white-space: nowrap; }
+.s6 { color: #9dff7a; font-weight: 600; }
+.s5 { color: #ffd76a; }
+.won { color: #9dff7a; } .lost { color: #ff9a7a; }
+.tag { display: inline-block; padding: 1px 6px; margin: 1px 2px 1px 0; border-radius: 6px; font-size: 12px; background: #241a0e; color: #d8c8a8; }
+.tag.l { background: #2e2610; color: #ffe39a; }
+.err { color: #ff9a7a; }
+.wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+<h1>Inn stats</h1>
+<p class="at" id="at">Loading…</p>
+<div id="out"></div>
+</main>
+<script>
+const API = 'https://azeroth-draft.sanredz.workers.dev';
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'now' : m < 60 ? `${m}m ago` : m < 1440 ? `${Math.floor(m / 60)}h ${m % 60}m ago` : `${Math.floor(m / 1440)}d ago`; };
+const clock = (t) => new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+const RAID = { mc: 'MC', zg: 'ZG', aq20: 'AQ20' };
+const tile = (v, l) => `<div class="tile"><b>${esc(v)}</b><small>${esc(l)}</small></div>`;
+async function load() {
+  let d = null;
+  try {
+    const key = localStorage.getItem('draftKey') || '';
+    const r = await fetch(`${API}/admin/stats`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) });
+    d = await r.json();
+    if (!r.ok) throw new Error(d && d.error === 'nope' ? 'This page only works on your own device, signed in with your Hearth.' : 'Could not load.');
+  } catch (e) { document.getElementById('at').innerHTML = `<span class="err">${esc(e.message)}</span>`; return; }
+  const t = d.totals;
+  document.getElementById('at').textContent = `Updated ${new Date(d.at).toLocaleTimeString()} · refreshes every minute · counting since ${clock(d.since)}`;
+  const kills = d.kazzak.filter((k) => k.won).length;
+  document.getElementById('out').innerHTML = `
+    <div class="tiles">${tile(t.raids, 'raids')}${tile(t.players, 'players')}${tile(t.finals, 'final bosses')}${tile(t.raids24, 'raids last 24h')}${tile(t.active1h, 'active last hour')}${tile(d.forged.length, 'seals broken')}${tile(`${kills}/${d.kazzak.length}`, 'Kazzak kills')}${tile(t.arena.n, 'arena runs')}</div>
+    ${d.open.length ? `<h2>Fighting Kazzak right now</h2><p>${d.open.map((o) => `<b>${esc(o.name || 'Unnamed')}</b> started ${ago(o.at)}`).join('<br>')}</p>` : ''}
+    <h2>Kazzak attempts</h2>
+    ${d.kazzak.length ? `<div class="wrap"><table><tr><th>When</th><th>Player</th><th>Result</th><th class="n">Time</th></tr>${d.kazzak.map((k) => `<tr><td>${clock(k.at)}</td><td>${esc(k.name || 'Unnamed')}</td><td class="${k.won ? 'won' : 'lost'}">${k.won ? 'Killed him' : `Lost, he had ${Math.round(k.health * 1000) / 10}%`}${k.used ? ' · consumables' : ''}</td><td class="n">${Math.floor(k.time / 60)}:${String(Math.round(k.time % 60)).padStart(2, '0')}</td></tr>`).join('')}</table></div>` : '<p>None yet.</p>'}
+    <h2>Seals broken</h2>
+    ${d.forged.length ? `<p>${d.forged.map((f) => `<b>${esc(f.name || 'Unnamed')}</b> ${clock(f.forged)}`).join('<br>')}</p>` : '<p>Nobody yet.</p>'}
+    <h2>Players</h2>
+    <div class="wrap"><table><tr><th>Player</th><th class="n">Seals</th><th>Pieces / Paladin runs</th><th class="n">Raids</th><th class="n">Last</th></tr>${d.players.map((p) => `<tr><td>${esc(p.name)}</td><td class="n ${p.steps === 6 ? 's6' : p.steps === 5 ? 's5' : ''}">${p.steps}/6</td><td>${p.pieces.map((x) => `<span class="tag">${RAID[x]}</span>`).join('')}${p.light.map((x) => `<span class="tag l">${RAID[x]} Light</span>`).join('') || (p.pieces.length ? '' : '–')}</td><td class="n">${p.raids}</td><td class="n">${ago(p.last)}</td></tr>`).join('')}</table></div>`;
+}
+load();
+setInterval(load, 60000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); });
+</script>
+</body>
+</html>

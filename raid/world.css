@@ -425,3 +425,4 @@ body[data-view="raid"]:has(#sheet:not([hidden])) .chatfab { display: none; }
 .wczstage::after { content: ""; position: absolute; left: 50%; top: 52%; width: 46%; height: 70%; transform: translate(-50%, -100%); border-radius: 50% 50% 10% 10%; background: radial-gradient(60% 100% at 50% 100%, color-mix(in srgb, var(--rc) 70%, #fff) 0%, color-mix(in srgb, var(--rc) 40%, transparent) 35%, transparent 70%); opacity: 0; pointer-events: none; mix-blend-mode: screen; transition: opacity .6s ease .25s; }
 .wcz.three.open:not(.empty) .wczstage::after { opacity: .85; }
 .wcz.three.shake .wczstage { animation: none; }
+.wbsat { font-size: 12.5px; color: #b9ab94; }

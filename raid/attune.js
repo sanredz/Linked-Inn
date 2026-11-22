@@ -33,7 +33,7 @@ export const ALL = 63;
 const finalOf = (raid) => RAIDS[raid].bosses.length - 1;
 export const pieceRoll = (seed, raid) => rng(hash(seed, 'attune', raid))() < CHANCE;
 export const reachedFinal = (raid, kills) => !!RAIDS[raid] && kills === finalOf(raid);
-export const lightParty = (party) => party.length === 3 && party.every((h) => h.cls === 'PALADIN') && party.some((h) => h.role === 'dps' && h.build === 'ret') && party.some((h) => h.role === 'tank') && party.some((h) => h.role === 'heal');
+export const lightParty = (party) => party.length === 3 && party.every((h) => h.cls === 'PALADIN') && ['tank', 'heal', 'dps'].every((r) => party.some((h) => h.role === r));
 
 export function earned(raid, kills, seed, party) {
   if (!reachedFinal(raid, kills)) return { piece: 0, light: 0 };

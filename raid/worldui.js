@@ -60,7 +60,7 @@ export function makeWorld(ctx) {
   function sealedHtml(b, a) {
     const sigil = (on, icon, name, need, kind) => `<li class="wbsigil ${kind} ${on ? 'on' : ''}"><img src="assets/icons/${icon}.png" alt=""><span><b>${esc(name)}</b><small>${on ? (kind === 'piece' ? 'Found' : 'The Light answered') : esc(need)}</small></span><i aria-hidden="true">${on ? '✓' : ''}</i></li>`;
     const pieces = PIECES.map((p) => sigil(a.pieces[p.raid], p.icon, p.name, `${Math.round(CHANCE * 100)}% chance when you reach ${p.from}`, 'piece')).join('');
-    const light = LIGHT.map((l) => sigil(a.light[l.raid], l.icon, l.name, `Reach ${l.place} with a Paladin tank, Paladin healer and Retribution Paladin`, 'light')).join('');
+    const light = LIGHT.map((l) => sigil(a.light[l.raid], l.icon, l.name, `Reach ${l.place} with a Paladin tank, a Paladin healer and a Paladin damage dealer`, 'light')).join('');
     const said = a.steps ? WHISPERS[a.steps - 1] : 'Something sleeps beyond the Dark Portal. Six seals hold it there.';
     const st = status[b.id] || {};
     const prev = st.early ? `<span class="wbprevs"><button class="wbprev" data-act="worldseal" data-how="stock" data-raid="${b.id}">Fill satchel (preview)</button><button class="wbprev" data-act="worldseal" data-how="grant" data-raid="${b.id}">Grant next seal (preview only)</button><button class="wbprev" data-act="worldseal" data-how="grantall" data-raid="${b.id}">Grant all</button><button class="wbprev" data-act="worldseal" data-how="reset" data-raid="${b.id}">Reset attunement</button></span>` : '';

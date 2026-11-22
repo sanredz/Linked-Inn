@@ -34,7 +34,7 @@ function row(m) {
   if (seen.has(m.id)) return '';
   seen.add(m.id);
   const color = CLASS_COLOR[m.cls] || '#e8d5a8', self = m.name === me;
-  return `<li class="${self ? 'me' : ''}" data-id="${m.id}">${face(m) ? `<img src="${face(m)}" alt="">` : '<i class="noicon"></i>'}<div><b style="color:${color}">${esc(m.name)}</b><time>${clock(m.at)}</time><p>${esc(m.text)}</p></div>${mod && !self ? '<button class="chatmod" aria-label="Moderate">&#8943;</button>' : ''}</li>`;
+  return `<li class="${self ? 'me' : ''}" data-id="${m.id}">${face(m) ? `<img src="${face(m)}" alt="">` : '<i class="noicon"></i>'}<div><b style="color:${color}">${esc(m.name)}</b><time>${clock(m.at)}</time><p>${esc(m.text)}</p></div>${mod ? '<button class="chatmod" aria-label="Moderate">&#8943;</button>' : ''}</li>`;
 }
 
 function add(msgs, fresh) {

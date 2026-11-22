@@ -101,6 +101,7 @@ function stamp(pool, i, h, bonuses) {
     if (h.role === 'dps') add(b.phys);
     if (h.role === 'heal') add(b.healer);
   }
+  add(h.boost);
   pool.items[BUFF_ID + i] = ['Party bonuses', 1, 1, 4, 0, 4, 0, stats, null, 0, null, null, [], 0];
   return { ...h.picks, shirt: BUFF_ID + i };
 }

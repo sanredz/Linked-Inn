@@ -11,6 +11,9 @@ import { shouldShow, playOpening } from './aqopen.js';
 import { makeWorld } from './worldui.js';
 import { WORLD } from './world.js';
 import { PIECES, LIGHT, earned } from './attune.js';
+import { walkout } from './wloot.js';
+import { consumeDrops, TIERS as CTIERS, CONSUMABLES } from './consumables.js';
+import { LOOT as WLOOT, KEY as WKEY } from './worldloot.js';
 import { HEROIC, CLASS_NAME, DRAFT_PICKS, FORGE, INGOT, INGOTS, SCEPTER, SHARDS, collect, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, receivers, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js';
 
 const KEY = 'raidRun', WHO = 'gauntletWho';
@@ -253,6 +256,10 @@ function compare(o) {
 const hintOf = (m) => (SHARDS.includes(m.id) ? `One of three Scepter Shards. Find all three, then deal ${num(FORGE[SCEPTER].score)} damage to Ossirian to forge the Scepter of the Shifting Sands.` : m.id === INGOT ? `Needed to forge Sulfuras, Hand of Ragnaros. Collect ${INGOTS} of them and the Eye of Sulfuras.` : FORGE[17182].needs.includes(m.id) ? `Needed to forge Sulfuras, Hand of Ragnaros, along with ${INGOTS} Sulfuron Ingots. Once you have it, deal ${num(FORGE[17182].score)} damage to Ragnaros.` : FORGE[19019].needs.includes(m.id) ? `Needed to forge Thunderfury. Find both Bindings, then deal ${num(FORGE[19019].score)} damage to Ragnaros.` : '');
 const mountHtml = (m, tag = 'Dropped this run') => { const hint = hintOf(m); return `<div class="rmount" ${hint ? `tabindex="0" data-hint="${esc(hint)}"` : ''}><img src="assets/icons/${m.icon}.png" alt=""><span><small>${tag}</small><b>${esc(m.name)}</b></span></div>`; };
 
+const unsealed = () => { const a = world && world.attune('kazzak'); return !!(a && a.forged); };
+const consDrops = (only) => (unsealed() ? consumeDrops(run.raid, killed(run), run.seed).filter((d) => only === undefined || d.boss === only) : []);
+const consumeHtml = (list) => list.map((c) => `<div class="rmount rcons" style="--q:${CTIERS[c.tier].color}" tabindex="0" data-hint="${esc(`${c.line}. Drink it before a World Boss fight; one per hero.`)}"><img src="assets/icons/${c.icon}.png" alt=""><span><small>${CTIERS[c.tier].name} consumable · ${esc(RAIDS[run.raid].bosses[c.boss].name)} dropped</small><b>${esc(c.name)}</b></span></div>`).join('');
+
 const attuneHtml = () => {
   const a = run.attune;
   if (!a) return '';
@@ -274,12 +281,22 @@ const LIVE = () => ['mc', 'zg', ...UPCOMING.map(([id]) => id).filter(opened)], S
 const PLAYABLE = () => [...LIVE(), ...(TEST || (war && war.early) ? SOON().map(([id]) => id) : [])];
 loadWar().then((w) => { war = w; warDone = true; if (root && !run) render(); maybeOpening(); });
 let openingShown = false, warDone = false;
+function chestDemo() {
+  const kind = TEST ? new URLSearchParams(location.search).get('chest') : null;
+  if (kind === null) return;
+  const at = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 }[kind];
+  const drops = at === undefined ? [] : [{ ...WLOOT[at] }];
+  const go = () => walkout({ drops, keyed: kind === 'key' ? 1 : 0, from: 'Lord Kazzak', title: 'Lord Kazzak', loot: WLOOT, have: { [WLOOT[0].id]: 1 }, owned: 1, full: kind === 'key' ? 1 : 0, key: WKEY, keys: 1, complete: 0 }).then(() => { const b = document.createElement('button'); b.className = 'rchestagain'; b.textContent = 'Play it again'; b.onclick = () => { b.remove(); go(); }; document.body.append(b); });
+  setTimeout(go, 600);
+}
+
 function sealDemo() {
   const kind = TEST ? new URLSearchParams(location.search).get('seals') : null;
-  if (kind !== 'drop' && kind !== 'light') return;
+  const cdrop = TEST ? new URLSearchParams(location.search).get('cdrop') : null;
+  if (kind !== 'drop' && kind !== 'light' && !cdrop) return;
   const real = run;
   run = { raid: 'mc', attune: { piece: kind === 'drop' ? 1 : 0, light: kind === 'light' ? 1 : 0 } };
-  const extra = attuneHtml();
+  const extra = cdrop ? consumeHtml([{ ...CONSUMABLES.find((c) => c.raid === 'mc' && c.tier === cdrop) || CONSUMABLES[0], boss: 9 }]) : attuneHtml();
   run = real;
   const box = document.createElement('div');
   box.className = 'rsealdemo';
@@ -379,6 +396,7 @@ function overHtml() {
     <div class="rtrail">${trail}</div>${bossTable()}
     ${keptDrops().list.map((m) => mountHtml(m, m.id === INGOT ? 'Found this run' : 'Dropped this run')).join('')}
     ${attuneHtml()}
+    ${consumeHtml(consDrops())}
     <p>${k} of ${bosses.length - 1} bosses killed${heroics ? `, ${heroics} on Heroic` : ''}. ${esc(last.why || '')}</p>
     <div class="rsumparty">${run.heroes.map((h) => `<div class="rsumhero"><img src="assets/classes/${h.cls}.png" alt=""><span><small>${ROLE_NAME[h.role]}</small><b>${CLASS_NAME[h.cls]}</b></span></div>`).join('')}</div>
     ${run.boons.length ? `<div class="rbonus rboons">${run.boons.map((id) => `<span><b>${esc(boonById(id).name)}</b></span>`).join('')}</div>` : ''}
@@ -508,7 +526,7 @@ function finished(result, why, after, boss) {
   const title = result.won ? 'Victory' : boss.endless ? num(result.score) : 'Wipe';
   const dealt = result.totals.reduce((n, h) => n + h.dealt, 0), share = (h) => Math.round(h).toLocaleString('en-US');
   const kept = keptDrops(), drop = (result.won || boss.endless) && boss.drop && kept.list.includes(boss.drop);
-  scene.banner(resultHtml({ title, stats: boss.endless ? [['Final Stand', `Damage to ${RAIDS[run.raid].finale || 'Ragnaros'}`], [Math.round(result.time), 'Seconds survived']] : [[Math.round(result.time), 'Seconds'], [share(dealt), 'Damage dealt'], result.won ? [run.boss, `of ${RAIDS[run.raid].bosses.length} bosses`] : [`${Math.round(result.health * 100)}%`, 'Boss health left']], note: boss.endless ? '' : esc(why), extra: breakdownHtml(result) + attuneHtml() + (drop ? mountHtml(boss.drop, boss.drop.kind === 'mount' ? 'A rare mount dropped!' : SHARDS.includes(boss.drop.id) ? 'A Scepter Shard dropped!' : boss.drop.id === 21220 ? 'A rare trophy dropped!' : boss.drop.id === INGOT ? `Sulfuron Ingot ${kept.have[INGOT]} of ${INGOTS}` : 'A legendary relic dropped!') : ''), action: result.won ? 'Claim spoils' : 'See your run' }), `result ${result.won || boss.endless ? 'win' : 'lose'}`);
+  scene.banner(resultHtml({ title, stats: boss.endless ? [['Final Stand', `Damage to ${RAIDS[run.raid].finale || 'Ragnaros'}`], [Math.round(result.time), 'Seconds survived']] : [[Math.round(result.time), 'Seconds'], [share(dealt), 'Damage dealt'], result.won ? [run.boss, `of ${RAIDS[run.raid].bosses.length} bosses`] : [`${Math.round(result.health * 100)}%`, 'Boss health left']], note: boss.endless ? '' : esc(why), extra: breakdownHtml(result) + attuneHtml() + ((result.won || boss.endless) ? consumeHtml(consDrops(RAIDS[run.raid].bosses.findIndex((b) => b.name === boss.name))) : '') + (drop ? mountHtml(boss.drop, boss.drop.kind === 'mount' ? 'A rare mount dropped!' : SHARDS.includes(boss.drop.id) ? 'A Scepter Shard dropped!' : boss.drop.id === 21220 ? 'A rare trophy dropped!' : boss.drop.id === INGOT ? `Sulfuron Ingot ${kept.have[INGOT]} of ${INGOTS}` : 'A legendary relic dropped!') : ''), action: result.won ? 'Claim spoils' : 'See your run' }), `result ${result.won || boss.endless ? 'win' : 'lose'}`);
   root.querySelector('[data-next]').onclick = () => {
     run.step = after;
     offers = null;
@@ -651,5 +669,6 @@ export async function openRaid(data, host) {
   loadBoard();
   maybeOpening();
   sealDemo();
+  chestDemo();
   window.raid = { scene, get run() { return run; }, set run(v) { run = v; }, render };
 }

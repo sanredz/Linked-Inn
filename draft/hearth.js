@@ -4,6 +4,8 @@ import { askName, claimName, heroName, nameOk } from '../pvp/name.js';
 import { SEASON, SEASONS, seasonOf } from './seasons.js';
 import { honorsOf, titleHtml, honorCards, unseen, revealHonor, plaqueHtml, HONORS } from './honors.js';
 import { LOOT, KEY } from '../raid/worldloot.js';
+import { satchelHtml, bindSatchel, satchelCss } from '../raid/satchel.js';
+import { CONSUMABLES } from '../raid/consumables.js';
 
 const WHO = 'gauntletWho', CLASSES = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];
 const CLASS_NAME = Object.fromEntries(CLASSES.map((c) => [c, c[0] + c.slice(1).toLowerCase()]));
@@ -40,6 +42,7 @@ function showcase(st) {
   st.world = st.world || {};
   for (const it of LOOT) { const w = st.world[it.boss] = st.world[it.boss] || { tries: 0, kills: 0, best: 0, drops: {} }; w.drops = w.drops || {}; w.drops[it.id] = 1; st.found[it.id] = st.found[it.id] || now; }
   st.attune = { kazzak: { forged: now } };
+  st.satchel = Object.fromEntries(CONSUMABLES.map((c, i) => [c.id, 1 + (i % 3)]));
 }
 let ctx = null, data = null, got = new Set(), gotIn = {}, view = '', tab = 'overview', root = null, stage = null, showing = '', mountRoot = null, mountMixer = null, heroRig = null, busy = Promise.resolve();
 
@@ -291,6 +294,7 @@ function tabHtml() {
     const mine = FEATS.filter((f) => got.has(f.id)).sort((a, b) => RANK[b.tier] - RANK[a.tier]), all = expanded.overview, shown = all ? mine : mine.slice(0, 12);
     return `${honorCards(myHonors())}<div class="hmodes">${MODES.map(modeCard).join('')}</div>
       <h3 class="hh3">Collection</h3>${collectionHtml('')}
+      <h3 class="hh3">Your satchel <em>consumables for World Boss fights, one per hero</em></h3><div class="hsatchel">${satchelHtml(s.satchel || {}, { sealed: !(s.attune && s.attune.kazzak && s.attune.kazzak.forged) })}</div>
       <h3 class="hh3">Badges earned <em>${mine.length} of ${badgeTotal(got)}</em></h3>${mine.length ? `<div class="hmedals">${shown.map(medal).join('')}</div>` : '<p class="hempty">Play any mode to earn your first badge.</p>'}<div class="hmore">${mine.length > 12 ? `<button class="gmini" data-more="overview">${all ? 'Show fewer' : `Show all ${mine.length}`}</button>` : ''}</div>`;
   }
   const feats = badgeBlock(tab, FEATS.filter((f) => f.mode === tab && !(f.art && inLadder.has(f.id)))) + classLadders(tab);
@@ -355,6 +359,8 @@ function bindBody() {
   }
   for (const b of root.querySelectorAll('[data-ride]')) b.onclick = () => save({ ride: +b.dataset.ride });
   for (const b of root.querySelectorAll('[data-forge]')) b.onclick = () => { b.disabled = true; forge(+b.dataset.forge).finally(() => { b.disabled = false; }); };
+  const sat = root.querySelector('.hsatchel');
+  if (sat) { satchelCss(); bindSatchel(sat, sv().satchel || {}); }
   for (const b of root.querySelectorAll('[data-inn]')) b.onclick = () => openInn(+b.dataset.inn);
   for (const b of root.querySelectorAll('[data-trophy]')) b.onclick = () => import('./trophy.js').then((m) => m.openTrophyHall(trophyItems(), plaqueHtml(myHonors()), innOpts()));
   for (const b of root.querySelectorAll('[data-more]')) b.onclick = () => { expanded[b.dataset.more] = !expanded[b.dataset.more]; drawBody(); };

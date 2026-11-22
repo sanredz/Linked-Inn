@@ -8,6 +8,8 @@ import { walkout } from './wloot.js';
 import { KEY as DARK_KEY } from './worldloot.js';
 import { PIECES, LIGHT, WHISPERS, CHANCE } from './attune.js';
 import { breakSeals, whisper, whisperSeen } from './seals.js';
+import { CONSUMABLE, TIERS } from './consumables.js';
+import { openSatchel } from './satchel.js';
 
 const PREVIEW = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || /^(life-preview|azeroth-preview)\./.test(location.hostname);
 const PRETEND = PREVIEW ? new URLSearchParams(location.search).get('seals') : null;
@@ -32,6 +34,7 @@ const THEME = { zone: 'blasted' };
 export function makeWorld(ctx) {
   const { root, scene, pool, API } = ctx;
   if (!document.querySelector('link[href$="raid/world.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/world.css">');
+  if (!document.querySelector('link[href$="raid/satchel.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/satchel.css">');
   let rolled = '', fresh = '', justTook = '', run = null, status = {}, chosenCls = '', chosenSpec = '', chosenPick = '', viewing = 0, hands = '', busy = false, verdict = null, pulled = null, error = '', shownRole = -1, board = null;
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const num = (v) => Math.round(v).toLocaleString('en-US');
@@ -41,7 +44,7 @@ export function makeWorld(ctx) {
   const left = (at) => { const ms = Math.max(0, at - Date.now()), h = Math.floor(ms / 36e5), m = Math.ceil((ms % 36e5) / 6e4); return h ? `${h}h ${m}m` : `${m}m`; };
   const boss = () => WORLD[run ? run.raid : 'kazzak'];
   const cache = {};
-  const team = () => { const key = JSON.stringify(run.heroes.map((h) => [h.cls, h.build, h.pick, h.picks])); if (cache.key !== key) { cache.key = key; cache.heroes = worldParty(pool, run); } return cache.heroes; };
+  const team = () => { const key = JSON.stringify([run.consume, run.heroes.map((h) => [h.cls, h.build, h.pick, h.picks])]); if (cache.key !== key) { cache.key = key; cache.heroes = worldParty(pool, run); } return cache.heroes; };
 
   let fake = null;
   async function refresh(id = 'kazzak') {
@@ -60,7 +63,7 @@ export function makeWorld(ctx) {
     const light = LIGHT.map((l) => sigil(a.light[l.raid], l.icon, l.name, `Reach ${l.place} with a Paladin tank, Paladin healer and Retribution Paladin`, 'light')).join('');
     const said = a.steps ? WHISPERS[a.steps - 1] : 'Something sleeps beyond the Dark Portal. Six seals hold it there.';
     const st = status[b.id] || {};
-    const prev = st.early ? `<span class="wbprevs"><button class="wbprev" data-act="worldseal" data-how="grant" data-raid="${b.id}">Grant next seal (preview only)</button><button class="wbprev" data-act="worldseal" data-how="grantall" data-raid="${b.id}">Grant all</button><button class="wbprev" data-act="worldseal" data-how="reset" data-raid="${b.id}">Reset attunement</button></span>` : '';
+    const prev = st.early ? `<span class="wbprevs"><button class="wbprev" data-act="worldseal" data-how="stock" data-raid="${b.id}">Fill satchel (preview)</button><button class="wbprev" data-act="worldseal" data-how="grant" data-raid="${b.id}">Grant next seal (preview only)</button><button class="wbprev" data-act="worldseal" data-how="grantall" data-raid="${b.id}">Grant all</button><button class="wbprev" data-act="worldseal" data-how="reset" data-raid="${b.id}">Reset attunement</button></span>` : '';
     const note = a.pretend ? '<span class="wbpretend">Preview pretend mode: nothing is saved</span>' : '';
     return `${note}<div class="wbwrap"><div class="wbcard wbsealed ${a.ready ? 'ready' : ''}" data-raid="${b.id}"><i class="wbart" style="background-image:url(assets/draft/arena/raid-${b.id}.jpg)"></i><i class="wbfel" aria-hidden="true"></i>
       <span class="wbsay"><small class="wbkick">World Boss · Sealed</small><b class="wbname wbglitch" data-text="${esc(SCRAMBLE(b.name))}" aria-label="A sealed world boss">${esc(SCRAMBLE(b.name))}</b><span class="wbwhis">“${esc(said)}”</span>
@@ -83,6 +86,7 @@ export function makeWorld(ctx) {
       const r = await fetch(`${API}/world/attune`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: ctx.who(), boss: id, act: how }) });
       const d = await r.json().catch(() => null);
       if (d && d.attune && status[id]) status[id].attune = d.attune;
+      if (d && d.satchel && status[id]) status[id].satchel = d.satchel;
       if (how === 'forge' && d && d.ok) { busy = false; await breakSeals(); ctx.after(); }
       if (how !== 'forge') ctx.after();
       if (how === 'reset') { try { localStorage.removeItem('attuneSeen'); } catch {} }
@@ -113,7 +117,7 @@ export function makeWorld(ctx) {
       const chip = done ? '' : `<span class="wbstate ${mid ? 'live' : 'ready'}"><b>${mid ? 'Under way' : 'Ready'}</b><small>${mid ? 'Pick up where you left off' : 'One attempt today'}</small></span>`;
       const pips = st && st.total ? `<span class="wbset">${b.loot.map((l) => `<i class="${(st.have || []).includes(l.id) ? 'on' : ''}" title="${esc(l.name)}"></i>`).join('')}<small>${st.owned} of ${st.total} collected</small></span>` : '';
       const keyBtn = done && st && st.done && st.keys > 0 ? `<button class="wbkeybtn" data-act="worldkey" data-raid="${b.id}"><img src="assets/icons/${DARK_KEY.icon}.png" alt="">Use a ${esc(DARK_KEY.name)} <small>(${st.keys} held)</small></button>` : '';
-      const reset = st && st.early ? `<span class="wbprevs">${done ? `<button class="wbprev" data-act="worldreset" data-raid="${b.id}">Reset lockout (preview only)</button>` : ''}${st.attune ? `<button class="wbprev" data-act="worldseal" data-how="reset" data-raid="${b.id}">Reset attunement (preview only)</button>` : ''}</span>` : '';
+      const reset = st && st.early ? `<span class="wbprevs">${done ? `<button class="wbprev" data-act="worldreset" data-raid="${b.id}">Reset lockout (preview only)</button>` : ''}${st.attune ? `<button class="wbprev" data-act="worldseal" data-how="reset" data-raid="${b.id}">Reset attunement (preview only)</button>` : ''}<button class="wbprev" data-act="worldseal" data-how="stock" data-raid="${b.id}">Fill satchel (preview)</button><button class="wbprev" data-act="worldseal" data-how="unstock" data-raid="${b.id}">Empty satchel (preview)</button></span>` : '';
       return `<div class="wbwrap"><button class="wbcard ${done ? 'locked' : ''} ${today && today.won ? 'slain' : ''}" data-act="world" data-raid="${b.id}" ${done ? 'aria-disabled="true"' : ''}><i class="wbart" style="background-image:url(assets/draft/arena/raid-${b.id}.jpg)"></i><span class="wbsay"><small class="wbkick">World Boss · ${esc(b.zone)}</small><b class="wbname">${esc(b.name)}</b><span class="wbtext">${esc(b.blurb)}</span>${pips}${chip}${go}</span>${side}</button>${keyBtn}${reset}</div>`;
     }).join('');
   }
@@ -255,6 +259,7 @@ export function makeWorld(ctx) {
     const b = boss(), f = forecast(), [, word, tone] = [...VERDICT].reverse().find(([at]) => f.wins >= at), hp = bossHealth(b, null);
     return `<div class="gpanel rboss-card wbpull"><div class="rtitle"><div><small>World Boss · ${esc(b.zone)}</small><h3>${esc(b.name)}</h3></div><span class="rverdict ${tone}">${word}</span></div><p>${esc(b.blurb)}</p>
       <div class="rtests"><div><b>Survive</b><span>Tank takes ${num(f.tank)} a second</span></div><div><b>Heal</b><span>Healer restores ${num(f.heal)} a second${f.oom ? ', runs out of mana' : ''}</span></div><div><b>Burn</b><span>${num(f.dps)} DPS against ${num(hp)} health before Supreme Mode at ${Math.floor(b.supreme / 60)}:${String(b.supreme % 60).padStart(2, '0')}</span></div></div>
+      <h4 class="wconsh">Consumables</h4>${consHtml()}
       ${error ? `<p class="rwarn">${esc(error)}</p>` : ''}<div class="rpulls one"><button class="rforge wbforge" data-wact="pull" ${busy ? 'disabled' : ''}><span>${busy ? 'Summoning…' : `Face ${esc(b.name)}`}</span></button></div><p class="wbonce">This is your only attempt today. There is no second pull.</p></div>${knowHtml(true)}`;
   }
 
@@ -303,6 +308,7 @@ export function makeWorld(ctx) {
     if (!hero) return '';
     const art = (s) => (s.startsWith('finger') ? 'finger' : s.startsWith('trinket') ? 'trinket' : s);
     return ctx.PANE.map(([s, x, y]) => {
+      if (s === 'tabard' && run.step !== 'party' && run.step !== 'over') { const c = CONSUMABLE[(run.consume || [])[viewing]]; return `<button class="ps wvial${c ? ' on' : ''}" data-wvial="${viewing}" title="${c ? esc(c.name) : 'Consumable slot: tap to open your satchel'}" aria-label="${c ? esc(c.name) : 'Consumable slot'}" style="left:calc(var(--u)*${x});top:calc(var(--u)*${y})${c ? `;--q:${TIERS[c.tier].color}` : ''}">${c ? `<img src="assets/icons/${c.icon}.png" alt="">` : '<i>+</i>'}</button>`; }
       const id = hero.picks[s], dead = s === 'shirt' || s === 'tabard';
       return `<button class="ps${id ? ' on' : ''}${dead ? ' dead' : ''}" data-pslot="${s}" data-item="${id || ''}" style="left:calc(var(--u)*${x});top:calc(var(--u)*${y});background-image:url(assets/draft/ui/${art(s)}.png)${id ? `;--q:${ctx.QUALITY[pool.items[id][1]]}` : ''}" tabindex="-1">${id ? `<img src="${icon(id)}" alt="">` : ''}</button>`;
     }).join('');
@@ -319,6 +325,8 @@ export function makeWorld(ctx) {
     on('[data-wview]', (el) => { if (run.step === 'fight') return; viewing = +el.dataset.wview; render(); showHero(); });
     on('[data-wknow]', (el) => { const was = el.classList.contains('open'); for (const x of root.querySelectorAll('[data-wknow].open')) x.classList.remove('open'); el.classList.toggle('open', !was); });
     on('[data-winn]', (el) => openInn(+el.dataset.winn));
+    on('[data-wvial]', (el) => pickConsumable(+el.dataset.wvial));
+    on('[data-wcon]', (el) => { viewing = +el.dataset.wcon; render(); showHero(); pickConsumable(viewing); });
     on('[data-wspeed]', (el) => { scene.speed = +el.dataset.wspeed; for (const b of root.querySelectorAll('[data-wspeed]')) b.classList.toggle('on', b === el); });
   }
 
@@ -379,6 +387,27 @@ export function makeWorld(ctx) {
     return ctx.dress(() => scene.hero({ cls: h.cls, picks: { ...h.picks }, role: h.role, build: h.build }));
   }
 
+  function satchel() { return (status[run ? run.raid : 'kazzak'] || {}).satchel || {}; }
+  function pickConsumable(i) {
+    const hero = run && run.heroes[i];
+    if (!hero || busy || run.step === 'fight' || run.step === 'over') return;
+    run.consume ||= [0, 0, 0];
+    const reserved = {};
+    run.consume.forEach((id, k) => { if (id && k !== i) reserved[id] = (reserved[id] || 0) + 1; });
+    openSatchel(satchel(), { hero, reserved, current: run.consume[i] || 0, title: `${CLASS_NAME[hero.cls]} · consumable`, onUse: (id) => {
+      run.consume[i] = id;
+      verdict = null;
+      save();
+      render();
+      const v = root.querySelector('[data-wvial]');
+      if (v && id) { v.classList.add('drink'); toast(`${CONSUMABLE[id].name} uncorked`, CONSUMABLE[id].line); }
+    } });
+  }
+  function consHtml() {
+    const c = run.consume || [];
+    return `<div class="wcons" aria-label="Consumables">${run.heroes.map((h, i) => { const k = CONSUMABLE[c[i]]; return `<button type="button" class="${k ? 'on' : ''}" data-wcon="${i}" style="${k ? `--q:${TIERS[k.tier].color}` : ''}">${k ? `<img src="assets/icons/${k.icon}.png" alt="">` : '<i>+</i>'}${CLASS_NAME[h.cls]}: ${k ? esc(k.line) : 'no consumable'}</button>`; }).join('')}</div>`;
+  }
+
   async function pull() {
     if (busy || run.step !== 'boss') return;
     busy = true;
@@ -386,11 +415,12 @@ export function makeWorld(ctx) {
     render();
     let d = null;
     try {
-      const r = await fetch(`${API}/world/pull`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: ctx.who(), name: ctx.heroName(), boss: run.raid, day: run.day, moves: run.moves }) });
+      const r = await fetch(`${API}/world/pull`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: ctx.who(), name: ctx.heroName(), boss: run.raid, day: run.day, moves: run.moves, consume: run.consume || [0, 0, 0] }) });
       d = await r.json().catch(() => null);
-      if (!r.ok || !d || !d.ok) { busy = false; error = d && d.error === 'locked' ? 'Your attempt for today is already spent.' : 'Kazzak could not be reached. Try again.'; if (d && d.error === 'locked') { run = null; save(); refresh(); ctx.redraw(); return; } render(); return; }
+      if (!r.ok || !d || !d.ok) { busy = false; if (d && d.error === 'satchel') { run.consume = [0, 0, 0]; save(); await refresh(run.raid); error = 'Your satchel changed. Pick your consumables again.'; render(); return; } error = d && d.error === 'locked' ? 'Your attempt for today is already spent.' : 'Kazzak could not be reached. Try again.'; if (d && d.error === 'locked') { run = null; save(); refresh(); ctx.redraw(); return; } render(); return; }
     } catch { busy = false; error = 'Kazzak could not be reached. Try again.'; render(); return; }
     pulled = d;
+    if (d.satchel && status[run.raid]) status[run.raid].satchel = d.satchel;
     const heroes = team(), b = boss(), result = pullWorld(pool, run, d.salt, heroes), why = explain(result).replace('the boss enraged', `${b.short} entered Supreme Mode`);
     try { localStorage.setItem(`${KEY}Done`, JSON.stringify({ day: run.day, raid: run.raid })); } catch {}
     save();
@@ -413,7 +443,7 @@ export function makeWorld(ctx) {
     }).join('')}</ul>`;
   }
 
-  const openInn = (id) => import('../draft/hearth.js?v=20261121220804').then((m) => m.openInn(id)).catch(() => {});
+  const openInn = (id) => import('../draft/hearth.js?v=20261122074712').then((m) => m.openInn(id)).catch(() => {});
 
   function toOver() {
     run.step = 'over';

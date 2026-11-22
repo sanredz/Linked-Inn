@@ -2,6 +2,7 @@ import { hash, rng } from '../draft/core.js';
 import { fight, enrageTime } from './engine.js';
 import { makeParty, choiceOf } from './roles.js';
 import { ROLES, classesFor, specsFor, list, targetsOf } from './run.js';
+import { boostOf, drink } from './consumables.js';
 import { LOOT, KEY } from './worldloot.js';
 
 const SHADOW = 'shadow', PHYS = 'phys';
@@ -142,7 +143,7 @@ export function tuneParty(party, boss) {
   });
 }
 
-export const worldParty = (pool, run, iterations = ITERATIONS) => tuneParty(makeParty(pool, run.heroes, iterations, [], run.raid), bossOf(run));
+export const worldParty = (pool, run, iterations = ITERATIONS) => drink(tuneParty(makeParty(pool, run.heroes.map((h, i) => { const b = boostOf(run.consume && run.consume[i]); return b ? { ...h, boost: b } : h; }), iterations, [], run.raid), bossOf(run)), run.consume);
 export const fightSeed = (run) => hash(run.salt, 'fight', run.raid);
 export const variance = (seed) => { const r = rng(hash(seed, 'variance')); return { damage: .7 + r() * .6, health: .84 + r() * .32 }; };
 

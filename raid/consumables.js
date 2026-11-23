@@ -39,13 +39,13 @@ export function consumeDrops(raid, kills, seed, at = Date.now()) {
   const src = SOURCES[raid];
   if (!src || !Number.isInteger(seed)) return [];
   const out = [];
-  for (const at of ['mid', 'final']) {
-    const i = src[at], reached = at === 'final' ? kills === i : kills > i;
+  for (const spot of ['mid', 'final']) {
+    const i = src[spot], reached = spot === 'final' ? kills === i : kills > i;
     if (!reached) continue;
-    const r = rng(hash(seed, 'consume', raid, at));
+    const r = rng(hash(seed, 'consume', raid, spot));
     if (r() >= (at >= RATE_UP ? DROP_CHANCE : OLD_CHANCE)) continue;
     let tier = 'minor';
-    if (at === 'final') { const x = r(); let acc = 0; for (const [t, p] of TIER_ROLL) { acc += p; if (x < acc) { tier = t; break; } } }
+    if (spot === 'final') { const x = r(); let acc = 0; for (const [t, p] of TIER_ROLL) { acc += p; if (x < acc) { tier = t; break; } } }
     const c = CONSUMABLES.find((k) => k.raid === raid && k.tier === tier);
     out.push({ ...c, boss: i });
   }

@@ -346,3 +346,16 @@ img.sq { transform: scale(1.22); }
 .hc.hcworld.on { border-color: color-mix(in srgb, var(--r) 55%, #3f3119); background: linear-gradient(90deg, color-mix(in srgb, var(--r) 12%, rgba(0, 0, 0, .4)), rgba(0, 0, 0, .3)); }
 .hc.hcworld.on .hcicon img { border-color: var(--r); box-shadow: 0 0 10px color-mix(in srgb, var(--r) 50%, transparent); }
 .hc.hcworld.on .hcsay small { color: color-mix(in srgb, var(--r) 70%, #c9b99a); }
+.codenudge { position: fixed; left: 16px; bottom: 16px; z-index: 1500; display: flex; gap: 12px; align-items: flex-start; width: min(380px, calc(100vw - 32px)); box-sizing: border-box; padding: 14px 16px; border: 1px solid #6d5222; border-radius: 12px; background: radial-gradient(120% 120% at 0% 0%, #2a1b0c, #120a05 70%); box-shadow: 0 12px 36px rgba(0, 0, 0, .6); opacity: 0; transform: translateY(16px); transition: opacity .35s ease, transform .4s cubic-bezier(.2, 1.2, .4, 1); }
+.codenudge.in { opacity: 1; transform: none; }
+.codenudge img { flex: none; width: 40px; height: 40px; border-radius: 8px; border: 1px solid #c9a24a; }
+.codenudge > div { display: grid; gap: 4px; min-width: 0; }
+.codenudge b { font: 16px "Friz", serif; font-weight: normal; color: #ffe39a; }
+.codenudge span { font-size: 13.5px; line-height: 1.4; color: #cbbca2; }
+.codenudge .cncode { font: 18px/1.2 ui-monospace, monospace; letter-spacing: .06em; color: #fff4dc; padding: 6px 8px; border-radius: 6px; background: rgba(0, 0, 0, .45); user-select: all; word-break: break-all; }
+.cnbtns { display: flex; gap: 8px; margin-top: 6px; }
+.cnbtns button { padding: 8px 14px; font: 14px "Friz", serif; cursor: pointer; border-radius: 8px; }
+.cngo { color: #1a1006; border: 1px solid #ffe39a; background: linear-gradient(#ffe39a, #d5a548); }
+.cnlater { color: #c9b99a; border: 1px solid #5a4520; background: rgba(0, 0, 0, .35); }
+.cnbtns button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+@media (max-width: 520px) { .codenudge { left: 12px; right: 12px; width: auto; bottom: 76px; } }

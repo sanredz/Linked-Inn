@@ -1,5 +1,5 @@
-import * as C from './core.js?v=20261122170417';
-import { Stage } from './stage.js?v=20261122170417';
+import * as C from './core.js?v=20261123085234';
+import { Stage } from './stage.js?v=20261123085234';
 import { askFeedback, askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
@@ -755,7 +755,7 @@ function useCode(input = 'sIn', msg = 'sMsg') {
 let hearthLib = null;
 const hearthMod = async () => {
   if (!hearthLib) {
-    hearthLib = await import('./hearth.js?v=20261122170417');
+    hearthLib = await import('./hearth.js?v=20261123085234');
     hearthLib.setupHearth({ API, key: () => playerKey, Stage, gear, row: (id) => row(id), onChange: () => hearthLib.hearthBar($('hearthBar')) });
   }
   return hearthLib;
@@ -782,12 +782,41 @@ async function callForge() {
   await hearthLib.callForge(x);
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Date.now() - hearthAt > 120000) refreshHearth(); });
+function logSave(src) {
+  fetch(`${API}/code/saved`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: playerKey, src }) }).catch(() => {});
+}
+
+function codeNudge(stats) {
+  let saved = '', last = 0;
+  try { saved = localStorage.getItem('draftCodeSaved'); last = +(localStorage.getItem('codeNudgeAt') || 0); } catch {}
+  const force = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || /^(life-preview|azeroth-preview)\./.test(location.hostname) ? new URLSearchParams(location.search).has('codenudge') : false;
+  if (!force && (saved || Date.now() - last < 864e5 || !stats)) return;
+  if (document.querySelector('.codenudge')) return;
+  const runs = !stats ? 0 : ((stats.gear && stats.gear.runs) || 0) + ((stats.arena && stats.arena.runs) || 0) + Object.values(stats.raids || {}).reduce((n, r) => n + ((r && r.runs) || 0), 0);
+  if (runs < 3 && !force) return;
+  try { localStorage.setItem('codeNudgeAt', String(Date.now())); } catch {}
+  const box = document.createElement('aside');
+  box.className = 'codenudge';
+  box.setAttribute('role', 'status');
+  box.innerHTML = `<img src="assets/icons/134414.png" alt=""><div><b>Keep your progress safe</b><span>Your Hearthstone code brings back every run, badge and mount on any device. Save it once, somewhere safe.</span><div class="cnbtns"><button type="button" class="cngo">Show my code</button><button type="button" class="cnlater">Later</button></div></div>`;
+  document.body.append(box);
+  requestAnimationFrame(() => box.classList.add('in'));
+  const close = () => { box.classList.remove('in'); setTimeout(() => box.remove(), 300); };
+  box.querySelector('.cnlater').onclick = close;
+  box.querySelector('.cngo').onclick = () => {
+    box.querySelector('div').innerHTML = `<b>Your Hearthstone code</b><code class="cncode">${prettyKey(playerKey)}</code><span>Save it in your notes or a password manager. Never share it.</span><div class="cnbtns"><button type="button" class="cngo">Copy</button><button type="button" class="cnlater">Done</button></div>`;
+    box.querySelector('.cnlater').onclick = () => { note('draftCodeSaved'); close(); };
+    box.querySelector('.cngo').onclick = () => { note('draftCodeSaved'); logSave('nudge'); copyLink(box.querySelector('.cngo'), prettyKey(playerKey), 'Copy'); };
+  };
+}
+
 async function refreshHearth(from) {
   hearthAt = Date.now();
   try {
     const h = await hearthMod(), d = await h.loadHearth(from ? { from } : {});
     await syncName(d.name);
     h.hearthBar($('hearthBar'));
+    codeNudge(d.stats);
     for (const n of d.notices || []) await notify(n);
     if (h.revealHonors) await h.revealHonors();
     await callForge();
@@ -965,7 +994,7 @@ async function loadTally() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261122170417', 'draft/gear.json?v=20261122170417', 'draft/talents.json?v=20261122170417', 'draft/retired.json?v=20261122170417'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261123085234', 'draft/gear.json?v=20261123085234', 'draft/talents.json?v=20261123085234', 'draft/retired.json?v=20261123085234'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {
@@ -1019,7 +1048,7 @@ async function boot() {
   refreshHearth();
   $('hearthBar').onclick = (e) => { if (e.target.closest('[data-hearth]')) openHearth(); };
   $('sShow').onclick = () => flipCode('sCode', 'sShow');
-  $('sCopy').onclick = () => { note('draftCodeSaved'); copyLink($('sCopy'), prettyKey(playerKey), 'Copy'); };
+  $('sCopy').onclick = () => { note('draftCodeSaved'); logSave('stone'); copyLink($('sCopy'), prettyKey(playerKey), 'Copy'); };
   $('sUse').onclick = () => { $('sUse').hidden = true; $('sForm').hidden = false; $('sMsg').textContent = ''; $('sIn').focus(); };
   $('sLoad').onclick = () => useCode('sIn', 'sMsg');
   $('sIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') useCode('sIn', 'sMsg'); });
@@ -1067,4 +1096,4 @@ async function boot() {
 }
 
 boot();
-import('../pvp/chat.js?v=20261122170417').then((m) => m.mountChat()).catch(() => {});
+import('../pvp/chat.js?v=20261123085234').then((m) => m.mountChat()).catch(() => {});

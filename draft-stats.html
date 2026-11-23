@@ -54,12 +54,14 @@ async function load() {
   document.getElementById('at').textContent = `Updated ${new Date(d.at).toLocaleTimeString()} · refreshes every minute · counting since ${clock(d.since)}`;
   const kills = d.kazzak.filter((k) => k.won).length;
   document.getElementById('out').innerHTML = `
-    <div class="tiles">${tile(t.raids, 'raids')}${tile(t.players, 'players')}${tile(t.finals, 'final bosses')}${tile(t.raids24, 'raids last 24h')}${tile(t.active1h, 'active last hour')}${tile(d.forged.length, 'seals broken')}${tile(`${kills}/${d.kazzak.length}`, 'Kazzak kills')}${tile(t.arena.n, 'arena runs')}</div>
+    <div class="tiles">${tile(t.raids, 'raids')}${tile(t.players, 'players')}${tile(t.finals, 'final bosses')}${tile(t.raids24, 'raids last 24h')}${tile(t.active1h, 'active last hour')}${tile(d.forged.length, 'seals broken')}${tile(`${kills}/${d.kazzak.length}`, 'Kazzak kills')}${tile(t.arena.n, 'arena runs')}${tile(new Set((d.saves || []).map((x) => x.name)).size, 'saved their code')}</div>
     ${d.open.length ? `<h2>Fighting Kazzak right now</h2><p>${d.open.map((o) => `<b>${esc(o.name || 'Unnamed')}</b> started ${ago(o.at)}`).join('<br>')}</p>` : ''}
     <h2>Kazzak attempts</h2>
     ${d.kazzak.length ? `<div class="wrap"><table><tr><th>When</th><th>Player</th><th>Result</th><th class="n">Time</th></tr>${d.kazzak.map((k) => `<tr><td>${clock(k.at)}</td><td>${esc(k.name || 'Unnamed')}</td><td class="${k.won ? 'won' : 'lost'}">${k.won ? 'Killed him' : `Lost, he had ${Math.round(k.health * 1000) / 10}%`}${k.used ? ' · consumables' : ''}</td><td class="n">${Math.floor(k.time / 60)}:${String(Math.round(k.time % 60)).padStart(2, '0')}</td></tr>`).join('')}</table></div>` : '<p>None yet.</p>'}
     <h2>Seals broken</h2>
     ${d.forged.length ? `<p>${d.forged.map((f) => `<b>${esc(f.name || 'Unnamed')}</b> ${clock(f.forged)}`).join('<br>')}</p>` : '<p>Nobody yet.</p>'}
+    <h2>Hearthstone codes copied</h2>
+    ${(d.saves || []).length ? `<div class="wrap"><table><tr><th>When</th><th>Player</th><th>From</th></tr>${d.saves.map((x) => `<tr><td>${clock(x.at)}</td><td>${esc(x.name || 'Unnamed')}</td><td>${x.src === 'nudge' ? 'Reminder card' : 'Hearthstone box'}</td></tr>`).join('')}</table></div>` : '<p>Nobody yet.</p>'}
     <h2>Players</h2>
     <div class="wrap"><table><tr><th>Player</th><th class="n">Seals</th><th>Pieces / Paladin runs</th><th class="n">Raids</th><th class="n">Last</th></tr>${d.players.map((p) => `<tr><td>${esc(p.name)}</td><td class="n ${p.steps === 6 ? 's6' : p.steps === 5 ? 's5' : ''}">${p.steps}/6</td><td>${p.pieces.map((x) => `<span class="tag">${RAID[x]}</span>`).join('')}${p.light.map((x) => `<span class="tag l">${RAID[x]} Light</span>`).join('') || (p.pieces.length ? '' : '–')}</td><td class="n">${p.raids}</td><td class="n">${ago(p.last)}</td></tr>`).join('')}</table></div>`;
 }

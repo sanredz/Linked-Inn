@@ -55,6 +55,20 @@ function drawWho() {
   whoBox.innerHTML = `<b>Online in this channel</b><ul>${whoList.map((p) => `<li class="${p.named ? '' : 'anon'}">${face(p) ? `<img src="${face(p)}" alt="">` : '<i class="noicon"></i>'}<span style="color:${p.named ? CLASS_COLOR[p.cls] || '#e8d5a8' : '#8f8170'}">${esc(p.guest ? 'Unnamed visitor' : p.name)}</span>${p.tabs > 1 ? `<small>${p.tabs} tabs</small>` : ''}</li>`).join('')}</ul><small>${named.length} named${rest ? `, ${rest} unnamed` : ''} · only you can see this</small>`;
 }
 
+function statsLink() {
+  let a = document.querySelector('.statsfab');
+  if (!mod) { if (a) a.remove(); return; }
+  if (a) return;
+  a = document.createElement('a');
+  a.className = 'statsfab';
+  a.href = 'draft-stats.html';
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.title = 'Your private stats page';
+  a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Stats';
+  document.body.append(a);
+}
+
 function badge() {
   fab.setAttribute('aria-label', unread ? `Open tavern chat, ${unread} new` : 'Open tavern chat');
   fab.classList.toggle('new', unread > 0);
@@ -99,7 +113,7 @@ function connect() {
   ws.onmessage = (e) => {
     let d;
     try { d = JSON.parse(e.data); } catch { return; }
-    if (d.t === 'hello') { retry = 0; named = d.named; mod = !!d.mod; channels(d.online); footer(); say(''); list.innerHTML = ''; seen = new Set(); add(d.list, false); drawWho(); }
+    if (d.t === 'hello') { retry = 0; named = d.named; mod = !!d.mod; statsLink(); channels(d.online); footer(); say(''); list.innerHTML = ''; seen = new Set(); add(d.list, false); drawWho(); }
     if (d.t === 'who') { whoList = d.list || []; drawWho(); }
     if (d.t === 'msg') add([d.m], true);
     if (d.t === 'online') { here.textContent = `${d.online} here`; channels(d.online); }

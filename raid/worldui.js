@@ -445,7 +445,7 @@ export function makeWorld(ctx) {
     }).join('')}</ul>`;
   }
 
-  const openInn = (id) => import('../draft/hearth.js?v=20261123085234').then((m) => m.openInn(id)).catch(() => {});
+  const openInn = (id) => import('../draft/hearth.js?v=20261123095739').then((m) => m.openInn(id)).catch(() => {});
 
   function toOver() {
     run.step = 'over';

@@ -3,7 +3,9 @@ import { RAIDS } from './bosses.js';
 
 export const CONSUME_START = 1795329976802;
 export const CAP = 5;
-export const DROP_CHANCE = .06;
+export const DROP_CHANCE = .1;
+export const OLD_CHANCE = .06;
+export const RATE_UP = 1795427812515;
 export const TIER_ROLL = [['minor', .6], ['major', .3], ['superior', .1]];
 export const TIERS = { minor: { name: 'Minor', color: '#1eff00' }, major: { name: 'Major', color: '#3a9bff' }, superior: { name: 'Superior', color: '#b45cff' } };
 
@@ -33,7 +35,7 @@ export const bossName = (raid, i) => RAIDS[raid].bosses[i].name;
 export const fits = (c, hero) => !!(c && hero && FITS[c.fit](hero));
 export const whyNot = (c) => NOPE[c.fit] || '';
 
-export function consumeDrops(raid, kills, seed) {
+export function consumeDrops(raid, kills, seed, at = Date.now()) {
   const src = SOURCES[raid];
   if (!src || !Number.isInteger(seed)) return [];
   const out = [];
@@ -41,7 +43,7 @@ export function consumeDrops(raid, kills, seed) {
     const i = src[at], reached = at === 'final' ? kills === i : kills > i;
     if (!reached) continue;
     const r = rng(hash(seed, 'consume', raid, at));
-    if (r() >= DROP_CHANCE) continue;
+    if (r() >= (at >= RATE_UP ? DROP_CHANCE : OLD_CHANCE)) continue;
     let tier = 'minor';
     if (at === 'final') { const x = r(); let acc = 0; for (const [t, p] of TIER_ROLL) { acc += p; if (x < acc) { tier = t; break; } } }
     const c = CONSUMABLES.find((k) => k.raid === raid && k.tier === tier);
@@ -52,7 +54,7 @@ export function consumeDrops(raid, kills, seed) {
 
 export function satchelOf(raidRows, usedRows = [], grants = [], unsealed = 0) {
   const events = [], from = unsealed ? Math.max(CONSUME_START, unsealed) : Infinity;
-  for (const r of raidRows) if ((r.at || 0) >= from) for (const c of consumeDrops(r.raid, r.kills, r.seed)) events.push([r.at, c.id, 1]);
+  for (const r of raidRows) if ((r.at || 0) >= from) for (const c of consumeDrops(r.raid, r.kills, r.seed, r.at || 0)) events.push([r.at, c.id, 1]);
   for (const g of grants) events.push([g.at || 0, g.item, g.n || 1]);
   for (const u of usedRows) {
     let list = u.used;

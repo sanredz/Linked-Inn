@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { glowOf } from './paths.js';
 
 const ROOT = 'assets/draft/';
 const RACE = { WARRIOR: 'human', PALADIN: 'human', HUNTER: 'orc', ROGUE: 'human', PRIEST: 'human', SHAMAN: 'orc', MAGE: 'human', WARLOCK: 'human', DRUID: 'nightelf' };
@@ -21,6 +22,39 @@ const MINION = {
   cat: { melee: 1, x: -1.25, z: .65, scale: .7, clip: 'attack', speed: 2 },
 };
 const LIMIT = 340;
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3();
+function surfacePoint(geo, out) {
+  const pos = geo.attributes.position, idx = geo.index;
+  if (!geo.userData.areas) {
+    const n = idx ? idx.count / 3 : pos.count / 3, acc = new Float32Array(n);
+    let t = 0;
+    for (let i = 0; i < n; i++) {
+      const [ia, ib, ic] = idx ? [idx.getX(i * 3), idx.getX(i * 3 + 1), idx.getX(i * 3 + 2)] : [i * 3, i * 3 + 1, i * 3 + 2];
+      _a.fromBufferAttribute(pos, ia); _b.fromBufferAttribute(pos, ib); _c.fromBufferAttribute(pos, ic);
+      t += _b.sub(_a).cross(_c.sub(_a)).length() / 2;
+      acc[i] = t;
+    }
+    geo.userData.areas = acc;
+  }
+  const acc = geo.userData.areas, n = acc.length;
+  if (!n) return out.fromBufferAttribute(pos, 0);
+  const want = Math.random() * acc[n - 1];
+  let lo = 0, hi = n - 1;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (acc[mid] < want) lo = mid + 1; else hi = mid; }
+  const [ia, ib, ic] = idx ? [idx.getX(lo * 3), idx.getX(lo * 3 + 1), idx.getX(lo * 3 + 2)] : [lo * 3, lo * 3 + 1, lo * 3 + 2];
+  let u = Math.random(), v = Math.random();
+  if (u + v > 1) { u = 1 - u; v = 1 - v; }
+  _a.fromBufferAttribute(pos, ia); _b.fromBufferAttribute(pos, ib); _c.fromBufferAttribute(pos, ic);
+  return out.copy(_a).addScaledVector(_b.sub(_a), u).addScaledVector(_c.sub(_a), v);
+}
+const ENCHANT = {
+  fire: { shell: .75, rate: 130, emit: (r) => ({ color: pick([0xff4a0a, 0xff7a1a, 0xffa030, 0xffc860]), size: .12 + r() * .14, life: .32 + r() * .26, vy: .6 + r() * .5, vx: (r() - .5) * .16, vz: (r() - .5) * .16, grow: -.6, opacity: .8 }), extra: (r) => (r() < .1 ? { color: 0xffe0a0, size: .04, life: 1.2, vy: 1, vx: (r() - .5) * .4, grow: -.4, star: true, opacity: 1 } : null) },
+  fel: { shell: .75, rate: 130, emit: (r) => ({ color: pick([0x1ae80a, 0x4aff2a, 0x8aff5a, 0x0aa806]), size: .12 + r() * .14, life: .32 + r() * .26, vy: .6 + r() * .5, vx: (r() - .5) * .16, vz: (r() - .5) * .16, grow: -.6, opacity: .8 }), extra: (r) => (r() < .1 ? { color: 0xd8ffb0, size: .04, life: 1.2, vy: 1, vx: (r() - .5) * .4, grow: -.4, star: true, opacity: 1 } : null) },
+  frost: { shell: .8, rate: 60, emit: (r) => ({ color: pick([0x9fdcff, 0x6ac0ff, 0xd8f4ff]), size: .14 + r() * .14, life: .9 + r() * .5, vy: -.14 - r() * .12, vx: (r() - .5) * .1, vz: (r() - .5) * .1, fall: .15, grow: 1, opacity: .6 }), extra: (r) => (r() < .5 ? { color: 0xffffff, size: .06 + r() * .05, life: .7, vy: 0, grow: -.8, star: true, opacity: 1 } : null) },
+  holy: { shell: 1, rate: 60, pulse: 1, emit: (r) => ({ color: pick([0xff2a2a, 0xff5a5a, 0xffa0a0]), size: .11 + r() * .1, life: .8 + r() * .5, vy: .35 + r() * .25, vx: (r() - .5) * .08, grow: -.5, star: r() < .5, opacity: 1 }) },
+  shadow: { shell: .7, rate: 50, emit: (r) => ({ color: pick([0x14041e, 0x22082e, 0x0e0216]), size: .16 + r() * .14, life: 1 + r() * .6, vy: .25 + r() * .2, vx: (r() - .5) * .12, vz: (r() - .5) * .12, grow: 1.5, opacity: .6, dust: true }), extra: (r) => (r() < .25 ? { color: 0xb06aff, size: .05, life: .8, vy: .25, grow: -.6, star: true, opacity: 1 } : null) },
+};
 const PAL = {
   fire: [0xff6a1a, 0xffe2a0], frost: [0x58b8ff, 0xe4f6ff], arcane: [0xc266ff, 0xf4dcff], shadow: [0x7a3cff, 0xd9c4ff], nature: [0x46e860, 0xdcffd8],
   holy: [0xffc94a, 0xfff6cf], moon: [0x8fb4ff, 0xf0f5ff], fel: [0x5de08a, 0xe2ffe6], phys: [0xfff0d0, 0xffffff], arrow: [0xfff0c0, 0xffffff],
@@ -172,6 +206,7 @@ export class Stage {
   }
 
   async setClass(cls, body) {
+    this.unride();
     this.real = false;
     const race = (body && this.gear.rigs[body] && body) || RACE[cls], rig = this.gear.rigs[race];
     if (this.rig && this.race === race) {
@@ -304,6 +339,105 @@ export class Stage {
     }
     node.add(g.scene);
     this.attached[att] = g.scene;
+    if (att === 'att1' || att === 'att2') this.shine(g.scene);
+  }
+
+  wearMine() {
+    this.setGlow(this.mine ? glowOf(document.documentElement.dataset.glow || '') : null);
+  }
+
+  setGlow(glow) {
+    this.glowFx = glow || null;
+    if (this.attached) for (const att of ['att1', 'att2']) if (this.attached[att]) this.shine(this.attached[att]);
+  }
+
+  shine(root) {
+    const old = [];
+    root.traverse((o) => { if (o.userData.shine) old.push(o); });
+    for (const o of old) o.removeFromParent();
+    const glow = this.glowFx;
+    if (!glow) return;
+    this.shineT ||= { value: 0 };
+    const color = new THREE.Color(glow.color), meshes = [];
+    root.traverse((o) => { if (o.isMesh && o.visible && o.material.blending !== THREE.AdditiveBlending && !o.userData.shine) meshes.push(o); });
+    for (const m of meshes) {
+      const mat = new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, opacity: (ENCHANT[glow.fx] || {}).shell ?? .7 });
+      if (ENCHANT[glow.fx] && ENCHANT[glow.fx].pulse) this.shinePulse = mat; else if (this.shinePulse === mat) this.shinePulse = null;
+      const t = this.shineT;
+      mat.onBeforeCompile = (sh) => {
+        sh.uniforms.shineT = t;
+        sh.vertexShader = 'uniform float shineT;\nvarying float vBand;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  transformed += normalize(normal) * .012;\n  vBand = sin(position.y * 9.0 + position.x * 5.0 - shineT * 3.2);');
+        sh.fragmentShader = 'varying float vBand;\n' + sh.fragmentShader.replace('#include <dithering_fragment>', '#include <dithering_fragment>\n  gl_FragColor.a *= .08 + .92 * pow(smoothstep(.1, 1.0, vBand), 2.0);');
+      };
+      const g = new THREE.Mesh(m.geometry, mat);
+      g.userData.shine = 1;
+      g.frustumCulled = false;
+      m.add(g);
+    }
+    if (!this.shineOn) {
+      this.shineOn = true;
+      const at = new THREE.Vector3();
+      this.fx.push((dt) => {
+        this.shineT.value += dt;
+        const glow = this.glowFx;
+        if (!glow) { this.shineOn = false; return true; }
+        const style = ENCHANT[glow.fx];
+        if (this.shinePulse) this.shinePulse.opacity = .45 + .55 * (.5 + .5 * Math.sin(this.shineT.value * 3.4));
+        const pool = [];
+        if (this.attached) for (const k of ['att1', 'att2']) if (this.attached[k]) this.attached[k].traverse((o) => { if (o.userData.shine) pool.push(o); });
+        const n = style ? style.rate * dt : 9 * dt;
+        for (let k = Math.floor(n) + (Math.random() < n % 1 ? 1 : 0); k > 0; k--) {
+          let m = null;
+          if (pool.length) {
+            const w = pool.map((x) => { if (!x.geometry.userData.areas) surfacePoint(x.geometry, at); const a = x.geometry.userData.areas; return a.length ? a[a.length - 1] : 0; });
+            let r = Math.random() * w.reduce((t, x) => t + x, 0);
+            m = pool.find((x, i) => (r -= w[i]) <= 0) || pool[pool.length - 1];
+          }
+          if (!m || !m.geometry.attributes.position) break;
+          surfacePoint(m.geometry, at);
+          m.localToWorld(at);
+          if (!style) { this.spark(at.x, at.y, at.z, { color: new THREE.Color(glow.sparks).getHex(), size: .05 + Math.random() * .05, life: .7, vy: .25, grow: -.6, star: Math.random() < .3, opacity: .9 }); continue; }
+          this.spark(at.x, at.y, at.z, style.emit(Math.random));
+          const x = style.extra && style.extra(Math.random);
+          if (x) this.spark(at.x, at.y, at.z, x);
+        }
+        return false;
+      });
+    }
+  }
+
+  async ride(m) {
+    this.unride();
+    if (!m || !this.rig) return;
+    const g = await this.loader.loadAsync(m.file).catch(() => null);
+    if (!g || !this.rig) return;
+    const hero = this.rig, root = g.scene, seat = root.getObjectByName('att0');
+    root.scale.setScalar(m.scale || 1);
+    root.traverse((o) => { if (o.isMesh) o.frustumCulled = false; });
+    const mixer = new THREE.AnimationMixer(root), idle = g.animations.find((a) => a.name === 'idle');
+    if (idle) mixer.clipAction(idle).play();
+    this.scene.remove(hero);
+    hero.position.set(0, 0, 0);
+    hero.rotation.set(0, 0, 0);
+    hero.scale.setScalar(1 / (m.scale || 1));
+    (seat || root).add(hero);
+    this.scene.add(root);
+    this.mounted = { root, hero, mixer };
+    this.pose('mount');
+    this.fx.push((dt) => { if (!this.mounted || this.mounted.mixer !== mixer) return true; mixer.update(dt); return false; });
+  }
+
+  unride() {
+    const m = this.mounted;
+    if (!m) return;
+    this.mounted = null;
+    m.root.removeFromParent();
+    m.hero.removeFromParent();
+    m.hero.scale.setScalar(1);
+    m.hero.position.set(0, 0, 0);
+    m.hero.rotation.set(0, 0, 0);
+    this.scene.add(m.hero);
+    this.pose('idle');
   }
 
   async wear(slot, id, row, ranged) {
@@ -413,6 +547,7 @@ export class Stage {
   }
 
   async fight(kind, two) {
+    this.unride();
     await this.buildDummy();
     this.kind = kind;
     const gap = kind === 'melee' ? 1.7 : 3.6;
@@ -759,7 +894,8 @@ export class Stage {
       m.root.scale.setScalar(Math.max(.001, m.size * m.place.scale));
       if (!stay && m.size === 0) m.root.visible = false;
     }
-    if (this.rig && !this.fightOn && this.rig.position.x === 0) this.rig.rotation.y = this.yaw + (this.drag != null ? 0 : Math.sin(performance.now() / 3200) * .12);
+    const body = this.mounted ? this.mounted.root : this.rig;
+    if (body && !this.fightOn && this.rig.position.x === 0) body.rotation.y = this.yaw + (this.drag != null ? 0 : Math.sin(performance.now() / 3200) * .12);
     const v = this.view, w = this.want;
     for (const k of Object.keys(v)) v[k] += (w[k] - v[k]) * Math.min(1, dt * 4);
     this.camera.position.set(v.x, v.y, v.z);

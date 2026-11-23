@@ -57,6 +57,7 @@ export class Arena {
       <div class="banner3d" hidden></div><div class="vignette"></div>`;
     this.q = (s) => host.querySelector(s);
     this.stageA = new Stage(this.q('.arena-canvas'), gearData);
+    this.stageA.mine = true;
     this.stageB = new Stage(this.q('.arena-other'), gearData);
     this.stageB.pause();
     this.extras = [];
@@ -297,6 +298,7 @@ export class Arena {
 
   async dressOne(stage, s) {
     let real = false;
+    if (stage.wearMine) stage.wearMine();
     if (s.look && s.m3) real = await stage.setLook(s.look, s.m3).then(() => true, () => false);
     if (!real) {
       await stage.setClass(s.cls, s.body);

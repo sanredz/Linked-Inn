@@ -1,4 +1,5 @@
 import { CLASS_COLOR } from '../draft/core.js';
+import { titleOf } from '../draft/paths.js';
 import { bindName, heroName, nameField, nameOk } from './name.js';
 import { BOON, BOON_KIND, boonIcon, boonsOf } from './boons.js';
 import { PLANS, PRESETS, fight } from './engine.js';
@@ -162,7 +163,7 @@ function boardList() {
   if (!boardRows) return '<p>The board could not be reached.</p>';
   if (!boardRows.length && boardFind.trim()) return '<p>Nobody with that name here.</p>';
   if (!boardRows.length) return `<p>${boardMine ? 'You have not' : 'Nobody has'} finished a ${boardCls ? `${boardCls[0]}${boardCls.slice(1).toLowerCase()} ` : ''}run yet.</p>`;
-  return boardRows.map((r) => `<div class="gbrun ${r.id === boardOpen ? 'open' : ''} ${r.mine ? 'mine' : ''}" data-owner="${r.id}"><button class="gbrow" data-run="${r.id}" aria-expanded="${r.id === boardOpen}"><img src="assets/classes/${r.cls}.png" alt=""><span class="gbname"><b>${esc(r.name || 'Unknown')}${r.mine && !boardMine ? ' <em>you</em>' : ''}</b><small>${className(r.cls)}</small></span><span class="gbwins ${r.wins >= MAX_WINS ? 'full' : ''}"><b>${r.wins}</b>/${MAX_WINS}</span><span class="gbago">${ago(r.at)}</span></button>${r.id === boardOpen ? runDetail(r) : ''}</div>`).join('');
+  return boardRows.map((r) => `<div class="gbrun ${r.id === boardOpen ? 'open' : ''} ${r.mine ? 'mine' : ''}" data-owner="${r.id}"><button class="gbrow" data-run="${r.id}" aria-expanded="${r.id === boardOpen}"><img src="assets/classes/${r.cls}.png" alt=""><span class="gbname"><b>${esc(r.name || 'Unknown')}${r.mine && !boardMine ? ' <em>you</em>' : ''}</b><small>${titleOf(r.t) ? `<i class="ttl">${esc(titleOf(r.t))}</i> · ` : ''}${className(r.cls)}</small></span><span class="gbwins ${r.wins >= MAX_WINS ? 'full' : ''}"><b>${r.wins}</b>/${MAX_WINS}</span><span class="gbago">${ago(r.at)}</span></button>${r.id === boardOpen ? runDetail(r) : ''}</div>`).join('');
 }
 
 function drawBoard() {

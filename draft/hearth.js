@@ -1,11 +1,13 @@
 import * as THREE from 'three';
-import { ANY, FEATS, LADDERS, MODES, MOUNTS, PORTRAIT, PORTRAITS, RELICS, TIERS, count, earned, forgeReady, forgeSteps, owned, portraitOpen, badgeTotal, usedIn, valueOf } from './feats.js';
+import { MODES, MOUNTS, PORTRAIT, PORTRAITS, RELICS, count, forgeReady, forgeSteps, owned, usedIn } from './feats.js';
 import { askName, claimName, heroName, nameOk } from '../pvp/name.js';
 import { SEASON, SEASONS, seasonOf } from './seasons.js';
 import { honorsOf, titleHtml, honorCards, unseen, revealHonor, plaqueHtml, HONORS } from './honors.js';
 import { LOOT, KEY } from '../raid/worldloot.js';
 import { satchelHtml, bindSatchel, satchelCss } from '../raid/satchel.js';
 import { CONSUMABLES } from '../raid/consumables.js';
+import { standing, bannerProgress, REWARDS, REWARD, REWARD_MOUNT, RENOWN_MAX, portraitNeeds, rewardFor, titleOf, glowOf } from './paths.js';
+import { pathsCss, pathsPanel, pathDetail, bindPaths, lookHtml, bindLook, frameAttr, revealPaths as revealPathsUI } from './pathsui.js';
 
 const WHO = 'gauntletWho', CLASSES = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];
 const CLASS_NAME = Object.fromEntries(CLASSES.map((c) => [c, c[0] + c.slice(1).toLowerCase()]));
@@ -42,22 +44,31 @@ function showcase(st) {
   st.world = st.world || {};
   for (const it of LOOT) { const w = st.world[it.boss] = st.world[it.boss] || { tries: 0, kills: 0, best: 0, drops: {} }; w.drops = w.drops || {}; w.drops[it.id] = 1; st.found[it.id] = st.found[it.id] || now; }
   st.attune = { kazzak: { forged: now } };
+  st.gear.bestOf = st.gear.bestOf || {};
+  for (const c of CLASSES) st.gear.bestOf[c] ||= { dps: 0, build: '', picks: { main: 19019 } };
   st.satchel = Object.fromEntries(CONSUMABLES.map((c, i) => [c.id, 1 + (i % 3)]));
 }
-let ctx = null, data = null, got = new Set(), gotIn = {}, view = '', tab = 'overview', root = null, stage = null, showing = '', mountRoot = null, mountMixer = null, heroRig = null, busy = Promise.resolve();
+const showLook = (set) => {
+  try {
+    const cur = JSON.parse(localStorage.getItem('showcaseLook') || '{}');
+    if (set) { for (const k of ['title', 'frame', 'glow', 'ride', 'decor']) if (k in set) cur[k] = set[k]; localStorage.setItem('showcaseLook', JSON.stringify(cur)); }
+    return cur;
+  } catch { return {}; }
+};
+let ctx = null, data = null, st = null, view = '', tab = 'overview', root = null, stage = null, showing = '', busy = Promise.resolve();
 
 export function setupHearth(c) { ctx = c; }
 
 export async function loadHearth(extra = {}) {
-  const r = await fetch(`${ctx.API}/profile`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: ctx.key(), who: deviceWho(), ...extra }) });
+  const r = await fetch(`${ctx.API}/profile`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: ctx.key(), who: deviceWho(), ...(SHOWCASE && { showcase: 1 }), ...extra }) });
   if (!r.ok) throw new Error('profile');
   data = await r.json();
   data.season = data.season || SEASON;
   data.seasons = data.seasons || [{ id: data.season, stats: data.stats }];
   if (SHOWCASE) for (const st of new Set([data.stats, ...data.seasons.map((x) => x.stats)])) showcase(st);
-  gotIn = Object.fromEntries(data.seasons.map((s) => [s.id, earned(s.stats)]));
-  got = new Set([...earned(data.stats), ...Object.values(gotIn).flatMap((g) => [...g])]);
-  if (SHOWCASE) { got = new Set(FEATS.map((f) => f.id)); for (const k of Object.keys(gotIn)) gotIn[k] = new Set(got); }
+  st = standing(data.stats);
+  if (SHOWCASE) { st.open = new Set(REWARDS.map((r) => r.id)); for (const k of Object.keys(st.tiers)) st.tiers[k] = 3; Object.assign(data.profile, showLook()); }
+  document.documentElement.dataset.glow = st.open.has(data.profile.glow) ? data.profile.glow : '';
   if (view !== 'all' && !data.seasons.some((s) => s.id === view)) view = data.season;
   return data;
 }
@@ -65,11 +76,6 @@ export async function loadHearth(extra = {}) {
 const sv = () => (view === 'all' ? data.stats : (data.seasons.find((s) => s.id === view) || {}).stats || data.stats);
 const both = () => data.seasons.length > 1;
 const viewName = () => (view === 'all' ? 'all time' : seasonOf(view).name);
-const earnedWhen = (id) => {
-  const where = SEASONS.filter((s) => gotIn[s.id] && gotIn[s.id].has(id)).map((s) => s.name);
-  return where.length ? `Earned in ${where.join(' and ')}` : 'Earned across seasons';
-};
-const pastOnly = (id) => got.has(id) && !(gotIn[data.season] && gotIn[data.season].has(id)) && SEASONS.find((s) => gotIn[s.id] && gotIn[s.id].has(id));
 
 function seasonBar() {
   const at = SEASONS.findIndex((s) => s.id === data.season), played = new Set(data.seasons.map((s) => s.id));
@@ -101,47 +107,14 @@ export function held() {
 
 export function hearthBar(el) {
   if (!data) return;
-  const p = portraitOf(), n = got.size;
-  el.innerHTML = `<button class="hb" data-hearth><span class="hbface"><img class="${sq(p)}" src="${p.src}" alt=""></span><span class="hbwho"><small>Your Hearth</small><b>${esc(heroName())}</b></span><span class="hbbadges"><i style="--p:${n / badgeTotal(got)}"></i><b>${n}</b><small>of ${badgeTotal(got)} badges</small></span>${RELICS.some((x) => forgeReady(data.stats, x)) ? '<span class="hbforge">Forge ready</span>' : ''}<span class="hbgo">Open</span></button>`;
+  pathsCss();
+  const p = portraitOf(), title = titleOf(data.profile.title);
+  el.innerHTML = `<button class="hb" data-hearth><span class="hbface"${frameAttr(data.profile.frame)}><img class="${sq(p)}" src="${p.src}" alt=""></span><span class="hbwho"><small>${title ? esc(title) : 'Your Hearth'}</small><b>${esc(heroName())}</b></span><span class="hbbadges"><i style="--p:${st.renown / RENOWN_MAX}"></i><b>${st.renown}</b><small>Renown</small></span>${RELICS.some((x) => forgeReady(data.stats, x)) ? '<span class="hbforge">Forge ready</span>' : ''}<span class="hbgo">Open</span></button>`;
   el.hidden = false;
   innFab();
 }
 
-const modeOf = (f) => MODES.find((m) => m.id === f.mode) || ANY;
-const square = (src) => /assets\/(icons|classes)\//.test(src || '');
-const artOf = (f) => (f.icon ? `assets/icons/${f.icon}.png` : f.art || modeOf(f).art);
-const medal = (f) => {
-  const on = got.has(f.id);
-  return `<button class="hm ${on ? 'on' : 'off'} ${f.tier} ${square(artOf(f)) ? 'hcls' : ''}" style="--t:${TIERS[f.tier]}" data-feat="${f.id}" aria-label="${esc(f.name)}: ${esc(f.text)}${on ? '' : ' (locked)'}"><span class="hmface" style="background-image:url(${artOf(f)})"></span>${on ? '' : '<i class="hmlock"></i>'}${pastOnly(f.id) ? `<i class="hmseason">${esc(pastOnly(f.id).name)}</i>` : ''}<b>${esc(f.name)}</b><small>${esc(f.text)}</small></button>`;
-};
-const RANK = { bronze: 0, silver: 1, gold: 2, legend: 3 }, GLANCE = 8;
-let expanded = {};
-
-const FEAT = Object.fromEntries(FEATS.map((f) => [f.id, f]));
-const inLadder = new Set(LADDERS.flatMap((l) => l.steps.map((x) => x.id)));
-const stepsOf = (l) => l.steps.map((x) => ({ ...x, f: FEAT[x.id], on: got.has(x.id) }));
-const topOf = (steps) => [...steps].reverse().find((x) => x.on);
-
-function ladderCard(l) {
-  const s = sv(), steps = stepsOf(l), top = topOf(steps), now = l.now(s), art = l.art || artOf(steps[0].f);
-  return `<button class="hk ${top ? 'on' : 'off'} ${square(art) ? 'hcls' : ''}" style="--t:${top ? TIERS[top.f.tier] : '#3f3119'}" data-ladder="${l.id}" aria-label="${esc(l.name)}${top ? `: ${esc(top.f.rank || top.f.name)}` : ''}"><span class="hkface" style="background-image:url(${art})"></span><span class="hkbody"><span class="hkhead"><b>${esc(l.name)}</b>${top && top.f.rank ? `<i class="hkrank">${esc(top.f.rank)}</i>` : ''}${now ? `<small>${esc(now)}</small>` : ''}</span><span class="hktrack">${steps.map((x) => `<span class="hkseg ${x.on ? 'on' : ''}" style="--t:${TIERS[x.f.tier]};--p:${x.on ? 1 : x.prog(s).toFixed(3)}"><i></i><em>${esc(x.mark)}</em></span>`).join('')}</span></span></button>`;
-}
-
-function classLadders(mode) {
-  const ls = LADDERS.filter((l) => l.mode === mode && l.cls), steps = ls.flatMap((l) => l.steps);
-  if (!ls.length) return '';
-  return `<h3 class="hh3">Class badges <em>${steps.filter((x) => got.has(x.id)).length} of ${steps.length} earned</em></h3><div class="hladders">${ls.map(ladderCard).join('')}</div>`;
-}
-
-function badgeBlock(key, list, title = 'Badges') {
-  const lad = LADDERS.filter((l) => l.mode === key && !l.cls), earnedHere = list.filter((f) => got.has(f.id)).length;
-  const open = list.filter((f) => !inLadder.has(f.id) && (!f.hidden || got.has(f.id))), mine = open.filter((f) => got.has(f.id));
-  const next = open.filter((f) => !got.has(f.id)).sort((a, b) => RANK[a.tier] - RANK[b.tier]);
-  const all = expanded[key], shown = all ? [...mine, ...next] : [...mine.slice(0, Math.max(GLANCE, mine.length)), ...next.slice(0, Math.max(0, GLANCE - mine.length))];
-  const rest = mine.length + next.length - shown.length;
-  return `<h3 class="hh3">${title} <em>${earnedHere} of ${list.length} earned</em></h3>${lad.length ? `<div class="hladders">${lad.map(ladderCard).join('')}</div>` : ''}${shown.length ? `<div class="hmedals">${shown.map(medal).join('')}</div>` : lad.length ? '' : '<p class="hempty">Play this mode to earn your first badge.</p>'}<div class="hmore">${rest > 0 || all ? `<button class="gmini" data-more="${key}">${all ? 'Show fewer' : `Show all ${mine.length + next.length} badges`}</button>` : ''}</div>`;
-}
-
+const PATH_OF = { gear: 'drafter', arena: 'gladiator', mc: 'raider', zg: 'raider', aq20: 'raider' };
 const tile = (value, label, tone = '') => `<div class="ht ${tone}"><b>${value}</b><span>${label}</span></div>`;
 
 function collectionHtml(raid) {
@@ -283,21 +256,21 @@ function sparks(canvas, theme) {
 }
 
 function modeCard(m) {
-  const s = sv(), feats = FEATS.filter((f) => f.mode === m.id), n = feats.filter((f) => got.has(f.id)).length;
+  const s = sv(), path = st.paths.find((x) => x.path.id === PATH_OF[m.id]);
   const line = m.id === 'gear' ? `${num(s.gear.runs)} runs · best ${s.gear.best ? s.gear.best.toFixed(1) : '-'}` : m.id === 'arena' ? `${num(s.arena.runs)} runs · best ${s.arena.best}/10` : `${num((s.raids[m.id] || {}).runs)} runs · best ${(s.raids[m.id] || {}).best || 0} bosses`;
-  return `<button class="hmode" data-tab="${m.id}" style="background-image:url(${m.art})"><span><b>${m.name}</b><small>${line}</small></span><em>${n}/${feats.length}</em></button>`;
+  return `<button class="hmode" data-tab="${m.id}" style="background-image:url(${m.art})"><span><b>${m.name}</b><small>${line}</small></span><em>${esc(path.rankName)}</em></button>`;
 }
 
 function tabHtml() {
   const s = sv();
   if (tab === 'overview') {
-    const mine = FEATS.filter((f) => got.has(f.id)).sort((a, b) => RANK[b.tier] - RANK[a.tier]), all = expanded.overview, shown = all ? mine : mine.slice(0, 12);
-    return `${honorCards(myHonors())}<div class="hmodes">${MODES.map(modeCard).join('')}</div>
+    return `${honorCards(myHonors())}<h3 class="hh3">Paths <em>five roads, five ranks each</em></h3>${pathsPanel(st)}
+      <h3 class="hh3">Your look <em>tap one to change it</em></h3><div class="hlook">${lookHtml(st, data.profile, rideList())}</div>
+      <div class="hmodes">${MODES.map(modeCard).join('')}</div>
       <h3 class="hh3">Collection</h3>${collectionHtml('')}
-      <h3 class="hh3">Your satchel <em>consumables for World Boss fights, one per hero</em></h3><div class="hsatchel">${satchelHtml(s.satchel || {}, { sealed: !(s.attune && s.attune.kazzak && s.attune.kazzak.forged) })}</div>
-      <h3 class="hh3">Badges earned <em>${mine.length} of ${badgeTotal(got)}</em></h3>${mine.length ? `<div class="hmedals">${shown.map(medal).join('')}</div>` : '<p class="hempty">Play any mode to earn your first badge.</p>'}<div class="hmore">${mine.length > 12 ? `<button class="gmini" data-more="overview">${all ? 'Show fewer' : `Show all ${mine.length}`}</button>` : ''}</div>`;
+      <h3 class="hh3">Your satchel <em>consumables for World Boss fights, one per hero</em></h3><div class="hsatchel">${satchelHtml(s.satchel || {}, { sealed: !(s.attune && s.attune.kazzak && s.attune.kazzak.forged) })}</div>`;
   }
-  const feats = badgeBlock(tab, FEATS.filter((f) => f.mode === tab && !(f.art && inLadder.has(f.id)))) + classLadders(tab);
+  const feats = `<h3 class="hh3">${tab === 'gear' ? 'Drafter' : tab === 'arena' ? 'Gladiator' : 'Raider'} Path</h3><div class="hpathin">${pathDetail(st, PATH_OF[tab])}</div>`;
   if (tab === 'gear') {
     const g = s.gear, it = s.items;
     return `<div class="htiles">${tile(num(g.runs), 'Runs')}${tile(g.best ? g.best.toFixed(1) : '-', 'Best DPS', 'gold')}${tile(g.rank ? `#${num(g.rank)}` : '-', view === 'all' ? 'Best board rank' : `${esc(seasonOf(view).name)} rank`)}${tile(`${g.classes.length}/9`, 'Classes')}</div>${feats}
@@ -312,10 +285,10 @@ function tabHtml() {
 }
 
 const headHtml = () => {
-  const p = portraitOf(), n = got.size;
-  return `<button class="hface" data-act="face" aria-label="Change portrait"><img class="${sq(p)}" src="${p.src}" alt=""><i>Change</i></button><div class="hwho"><small>Your Hearth</small><h2><button class="hname" data-act="name" title="Change your name">${esc(heroName())}<i>Edit</i></button></h2>${myHonors().map(titleHtml).join('')}<span>${both() && view !== 'all' ? `${num(totalRuns(sv()))} runs in ${esc(viewName())} · ${num(totalRuns(data.stats))} all time` : `${num(totalRuns(data.stats))} runs across every mode`}</span></div><div class="hring" style="--p:${n / badgeTotal(got)}"><b>${n}</b><span>of ${badgeTotal(got)}<br>badges</span></div>`;
+  const p = portraitOf(), title = titleOf(data.profile.title);
+  return `<button class="hface" data-act="face" aria-label="Change portrait"${frameAttr(data.profile.frame)}><img class="${sq(p)}" src="${p.src}" alt=""><i>Change</i></button><div class="hwho"><small>Your Hearth</small><h2><button class="hname" data-act="name" title="Change your name">${esc(heroName())}<i>Edit</i></button></h2>${title ? `<em class="hwhotitle">${esc(title)}</em>` : ''}${myHonors().map(titleHtml).join('')}<span>${both() && view !== 'all' ? `${num(totalRuns(sv()))} runs in ${esc(viewName())} · ${num(totalRuns(data.stats))} all time` : `${num(totalRuns(data.stats))} runs across every mode`}</span></div><div class="hring" style="--p:${st.renown / RENOWN_MAX}"><b>${st.renown}</b><span>Renown<br>of ${RENOWN_MAX}</span></div>`;
 };
-const noteText = () => `${data.stats.gear.bestOf[showing] ? `Wearing your best ${CLASS_NAME[showing]} draft` : `Finish a ${CLASS_NAME[showing]} Gear Draft to dress them`}${data.profile.ride ? ` · Riding your ${(MOUNTS.find((m) => m.id === data.profile.ride) || {}).name || ''}` : ''}`;
+const noteText = () => `${data.stats.gear.bestOf[showing] ? `Wearing your best ${CLASS_NAME[showing]} draft` : `Finish a ${CLASS_NAME[showing]} Gear Draft to dress them`}${look().ride ? ` · Riding your ${(rideList().find((m) => m.id === data.profile.ride) || {}).name || ''}` : ''}`;
 
 function draw() {
   root.innerHTML = `<div class="hhead">${headHtml()}</div>
@@ -352,12 +325,10 @@ function bindBody() {
   bindHonors();
   for (const b of root.querySelectorAll('.htabs [data-tab]')) b.classList.toggle('on', b.dataset.tab === tab);
   for (const b of root.querySelectorAll('.hbody [data-tab]')) b.onclick = () => { tab = b.dataset.tab; drawBody(); };
-  for (const b of root.querySelectorAll('[data-feat], [data-ladder]')) {
-    b.onclick = (e) => { e.stopPropagation(); if (pop && pop.dataset.for === (b.dataset.feat || b.dataset.ladder) && pop.dataset.tap) return hidePop(); showPop(b, true); };
-    b.onpointerenter = (e) => { if (e.pointerType === 'mouse') showPop(b, false); };
-    b.onpointerleave = (e) => { if (e.pointerType === 'mouse' && pop && !pop.dataset.tap) hidePop(); };
-  }
-  for (const b of root.querySelectorAll('[data-ride]')) b.onclick = () => save({ ride: +b.dataset.ride });
+  for (const b of root.querySelectorAll('.hcoll [data-ride]')) b.onclick = () => save({ ride: +b.dataset.ride });
+  bindPaths(root.querySelector('.hbody'), st);
+  const look = root.querySelector('.hlook');
+  if (look) bindLook(look, save, st, data.profile, rideList());
   for (const b of root.querySelectorAll('[data-forge]')) b.onclick = () => { b.disabled = true; forge(+b.dataset.forge).finally(() => { b.disabled = false; }); };
   const sat = root.querySelector('.hsatchel');
   if (sat) { satchelCss(); bindSatchel(sat, sv().satchel || {}); }
@@ -367,7 +338,6 @@ function bindBody() {
 }
 
 let pop = null;
-const TIER_NAME = { bronze: 'Bronze', silver: 'Silver', gold: 'Gold', legend: 'Legendary' };
 
 function hidePop() {
   if (!pop) return;
@@ -375,42 +345,6 @@ function hidePop() {
   pop = null;
   old.classList.add('out');
   setTimeout(() => old.remove(), 160);
-}
-
-function ladderPop(l) {
-  const steps = stepsOf(l), top = topOf(steps), next = steps.find((x) => !x.on), val = valueOf(sv(), (next || steps[steps.length - 1]).f), mode = MODES.find((m) => m.id === l.mode) || ANY;
-  pop.className = `hpop hkpop ${top ? 'on' : 'off'} ${square(l.art || artOf(steps[0].f)) ? 'hcls' : ''}`;
-  pop.style.setProperty('--t', top ? TIERS[top.f.tier] : '#8a7a60');
-  pop.innerHTML = `<span class="hpopface" style="background-image:url(${l.art || artOf(steps[0].f)})"></span><div><small>${esc(mode.name)}</small><b>${esc(l.name)}</b><ul class="hksteps">${steps.map((x) => `<li class="${x.on ? 'on' : ''}" style="--t:${TIERS[x.f.tier]}"><i></i><span><strong>${esc(x.f.rank || x.f.name)}</strong>${esc(x.f.text)}</span></li>`).join('')}</ul>${val ? `<i class="hpopval">${esc(val)}</i>` : ''}<em>${next ? `${steps.filter((x) => x.on).length} of ${steps.length} earned` : 'All earned'}${top ? ` · ${esc(earnedWhen(top.id).replace(/^Earned /, ''))}` : ''}</em></div>`;
-}
-
-function showPop(b, tap) {
-  const l = b.dataset.ladder && LADDERS.find((x) => x.id === b.dataset.ladder), f = !l && FEATS.find((x) => x.id === b.dataset.feat);
-  if (!l && !f) return;
-  if (pop) { pop.remove(); pop = null; }
-  if (l) {
-    pop = document.createElement('div');
-    pop.dataset.for = l.id;
-    if (tap) pop.dataset.tap = '1';
-    ladderPop(l);
-    return place(b);
-  }
-  const mode = modeOf(f), on = got.has(f.id), art = artOf(f);
-  pop = document.createElement('div');
-  pop.className = `hpop ${on ? 'on' : 'off'} ${f.tier} ${square(artOf(f)) ? 'hcls' : ''}`;
-  pop.style.setProperty('--t', TIERS[f.tier]);
-  pop.dataset.for = f.id;
-  if (tap) pop.dataset.tap = '1';
-  pop.innerHTML = `<span class="hpopface" style="background-image:url(${art})"></span><div><small>${TIER_NAME[f.tier]} · ${esc(mode.name)}</small><b>${esc(f.name)}</b><p>${esc(f.text)}</p>${valueOf(sv(), f) ? `<i class="hpopval">${esc(valueOf(sv(), f))}</i>` : ''}<em>${on ? esc(earnedWhen(f.id)) : 'Not earned yet'}</em></div>`;
-  place(b);
-}
-
-function place(b) {
-  document.body.append(pop);
-  const r = b.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight, x = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)), above = r.top - h - 10 > 8;
-  pop.style.left = `${x}px`;
-  pop.style.top = `${above ? r.top - h - 10 : r.bottom + 10}px`;
-  pop.classList.add(above ? 'above' : 'below');
 }
 
 addEventListener('click', () => { if (pop && pop.dataset.tap) hidePop(); });
@@ -424,10 +358,11 @@ function drawBody() {
 
 async function save(set) {
   try {
+    if (SHOWCASE) showLook(set);
     await loadHearth({ set });
     showing = data.profile.cls || showing;
     refresh();
-    if ('cls' in set || 'ride' in set) dressStage();
+    if ('cls' in set || 'ride' in set || 'glow' in set) dressStage();
     if (ctx.onChange) ctx.onChange();
   } catch {}
 }
@@ -466,9 +401,9 @@ async function editName() {
 function pickFace() {
   const box = document.createElement('div');
   box.className = 'gmodal hpick';
-  box.innerHTML = `<div class="gmodalbox"><h2>Choose your portrait</h2><p>Some portraits unlock with badges.</p><div class="hfaces">${PORTRAITS.map((p) => {
-    const open = portraitOpen(got, p), need = p.needs && FEATS.find((f) => f.id === p.needs);
-    return `<button class="${open ? '' : 'locked'} ${data.profile.icon === p.id ? 'on' : ''}" data-face="${p.id}" ${open ? '' : 'disabled'} title="${esc(p.name)}${need && !open ? ` · Unlock: ${esc(need.name)}` : ''}"><span class="hfface"><img class="${sq(p)}" src="${p.src}" alt=""></span><small>${esc(open ? p.name : need ? need.name : p.name)}</small></button>`;
+  box.innerHTML = `<div class="gmodalbox"><h2>Choose your portrait</h2><p>Hero portraits unlock as you climb the Paths.</p><div class="hfaces">${PORTRAITS.map((p) => {
+    const need = REWARD[portraitNeeds[p.id]], open = !need || st.open.has(need.id) || data.profile.icon === p.id;
+    return `<button class="${open ? '' : 'locked'} ${data.profile.icon === p.id ? 'on' : ''}" data-face="${p.id}" ${open ? '' : 'disabled'} title="${esc(p.name)}${need && !open ? ` · Unlocks at ${esc(rewardFor(need))}` : ''}"><span class="hfface"><img class="${sq(p)}" src="${p.src}" alt=""></span><small>${esc(open ? p.name : need ? rewardFor(need) : p.name)}</small></button>`;
   }).join('')}</div><button class="gmini" data-close>Close</button></div>`;
   document.body.append(box);
   const close = () => box.remove();
@@ -477,54 +412,57 @@ function pickFace() {
   for (const b of box.querySelectorAll('[data-face]:not([disabled])')) b.onclick = () => { close(); save({ icon: b.dataset.face }); };
 }
 
+function rideList() {
+  const s = data.stats, w = (s.world && s.world.kazzak && s.world.kazzak.drops) || {};
+  return [
+    ...MOUNTS.map((m) => ({ id: m.id, name: m.name.replace(/^Swift /, ''), icon: m.icon, file: `assets/raid/gear/${m.model}.glb`, scale: m.scale, have: count(s, m.id) > 0, need: `${m.from} in Zul'Gurub` })),
+    { id: 990204, name: 'Dreadsteed', icon: 132238, file: 'assets/raid/gear/mount_dreadsteed.glb', scale: 1, have: !!w[990204], need: 'a rare drop from Lord Kazzak' },
+    ...REWARD_MOUNT.map((m) => ({ id: m.id, name: m.name, icon: m.icon, file: `assets/raid/gear/${m.model}.glb`, scale: m.scale, have: st.open.has(m.reward), need: rewardFor(REWARD[m.reward]) })),
+  ];
+}
+
+async function saveDecor(decor) {
+  if (SHOWCASE) showLook({ decor });
+  if (data) data.profile.decor = decor;
+  try { await loadHearth({ set: { decor } }); } catch {}
+}
+
+export function look() {
+  if (!data || !st) return { ride: null, glow: null };
+  const r = rideList().find((m) => m.id === data.profile.ride && m.have);
+  const g = st.open.has(data.profile.glow) ? glowOf(data.profile.glow) : null;
+  return { ride: r ? { file: r.file, scale: r.scale } : null, glow: g };
+}
+
+export async function revealPaths(opts = {}) {
+  if (!data || !st) return;
+  const again = /^(localhost|127\.0\.0\.1|[\w-]*\.?azeroth-preview\.pages\.dev)$/.test(location.hostname) && new URLSearchParams(location.search).has('reveal');
+  await revealPathsUI(st, { ...opts, force: again });
+}
+
 function dressStage() {
   const canvas = root.querySelector('.hcanvas');
   busy = busy.then(async () => {
     if (!stage || stage.canvas !== canvas) {
       if (stage) stage.pause();
       stage = new ctx.Stage(canvas, ctx.gear);
-      heroRig = null;
-      mountRoot = null;
     }
-    if (mountRoot && heroRig) { mountRoot.parent && mountRoot.parent.remove(mountRoot); stage.rig = heroRig; stage.scene.add(heroRig); heroRig.position.set(0, 0, 0); heroRig.rotation.set(0, 0, 0); heroRig.scale.setScalar(1); mountRoot = null; mountMixer = null; stage.pose('idle'); }
+    stage.unride();
     await stage.setClass(showing);
-    heroRig = stage.rig;
+    const lk = look();
+    stage.setGlow(lk.glow);
     const best = data.stats.gear.bestOf[showing];
     if (best) await new Promise((done) => { stage.outfit(Object.entries(best.picks).filter(([, id]) => id && ctx.row(id)).map(([slot, id]) => [slot, id, ctx.row(id)]), done); });
-    const ride = MOUNTS.find((m) => m.id === data.profile.ride);
-    stage.want = { ...(ride ? RIDE_VIEW : FOOT_VIEW) };
+    stage.want = { ...(lk.ride ? RIDE_VIEW : FOOT_VIEW) };
     stage.view = { ...stage.want };
-    if (ride) await mount(ride);
+    if (lk.ride) { await stage.ride(lk.ride); stage.yaw = -.85; }
   }).catch(() => {});
-}
-
-async function mount(ride) {
-  const g = await stage.loader.loadAsync(`assets/raid/gear/${ride.model}.glb`).catch(() => null);
-  if (!g) return;
-  const root3 = g.scene, seat = root3.getObjectByName('att0');
-  root3.scale.setScalar(ride.scale);
-  root3.traverse((o) => { if (o.isMesh) o.frustumCulled = false; });
-  mountMixer = new THREE.AnimationMixer(root3);
-  const idle = g.animations.find((a) => a.name === 'idle');
-  if (idle) mountMixer.clipAction(idle).play();
-  stage.scene.remove(heroRig);
-  heroRig.position.set(0, 0, 0);
-  heroRig.rotation.set(0, 0, 0);
-  heroRig.scale.setScalar(1 / ride.scale);
-  (seat || root3).add(heroRig);
-  stage.scene.add(root3);
-  stage.pose('mount');
-  stage.yaw = -.85;
-  mountRoot = root3;
-  stage.rig = root3;
-  const mixer = mountMixer;
-  stage.fx.push((dt) => { if (mountMixer !== mixer) return true; mixer.update(dt); return false; });
 }
 
 const CELLAR_SHUT = 'Something stirs beneath the floorboards. Break the seals to open the cellar.';
 function innOpts() {
-  const a = data && data.stats && data.stats.attune && data.stats.attune.kazzak;
-  return a && !a.forged ? { locked: { cellar: CELLAR_SHUT } } : {};
+  const a = data && data.stats && data.stats.attune && data.stats.attune.kazzak, decor = st ? { open: [...st.open], tiers: st.tiers, pick: data.profile.decor, save: saveDecor, progress: (id) => bannerProgress(id, data.stats, st.ctx) } : null;
+  return a && !a.forged ? { locked: { cellar: CELLAR_SHUT }, decor } : { decor };
 }
 
 export async function openInn(focus) {

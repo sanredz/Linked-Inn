@@ -12,6 +12,7 @@
 <link rel="icon" href="assets/favicon.png">
 <script type="importmap">{"imports":{"three":"./assets/draft/vendor/three.module.min.js","three/addons/":"./assets/draft/vendor/addons/"}}</script>
 <style>
+.ttl { display: block; margin-top: 1px; font: 11px/1.2 system-ui, sans-serif; font-style: normal; letter-spacing: .02em; color: #c9a24a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @font-face { font-family: "Morpheus"; src: url("assets/game/morpheus.ttf") format("truetype"); font-display: swap; }
 @font-face { font-family: "Friz"; src: url("assets/game/frizqt.ttf") format("truetype"); font-display: swap; }
 :root {
@@ -493,9 +494,9 @@ footer .lz-mob { display: none; }
   .top .ap-grp.open > .tab { color: var(--gold); border-color: var(--gold-2, #8a6a2c); }
 }
 </style>
-<link rel="stylesheet" href="gates.css?v=20261123134304">
-<script type="module" src="gates.js?v=20261123134304"></script>
-<script type="module" src="omen.js?v=20261123134304"></script>
+<link rel="stylesheet" href="gates.css?v=20261123145643">
+<script type="module" src="gates.js?v=20261123145643"></script>
+<script type="module" src="omen.js?v=20261123145643"></script>
 </head>
 <body>
 <header class="top">
@@ -734,7 +735,7 @@ footer .lz-mob { display: none; }
 <div id="peek" hidden><div class="pane"><img class="portrait" id="pkPortrait" alt=""><div class="frameart"></div><div class="viewport"><canvas id="pkStage" aria-label="Character for this run. Drag to turn."></canvas></div><div class="peekwho" id="pkWho"></div><div class="sub" id="pkSay"></div><div class="peekdoll" id="pkDoll"></div></div></div>
 <div id="tip" hidden></div>
 <div id="sheet" hidden><div class="box"><div id="sheetBody"></div><div class="acts"><button class="go" id="sheetKeep">Keep this item</button><button class="go" id="sheetMain" hidden>Main Hand</button><button class="go" id="sheetOff" hidden>Off Hand</button><button id="sheetClose">Close</button></div></div></div>
-<script type="module" src="draft/app.js?v=20261123134304"></script>
+<script type="module" src="draft/app.js?v=20261123145643"></script>
 <script>(() => {
   const mq = matchMedia('(max-width: 720px)');
   document.addEventListener('click', (e) => {

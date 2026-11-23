@@ -79,3 +79,5 @@
   .hpod.p1 .hpface { width: 62px; height: 62px; }
 }
 @media (prefers-reduced-motion: reduce) { .hall { animation: none; } }
+.hptitle { display: block; margin-top: -2px; font-size: 11px; color: #c9a24a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hltitle { margin-left: 6px; font-size: 11px; color: #c9a24a; }

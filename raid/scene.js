@@ -21,6 +21,7 @@ export class RaidScene extends Arena {
     third.className = 'arena-other';
     host.append(third);
     this.stageC = new Stage(third, gearData);
+    this.stageB.mine = this.stageC.mine = true;
     this.stageC.pause();
     host.insertAdjacentHTML('beforeend', '<div class="rframes"></div><div class="rcast" hidden></div>');
     this.team = [];
@@ -159,7 +160,7 @@ export class RaidScene extends Arena {
 
   drawFrames(f) {
     const box = this.q('.rframes');
-    if (!box.firstChild) {
+    if (!box.firstChild || box.querySelectorAll('.rmember').length !== this.team.length) {
       if (this.worldBoss) {
         box.innerHTML = `<div class="rworld"><div class="rwname"><b>${this.bossName}</b>${this.bossTitle ? `<small>${this.bossTitle}</small>` : ''}</div><div class="rwbar"><i class="rwlag"></i><i class="rwfill"></i>${[.75, .5, .25].map((m) => `<span class="rwmark" style="left:${m * 100}%"></span>`).join('')}<b class="rwnum">${Math.round(this.bossMax).toLocaleString('en-US')}</b></div><div class="rwclock">Supreme Mode in <b>${this.clock(this.supreme)}</b></div></div><div class="rmiles"></div><div class="rteam">${this.team.map((m, i) => `<div class="rmember" data-m="${i}"><img src="assets/classes/${m.hero.cls}.png" alt=""><div><div class="ubar hp"><i></i><b></b></div><div class="ubar res"><i></i></div></div></div>`).join('')}</div>`;
       } else box.innerHTML = `${this.endless ? `<div class="rfinal t-1"><span>Final Stand</span><b>0</b><em>Damage to ${this.finale}</em></div><div class="rmiles"></div>` : '<div class="rboss"><span class="rbname"></span><div class="ubar hp"><i></i><b></b></div></div>'}<div class="rteam">${this.team.map((m, i) => `<div class="rmember" data-m="${i}"><img src="assets/classes/${m.hero.cls}.png" alt=""><div><div class="ubar hp"><i></i><b></b></div><div class="ubar res"><i></i></div></div></div>`).join('')}</div>`;
@@ -330,16 +331,23 @@ export class RaidScene extends Arena {
     else if (e.k === 'death') { if (m) { m.dead = true; m.stage.pose('death', 1); if (m.form) this.act(m.form, 'death', 1); const p = m.stage.rig.position; setTimeout(() => this.puff(p.x, p.z, 12, 1), 550); } this.fx.shake = .6; }
   }
 
+  fullFrame(rec) {
+    const f = rec.frames[0];
+    return f && { ...f, t: 0, boss: 1, score: 0, party: f.party.map(([, max], i) => [max, max, (this.team[i] && this.team[i].hero.mana) || 0]) };
+  }
+
   play(rec, x, { onEnd }) {
     this.q('.banner3d').hidden = true;
     this.playing = { t: 0, at: 0, rec };
+    const start = this.fullFrame(rec);
+    if (start) this.drawFrames(start);
     this.onEnd = onEnd;
   }
 
   step(dt) {
     const run = this.playing, { rec } = run, last = rec.frames.length - 1;
     run.t += dt * this.speed * TIME;
-    const i = Math.min(last, Math.max(0, Math.floor(run.t / .5))), f = rec.frames[i];
+    const i = Math.min(last, Math.max(0, Math.floor(run.t / .5))), f = rec.frames[0] && run.t < rec.frames[0].t ? this.fullFrame(rec) : rec.frames[i];
     if (f) { this.drawFrames(f); if (this.endless) this.climb(f.score, dt); }
     if (this.worldBoss) this.worldNumber(dt);
     let shown = 0;
@@ -360,10 +368,11 @@ export class RaidScene extends Arena {
     if (this.bossRig && (this.bossBusy || 0) < run.t) this.act(this.bossRig, 'attack', 1);
     if (run.t >= rec.time || i >= last) {
       this.playing = null;
-      if (f && this.worldBoss) { this.drawFrames(f); this.bossShown = this.bossTarget * this.bossMax; this.worldNumber(1); if (rec.won) this.worldSlain(rec.time); }
-      if (f) { this.drawFrames(f); if (this.endless) { this.shown = f.score; this.climb(rec.score, 1); this.shown = rec.score; this.climb(rec.score, 1); } }
+      const fin = f && { ...f, boss: rec.won ? 0 : f.boss, party: rec.won ? f.party : f.party.map(([, max, mana]) => [0, max, mana]) };
+      if (f && this.worldBoss) { this.drawFrames(fin); this.bossShown = this.bossTarget * this.bossMax; this.worldNumber(1); if (rec.won) this.worldSlain(rec.time); }
+      if (f) { this.drawFrames(fin); if (this.endless) { this.shown = f.score; this.climb(rec.score, 1); this.shown = rec.score; this.climb(rec.score, 1); } }
       if (this.bossRig) this.act(this.bossRig, rec.won ? 'death' : 'idle', 1);
-      for (const m of this.team) if (!m.dead && !rec.won) { m.stage.pose('ready1h'); if (m.form) this.act(m.form, 'idle', 1); }
+      for (const m of this.team) if (!m.dead && !rec.won) { m.dead = true; m.stage.pose('death', 1); if (m.form) this.act(m.form, 'death', 1); }
       if (this.onEnd) setTimeout(() => this.onEnd(rec), this.worldBoss && rec.won ? 2600 : 900);
     }
   }

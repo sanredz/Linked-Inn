@@ -1,0 +1,65 @@
+@property --fa { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+[data-frame] { --fw: 4px; --core: #0c0703; border: var(--fw) solid transparent !important; background-clip: padding-box, border-box !important; background-origin: border-box !important; }
+.hface[data-frame] { --fw: 7px; }
+.hbface[data-frame] { --fw: 4px; }
+.chatlist img[data-frame], .plsicon[data-frame] { --fw: 2.5px; }
+.prframe[data-frame], .plsicon .prframe[data-frame] { --fw: 4px; display: block; width: 26px; height: 26px; border-radius: 50%; }
+
+[data-frame="f_bronze"] {
+  background-image: linear-gradient(var(--core), var(--core)), conic-gradient(from 200deg, #4a2a10, #c88a4a 12%, #f2c48a 18%, #8a5424 30%, #5a3414 45%, #d8a060 62%, #f6d0a0 68%, #8a5424 80%, #4a2a10) !important;
+  box-shadow: 0 0 0 1px #140a04, 0 2px 6px rgba(0, 0, 0, .6) !important;
+}
+
+[data-frame="f_silver"] {
+  background-image: linear-gradient(var(--core), var(--core)), conic-gradient(from var(--fa), #6a727e, #f6f9ff 6%, #aab2be 14%, #4a525e 32%, #c8d0dc 52%, #ffffff 57%, #8a929e 66%, #4a525e 84%, #6a727e) !important;
+  box-shadow: 0 0 0 1px #10141a, 0 0 8px rgba(220, 230, 245, .25), 0 2px 6px rgba(0, 0, 0, .6) !important;
+  animation: fspin 7s linear infinite;
+}
+
+[data-frame="f_gold"] {
+  background-image: linear-gradient(var(--core), var(--core)),
+    radial-gradient(circle, #fff 0 10%, #ff4a4a 30%, #7a0a0a 58%, transparent 66%),
+    radial-gradient(circle, #fff 0 10%, #ff4a4a 30%, #7a0a0a 58%, transparent 66%),
+    conic-gradient(from var(--fa), #8a5a14, #ffe9a8 6%, #f8c858 14%, #7a4a10 30%, #e8b048 50%, #fff4c8 55%, #c88a28 64%, #6a400c 84%, #8a5a14) !important;
+  background-size: auto, var(--fw) var(--fw), var(--fw) var(--fw), auto !important;
+  background-position: 0 0, 50% 0, 50% 100%, 0 0 !important;
+  background-repeat: no-repeat !important;
+  background-clip: padding-box, border-box, border-box, border-box !important;
+  box-shadow: 0 0 0 1px #1a1004, 0 0 12px rgba(248, 211, 107, .35), 0 2px 6px rgba(0, 0, 0, .6) !important;
+  animation: fspin 6s linear infinite;
+}
+
+[data-frame="f_podium"] {
+  background-image: linear-gradient(var(--core), var(--core)), conic-gradient(from var(--fa), #c8cce0, #ffffff 5%, #eef0ff 12%, #9aa0b8 30%, #ffffff 48%, #dfe2f4 56%, #8a90a8 76%, #c8cce0) !important;
+  box-shadow: 0 0 0 1px #12141c, 0 0 10px rgba(238, 240, 255, .45), 0 0 22px rgba(200, 210, 255, .2) !important;
+  animation: fspin 5s linear infinite, fhalo 3.2s ease-in-out infinite;
+  --halo: 238, 240, 255;
+}
+
+[data-frame="f_fel"] {
+  background-image: linear-gradient(var(--core), var(--core)), conic-gradient(from var(--fa), #0a1806, #5aff3a 8%, #0e2a08 16%, #2ad41a 27%, #0a1806 36%, #b8ff8a 44%, #1a5a10 52%, #0a1806 62%, #5aff3a 72%, #0e2a08 82%, #3aff2a 92%, #0a1806) !important;
+  box-shadow: 0 0 0 1px #040a02, 0 0 10px rgba(90, 255, 58, .6), 0 0 24px rgba(90, 255, 58, .25) !important;
+  animation: fspin 2.6s linear infinite, fhalo 1.8s ease-in-out infinite;
+  --halo: 90, 255, 58;
+}
+
+[data-frame="f_legend"] {
+  background-image: linear-gradient(var(--core), var(--core)),
+    conic-gradient(from var(--fa), transparent 0 62%, rgba(255, 210, 122, 0) 64%, #ffd27a 74%, #ffffff 78%, #ff8a1e 84%, transparent 92%),
+    radial-gradient(circle, #fff 0 10%, #ffb03a 30%, #8a3a00 58%, transparent 66%),
+    radial-gradient(circle, #fff 0 10%, #ffb03a 30%, #8a3a00 58%, transparent 66%),
+    radial-gradient(circle, #fff 0 10%, #ffb03a 30%, #8a3a00 58%, transparent 66%),
+    radial-gradient(circle, #fff 0 10%, #ffb03a 30%, #8a3a00 58%, transparent 66%),
+    conic-gradient(from 30deg, #7a3a08, #ffd27a 8%, #ff9a2a 16%, #6a2a04 32%, #e88a2a 52%, #fff0b8 56%, #c86a14 66%, #5a2404 84%, #7a3a08) !important;
+  background-size: auto, auto, var(--fw) var(--fw), var(--fw) var(--fw), var(--fw) var(--fw), var(--fw) var(--fw), auto !important;
+  background-position: 0 0, 0 0, 50% 0, 50% 100%, 0 50%, 100% 50%, 0 0 !important;
+  background-repeat: no-repeat !important;
+  background-clip: padding-box, border-box, border-box, border-box, border-box, border-box, border-box !important;
+  box-shadow: 0 0 0 1px #1a0a02, 0 0 12px rgba(255, 138, 30, .65), 0 0 30px rgba(255, 138, 30, .3) !important;
+  animation: fspin 3.2s linear infinite, fhalo 2.4s ease-in-out infinite;
+  --halo: 255, 138, 30;
+}
+
+@keyframes fspin { to { --fa: 360deg; } }
+@keyframes fhalo { 50% { box-shadow: 0 0 0 1px #000, 0 0 16px rgba(var(--halo), .8), 0 0 40px rgba(var(--halo), .35); } }
+@media (prefers-reduced-motion: reduce) { [data-frame] { animation: none !important; } }

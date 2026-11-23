@@ -1,4 +1,5 @@
 import { MILESTONES, RAIDS, tierOf } from './bosses.js';
+import { titleOf } from '../draft/paths.js';
 import { BONUS, choiceOf, makeParty, partyBonuses, stacks } from './roles.js';
 import { bossHealth, enrageTime, explain, fight } from './engine.js';
 import { boonById } from './boons.js';
@@ -425,7 +426,7 @@ function boardHtml() {
   if (!board) return `${head}<p>The board could not be reached.</p>`;
   const filtered = boardFind.trim() || ROLES.some((r) => boardPick[r]), count = boardCount ? `<p class="rboardcount">${filtered ? `${num(boardCount.matched)} of ${num(boardCount.total)}` : num(boardCount.total)} ${boardCount.total === 1 ? 'run' : 'runs'}</p>` : '';
   if (!board.length) return `${head}${count}<p>${filtered ? 'No runs match these filters.' : `Nobody has reached ${esc(last)} yet.`}</p>`;
-  return head + count + board.map((r, i) => `<div class="rrun ${i === boardRow ? 'open' : ''} ${r.mine ? 'mine' : ''}"><button class="rrow" data-row="${i}" aria-expanded="${i === boardRow}"><span>${r.pos || i + 1}</span><b>${esc(r.name)}${(r.mounts || []).map((m) => `<img class="rmicon" src="assets/icons/${m.icon}.png" alt="${esc(m.name)}" title="${esc(m.name)}">`).join('')}</b><span class="rclassrow">${r.party.map((c) => `<img src="assets/classes/${c}.png" alt="${c}">`).join('')}</span><em>${num(r.score)}</em><i class="rchev"></i></button>${i === boardRow ? rowDetail(r) : ''}</div>`).join('');
+  return head + count + board.map((r, i) => `<div class="rrun ${i === boardRow ? 'open' : ''} ${r.mine ? 'mine' : ''}"><button class="rrow" data-row="${i}" aria-expanded="${i === boardRow}"><span>${r.pos || i + 1}</span><b>${esc(r.name)}${titleOf(r.t) ? `<small class="ttl">${esc(titleOf(r.t))}</small>` : ''}${(r.mounts || []).map((m) => `<img class="rmicon" src="assets/icons/${m.icon}.png" alt="${esc(m.name)}" title="${esc(m.name)}">`).join('')}</b><span class="rclassrow">${r.party.map((c) => `<img src="assets/classes/${c}.png" alt="${c}">`).join('')}</span><em>${num(r.score)}</em><i class="rchev"></i></button>${i === boardRow ? rowDetail(r) : ''}</div>`).join('');
 }
 
 function render() {

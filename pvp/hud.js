@@ -107,7 +107,7 @@ export class FightHud {
       if (id !== this.runId) return;
       const p = arena.playing;
       if (!p) return;
-      const t = Math.min(endT, p.t), i = Math.min(rec.frames.length - 1, Math.floor(t / 0.2) + 1);
+      const t = Math.min(endT, p.t), i = Math.min(rec.frames.length - 1, Math.floor(t / 0.2));
       if (i !== shown) { shown = i; const f = rec.frames[i]; this.bars(0, f.a); this.bars(1, f.b); this.el.querySelector('.fh-clock b').textContent = f.t.toFixed(1); }
       this.host.classList.toggle('fh-slow', endT - t < 1 && !CALM && p.t < 1e4);
       requestAnimationFrame(tick);

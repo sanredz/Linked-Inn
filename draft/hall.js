@@ -1,4 +1,5 @@
 import { PORTRAIT } from './feats.js';
+import { titleOf } from './paths.js';
 import { seasonOf } from './seasons.js';
 
 const CLASSES = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];
@@ -56,14 +57,14 @@ function podium(key, list) {
   const b = BOARDS[key], spot = (p, i) => {
     if (!p) return `<div class="hpod empty p${i + 1}"><span class="hpface"></span><b>Open seat</b><em>&nbsp;</em><i class="hpstep">${i + 1}</i></div>`;
     const [v, unit] = b.value(p);
-    return `<div class="hpod p${i + 1} ${p.n === me() ? 'me' : ''}"><span class="hpface ${square(p) ? 'sq' : ''}"><span class="hpimg"><img src="${face(p)}" alt="" loading="lazy"></span>${i === 0 ? '<i class="hpcrown"></i>' : ''}</span><b title="${esc(p.n)}">${esc(p.n)}</b><em>${v}<small>${unit}</small></em><i class="hpstep">${i + 1}</i></div>`;
+    return `<div class="hpod p${i + 1} ${p.n === me() ? 'me' : ''}"><span class="hpface ${square(p) ? 'sq' : ''}"><span class="hpimg"><img src="${face(p)}" alt="" loading="lazy"></span>${i === 0 ? '<i class="hpcrown"></i>' : ''}</span><b title="${esc(p.n)}">${esc(p.n)}</b>${titleOf(p.t) ? `<small class="hptitle">${esc(titleOf(p.t))}</small>` : ''}<em>${v}<small>${unit}</small></em><i class="hpstep">${i + 1}</i></div>`;
   };
   return `<div class="hpodium">${[1, 0, 2].map((i) => spot(list[i], i)).join('')}</div>`;
 }
 
 const row = (key, p, rank) => {
   const [v, unit] = BOARDS[key].value(p);
-  return `<li class="${p.n === me() ? 'me' : ''}"><span class="hlpos">${rank}</span><span class="hlface ${square(p) ? 'sq' : ''}"><img src="${face(p)}" alt="" loading="lazy"></span><span class="hlwho"><b>${esc(p.n)}</b>${BOARDS[key].extra(p)}</span><em title="${v} ${unit}">${v}</em></li>`;
+  return `<li class="${p.n === me() ? 'me' : ''}"><span class="hlpos">${rank}</span><span class="hlface ${square(p) ? 'sq' : ''}"><img src="${face(p)}" alt="" loading="lazy"></span><span class="hlwho"><b>${esc(p.n)}</b>${titleOf(p.t) ? `<small class="hltitle">${esc(titleOf(p.t))}</small>` : ''}${BOARDS[key].extra(p)}</span><em title="${v} ${unit}">${v}</em></li>`;
 };
 
 function body(key) {

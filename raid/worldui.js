@@ -1,3 +1,4 @@
+import { titleOf } from '../draft/paths.js';
 import { variance, WORLD, SLOTS, newWorld, addHero, gearOffers, handsFor, takeGear, mulligan, worldParty, pullWorld, dayOf, resetAt, dropsOf } from './world.js';
 import { ROLES, ROLE_NAME, CLASS_NAME, classesFor, specsFor } from './run.js';
 import { BONUS, choiceOf, partyBonuses, stacks } from './roles.js';
@@ -445,7 +446,7 @@ export function makeWorld(ctx) {
     }).join('')}</ul>`;
   }
 
-  const openInn = (id) => import('../draft/hearth.js?v=20261123134304').then((m) => m.openInn(id)).catch(() => {});
+  const openInn = (id) => import('../draft/hearth.js?v=20261123145643').then((m) => m.openInn(id)).catch(() => {});
 
   function toOver() {
     run.step = 'over';
@@ -501,7 +502,7 @@ export function makeWorld(ctx) {
     const time = (s) => (s ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}` : '');
     const head = `<p class="rboardcount">${num(board.kills)} ${board.kills === 1 ? 'kill' : 'kills'} in ${num(board.tries)} ${board.tries === 1 ? 'attempt' : 'attempts'} · today ${num(board.today.kills)} of ${num(board.today.tries)}</p>`;
     if (!board.rows.length) return `${head}<p>Nobody has slain ${esc(b.name)} yet.</p>`;
-    return head + `<div class="wbrows"><div class="wbrowhead"><span></span><b>Name</b><em>Kills</em><em>Fastest</em></div>${board.rows.map((r) => `<div class="wbrow ${r.mine ? 'mine' : ''}"><span>${r.pos}</span><b>${esc(r.name)}</b><em>${num(r.kills)}</em><em>${time(r.best)}</em></div>`).join('')}</div>`;
+    return head + `<div class="wbrows"><div class="wbrowhead"><span></span><b>Name</b><em>Kills</em><em>Fastest</em></div>${board.rows.map((r) => `<div class="wbrow ${r.mine ? 'mine' : ''}"><span>${r.pos}</span><b>${esc(r.name)}${titleOf(r.t) ? `<small class="ttl">${esc(titleOf(r.t))}</small>` : ''}</b><em>${num(r.kills)}</em><em>${time(r.best)}</em></div>`).join('')}</div>`;
   }
 
   const saved = load();

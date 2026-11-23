@@ -532,3 +532,4 @@ body.arenarun .banner[data-screen="gauntlet"] { display: none; }
   .fh-l { font-size: 12px; }
 }
 .gscene.fhud-on.dressing::after { opacity: 0 !important; }
+.gbname .ttl { display: inline; color: #c9a24a; font-style: normal; }

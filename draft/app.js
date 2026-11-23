@@ -1,5 +1,6 @@
-import * as C from './core.js?v=20261123134304';
-import { Stage } from './stage.js?v=20261123134304';
+import * as C from './core.js?v=20261123145643';
+import { Stage } from './stage.js?v=20261123145643';
+import { titleOf } from './paths.js';
 import { askFeedback, askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
@@ -513,7 +514,7 @@ async function board(cls, spec = '') {
     el.classList.toggle('ranks', !!find);
     el.innerHTML = (find ? '<p class="rw rh"><span>Overall</span><span>Class</span></p>' : '') + d.rows.map((x) => {
       const b = (C.BUILDS[x.cls] || []).find((q) => q.id === x.build);
-      return `<a class="rw${last && x.id === last.id ? ' me' : ''}" href="#run=${x.id}" data-run="${x.id}"><span class="rk">${x.pos}</span>${find ? `<span class="rk">${x.classPos}</span>` : ''}<img src="assets/classes/${x.cls}.png" alt="${C.CLASS_NAME[x.cls]}"><span class="nm" style="color:${C.CLASS_COLOR[x.cls]}">${esc(x.name)}${x.auto ? '<em>random name</em>' : ''}</span><span class="bd">${b ? esc(b.name) : ''}</span><b>${(+x.dps).toFixed(1)}</b></a>`;
+      return `<a class="rw${last && x.id === last.id ? ' me' : ''}" href="#run=${x.id}" data-run="${x.id}"><span class="rk">${x.pos}</span>${find ? `<span class="rk">${x.classPos}</span>` : ''}<img src="assets/classes/${x.cls}.png" alt="${C.CLASS_NAME[x.cls]}"><span class="nm" style="color:${C.CLASS_COLOR[x.cls]}">${esc(x.name)}${x.auto ? '<em>random name</em>' : ''}${titleOf(x.t) ? `<small class="ttl">${esc(titleOf(x.t))}</small>` : ''}</span><span class="bd">${b ? esc(b.name) : ''}</span><b>${(+x.dps).toFixed(1)}</b></a>`;
     }).join('');
   } catch {
     if (ticket !== boardTicket) return;
@@ -755,7 +756,7 @@ function useCode(input = 'sIn', msg = 'sMsg') {
 let hearthLib = null;
 const hearthMod = async () => {
   if (!hearthLib) {
-    hearthLib = await import('./hearth.js?v=20261123134304');
+    hearthLib = await import('./hearth.js?v=20261123145643');
     hearthLib.setupHearth({ API, key: () => playerKey, Stage, gear, row: (id) => row(id), onChange: () => hearthLib.hearthBar($('hearthBar')) });
   }
   return hearthLib;
@@ -819,6 +820,7 @@ async function refreshHearth(from) {
     codeNudge(d.stats);
     for (const n of d.notices || []) await notify(n);
     if (h.revealHonors) await h.revealHonors();
+    if (h.revealPaths) await h.revealPaths({ onLook: () => { const b = $('hearthBar').querySelector('[data-hearth]'); if (b) b.click(); } });
     await callForge();
     await callFeedback();
     shareId = d.share || shareId;
@@ -918,6 +920,14 @@ function setTable(cls, build) {
   buildDoll();
 }
 
+async function dressLook() {
+  const lk = hearthLib && hearthLib.look ? hearthLib.look() : { ride: null, glow: null };
+  stage.setGlow(lk.glow);
+  if (!lk.ride) return;
+  await stage.ride(lk.ride);
+  stage.want = { x: 0, y: 2.3, z: 9.6, tx: 0, ty: 1.7 };
+}
+
 async function startClass(cls) {
   show('draft');
   setTable(cls, C.BUILDS[cls][0].id);
@@ -934,6 +944,7 @@ async function startClass(cls) {
   stage.reset();
   $('status').textContent = 'Dressing your character...';
   await stage.setClass(cls);
+  await dressLook();
   spin();
 }
 
@@ -994,7 +1005,7 @@ async function loadTally() {
 }
 
 async function boot() {
-  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261123134304', 'draft/gear.json?v=20261123134304', 'draft/talents.json?v=20261123134304', 'draft/retired.json?v=20261123134304'].map((f) => fetch(f).then((r) => r.json())));
+  [pool, gear, talents, retired] = await Promise.all(['draft/pool.json?v=20261123145643', 'draft/gear.json?v=20261123145643', 'draft/talents.json?v=20261123145643', 'draft/retired.json?v=20261123145643'].map((f) => fetch(f).then((r) => r.json())));
   everything = { ...pool, items: { ...pool.items, ...retired } };
   classGrid();
   for (const box of [$('bFind'), $('rFind')]) box.oninput = () => {
@@ -1096,4 +1107,5 @@ async function boot() {
 }
 
 boot();
-import('../pvp/chat.js?v=20261123134304').then((m) => m.mountChat()).catch(() => {});
+import('../pvp/chat.js?v=20261123145643').then((m) => m.mountChat()).catch(() => {});
+import('./update.js').then((m) => m.showUpdate()).catch(() => {});

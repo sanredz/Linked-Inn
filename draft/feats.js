@@ -61,7 +61,7 @@ export const FEATS = [
 
 const CLASS_LIST = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];
 const PRETTY = (c) => c[0] + c.slice(1).toLowerCase();
-const DPS_MARKS = { WARRIOR: [260, 280, 315], PALADIN: [215, 230, 250], HUNTER: [255, 270, 290], ROGUE: [270, 285, 310], PRIEST: [380, 395, 415], SHAMAN: [265, 290, 315], MAGE: [400, 425, 455], WARLOCK: [365, 390, 415], DRUID: [240, 255, 280] };
+export const DPS_MARKS = { WARRIOR: [260, 280, 310], PALADIN: [215, 230, 245], HUNTER: [255, 270, 285], ROGUE: [270, 285, 310], PRIEST: [370, 385, 405], SHAMAN: [265, 290, 315], MAGE: [400, 425, 455], WARLOCK: [365, 390, 415], DRUID: [240, 255, 280] };
 const bestDps = (s, c) => (s.gear.bestOf[c] && s.gear.bestOf[c].dps) || 0;
 const arenaBest = (s, c) => (s.arena.bestBy && s.arena.bestBy[c]) || 0;
 const dpsLine = (s, c) => (bestDps(s, c) ? `Your best ${PRETTY(c)}: ${bestDps(s, c).toFixed(1)} DPS` : `No ${PRETTY(c)} run yet`);

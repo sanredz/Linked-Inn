@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { FIRES, BANNERS, BANNER_HOOKS, REWARD, decorOf, rewardFor } from './paths.js';
+import { paintBanner, bannerThumb, loadEmblems } from './banners.js';
+import { BANNER_TIERS } from './paths.js';
 
 const ROOT = 'assets/draft/hall/';
 const AREAS = [
@@ -55,6 +58,8 @@ const THEME = {
   fire: { light: 0xff7a2a, glow: '#ffb15a', spark: 0xffa040 },
   sand: { light: 0xffcf6a, glow: '#ffe2a0', spark: 0xffd98a },
 };
+const HOOKS = [[-6.74, 3.55, -3.95], [-6.74, 3.55, 2.85], [-6.74, 3.55, -3.15], [-6.74, 3.55, 3.65]];
+const BRAZIER = [2.2, -6.73, -35.5];
 const FIRE = new THREE.Vector3(-6.4, 1.6, .06), HEARTH = new THREE.Vector3(-7.7, .25, .05);
 const SEEN = 'trophySeen', MUTE = 'trophyMute';
 const areaOf = (x) => x.area || 'hall';
@@ -145,6 +150,10 @@ class Hall {
     this.box = box;
     this.items = items;
     this.opts = opts;
+    this.decorOpen = new Set((opts && opts.decor && opts.decor.open) || []);
+    this.tiers = (opts && opts.decor && opts.decor.tiers) || {};
+    this.look = decorOf(opts && opts.decor ? opts.decor.pick : null, this.decorOpen);
+    this.hung = [];
     this.canvas = box.querySelector('canvas');
     this.loader = new GLTFLoader();
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
@@ -213,10 +222,108 @@ class Hall {
     }
     this.embers();
     this.cellar();
+    await loadEmblems();
+    this.decorate();
     await Promise.all(this.items.map((x) => this.place(x)));
   }
 
   load(url) { return this.loader.loadAsync(url).catch(() => null); }
+
+  decorate() {
+    this.hangBanners(this.look.banners);
+    this.setBrazier(this.look.brazier);
+  }
+
+  paintFire(id) {
+    const f = FIRES.find((x) => x.id === id) || FIRES[0], h = this.hearthFx;
+    if (!h) return;
+    const swap = (mat, color) => { if (mat.map) mat.map.dispose(); mat.map = glowTexture(color); mat.needsUpdate = true; };
+    h.flames.forEach((s, i) => swap(s.material, i % 3 ? f.flame[0] : f.flame[1]));
+    swap(h.bed.material, f.bed);
+    h.pts.material.color.setHex(f.spark);
+    this.fire.color.setHex(f.light);
+  }
+
+  hangBanners(ids) {
+    for (const g of this.hung) g.removeFromParent();
+    this.hung = ids.slice(0, BANNER_HOOKS).map((id, i) => this.banner(BANNERS.find((b) => b.id === id), HOOKS[i]));
+  }
+
+  setBrazier(on) {
+    if (on && !this.brazierGroup) this.brazier();
+    if (this.brazierGroup) this.brazierGroup.visible = !!on;
+  }
+
+  setDecor(look) {
+    this.look = look;
+    this.paintFire(look.fire);
+    this.hangBanners(look.banners);
+    this.setBrazier(look.brazier);
+  }
+
+  banner(b, at) {
+    const tier = this.tiers[b.id] || 1, tex = new THREE.CanvasTexture(paintBanner(document.createElement('canvas'), b, tier));
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    const geo = new THREE.PlaneGeometry(.8, 1.6, 6, 12), base = geo.attributes.position.array.slice();
+    const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: .4, side: THREE.DoubleSide, roughness: .95, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: [0, .06, .16][tier - 1] });
+    const cloth3 = new THREE.Mesh(geo, mat);
+    const group = new THREE.Group();
+    cloth3.position.y = -.8;
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, 1, 8), new THREE.MeshStandardMaterial({ color: 0x8a6a2a, metalness: .7, roughness: .4 }));
+    pole.rotation.z = Math.PI / 2;
+    group.add(cloth3, pole);
+    group.position.fromArray(at);
+    group.rotation.y = Math.PI / 2;
+    group.scale.setScalar(.85);
+    this.scene.add(group);
+    const k = Math.random() * 9, pos = geo.attributes.position;
+    this.fx.push((t) => {
+      if (this.still || !group.parent) return;
+      for (let i = 0; i < pos.count; i++) {
+        const y = base[i * 3 + 1], drop = (.8 - y) / 1.6;
+        pos.array[i * 3 + 2] = base[i * 3 + 2] + Math.sin(t * 1.6 + k + y * 3 + base[i * 3] * 2) * .035 * drop;
+      }
+      pos.needsUpdate = true;
+    });
+    return group;
+  }
+
+  brazier() {
+    const grp = this.brazierGroup = new THREE.Group();
+    this.scene.add(grp);
+    const at = new THREE.Vector3(...BRAZIER), iron = new THREE.MeshStandardMaterial({ color: 0x1e1a14, metalness: .7, roughness: .45 });
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(.42, .22, .26, 18, 1, true), iron);
+    bowl.position.set(at.x, at.y + .95, at.z);
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(.06, .14, .9, 10), iron);
+    stem.position.set(at.x, at.y + .45, at.z);
+    const foot = new THREE.Mesh(new THREE.CylinderGeometry(.32, .38, .06, 18), iron);
+    foot.position.set(at.x, at.y + .03, at.z);
+    const coals = new THREE.Mesh(new THREE.CircleGeometry(.38, 18), new THREE.MeshBasicMaterial({ color: 0x3aff2a }));
+    coals.rotation.x = -Math.PI / 2;
+    coals.position.set(at.x, at.y + 1.02, at.z);
+    const light = new THREE.PointLight(0x5aff3a, 9, 7, 1.5);
+    light.position.set(at.x, at.y + 1.6, at.z);
+    grp.add(bowl, stem, foot, coals, light);
+    const flames = [];
+    for (let i = 0; i < 5; i++) {
+      const f = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(i % 2 ? '#4aff2a' : '#c8ffb0'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .85 }));
+      f.userData.k = Math.random() * 9;
+      f.userData.dx = (Math.random() - .5) * .3;
+      f.userData.dz = (Math.random() - .5) * .3;
+      grp.add(f);
+      flames.push(f);
+    }
+    const n = 30, pts = sparks(n, 0x8aff6a, .06);
+    grp.add(pts);
+    const seed = pts.userData.seed, pp = pts.geometry.attributes.position;
+    this.fx.push((t) => {
+      for (const f of flames) { const k = f.userData.k, h = .9 + Math.sin(t * 7 + k) * .25 + Math.sin(t * 13 + k) * .1; f.scale.set(.42, .8 * h, 1); f.position.set(at.x + f.userData.dx, at.y + 1.25 + h * .2, at.z + f.userData.dz); }
+      light.intensity = 8 + Math.sin(t * 9) * 1.4 + Math.sin(t * 4.3) * 1.1;
+      for (let i = 0; i < n; i++) { const q = (t * (.25 + seed[i] * .3) + seed[i]) % 1; pp.setXYZ(i, at.x + Math.sin(seed[i] * 50 + t) * .25 * q, at.y + 1.1 + q * 1.8, at.z + Math.cos(seed[i] * 40 + t) * .25 * q); }
+      pp.needsUpdate = true;
+    });
+  }
 
   cellar() {
     const lamp = new THREE.PointLight(0xffb070, 16, 13, 1.4);
@@ -270,13 +377,13 @@ class Hall {
   embers() {
     const flames = [];
     for (let i = 0; i < 7; i++) {
-      const f = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(i % 3 ? '#ff8a2a' : '#ffd27a'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .8 }));
+      const f = new THREE.Sprite(new THREE.SpriteMaterial({ map: null, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .8 }));
       f.position.set(HEARTH.x, HEARTH.y + .35, HEARTH.z + (i - 3) * .32);
       f.userData.k = Math.random() * 10;
       this.scene.add(f);
       flames.push(f);
     }
-    const bed = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture('#ff5a1a'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .9 }));
+    const bed = new THREE.Sprite(new THREE.SpriteMaterial({ map: null, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .9 }));
     bed.position.set(HEARTH.x, HEARTH.y + .15, HEARTH.z);
     bed.scale.set(3, 1.1, 1);
     this.scene.add(bed);
@@ -286,6 +393,8 @@ class Hall {
       for (const f of flames) { const k = f.userData.k, h = (.9 + Math.sin(t * 6 + k) * .25 + Math.sin(t * 11 + k * 2) * .12) * lit; f.scale.set((.75 + Math.sin(t * 4 + k) * .1) * Math.min(1, lit * 1.4), h * 1.3, 1); f.position.y = HEARTH.y + .2 + h * .45; }
     });
     const n = 46, pts = sparks(n, 0xffa24a, .07);
+    this.hearthFx = { flames, bed, pts };
+    this.paintFire(this.look.fire);
     this.scene.add(pts);
     const s = pts.userData.seed, pos = pts.geometry.attributes.position;
     this.fx.push((t) => {
@@ -705,6 +814,60 @@ class Hall {
 
 let open = null;
 
+function decorDrawer(box, hall, decor, locked) {
+  const open = new Set(decor.open), btn = box.querySelector('.trdecobtn'), panel = document.createElement('div');
+  panel.className = 'trdeco';
+  panel.hidden = true;
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-label', 'Decorate the Inn');
+  box.append(panel);
+  let look = { ...hall.look, banners: [...hall.look.banners] }, timer = 0;
+  const tiers = decor.tiers || {};
+  const tierList = (id) => {
+    const steps = decor.progress ? decor.progress(id) : [], b = BANNERS.find((x) => x.id === id);
+    return steps.length ? `<b>${esc(b.name)}${tiers[id] ? ` · Tier ${BANNER_TIERS[tiers[id] - 1]}` : ''}</b>${steps.map((t, i) => `<span class="${i < (tiers[id] || 0) ? 'ok' : ''}"><strong>${t.tier}</strong> ${t.parts.map((x) => `${esc(x.text)}${x.now && !x.done ? ` <em>${esc(x.now)}</em>` : ''}${x.done && i >= (tiers[id] || 0) ? ` <em class="held">done, counts once tier ${BANNER_TIERS[i - 1] || 'I'} is reached</em>` : ''}`).join(', ')}${i < (tiers[id] || 0) ? ' ✓' : ''}</span>`).join('')}` : '';
+  };
+  const has = (need) => !need || open.has(need);
+  const needText = (need) => (REWARD[need] ? `Unlocks at ${rewardFor(REWARD[need])}.` : '');
+  const draw = () => {
+    panel.innerHTML = `<header><b>Decorate the Inn</b><small>Only you see your Inn this way. Changes save on their own.</small><button class="trdecox" aria-label="Close">✕</button></header>
+      <div class="trdrow"><small>Hearthfire</small><div>${FIRES.map((f) => `<button class="trdc ${look.fire === f.id ? 'on' : ''} ${has(f.need) ? '' : 'locked'}" data-fire="${f.id}" ${has(f.need) ? '' : `data-need="${esc(f.need)}"`} aria-pressed="${look.fire === f.id}"><i class="trflame" style="--a:${f.flame[0]};--b:${f.flame[1]}"></i><span>${esc(f.name)}</span></button>`).join('')}</div></div>
+      <div class="trdrow"><small>Banners <em>${look.banners.length} of ${BANNER_HOOKS} hooks on the fireplace pillars · ${BANNERS.filter((b) => has(b.need)).length} of ${BANNERS.length} earned</em></small>${[...new Set(BANNERS.map((b) => b.group))].map((grp) => `<div class="trdgroup"><i>${esc(grp)}</i><div class="trdbanners">${BANNERS.filter((b) => b.group === grp).map((b) => `<button class="trban t${tiers[b.id] || 0} ${look.banners.includes(b.id) ? 'on' : ''} ${has(b.need) ? '' : 'locked'}" data-banner="${b.id}" ${has(b.need) ? '' : `data-need="${esc(b.need)}"`} aria-pressed="${look.banners.includes(b.id)}" title="${esc(b.name)}"><img src="${bannerThumb(b.id, tiers[b.id] || 1)}" alt="">${tiers[b.id] ? `<i class="trtier">${BANNER_TIERS[tiers[b.id] - 1]}</i>` : ''}<span>${esc(b.name.replace(/^Banner of (the )?/, ''))}</span>${look.banners.includes(b.id) ? `<b>${look.banners.indexOf(b.id) + 1}</b>` : ''}</button>`).join('')}</div></div>`).join('')}</div>
+      <div class="trdrow"><small>Cellar</small><div><button class="trdc ${look.brazier ? 'on' : ''} ${open.has('i_felbrazier') ? '' : 'locked'}" data-brazier ${open.has('i_felbrazier') ? '' : 'data-need="i_felbrazier"'} aria-pressed="${look.brazier}"><i class="trflame" style="--a:#3aff2a;--b:#d8ffb0"></i><span>Fel Brazier</span></button></div></div>
+      <p class="trdneed" aria-live="polite"></p>`;
+    panel.querySelector('.trdecox').onclick = toggle;
+    const say = panel.querySelector('.trdneed');
+    for (const b of panel.querySelectorAll('.trdc, .trban')) b.onclick = () => {
+      if (b.dataset.need) {
+        const list = b.dataset.banner ? tierList(b.dataset.banner) : '';
+        if (list) say.innerHTML = list;
+        else say.textContent = needText(b.dataset.need);
+        return;
+      }
+      if (b.dataset.fire) { look.fire = b.dataset.fire; if (hall.area !== 'hall') hall.travel('hall'); }
+      else if (b.dataset.banner) {
+        const id = b.dataset.banner, at = look.banners.indexOf(id);
+        if (at >= 0) look.banners.splice(at, 1);
+        else if (look.banners.length < BANNER_HOOKS) look.banners.push(id);
+        else { say.innerHTML = `${tierList(id)}<span>All ${BANNER_HOOKS} hooks are taken. Take one down first.</span>`; return; }
+        if (hall.area !== 'hall') hall.travel('hall');
+      } else if ('brazier' in b.dataset) { look.brazier = !look.brazier; if (hall.area !== 'cellar' && !locked.cellar) hall.travel('cellar'); }
+      hall.setDecor({ ...look, banners: [...look.banners] });
+      clearTimeout(timer);
+      timer = setTimeout(() => decor.save({ ...look }), 600);
+      draw();
+      if (b.dataset.banner) panel.querySelector('.trdneed').innerHTML = tierList(b.dataset.banner);
+    };
+  };
+  const toggle = () => {
+    panel.hidden = !panel.hidden;
+    btn.setAttribute('aria-expanded', String(!panel.hidden));
+    box.classList.toggle('decorating', !panel.hidden);
+    if (!panel.hidden) loadEmblems().then(draw);
+  };
+  btn.onclick = toggle;
+}
+
 export async function openTrophyHall(items, extra = '', opts = {}) {
   if (open) return;
   const box = document.createElement('div');
@@ -712,7 +875,7 @@ export async function openTrophyHall(items, extra = '', opts = {}) {
   const have = items.filter((x) => x.have).length, areas = AREAS.filter((a) => a.id === 'hall' || items.some((x) => areaOf(x) === a.id));
   const locked = opts.locked || {}, shut = (x) => !!locked[areaOf(x)];
   const tally = (id) => { const list = items.filter((x) => areaOf(x) === id); return `${list.filter((x) => x.have).length}/${list.length}`; };
-  box.innerHTML = `<canvas></canvas><div class="trveil"><b>Lighting the hearth</b></div><div class="trswap"></div><header class="trtop"><span><small>Your Trophy Hall</small><b>The Lion's Pride Inn</b><em>${have} of ${items.length} trophies</em></span><span class="trbtns"><button class="trsound" aria-label="Sound"></button><button class="trclose" aria-label="Close">✕</button></span></header>${areas.length > 1 ? `<nav class="trareas">${areas.map((a) => `${locked[a.id] ? `<button data-area="${a.id}" class="locked" aria-disabled="true" title="Locked"><b><svg class="trchain" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 10V7a3.5 3.5 0 0 1 7 0v3M6 10h12v10H6Z"/></svg>${esc(a.name)}</b><small>Sealed</small></button>` : `<button data-area="${a.id}" class="${a.id === 'hall' ? 'on' : ''}" title="${esc(a.note)}"><b>${esc(a.name)}</b><small>${tally(a.id)}</small></button>`}`).join('')}</nav>` : ''}<div class="trcard"></div><nav class="trdots">${items.map((x) => `<button data-go="${x.id}" data-in="${areaOf(x)}" class="${x.have ? 'have' : ''} ${areaOf(x) === 'hall' ? '' : 'away'} ${shut(x) ? 'shut' : ''}" title="${esc(x.have ? x.name : 'Not yet yours')}"><img src="assets/icons/${x.icon}.png" alt=""></button>`).join('')}</nav>`;
+  box.innerHTML = `<canvas></canvas><div class="trveil"><b>Lighting the hearth</b></div><div class="trswap"></div><header class="trtop"><span><small>Your Trophy Hall</small><b>The Lion's Pride Inn</b><em>${have} of ${items.length} trophies</em></span><span class="trbtns">${opts.decor ? '<button class="trdecobtn" aria-expanded="false"><img src="assets/icons/132483.png" alt=""><span>Decorate</span></button>' : ''}<button class="trsound" aria-label="Sound"></button><button class="trclose" aria-label="Close">✕</button></span></header>${areas.length > 1 ? `<nav class="trareas">${areas.map((a) => `${locked[a.id] ? `<button data-area="${a.id}" class="locked" aria-disabled="true" title="Locked"><b><svg class="trchain" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 10V7a3.5 3.5 0 0 1 7 0v3M6 10h12v10H6Z"/></svg>${esc(a.name)}</b><small>Sealed</small></button>` : `<button data-area="${a.id}" class="${a.id === 'hall' ? 'on' : ''}" title="${esc(a.note)}"><b>${esc(a.name)}</b><small>${tally(a.id)}</small></button>`}`).join('')}</nav>` : ''}<div class="trcard"></div><nav class="trdots">${items.map((x) => `<button data-go="${x.id}" data-in="${areaOf(x)}" class="${x.have ? 'have' : ''} ${areaOf(x) === 'hall' ? '' : 'away'} ${shut(x) ? 'shut' : ''}" title="${esc(x.have ? x.name : 'Not yet yours')}"><img src="assets/icons/${x.icon}.png" alt=""></button>`).join('')}</nav>`;
   if (!document.querySelector('link[data-trophy]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -723,7 +886,7 @@ export async function openTrophyHall(items, extra = '', opts = {}) {
   if (extra) box.insertAdjacentHTML('beforeend', extra);
   document.body.append(box);
   document.body.classList.add('trophyopen');
-  const hall = new Hall(box, items), sound = new Sounds(), mute = box.querySelector('.trsound');
+  const hall = new Hall(box, items, opts), sound = new Sounds(), mute = box.querySelector('.trsound');
   open = hall;
   const showMute = () => { mute.textContent = sound.off ? '🔇' : '🔊'; mute.setAttribute('aria-pressed', sound.off ? 'true' : 'false'); mute.title = sound.off ? 'Sound off' : 'Sound on'; };
   showMute();
@@ -734,6 +897,7 @@ export async function openTrophyHall(items, extra = '', opts = {}) {
   const key = (e) => { if (e.key === 'Escape') close(); };
   document.addEventListener('keydown', key);
   box.querySelector('.trclose').onclick = close;
+  if (opts.decor) decorDrawer(box, hall, opts.decor, locked);
   for (const b of box.querySelectorAll('[data-go]')) b.onclick = () => hall.go(hall.spots.find((s) => s.x.id === +b.dataset.go));
   hall.onArea = (id) => {
     for (const b of box.querySelectorAll('[data-area]')) b.classList.toggle('on', b.dataset.area === id);

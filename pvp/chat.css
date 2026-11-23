@@ -64,6 +64,8 @@
 .chatwho li small { margin-left: auto; font-size: 11px; color: #8f8170; }
 .chatwho li.anon { opacity: .7; }
 .chatwho > small { font-size: 11px; color: #8f8170; }
+.chatlist img.framed { border: 2px solid var(--fr); box-shadow: 0 0 6px var(--fr); }
+.chatlist .ctitle { margin-left: 5px; font-size: 11.5px; font-style: normal; color: #c9a24a; }
 .statsfab { position: fixed; right: 18px; bottom: 122px; z-index: 60; display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 15px 0 12px; font: 15px "Friz", serif; color: #ffe6a8; text-decoration: none; background: linear-gradient(#3a2914, #1d140a); border: 1px solid #a07a32; border-radius: 20px; box-shadow: 0 6px 18px rgba(0, 0, 0, .55); }
 .statsfab svg { width: 18px; height: 18px; fill: none; stroke: #ffd76a; stroke-width: 2; stroke-linecap: round; }
 .statsfab:hover { border-color: #f8d36b; }

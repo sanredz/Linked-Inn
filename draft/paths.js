@@ -65,15 +65,15 @@ export const PATHS = [
     ],
   },
   {
-    id: 'doomslayer', name: 'Doomslayer', mode: 'world', icon: 'assets/icons/237558.png', color: '#7dff5a', blurb: 'World Bosses',
+    id: 'doomslayer', name: 'Doomslayer', mode: 'world', icon: 'assets/icons/237558.png', color: '#7dff5a', blurb: 'Lord Kazzak',
     marks: [5, 29, 78, 142, 211],
     ranks: ['Seeker', 'Sealbreaker', 'Demonbane', 'Doomwalker', 'Bane of the Legion'],
     deeds: [
       d('w_seals', 'Seals broken', 136122, (s) => (s.attune && s.attune.kazzak ? (s.attune.kazzak.forged ? 6 : s.attune.kazzak.steps || 0) : 0), [[1, 'bronze'], [3, 'silver'], [6, 'gold']], { of: 6 }),
-      d('w_tries', 'World Boss attempts', 136224, (s) => world(s).tries || 0, [[1, 'bronze'], [10, 'silver'], [30, 'gold']]),
-      d('w_kills', 'World Boss kills', 237558, (s) => world(s).kills || 0, [[1, 'gold'], [5, 'legend'], [20, 'legend']]),
+      d('w_tries', 'Kazzak attempts', 136224, (s) => world(s).tries || 0, [[1, 'bronze'], [10, 'silver'], [30, 'gold']]),
+      d('w_kills', 'Kazzak kills', 237558, (s) => world(s).kills || 0, [[1, 'gold'], [5, 'legend'], [20, 'legend']]),
       d('w_drank', 'Consumables used', 134842, (s) => world(s).drank || 0, [[1, 'bronze'], [10, 'silver'], [30, 'gold']]),
-      d('w_bare', 'Bare-handed', 132334, (s) => world(s).bare || 0, [[1, 'legend']], { text: 'Kill a World Boss without any consumables' }),
+      d('w_bare', 'Bare-handed', 132334, (s) => world(s).bare || 0, [[1, 'legend']], { text: 'Kill Kazzak without any consumables' }),
     ],
   },
   {

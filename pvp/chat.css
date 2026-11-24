@@ -70,3 +70,14 @@
 .statsfab svg { width: 18px; height: 18px; fill: none; stroke: #ffd76a; stroke-width: 2; stroke-linecap: round; }
 .statsfab:hover { border-color: #f8d36b; }
 @media (max-width: 600px) { .statsfab { right: 12px; bottom: 110px; } }
+.chatspace { height: 76px; }
+.chatfab span { display: inline-block; max-width: 80px; overflow: hidden; white-space: nowrap; transition: max-width .2s ease, opacity .2s ease; }
+.chatfab.mini:not(:hover):not(.on) { padding: 0 11px; gap: 0; }
+.chatfab.mini:not(:hover):not(.on) span { max-width: 0; opacity: 0; }
+@media (pointer: coarse) {
+  .chatfab { width: 46px; height: 46px; padding: 0; gap: 0; justify-content: center; touch-action: none; transition: box-shadow .15s, border-color .15s; }
+  .chatfab span { display: none; }
+  .chatfab svg { width: 21px; height: 21px; }
+  .chatfab em { top: 8px; left: auto; right: 8px; }
+  .chatfab.drag { transition: none; opacity: .85; box-shadow: 0 10px 26px rgba(0, 0, 0, .7), 0 0 0 2px #f8d36b; }
+}

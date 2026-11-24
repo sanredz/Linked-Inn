@@ -154,6 +154,62 @@ function toggle(on) {
   }
 }
 
+const SPOT = 'tavernSpot', TOUCH = matchMedia('(pointer: coarse)');
+let dragged = false;
+const place = (spot) => {
+  if (!spot || !TOUCH.matches) { fab.style.left = fab.style.right = fab.style.bottom = fab.style.top = ''; return; }
+  const max = Math.max(12, innerHeight - 140);
+  fab.style.top = 'auto';
+  fab.style.bottom = `${Math.min(max, Math.max(12, spot.y))}px`;
+  fab.style.left = spot.side === 'left' ? '12px' : 'auto';
+  fab.style.right = spot.side === 'left' ? 'auto' : '12px';
+};
+function roam() {
+  const space = document.createElement('div');
+  space.className = 'chatspace';
+  space.setAttribute('aria-hidden', 'true');
+  fab.before(space);
+  let spot = null;
+  try { spot = JSON.parse(localStorage.getItem(SPOT) || 'null'); } catch {}
+  place(spot);
+  let start = null;
+  fab.addEventListener('pointerdown', (e) => { if (!TOUCH.matches || e.button > 0) return; start = { x: e.clientX, y: e.clientY, id: e.pointerId, moving: false }; });
+  fab.addEventListener('pointermove', (e) => {
+    if (!start || e.pointerId !== start.id) return;
+    if (!start.moving && Math.hypot(e.clientX - start.x, e.clientY - start.y) < 8) return;
+    if (!start.moving) { start.moving = true; fab.setPointerCapture(e.pointerId); fab.classList.add('drag'); }
+    const r = fab.getBoundingClientRect();
+    fab.style.right = 'auto';
+    fab.style.bottom = 'auto';
+    fab.style.left = `${Math.min(innerWidth - r.width, Math.max(0, e.clientX - r.width / 2))}px`;
+    fab.style.top = `${Math.min(innerHeight - r.height, Math.max(0, e.clientY - r.height / 2))}px`;
+    e.preventDefault();
+  });
+  const end = (e) => {
+    if (!start || e.pointerId !== start.id) return;
+    const moved = start.moving;
+    start = null;
+    if (!moved) return;
+    dragged = true;
+    setTimeout(() => { dragged = false; }, 400);
+    fab.classList.remove('drag');
+    const r = fab.getBoundingClientRect();
+    spot = { side: r.left + r.width / 2 < innerWidth / 2 ? 'left' : 'right', y: Math.round(innerHeight - r.bottom) };
+    try { localStorage.setItem(SPOT, JSON.stringify(spot)); } catch {}
+    place(spot);
+  };
+  fab.addEventListener('pointerup', end);
+  fab.addEventListener('pointercancel', end);
+  addEventListener('resize', () => place(spot));
+  let idle = 0;
+  addEventListener('scroll', () => {
+    if (TOUCH.matches) return;
+    fab.classList.add('mini');
+    clearTimeout(idle);
+    idle = setTimeout(() => fab.classList.remove('mini'), 1200);
+  }, { passive: true });
+}
+
 export function mountChat() {
   if (fab) return;
   style();
@@ -176,7 +232,8 @@ export function mountChat() {
   whoBox.hidden = true;
   box.querySelector('header').after(whoBox);
   here.addEventListener('click', () => { if (mod) whoBox.hidden = !whoBox.hidden; });
-  fab.onclick = () => toggle(!open);
+  fab.onclick = () => { if (dragged) { dragged = false; return; } toggle(!open); };
+  roam();
   list.addEventListener('click', (e) => { const b = e.target.closest('.chatmod'); if (b) menu(b.closest('li')); else if (!e.target.closest('.chatmenu')) box.querySelector('.chatmenu')?.remove(); });
   box.querySelector('.chatroom').onchange = (e) => {
     const n = Math.floor(+e.target.value);

@@ -1,5 +1,6 @@
 import { titleOf } from '../draft/paths.js';
 import { variance, WORLD, SLOTS, newWorld, addHero, gearOffers, handsFor, takeGear, mulligan, worldParty, pullWorld, dayOf, resetAt, dropsOf } from './world.js';
+import * as W from './world.js';
 import { ROLES, ROLE_NAME, CLASS_NAME, classesFor, specsFor } from './run.js';
 import { BONUS, choiceOf, partyBonuses, stacks } from './roles.js';
 import { bossHealth, explain, fight } from './engine.js';
@@ -252,7 +253,7 @@ export function makeWorld(ctx) {
 
   function forecast() {
     if (verdict) return verdict;
-    const heroes = team(), b = boss(), runs = [11, 23, 37, 41, 53, 67, 71, 83].map((s) => fight(heroes, b, s * 7919 + run.day, variance(s * 7919 + run.day), {}));
+    const heroes = team(), b = boss(), runs = [11, 23, 37, 41, 53, 67, 71, 83].map((s) => fight(heroes, b, s * 7919 + run.day, variance(s * 7919 + run.day, W.ROLL || 1), {}));
     const avg = (f) => runs.reduce((a, r) => a + f(r), 0) / runs.length;
     verdict = { wins: runs.filter((r) => r.won).length / runs.length, tank: avg((r) => r.totals[0].took / r.time), heal: avg((r) => r.totals[1].healed / r.time), dps: avg((r) => (r.totals[0].dealt + r.totals[2].dealt) / r.time), oom: runs.filter((r) => r.totals[1].oomAt).length };
     return verdict;
@@ -418,12 +419,13 @@ export function makeWorld(ctx) {
     render();
     let d = null;
     try {
-      const r = await fetch(`${API}/world/pull`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: ctx.who(), name: ctx.heroName(), boss: run.raid, day: run.day, moves: run.moves, consume: run.consume || [0, 0, 0] }) });
+      const r = await fetch(`${API}/world/pull`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: ctx.who(), name: ctx.heroName(), boss: run.raid, day: run.day, moves: run.moves, consume: run.consume || [0, 0, 0], roll: W.ROLL || 1 }) });
       d = await r.json().catch(() => null);
       if (!r.ok || !d || !d.ok) { busy = false; if (d && d.error === 'satchel') { run.consume = [0, 0, 0]; save(); await refresh(run.raid); error = 'Your satchel changed. Pick your consumables again.'; render(); return; } error = d && d.error === 'locked' ? 'Your attempt for today is already spent.' : 'Kazzak could not be reached. Try again.'; if (d && d.error === 'locked') { run = null; save(); refresh(); ctx.redraw(); return; } render(); return; }
     } catch { busy = false; error = 'Kazzak could not be reached. Try again.'; render(); return; }
     pulled = d;
     if (d.satchel && status[run.raid]) status[run.raid].satchel = d.satchel;
+    run.roll = d.roll === 2 ? 2 : 1;
     const heroes = team(), b = boss(), result = pullWorld(pool, run, d.salt, heroes), why = explain(result).replace('the boss enraged', `${b.short} entered Supreme Mode`);
     try { localStorage.setItem(`${KEY}Done`, JSON.stringify({ day: run.day, raid: run.raid })); } catch {}
     save();

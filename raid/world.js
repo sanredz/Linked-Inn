@@ -145,11 +145,18 @@ export function tuneParty(party, boss) {
 
 export const worldParty = (pool, run, iterations = ITERATIONS) => drink(tuneParty(makeParty(pool, run.heroes.map((h, i) => { const b = boostOf(run.consume && run.consume[i]); return b ? { ...h, boost: b } : h; }), iterations, [], run.raid), bossOf(run)), run.consume);
 export const fightSeed = (run) => hash(run.salt, 'fight', run.raid);
-export const variance = (seed) => { const r = rng(hash(seed, 'variance')); return { damage: .7 + r() * .6, health: .84 + r() * .32 }; };
+export const ROLL = 2;
+export const variance = (seed, roll = 1) => {
+  const r = rng(hash(seed, 'variance'));
+  if (roll !== 2) return { damage: .7 + r() * .6, health: .84 + r() * .32 };
+  let d = r(), h = r();
+  if (d > .95) h *= .65; else if (h > .95) d *= .65;
+  return { damage: .75 + d * .37, health: .88 + h * .22 };
+};
 
 export function fightWorld(pool, run, party = worldParty(pool, run)) {
   if (run.step !== 'boss') throw new Error('bad fight');
-  const result = fight(party, bossOf(run), fightSeed(run), variance(fightSeed(run)), {});
+  const result = fight(party, bossOf(run), fightSeed(run), variance(fightSeed(run), run.roll === 2 ? 2 : 1), {});
   run.moves.push(['f']);
   run.result = { won: result.won, time: Math.round(result.time * 10) / 10, health: Math.round(result.health * 1000) / 1000, dealt: result.totals.map((h) => Math.round(h.dealt)) };
   run.over = true;

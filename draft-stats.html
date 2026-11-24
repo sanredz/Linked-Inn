@@ -11,6 +11,8 @@ body { margin: 0; background: #0b0806; color: #f0e4cc; font: 15px/1.45 system-ui
 main { max-width: 760px; margin: 0 auto; padding: 16px 16px 40px; }
 .back { display: inline-block; margin: 0 0 10px; padding: 6px 12px; font-size: 14px; color: #ffd76a; text-decoration: none; border: 1px solid #3a2c18; border-radius: 999px; background: #140d07; }
 .sat { color: #57d683; }
+.col { display: inline-flex; flex-wrap: wrap; gap: 3px; margin-left: 6px; vertical-align: middle; }
+.col img { width: 18px; height: 18px; border-radius: 3px; box-shadow: 0 0 0 1px var(--q); }
 .back:hover { border-color: #c9a24a; }
 @media (min-width: 701px) { .back { display: none; } }
 h1 { margin: 0; font-size: 20px; color: #ffd76a; }
@@ -105,12 +107,13 @@ function arena(m) {
     <h2>Latest runs</h2>${table(['When', 'Player', 'Class', '#Record'], a.recent.map((x) => `<tr><td>${clock(x.at)}</td><td>${esc(x.name || 'Unnamed')}</td><td>${cls(x.cls)}</td><td class="n">${x.wins}-${x.losses}</td></tr>`))}`;
 }
 
+const QCOL = { Common: '#f4ead8', Uncommon: '#1eff00', Rare: '#3a9bff', Epic: '#b45cff', Legendary: '#ff8000', Mythic: '#3dffb0' };
 function raid(m) {
   const r = m.raid;
   return `<div class="tiles">${tile(num(r.n), 'raids')}${tile(num(r.p), 'players')}${tile(num(r.finals), 'full clears')}${tile(r.n ? `${Math.round((r.finals / r.n) * 100)}%` : '–', 'clear rate')}</div>
     ${chart(m, [r.buckets])}
     <h2>Raids</h2>${table(['Raid', '#Runs', '#Players', '#Full clears', '#Clear rate', '#Avg bosses'], r.raids.map((x) => `<tr><td>${RAID[x.raid] || esc(x.raid)}</td><td class="n">${num(x.n)}</td><td class="n">${num(x.p)}</td><td class="n">${num(x.finals)}</td><td class="n">${Math.round((x.finals / x.n) * 100)}%</td><td class="n">${x.avg} of ${FINAL[x.raid] || '?'}</td></tr>`))}
-    <h2>Most raids</h2>${table(['Player', '#Raids', '#Full clears', '#Last'], r.players.map((p) => `<tr><td>${esc(p.name || 'Unnamed')}${p.sat != null ? ` <span class="sat" title="Consumables in satchel">(${p.sat})</span>` : ''}</td><td class="n">${num(p.n)}</td><td class="n">${num(p.finals)}</td><td class="n">${ago(p.last)}</td></tr>`))}
+    <h2>Most raids</h2>${table(['Player', '#Raids', '#Full clears', '#Last'], r.players.map((p) => `<tr><td>${esc(p.name || 'Unnamed')}${p.sat != null ? ` <span class="sat" title="Consumables in satchel">(${p.sat})</span>` : ''}${p.col && p.col.length ? `<span class="col">${p.col.map((c) => `<img src="assets/icons/${c.icon}.png" alt="${esc(c.name)}" title="${esc(c.name)}" style="--q:${QCOL[c.rarity] || '#888'}">`).join('')}</span>` : ''}</td><td class="n">${num(p.n)}</td><td class="n">${num(p.finals)}</td><td class="n">${ago(p.last)}</td></tr>`))}
     <h2>Latest raids</h2>${table(['When', 'Player', 'Raid', '#Bosses'], r.recent.map((x) => `<tr><td>${clock(x.at)}</td><td>${esc(x.name || 'Unnamed')}</td><td>${RAID[x.raid] || esc(x.raid)}</td><td class="n ${x.kills === FINAL[x.raid] ? 'won' : ''}">${x.kills} of ${FINAL[x.raid] || '?'}</td></tr>`))}`;
 }
 

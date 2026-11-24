@@ -37,7 +37,7 @@ export function makeWorld(ctx) {
   const { root, scene, pool, API } = ctx;
   if (!document.querySelector('link[href$="raid/world.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/world.css">');
   if (!document.querySelector('link[href$="raid/satchel.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/satchel.css">');
-  let rolled = '', fresh = '', justTook = '', run = null, status = {}, chosenCls = '', chosenSpec = '', chosenPick = '', viewing = 0, hands = '', busy = false, verdict = null, pulled = null, error = '', shownRole = -1, board = null, pasts = [], pastResult = null;
+  let rolled = '', fresh = '', justTook = '', run = null, status = {}, chosenCls = '', chosenSpec = '', chosenPick = '', viewing = 0, hands = '', busy = false, verdict = null, pulled = null, error = '', shownRole = -1, board = null, pasts = [], pastResult = null, pastMine = [], pastAll = null, pastScope = 'mine';
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const num = (v) => Math.round(v).toLocaleString('en-US');
   const icon = (id) => `assets/icons/${pool.items[id][4]}.png`;
@@ -336,6 +336,7 @@ export function makeWorld(ctx) {
     on('[data-wvial]', (el) => pickConsumable(+el.dataset.wvial));
     on('[data-wcon]', (el) => { viewing = +el.dataset.wcon; render(); showHero(); pickConsumable(viewing); });
     on('[data-wpast]', (el) => showPast(+el.dataset.wpast));
+    on('[data-wscope]', (el) => { const to = el.dataset.wscope, list = to === 'all' ? pastAll : pastMine; if (!list || !list.length || to === pastScope) return; pastScope = to; pasts = list; showPast(0); });
     on('[data-wspeed]', (el) => { scene.speed = +el.dataset.wspeed; for (const b of root.querySelectorAll('[data-wspeed]')) b.classList.toggle('on', b === el); });
   }
 
@@ -503,10 +504,16 @@ export function makeWorld(ctx) {
   async function openPast(id = 'kazzak') {
     if (busy) return;
     busy = true;
-    let d = null;
-    try { const r = await fetch(`${API}/world/mine?boss=${id}&who=${ctx.who()}`); d = r.ok ? await r.json() : null; } catch {}
+    let key = null;
+    try { key = localStorage.getItem('draftKey'); } catch {}
+    const mine = fetch(`${API}/world/mine?boss=${id}&who=${ctx.who()}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    const all = key ? fetch(`${API}/world/all`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, boss: id }) }).then((r) => (r.ok ? r.json() : null)).catch(() => null) : Promise.resolve(null);
+    const [d, e] = await Promise.all([mine, all]);
     busy = false;
-    pasts = ((d && d.runs) || []).map((e) => ({ ...e, raid: id }));
+    pastMine = ((d && d.runs) || []).map((x) => ({ ...x, raid: id }));
+    pastAll = e && e.runs ? e.runs.map((x) => ({ ...x, raid: id })) : null;
+    pastScope = pastMine.length || !pastAll ? 'mine' : 'all';
+    pasts = pastScope === 'mine' ? pastMine : pastAll;
     if (!pasts.length) { toast('No attempts to show yet', d ? `Face ${WORLD[id].short} first` : `${WORLD[id].short} could not be reached. Try again.`); return; }
     showPast(0);
   }
@@ -546,7 +553,7 @@ export function makeWorld(ctx) {
     const verdictOf = (x) => (x.won ? `Slain in ${mmss(x.time)}` : `He stood at ${Math.max(1, Math.round(x.health * 100))}%`);
     const rows = pasts.map((x, n) => {
       const party = x.moves.filter((m) => m[0] === 'h').map((m) => m[1]), cons = (x.used || []).map((id) => CONSUMABLE[id]).filter(Boolean);
-      return `<li><button type="button" class="${n === sel ? 'on' : ''} ${x.won ? 'won' : 'lost'}" data-wpast="${n}" aria-pressed="${n === sel}"><span class="wbpwhen"><b>${esc(dayName(x.at))}</b><small>${esc(localTime(x.at))}</small></span><span class="wbpparty">${party.map((c) => `<img src="assets/classes/${c}.png" alt="${CLASS_NAME[c]}">`).join('')}</span><span class="wbpcons">${cons.map((c) => `<img src="assets/icons/${c.icon}.png" alt="${esc(c.name)}" title="${esc(c.name)}" style="--q:${TIERS[c.tier].color}">`).join('')}</span><span class="wbpres">${verdictOf(x)}</span></button></li>`;
+      return `<li><button type="button" class="${n === sel ? 'on' : ''} ${x.won ? 'won' : 'lost'}" data-wpast="${n}" aria-pressed="${n === sel}"><span class="wbpwhen">${pastScope === 'all' ? `<b>${esc(x.name || 'Unknown')}</b><small>${esc(dayName(x.at))} ${esc(localTime(x.at))}</small>` : `<b>${esc(dayName(x.at))}</b><small>${esc(localTime(x.at))}</small>`}</span><span class="wbpparty">${party.map((c) => `<img src="assets/classes/${c}.png" alt="${CLASS_NAME[c]}">`).join('')}</span><span class="wbpcons">${cons.map((c) => `<img src="assets/icons/${c.icon}.png" alt="${esc(c.name)}" title="${esc(c.name)}" style="--q:${TIERS[c.tier].color}">`).join('')}</span><span class="wbpres">${verdictOf(x)}</span></button></li>`;
     }).join('');
     const tabs = run.heroes.map((h, n) => {
       const t = r && r.totals[n], spec = (specsFor(h.role, h.cls).find((x) => x.id === h.build) || {}).name || '';
@@ -556,9 +563,10 @@ export function makeWorld(ctx) {
     const hero = run.heroes[viewing], c = CONSUMABLE[(run.consume || [])[viewing]];
     const drink = c ? `<li class="wbpdrink" style="--q:${TIERS[c.tier].color}"><img src="assets/icons/${c.icon}.png" alt=""><span><b style="color:${TIERS[c.tier].color}">${esc(c.name)}</b><small>Consumable · ${esc(c.line)}</small></span></li>` : '';
     const items = hero ? SLOTS.filter((s) => hero.picks[s]).map((s) => { const it = pool.items[hero.picks[s]]; return `<li data-item="${hero.picks[s]}"><img src="${icon(hero.picks[s])}" alt=""><span><b style="color:${ctx.QUALITY[it[1]]}">${esc(it[0])}</b><small>${SLOT_NAME[s]}</small></span></li>`; }).join('') : '';
-    return `<div class="gpanel wbpast"><div class="wbphead"><div><h3>Your attempts</h3><small>Your last ${pasts.length === 1 ? 'attempt' : `${pasts.length} attempts`} at ${esc(boss().name)}. Pick one to look at it.</small></div><button type="button" class="gmini" data-wact="leave">Back</button></div>
-      <ol class="wbplog">${rows}</ol>
-      <div class="wbpsel"><div class="wbpbar"><span><b>${esc(dayName(e.at))}</b> · ${verdictOf(e)}${e.won ? '' : ` after ${mmss(e.time)}`}</span><button type="button" class="gmini wbpwatch" data-wact="watch">&#9654; Watch the replay</button></div>
+    return `<div class="gpanel wbpast"><div class="wbphead"><div><h3>${pastScope === 'all' ? 'All attempts' : 'Your attempts'}</h3><small>${pastScope === 'all' ? `The last ${pasts.length} attempts by everyone. Moderators only.` : `Your last ${pasts.length === 1 ? 'attempt' : `${pasts.length} attempts`} at ${esc(boss().name)}.`} Pick one to look at it.</small></div><button type="button" class="gmini" data-wact="leave">Back</button></div>
+      ${pastAll ? `<div class="wbpscope" role="tablist"><button type="button" role="tab" aria-selected="${pastScope === 'mine'}" class="${pastScope === 'mine' ? 'on' : ''}" data-wscope="mine" ${pastMine.length ? '' : 'disabled'}>Mine (${pastMine.length})</button><button type="button" role="tab" aria-selected="${pastScope === 'all'}" class="${pastScope === 'all' ? 'on' : ''}" data-wscope="all">Everyone (${pastAll.length})</button></div>` : ''}
+      <ol class="wbplog ${pastScope === 'all' ? 'all' : ''}">${rows}</ol>
+      <div class="wbpsel"><div class="wbpbar"><span>${pastScope === 'all' ? `<b>${esc(e.name || 'Unknown')}</b> · ${esc(dayName(e.at))}` : `<b>${esc(dayName(e.at))}</b>`} · ${verdictOf(e)}${e.won ? '' : ` after ${mmss(e.time)}`}</span><button type="button" class="gmini wbpwatch" data-wact="watch">&#9654; Watch the replay</button></div>
       <p class="wbptabsh">Pick a hero to see their gear</p><div class="wbptabs" role="tablist" aria-label="Heroes">${tabs}</div>
       <ul class="wbpgear" role="tabpanel">${drink}${items}</ul></div></div>`;
   }

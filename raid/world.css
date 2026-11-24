@@ -433,8 +433,15 @@ body[data-view="raid"]:has(#sheet:not([hidden])) .chatfab { display: none; }
 .wbphead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
 .wbphead h3 { margin: 0; font: 22px "Morpheus", serif; font-weight: normal; color: #ffd76a; }
 .wbphead small { font: 13px "Friz", serif; color: #a89a85; }
+.wbpscope { display: inline-flex; gap: 4px; margin: 0 0 8px; padding: 3px; background: rgba(0, 0, 0, .45); border: 1px solid rgba(248, 211, 107, .2); border-radius: 999px; }
+.wbpscope button { padding: 5px 14px; font: 13.5px "Friz", serif; color: #c8bba5; cursor: pointer; background: none; border: 0; border-radius: 999px; }
+.wbpscope button.on { color: #1a1006; background: linear-gradient(#ffe39a, #d5a548); }
+.wbpscope button:disabled { opacity: .45; cursor: default; }
+.wbplog .wbpwhen b { overflow: hidden; text-overflow: ellipsis; }
 .wbplog { display: grid; gap: 4px; max-height: 236px; margin: 0 0 12px; padding: 0 2px 0 0; overflow-y: auto; list-style: none; }
 .wbplog button { display: grid; grid-template-columns: 96px auto 1fr auto; align-items: center; gap: 10px; width: 100%; padding: 6px 10px; font: 14px "Friz", serif; color: #e9dfcb; text-align: left; cursor: pointer; background: rgba(0, 0, 0, .42); border: 1px solid rgba(248, 211, 107, .16); border-radius: 8px; transition: border-color .15s ease, background .15s ease; }
+.wbplog.all button { grid-template-columns: 160px auto 1fr auto; }
+.wbplog .wbpwhen small { white-space: nowrap; }
 .wbplog button:hover { border-color: rgba(248, 211, 107, .5); background: rgba(40, 24, 10, .6); }
 .wbplog button.on { border-color: #ffd76a; background: rgba(70, 44, 14, .55); box-shadow: inset 3px 0 0 #ffd76a; }
 .wbpwhen { display: grid; }
@@ -470,6 +477,8 @@ body[data-view="raid"]:has(#sheet:not([hidden])) .chatfab { display: none; }
 @media (max-width: 640px) {
   .wbplog button { grid-template-columns: auto 1fr auto; gap: 8px; }
   .wbplog .wbpcons { display: none; }
+  .wbplog.all button { grid-template-columns: minmax(0, 1fr) auto; }
+  .wbplog.all .wbpparty { display: none; }
   .wbptabs button { flex-direction: column; align-items: flex-start; gap: 4px; padding: 6px; }
   .wbptabs img { width: 24px; height: 24px; }
   .wbptabs em { white-space: normal; }

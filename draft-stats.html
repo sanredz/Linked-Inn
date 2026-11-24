@@ -9,6 +9,9 @@
 :root { color-scheme: dark; }
 body { margin: 0; background: #0b0806; color: #f0e4cc; font: 15px/1.45 system-ui, sans-serif; }
 main { max-width: 760px; margin: 0 auto; padding: 16px 16px 40px; }
+.back { display: inline-block; margin: 0 0 10px; padding: 6px 12px; font-size: 14px; color: #ffd76a; text-decoration: none; border: 1px solid #3a2c18; border-radius: 999px; background: #140d07; }
+.back:hover { border-color: #c9a24a; }
+@media (min-width: 701px) { .back { display: none; } }
 h1 { margin: 0; font-size: 20px; color: #ffd76a; }
 h2 { margin: 22px 0 8px; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; color: #c9a24a; }
 .at { color: #8f8170; font-size: 13px; }
@@ -41,6 +44,7 @@ td.n, th.n { text-align: right; white-space: nowrap; }
 </head>
 <body>
 <main>
+<a class="back" href="draft.html" onclick="if (history.length > 1) { history.back(); return false; }">&larr; Back to the Draft</a>
 <h1>Inn stats</h1>
 <p class="at" id="at">Loading…</p>
 <div class="bar tabs" id="tabs"></div>

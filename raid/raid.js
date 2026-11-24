@@ -602,6 +602,7 @@ function action(a, raid, how) {
   if (a === 'world') { if (world) { boardRaid = raid; world.begin(raid); loadBoard(); } }
   else if (a === 'worldkey') { if (world) { boardRaid = raid; world.useKey(raid); loadBoard(); } }
   else if (a === 'worldreset') { if (world) world.reset(raid); }
+  else if (a === 'worldpast') { if (world) { boardRaid = raid; world.past(raid); loadBoard(); } }
   else if (a === 'worldforge') { if (world) world.seal(raid, 'forge'); }
   else if (a === 'worldseal') { if (world) world.seal(raid, how); }
   else if (a === 'begin') { if (raid === 'aq20' && !openingShown && war && (war.open || (TEST && war.early)) && shouldShow({ ...war, open: true })) gongFirst(); else begin(raid); }

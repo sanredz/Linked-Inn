@@ -243,12 +243,12 @@ function roll(pool, cls, slot, picks, r, taken) {
 
 export const remaining = (run) => SLOTS.map((s) => s[0]).filter((s) => !(s in run.picks));
 
-export function newRun(seed, cls) {
-  return { seed: seed >>> 0, cls, picks: {}, round: 0, mulligan: 1, moves: [] };
+export function newRun(seed, cls, branch = false) {
+  return { seed: seed >>> 0, cls, picks: {}, round: 0, mulligan: 1, moves: [], ...(branch ? { branch: 1 } : {}) };
 }
 
 export function offers(pool, run) {
-  const r = rng(hash(run.seed, run.cls, run.round));
+  const r = rng(run.branch ? hash(run.seed, run.cls, run.round, ...run.moves) : hash(run.seed, run.cls, run.round));
   const out = {};
   const taken = new Set(Object.values(run.picks).filter(Boolean).map((i) => item(pool, i)[0]));
   for (const slot of remaining(run)) {
@@ -286,9 +286,9 @@ export function mulligan(pool, run) {
 
 export const finished = (run) => remaining(run).length === 0;
 
-export function replay(pool, seed, cls, moves) {
+export function replay(pool, seed, cls, moves, branch = false) {
   if (!BUILDS[cls] || !Array.isArray(moves) || moves.length > 24) throw new Error('bad run');
-  const run = newRun(seed, cls);
+  const run = newRun(seed, cls, branch);
   run.log = [];
   for (const m of moves) {
     run.log.push([offers(pool, run), m]);

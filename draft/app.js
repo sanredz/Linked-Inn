@@ -1,4 +1,4 @@
-import * as C from './core.js?v=20261123145643';
+import * as C from './core.js?v=20261125170451';
 import { Stage } from './stage.js?v=20261123145643';
 import { titleOf } from './paths.js';
 import { askFeedback, askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
@@ -46,7 +46,8 @@ const pageUrl = () => location.origin + location.pathname;
 let playerKey = loadKey(), histRows = [], histSort = 'new', histOpen = 0, openPicks = {}, shareId = '', retired = {};
 let cameFrom = null;
 let sharedRows = [], sharedOpen = 0, replayRun = null, replayStep = 0, replayBack = 'pick', replayWorn = {}, dressed = {}, dressing = Promise.resolve(), everything;
-let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true;
+let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true, duelCtx = null, duelMod = null;
+const duelLib = () => (duelMod ||= import('./duel.js?v=20261125170451'));
 
 const row = (id) => pool.items[id] || retired[id];
 const taltip = (id, build) => {
@@ -341,6 +342,9 @@ function talentsStep() {
   $('status').textContent = 'All slots filled';
   $('round').textContent = 'All slots filled';
   show('talents');
+  $('talHead').textContent = duelCtx && duelCtx.mode === 'duel' ? 'Pick your tactic' : 'Pick your talents';
+  $('talLead').textContent = duelCtx && duelCtx.mode === 'duel' ? 'Your gear is locked in. How should your hero fight?' : 'Your gear is locked in. Which Forever build gets the most out of it?';
+  if (duelCtx && duelCtx.mode === 'duel') return tacticStep();
   const shield = C.hasShield(pool, run.picks);
   const main = row(run.picks.main || 0), two = main && main[3] === 17;
   const note = (b) => {
@@ -364,6 +368,13 @@ function talentsStep() {
       ${note(b) ? `<span class="nt">${note(b)}</span>` : ''}
     </button>`).join('');
   for (const b of document.querySelectorAll('.build')) b.onclick = () => fight(b.dataset.build);
+}
+
+function tacticStep() {
+  duelLib().then((D) => {
+    $('builds').innerHTML = D.tactics(run.cls).map((t) => `<button class="build" data-plan="${t.id}"><span class="bh"><b>${esc(t.label)}</b></span><span class="bl">${esc(t.tip)}</span></button>`).join('');
+    for (const b of document.querySelectorAll('.build[data-plan]')) b.onclick = () => { show('draft'); D.submit({ cls: run.cls, moves: run.moves, plan: b.dataset.plan }); };
+  });
 }
 
 const ease = (p) => 1 - Math.pow(1 - p, 3.4);
@@ -437,6 +448,7 @@ function statSpans(s, build) {
 }
 
 async function results() {
+  if (duelCtx) return (await duelLib()).submit({ cls: run.cls, moves: run.moves, build: chosenBuild });
   show('result');
   const { res, build } = last;
   $('rDps').textContent = res.dps.toFixed(1);
@@ -709,7 +721,8 @@ async function showShared(share) {
 }
 
 function route() {
-  const hash = location.hash, one = /^#run=(\d+)$/.exec(hash), many = /^#runs=([0-9a-f]{16})$/.exec(hash);
+  const hash = location.hash, one = /^#run=(\d+)$/.exec(hash), many = /^#runs=([0-9a-f]{16})$/.exec(hash), duel = /^#duel=([2-9A-HJKMNP-Z]{8})$/.exec(hash);
+  if (duel) { clearHash(); show(mainView); duelLib().then((D) => D.open(duel[1])); return; }
   $('shBack').hidden = !cameFrom;
   if (one) return showRun(+one[1]);
   if (many) return showShared(many[1]);
@@ -928,17 +941,23 @@ async function dressLook() {
   stage.want = { x: 0, y: 2.3, z: 9.6, tx: 0, ty: 1.7 };
 }
 
-async function startClass(cls) {
+async function startClass(cls, duel = null) {
   show('draft');
+  duelCtx = duel;
+  $('dTitle').textContent = duel ? 'Challenge' : 'Gear Draft';
+  $('dps').classList.remove('done');
+  $('dps').textContent = '0.0';
+  $('fill').style.width = '0';
   setTable(cls, C.BUILDS[cls][0].id);
   let seed = (Math.random() * 2 ** 32) >>> 0;
   sig = null;
-  try {
+  if (duel) seed = duel.seed;
+  else try {
     const s = await post('/start', { cls, version: C.VERSION });
     seed = s.seed;
     sig = s.sig;
   } catch { online = false; }
-  run = C.newRun(seed, cls);
+  run = C.newRun(seed, cls, !!duel);
   sheet();
   if (!stage) stage = new Stage($('stage'), gear);
   stage.reset();
@@ -1067,6 +1086,7 @@ async function boot() {
   $('modeDraft').onclick = modes.pick;
   $('modeArena').onclick = modes.gauntlet;
   $('modeRaid').onclick = modes.raid;
+  duelLib().then((D) => D.mountDuel($('duelRow'), { API, key: () => playerKey, pool: () => pool, gear: () => gear, draft: (ctx, cls) => startClass(cls, ctx), home: () => { duelCtx = null; restart(); go('home'); } })).catch(() => {});
   for (const b of document.querySelectorAll('[data-mode]')) b.onclick = modes[b.dataset.mode];
   if (location.search.includes('gauntlet')) openArena();
   if (location.search.includes('raid')) openRaid();

@@ -46,7 +46,7 @@ const pageUrl = () => location.origin + location.pathname;
 let playerKey = loadKey(), histRows = [], histSort = 'new', histOpen = 0, openPicks = {}, shareId = '', retired = {};
 let cameFrom = null;
 let sharedRows = [], sharedOpen = 0, replayRun = null, replayStep = 0, replayBack = 'pick', replayWorn = {}, dressed = {}, dressing = Promise.resolve(), everything;
-let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true, duelCtx = null, duelMod = null, duelWait = 0;
+let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true, duelCtx = null, duelMod = null, duelWait = /^#duel=/.test(location.hash) ? Date.now() + 15000 : 0;
 const duelBusy = () => !!document.querySelector('.duelover') || (duelCtx ? ['draft', 'talents', 'fight'].includes(document.body.dataset.view) : Date.now() < duelWait);
 const duelDone = () => new Promise((r) => { const t = () => (duelBusy() ? setTimeout(t, 800) : r()); t(); });
 const duelLib = () => (duelMod ||= import('./duel.js?v=20261125193718'));
@@ -726,7 +726,7 @@ async function showShared(share) {
 
 function route() {
   const hash = location.hash, one = /^#run=(\d+)$/.exec(hash), many = /^#runs=([0-9a-f]{16})$/.exec(hash), duel = /^#duel=([2-9A-HJKMNP-Z]{8})$/.exec(hash);
-  if (duel) { duelWait = Date.now() + 6000; clearHash(); show(mainView); duelLib().then((D) => D.open(duel[1])); return; }
+  if (duel) { duelWait = Math.max(duelWait, Date.now() + 6000); clearHash(); show(mainView); duelLib().then((D) => D.open(duel[1])); return; }
   $('shBack').hidden = !cameFrom;
   if (one) return showRun(+one[1]);
   if (many) return showShared(many[1]);

@@ -1,6 +1,6 @@
 const SEEN = 'omenSeen';
 const q = new URLSearchParams(location.search);
-const forced = q.has('omen');
+const forced = q.has('omen'), duelLink = /^#duel=/.test(location.hash);
 
 const seen = () => { try { return !!localStorage.getItem(SEEN); } catch { return true; } };
 const remember = () => { try { localStorage.setItem(SEEN, String(Date.now())); } catch {} };
@@ -41,4 +41,4 @@ function whenClear() {
   setTimeout(whenClear, 1500);
 }
 
-if (forced || !seen()) setTimeout(whenClear, forced ? 600 : 2600);
+if (forced || !seen()) setTimeout(whenClear, forced ? 600 : duelLink ? 9000 : 2600);

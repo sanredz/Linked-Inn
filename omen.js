@@ -36,7 +36,7 @@ function show() {
 }
 
 function whenClear() {
-  const gates = document.querySelector('.gates, .aqo, .seals, .troph');
+  const gates = document.querySelector('.gates, .aqo, .seals, .troph, .duelover, body[data-view=draft], body[data-view=talents], body[data-view=fight]');
   if (!gates) return show();
   setTimeout(whenClear, 1500);
 }

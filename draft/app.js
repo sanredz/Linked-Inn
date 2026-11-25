@@ -46,8 +46,10 @@ const pageUrl = () => location.origin + location.pathname;
 let playerKey = loadKey(), histRows = [], histSort = 'new', histOpen = 0, openPicks = {}, shareId = '', retired = {};
 let cameFrom = null;
 let sharedRows = [], sharedOpen = 0, replayRun = null, replayStep = 0, replayBack = 'pick', replayWorn = {}, dressed = {}, dressing = Promise.resolve(), everything;
-let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true, duelCtx = null, duelMod = null;
-const duelLib = () => (duelMod ||= import('./duel.js?v=20261125170451'));
+let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true, duelCtx = null, duelMod = null, duelWait = 0;
+const duelBusy = () => !!document.querySelector('.duelover') || (duelCtx ? ['draft', 'talents', 'fight'].includes(document.body.dataset.view) : Date.now() < duelWait);
+const duelDone = () => new Promise((r) => { const t = () => (duelBusy() ? setTimeout(t, 800) : r()); t(); });
+const duelLib = () => (duelMod ||= import('./duel.js?v=20261125193718'));
 
 const row = (id) => pool.items[id] || retired[id];
 const taltip = (id, build) => {
@@ -123,6 +125,8 @@ document.addEventListener('click', (e) => {
     openSheet(taltip(tal.dataset.tal, tal.dataset.build));
     return;
   }
+  const dit = e.target.closest('.duelover [data-item]');
+  if (dit && +dit.dataset.item) { openSheet(tooltip(dit.dataset.item)); return; }
   const worn = e.target.closest('.ps');
   if (worn && +worn.dataset.item) openSheet(tooltip(worn.dataset.item, undefined, worn.dataset.extra));
 }, true);
@@ -722,7 +726,7 @@ async function showShared(share) {
 
 function route() {
   const hash = location.hash, one = /^#run=(\d+)$/.exec(hash), many = /^#runs=([0-9a-f]{16})$/.exec(hash), duel = /^#duel=([2-9A-HJKMNP-Z]{8})$/.exec(hash);
-  if (duel) { clearHash(); show(mainView); duelLib().then((D) => D.open(duel[1])); return; }
+  if (duel) { duelWait = Date.now() + 6000; clearHash(); show(mainView); duelLib().then((D) => D.open(duel[1])); return; }
   $('shBack').hidden = !cameFrom;
   if (one) return showRun(+one[1]);
   if (many) return showShared(many[1]);
@@ -830,6 +834,7 @@ async function refreshHearth(from) {
     const h = await hearthMod(), d = await h.loadHearth(from ? { from } : {});
     await syncName(d.name);
     h.hearthBar($('hearthBar'));
+    await duelDone();
     codeNudge(d.stats);
     for (const n of d.notices || []) await notify(n);
     if (h.revealHonors) await h.revealHonors();
@@ -1042,7 +1047,7 @@ async function boot() {
     if (view !== 'hearth' && hearthLib) hearthLib.leaveHearth();
     mainView = view;
     show(view);
-    if (view !== 'hearth') setTimeout(() => callForge().then(callFeedback), 600);
+    if (view !== 'hearth') setTimeout(() => duelDone().then(callForge).then(callFeedback), 600);
     for (const b of document.querySelectorAll('[data-mode]')) b.classList.toggle('on', b.dataset.mode === view);
     scrollTo(0, 0);
   };

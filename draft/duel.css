@@ -101,8 +101,8 @@
 .dbar { display: block; width: 100%; height: 6px; margin-top: 8px; overflow: hidden; background: rgba(255, 255, 255, .08); border-radius: 3px; }
 .dbar i { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--gold-2), var(--gold)); transition: width 1.8s cubic-bezier(.2, .7, .2, 1); }
 .dvs.landed .dside.win, .duelover.result.win .dside.win { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 0 26px rgba(248, 211, 107, .3); }
-.drec { margin: 8px 0 0; font: 14px "Friz", serif; color: var(--ink-2); }
-.drec b { font-weight: normal; color: var(--gold); }
+.dh2h { margin: 8px 0 0; font: 14px "Friz", serif; color: var(--ink-2); }
+.dh2h b { font-weight: normal; color: var(--gold); }
 .dsplit { margin-top: 6px; text-align: left; }
 .dsplitlead { margin: 0 0 8px; font: 14px "Friz", serif; color: var(--ink-2); }
 .dfork { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
@@ -140,3 +140,6 @@
   .dstage { height: 58vh; }
 }
 @media (prefers-reduced-motion: reduce) { .dbadge.hot { animation: none; } .duelrow::before { display: none; } }
+body:has(.duelover) #tip { z-index: 990; }
+body:has(.duelover) #sheet { z-index: 980; }
+.dgear img[data-item], .dit[data-item] { cursor: pointer; }

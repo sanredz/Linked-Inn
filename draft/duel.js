@@ -207,7 +207,7 @@ function waiting(d) {
 
 function splitHtml(d, me) {
   const sides = [d.a, d.b], mineSide = sides[me], them = sides[1 - me], pool = lib.pool();
-  const gearRow = (s) => s.moves.filter((m) => m !== '!').map((m) => { const slot = String(m).split('>').pop(), id = s.picks[slot]; const it = id && itemOf(id); return it ? `<img src="assets/icons/${it[4]}.png" alt="${esc(it[0])}" title="${esc(it[0])}" style="--q:${QUALITY[it[1]] || '#888'}">` : ''; }).join('');
+  const gearRow = (s) => s.moves.filter((m) => m !== '!').map((m) => { const slot = String(m).split('>').pop(), id = s.picks[slot]; const it = id && itemOf(id); return it ? `<img src="assets/icons/${it[4]}.png" alt="${esc(it[0])}" data-item="${id}" style="--q:${QUALITY[it[1]] || '#888'}">` : ''; }).join('');
   let head = '';
   if (d.mode === 'dps') {
     const n = Math.min(mineSide.moves.length, them.moves.length);
@@ -218,7 +218,7 @@ function splitHtml(d, me) {
       if (m === undefined) return '<i>nothing</i>';
       if (m === '!') return '<i>a mulligan</i>';
       const r = C.replay(pool, d.seed, s.cls, s.moves, true), [offer] = r.log[i], [slot] = String(m).split('>'), it = itemOf(offer[slot]);
-      return it ? `<span class="dit"><img src="assets/icons/${it[4]}.png" alt=""><b style="color:${QUALITY[it[1]] || '#ddd'}">${esc(it[0])}</b></span>` : '<i>an item</i>';
+      return it ? `<span class="dit" data-item="${offer[slot]}"><img src="assets/icons/${it[4]}.png" alt=""><b style="color:${QUALITY[it[1]] || '#ddd'}">${esc(it[0])}</b></span>` : '<i>an item</i>';
     };
     head = i >= n ? '<p class="dsplitlead">You drafted the exact same gear.</p>' : `<p class="dsplitlead">${i ? `Same first ${i === 1 ? 'pick' : `${i} picks`}, then you split in round ${i + 1}.` : 'You split on the very first pick.'}</p><div class="dfork"><div><small>You kept</small>${kept(mineSide)}</div><div><small>${esc(them.name)} kept</small>${kept(them)}</div></div>`;
   }
@@ -241,7 +241,7 @@ async function reveal(d, fresh) {
   const [title, tone] = verdict(d, me);
   const L = sides[view], R = sides[1 - view], who = (s, i) => (me === null ? esc(s.name) : i === me ? 'You' : esc(s.name));
   const sideHtml = (s, i) => `<div class="dside ${d.winner === i ? 'win' : ''}" style="--cc:${C.CLASS_COLOR[s.cls]}"><span class="dport"><img src="assets/classes/${s.cls}.png" alt=""></span><b>${who(s, i)}</b><small>${d.mode === 'dps' ? esc(C.BUILDS[s.cls].find((x) => x.id === s.build)?.name || '') : `${C.CLASS_NAME[s.cls]} · ${esc(PLANS[s.cls][s.plan].label)}`}</small>${d.mode === 'dps' ? `<span class="dnum" data-to="${s.score}">0.0</span><small class="dunit">DPS</small><i class="dbar"><i data-w="${(100 * s.score) / Math.max(d.a.score, d.b.score, 1)}"></i></i>` : fightInfo ? `<span class="dnum small">${Math.round(fightInfo.dealt[i]).toLocaleString('en-US')}</span><small class="dunit">damage dealt</small>` : ''}</div>`;
-  const rec = d.record && me !== null ? `<p class="drec">Your record against ${esc(R.name)}: <b>${d.record.w}</b> – <b>${d.record.l}</b></p>` : '';
+  const rec = d.record && me !== null ? `<p class="dh2h">Your record against ${esc(R.name)}: <b>${d.record.w}</b> – <b>${d.record.l}</b></p>` : '';
   const el = overlay(`<small class="dkick">${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''}</small><h2 class="dverdict ${tone}">${title}</h2>${fightInfo ? `<p class="dlead">${fightInfo.time.toFixed(0)} seconds in the ring.</p>` : ''}
     <div class="dvs">${sideHtml(L, view)}<em>vs</em>${sideHtml(R, 1 - view)}</div>${rec}${me !== null ? splitHtml(d, me) : ''}
     <div class="dacts">${d.mode === 'duel' ? '<button class="spec" type="button" data-rewatch>Watch again</button>' : ''}${me !== null ? '<button class="rforge" type="button" data-rematch><span>Rematch</span></button>' : ''}<button class="spec" type="button" data-done>Done</button></div>`, `result ${tone}`);

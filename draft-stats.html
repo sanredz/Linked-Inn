@@ -66,7 +66,7 @@ const CC = { WARRIOR: '#C69B6D', PALADIN: '#F48CBA', HUNTER: '#AAD372', ROGUE: '
 const cls = (c) => `<span class="cls" style="color:${CC[c] || '#d8c8a8'}">${esc((c || '').charAt(0) + (c || '').slice(1).toLowerCase())}</span>`;
 const tile = (v, l) => `<div class="tile"><b>${esc(v)}</b><small>${esc(l)}</small></div>`;
 const table = (head, rows) => (rows.length ? `<div class="wrap"><table><tr>${head.map((h) => `<th${h.startsWith('#') ? ' class="n"' : ''}>${esc(h.replace(/^#/, ''))}</th>`).join('')}</tr>${rows.join('')}</table></div>` : '<p>Nothing in this range.</p>');
-const TABS = [['all', 'Overview'], ['gear', 'Gear Draft'], ['arena', 'Arena'], ['raid', 'Raids'], ['kazzak', 'Kazzak']];
+const TABS = [['all', 'Overview'], ['gear', 'Gear Draft'], ['arena', 'Arena'], ['raid', 'Raids'], ['kazzak', 'Kazzak'], ['duel', 'Challenges']];
 const RANGES = [[24, 'Last 24h'], [168, '7 days'], [720, '30 days'], [0, 'All time']];
 const pref = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
 const keep = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
@@ -83,10 +83,10 @@ function chart(m, lists) {
 }
 
 function overview(m) {
-  const g = m.gear, a = m.arena, r = m.raid, w = m.world;
-  return `<div class="tiles">${tile(num(g.n + a.n + r.n + w.n), 'runs, all modes')}${tile(num(g.n), 'Gear Drafts')}${tile(num(a.n), 'Arena runs')}${tile(num(r.n), 'raids')}${tile(num(w.n), 'Kazzak fights')}</div>
+  const g = m.gear, a = m.arena, r = m.raid, w = m.world, c = m.duel;
+  return `<div class="tiles">${tile(num(g.n + a.n + r.n + w.n), 'runs, all modes')}${tile(num(g.n), 'Gear Drafts')}${tile(num(a.n), 'Arena runs')}${tile(num(r.n), 'raids')}${tile(num(w.n), 'Kazzak fights')}${tile(`${num(c.done)}/${num(c.n)}`, 'challenges answered')}</div>
     ${chart(m, [g.buckets, a.buckets, r.buckets, w.buckets])}
-    <h2>By mode</h2>${table(['Mode', '#Runs', '#Players', '#Runs per player'], [['Gear Draft', g], ['Arena', a], ['Raids', r], ['Kazzak', w]].map(([k, x]) => `<tr><td>${k}</td><td class="n">${num(x.n)}</td><td class="n">${num(x.p)}</td><td class="n">${x.p ? (x.n / x.p).toFixed(1) : '–'}</td></tr>`))}`;
+    <h2>By mode</h2>${table(['Mode', '#Runs', '#Players', '#Runs per player'], [['Gear Draft', g], ['Arena', a], ['Raids', r], ['Kazzak', w], ['Challenges sent', c]].map(([k, x]) => `<tr><td>${k}</td><td class="n">${num(x.n)}</td><td class="n">${num(x.p)}</td><td class="n">${x.p ? (x.n / x.p).toFixed(1) : '–'}</td></tr>`))}`;
 }
 
 function gear(m) {
@@ -105,6 +105,15 @@ function arena(m) {
     <h2>Classes</h2>${table(['Class', '#Runs', '#Players', '#Avg wins', '#10-win', '#Best'], a.classes.map((c) => `<tr><td>${cls(c.cls)}</td><td class="n">${num(c.n)}</td><td class="n">${num(c.p)}</td><td class="n">${c.avg}</td><td class="n">${num(c.ten)}</td><td class="n">${c.best}</td></tr>`))}
     <h2>Most runs</h2>${table(['Player', '#Runs', '#Best', '#Last'], a.players.map((p) => `<tr><td>${esc(p.name || 'Unnamed')}</td><td class="n">${num(p.n)}</td><td class="n">${p.best}</td><td class="n">${ago(p.last)}</td></tr>`))}
     <h2>Latest runs</h2>${table(['When', 'Player', 'Class', '#Record'], a.recent.map((x) => `<tr><td>${clock(x.at)}</td><td>${esc(x.name || 'Unnamed')}</td><td>${cls(x.cls)}</td><td class="n">${x.wins}-${x.losses}</td></tr>`))}`;
+}
+
+const DMODE = { dps: 'DPS check', duel: 'Arena duel' };
+function duel(m) {
+  const c = m.duel, side = (n, k) => `${esc(n || 'Unnamed')} ${k ? cls(k) : ''}`;
+  const result = (x) => (x.done ? (x.winner === -1 ? '<td>Draw</td>' : `<td class="won">${esc((x.winner === 0 ? x.an : x.bn) || 'Unnamed')} won</td>`) : `<td>${x.taken ? 'Accepted, drafting' : 'Not accepted yet'}</td>`);
+  return `<div class="tiles">${tile(num(c.n), 'challenges sent')}${tile(num(c.done), 'answered')}${tile(num(c.p), 'players')}${tile(`${num(c.dpsDone)}/${num(c.dps)}`, 'DPS checks done')}${tile(`${num(c.duelDone)}/${num(c.duel)}`, 'Arena duels done')}${tile(num(c.draws), 'draws')}</div>
+    ${chart(m, [c.buckets])}
+    <h2>Latest challenges</h2>${table(['Sent', 'Mode', 'From', 'To', 'Result'], c.recent.map((x) => `<tr><td>${clock(x.at)}</td><td>${DMODE[x.mode] || esc(x.mode)}</td><td>${side(x.an, x.acls)}</td><td>${x.bn ? side(x.bn, x.bcls) : '–'}</td>${result(x)}</tr>`))}`;
 }
 
 const QCOL = { Common: '#f4ead8', Uncommon: '#1eff00', Rare: '#3a9bff', Epic: '#b45cff', Legendary: '#ff8000', Mythic: '#3dffb0' };
@@ -138,7 +147,7 @@ function draw() {
   const out = document.getElementById('out');
   if (tab === 'kazzak') out.innerHTML = stats ? kazzak(stats, modes) : '<p>Loading…</p>';
   else if (!modes) out.innerHTML = '<p>Loading…</p>';
-  else out.innerHTML = ({ all: overview, gear, arena, raid })[tab](modes);
+  else out.innerHTML = ({ all: overview, gear, arena, raid, duel })[tab](modes);
 }
 
 document.getElementById('tabs').onclick = (e) => { const b = e.target.closest('[data-tab]'); if (!b) return; tab = b.dataset.tab; keep('statsTab', tab); draw(); };

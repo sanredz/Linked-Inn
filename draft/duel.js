@@ -1,4 +1,4 @@
-import * as C from './core.js?v=20261125170451';
+import * as C from './core.js?v=20261125221600';
 import { PLANS, fight as duelFight } from '../pvp/engine.js';
 import { askName, heroName, nameOk } from '../pvp/name.js';
 
@@ -10,13 +10,16 @@ const MODES = {
   duel: { name: 'Arena duel', icon: 'assets/icons/132349.png', line: 'Any class, same seed. Your heroes fight it out.' },
 };
 const QUALITY = { 2: '#1eff00', 3: '#0070dd', 4: '#a335ee', 5: '#ff8000' };
-let lib, row, box, ring = null, mine = [], stats = null, pickMode = 'dps', pickCls = 'MAGE', current = null, busy = false;
+let lib, row, box, ring = null, mine = [], lobby = [], stats = null, pickMode = 'dps', pickCls = 'MAGE', pickOpen = false, current = null, busy = false;
 
 const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d; } catch { return d; } };
 const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 const link = (id) => `${location.origin}${location.pathname}#duel=${id}`;
 const classIcon = (c) => `<img class="dcls" src="assets/classes/${c}.png" alt="${C.CLASS_NAME[c]}" title="${C.CLASS_NAME[c]}">`;
 const itemOf = (id) => lib.pool().items[id];
+const left = (t) => { const m = Math.max(1, Math.round((t - Date.now()) / 60000)); return m < 60 ? `${m}m left` : `${Math.round(m / 60)}h left`; };
+const nth = (n) => `${n}${[11, 12, 13].includes(n % 100) ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'}`;
+const specOf = (cls, b) => (C.BUILDS[cls].find((x) => x.id === b) || {}).name || '';
 
 async function api(path, body = {}) {
   const r = await fetch(lib.API + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: lib.key(), ...body }) });
@@ -28,14 +31,14 @@ async function api(path, body = {}) {
 export function mountDuel(host, opts) {
   lib = opts;
   row = host;
-  ({ pickMode = 'dps', pickCls = 'MAGE' } = read(LAST, {}));
+  ({ pickMode = 'dps', pickCls = 'MAGE', pickOpen = false } = read(LAST, {}));
   if (!C.BUILDS[pickCls]) pickCls = 'MAGE';
   drawRow();
   refreshMine();
 }
 
 export async function refreshMine() {
-  try { ({ duels: mine = [], stats = null } = await api('/duel/mine', { seen: read(INBOX, []) })); } catch { mine = []; stats = null; }
+  try { ({ duels: mine = [], lobby = [], stats = null } = await api('/duel/mine', { seen: read(INBOX, []) })); } catch { mine = []; lobby = []; stats = null; }
   drawRow();
   tell();
 }
@@ -57,12 +60,13 @@ function tell() {
 }
 
 function badge() {
-  const seen = read(SEEN, []), turn = mine.filter((d) => d.state === 'yours' || d.state === 'invite').length, asked = mine.filter((d) => d.state === 'invite' && d.direct), fresh = mine.filter((d) => d.state === 'done' && d.role === 'a' && !seen.includes(d.id)).length;
+  const seen = read(SEEN, []), turn = mine.filter((d) => d.state === 'yours' || d.state === 'invite').length, asked = mine.filter((d) => d.state === 'invite' && d.direct), fresh = mine.filter((d) => ((d.state === 'done' && d.role === 'a') || d.state === 'closed') && !seen.includes(d.id)).length;
   if (asked.length) return `<em class="dbadge hot">${asked.length === 1 ? 'New challenge' : `${asked.length} challenges`}</em>`;
   if (fresh) return `<em class="dbadge hot">${fresh === 1 ? 'New result' : `${fresh} new results`}</em>`;
   if (turn) return `<em class="dbadge hot">Your turn</em>`;
-  const wait = mine.filter((d) => d.state === 'waiting').length;
-  return wait ? `<em class="dbadge">${wait} waiting</em>` : '';
+  const wait = mine.filter((d) => d.state === 'waiting' || d.state === 'live').length;
+  if (wait) return `<em class="dbadge">${wait} waiting</em>`;
+  return lobby.length ? `<em class="dbadge">${lobby.length} open</em>` : '';
 }
 
 function drawRow() {
@@ -91,8 +95,9 @@ function close() {
 }
 
 const ago = (t) => { const m = Math.max(0, (Date.now() - t) / 60000); return m < 60 ? `${Math.max(1, Math.round(m))}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`; };
-const tag = (d) => (d.state === 'done' ? (d.won > 0 ? 'Won' : d.won < 0 ? 'Lost' : 'Draw') : d.state === 'yours' || d.state === 'invite' ? 'Play' : 'Share');
-const rowHtml = (d, extra = '') => `<li class="${extra}"><button type="button" data-open="${d.id}" class="${d.state} ${d.won > 0 ? 'won' : d.won < 0 ? 'lost' : d.won === 0 ? 'draw' : ''}"><img src="${MODES[d.mode].icon}" alt="" class="dmi ${d.mode}"><span>${d.state === 'waiting' ? `<b>${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''}</b><small>Sent ${d.to ? `to ${esc(d.to)} ` : ''}${ago(d.at)}</small>` : d.state === 'invite' ? `<b>${esc(d.them)} challenges you</b><small>${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''} · ${ago(d.at)}</small>` : `<b>vs ${esc(d.them || 'Unnamed')}</b><small>${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''} · ${ago(d.at)}</small>`}</span><em>${tag(d)}</em></button></li>`;
+const tag = (d) => (d.open && d.rank ? (d.state === 'closed' ? `${nth(d.rank)} of ${d.n}` : `${nth(d.rank)}`) : d.state === 'lobby' ? 'Join' : d.state === 'done' ? (d.won > 0 ? 'Won' : d.won < 0 ? 'Lost' : 'Draw') : d.state === 'yours' || d.state === 'invite' ? 'Play' : 'Share');
+const openRow = (d, extra = '') => `<li class="${extra}"><button type="button" data-open="${d.id}" class="${d.state} dopen ${d.state === 'closed' && d.rank === 1 ? 'won' : ''}"><img src="${MODES.dps.icon}" alt="" class="dmi dps"><span><b>${d.role === 'a' ? 'Your open challenge' : `${esc(d.them)}'s open challenge`}</b><small>${C.CLASS_NAME[d.cls]} · ${d.state === 'closed' ? `${d.n} player${d.n > 1 ? 's' : ''} · ended ${ago(d.at)}` : `${d.joined} joined · ${left(d.ends)}`}</small></span><em>${tag(d)}</em></button></li>`;
+const rowHtml = (d, extra = '') => (d.open ? openRow(d, extra) : `<li class="${extra}"><button type="button" data-open="${d.id}" class="${d.state} ${d.won > 0 ? 'won' : d.won < 0 ? 'lost' : d.won === 0 ? 'draw' : ''}"><img src="${MODES[d.mode].icon}" alt="" class="dmi ${d.mode}"><span>${d.state === 'waiting' ? `<b>${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''}</b><small>Sent ${d.to ? `to ${esc(d.to)} ` : ''}${ago(d.at)}</small>` : d.state === 'invite' ? `<b>${esc(d.them)} challenges you</b><small>${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''} · ${ago(d.at)}</small>` : `<b>vs ${esc(d.them || 'Unnamed')}</b><small>${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''} · ${ago(d.at)}</small>`}</span><em>${tag(d)}</em></button></li>`);
 const RECENT = 5;
 function recordHtml() {
   const n = stats ? stats.w + stats.l + stats.d : 0;
@@ -101,9 +106,9 @@ function recordHtml() {
   return `<div class="drec"><div class="drecn"><small>Record</small><b><i class="w">${stats.w}</i>–<i class="l">${stats.l}</i>${stats.d ? `<s>${stats.d} draw${stats.d > 1 ? 's' : ''}</s>` : ''}</b></div><div class="drecbar" style="--w:${(stats.w / n) * 100}%;--d:${(stats.d / n) * 100}%" title="${pct}% won"></div><small class="drecp">${pct}% won${r ? ` · Rival <b>${esc(r.name)}</b> ${r.w}–${r.l}` : ''}</small></div>`;
 }
 function listHtml() {
-  const turn = mine.filter((d) => d.state === 'invite' || d.state === 'yours'), wait = mine.filter((d) => d.state === 'waiting'), done = mine.filter((d) => d.state === 'done');
+  const turn = mine.filter((d) => d.state === 'invite' || d.state === 'yours'), wait = mine.filter((d) => d.state === 'waiting'), live = [...mine.filter((d) => d.state === 'live'), ...lobby], done = mine.filter((d) => d.state === 'done' || d.state === 'closed').sort((x, y) => y.at - x.at);
   const part = (title, rows, more = false) => (rows.length ? `<h4 class="dsub">${title}${rows.length > 1 && !more ? ` <span>${rows.length}</span>` : ''}</h4><ul class="dlist">${rows.map((d, i) => rowHtml(d, more && i >= RECENT ? 'dextra' : '')).join('')}</ul>${more && rows.length > RECENT ? `<button type="button" class="dmore">Show ${rows.length - RECENT} more</button>` : ''}` : '');
-  return recordHtml() + part('Your turn', turn) + part('Waiting on them', wait) + part('Recent', done, true);
+  return recordHtml() + part('Your turn', turn) + part('Open challenges', live) + part('Waiting on them', wait) + part('Recent', done, true);
 }
 
 function openSheet() {
@@ -111,29 +116,35 @@ function openSheet() {
   const el = overlay(`<small class="dkick">Challenge</small><h2>Challenge a friend</h2><p class="dlead">You draft first, then send it to a player by name or as a link. They get the same first spin, and nobody sees your result until they finish.</p>
     <div class="dmodes" role="radiogroup">${Object.entries(MODES).map(([id, m]) => `<button type="button" role="radio" data-mode="${id}" aria-checked="${id === pickMode}" class="${id === pickMode ? 'on' : ''}"><img src="${m.icon}" alt="" class="dmi ${id}"><b>${m.name}</b><small>${m.line}</small></button>`).join('')}</div>
     <div class="dclsrow"><small class="dclslab"></small><div class="dclasses">${Object.keys(C.BUILDS).map((c) => `<button type="button" data-cls="${c}" style="--cc:${C.CLASS_COLOR[c]}" aria-label="${C.CLASS_NAME[c]}">${classIcon(c)}</button>`).join('')}</div></div>
+    <div class="dwho"><div class="dseg" role="radiogroup" aria-label="Who can answer"><button type="button" role="radio" data-open="0">A friend</button><button type="button" role="radio" data-open="1">Open to all</button></div><small class="dwhol"></small></div>
     <button class="rforge dstart" type="button"><span></span></button><p class="dmsg" role="status"></p>${listHtml()}`, 'sheet');
   const paint = () => {
     for (const b of el.querySelectorAll('[data-mode]')) { b.classList.toggle('on', b.dataset.mode === pickMode); b.setAttribute('aria-checked', b.dataset.mode === pickMode); }
     for (const b of el.querySelectorAll('[data-cls]')) b.classList.toggle('on', b.dataset.cls === pickCls);
-    el.querySelector('.dclslab').textContent = pickMode === 'dps' ? 'Class for both of you' : 'Your class (they pick their own)';
+    const op = pickMode === 'dps' && pickOpen;
+    el.querySelector('.dwho').hidden = pickMode !== 'dps';
+    for (const b of el.querySelectorAll('.dseg [data-open]')) { b.classList.toggle('on', (b.dataset.open === '1') === op); b.setAttribute('aria-checked', (b.dataset.open === '1') === op); }
+    el.querySelector('.dwhol').textContent = op ? 'Anyone can join for 24 hours, up to 20 players. Same first spin, then everyone rolls their own. Highest DPS wins.' : 'One friend answers, by name or by link.';
+    el.querySelector('.dclslab').textContent = pickMode !== 'dps' ? 'Your class (they pick their own)' : op ? 'Class for everyone' : 'Class for both of you';
     el.querySelector('.dstart span').textContent = `Draft a ${C.CLASS_NAME[pickCls]}`;
   };
-  for (const b of el.querySelectorAll('[data-mode]')) b.onclick = () => { pickMode = b.dataset.mode; write(LAST, { pickMode, pickCls }); paint(); };
-  for (const b of el.querySelectorAll('[data-cls]')) b.onclick = () => { pickCls = b.dataset.cls; write(LAST, { pickMode, pickCls }); paint(); };
-  for (const b of el.querySelectorAll('[data-open]')) b.onclick = () => open(b.dataset.open);
+  for (const b of el.querySelectorAll('[data-mode]')) b.onclick = () => { pickMode = b.dataset.mode; write(LAST, { pickMode, pickCls, pickOpen }); paint(); };
+  for (const b of el.querySelectorAll('[data-cls]')) b.onclick = () => { pickCls = b.dataset.cls; write(LAST, { pickMode, pickCls, pickOpen }); paint(); };
+  for (const b of el.querySelectorAll('.dseg [data-open]')) b.onclick = () => { pickOpen = b.dataset.open === '1'; write(LAST, { pickMode, pickCls, pickOpen }); paint(); };
+  for (const b of el.querySelectorAll('.dlist [data-open]')) b.onclick = () => open(b.dataset.open);
   const more = el.querySelector('.dmore');
   if (more) more.onclick = () => { more.closest('.duelbox').classList.add('dall'); more.remove(); };
-  el.querySelector('.dstart').onclick = () => create(pickMode, pickCls, el.querySelector('.dmsg'));
+  el.querySelector('.dstart').onclick = () => create(pickMode, pickCls, el.querySelector('.dmsg'), pickMode === 'dps' && pickOpen);
   paint();
 }
 
-async function create(mode, cls, msg) {
+async function create(mode, cls, msg, isOpen = false) {
   if (busy) return;
   if (!nameOk() && !(await askName())) return;
   busy = true;
   if (msg) msg.textContent = 'Setting the table...';
   try {
-    const d = await api('/duel/new', { mode, cls });
+    const d = await api('/duel/new', { mode, cls, open: isOpen ? 1 : 0 });
     close();
     current = { ...d, mode, myCls: cls, role: 'a' };
     lib.draft(current, cls);
@@ -151,6 +162,7 @@ export async function open(id) {
     return;
   }
   current = d;
+  if (d.open) return openDuel(d);
   if (d.state === 'open') write(INBOX, [d.id, ...read(INBOX, []).filter((x) => x !== d.id)].slice(0, 20));
   if (d.state === 'done') return reveal(d);
   if (d.state === 'waiting') return waiting(d);
@@ -174,12 +186,12 @@ export async function open(id) {
 function invite(d) {
   const m = MODES[d.mode];
   let cls = d.mode === 'dps' ? d.cls : (C.BUILDS[pickCls] ? pickCls : 'WARRIOR');
-  const el = overlay(`<div class="dinv"><span class="demb big"><img src="assets/icons/132147.png" alt=""></span><small class="dkick">${esc(m.name)}</small><h2><span>${esc(d.from)}</span> challenges you</h2><p class="dlead">${d.mode === 'dps' ? `Draft a ${C.CLASS_NAME[d.cls]} from the same first spin. Whoever does more damage wins.` : 'Draft any class from the same seed and pick a tactic. Then your heroes fight.'}</p>
+  const el = overlay(`<div class="dinv"><span class="demb big"><img src="assets/icons/132147.png" alt=""></span><small class="dkick">${esc(m.name)}</small><h2>${d.open ? `<span>${esc(d.from)}</span>'s open challenge` : `<span>${esc(d.from)}</span> challenges you`}</h2><p class="dlead">${d.open ? `Draft a ${C.CLASS_NAME[d.cls]}. Everyone starts from the same first spin, then the rolls are yours. ${d.joined} of ${d.cap} joined · ${left(d.ends)}.` : d.mode === 'dps' ? `Draft a ${C.CLASS_NAME[d.cls]} from the same first spin. Whoever does more damage wins.` : 'Draft any class from the same seed and pick a tactic. Then your heroes fight.'}</p>
     ${d.mode === 'dps' ? `<div class="dfixed" style="--cc:${C.CLASS_COLOR[d.cls]}">${classIcon(d.cls)}<b>${C.CLASS_NAME[d.cls]}</b></div>` : `<div class="dclsrow"><small class="dclslab">Your class</small><div class="dclasses">${Object.keys(C.BUILDS).map((c) => `<button type="button" data-cls="${c}" style="--cc:${C.CLASS_COLOR[c]}" aria-label="${C.CLASS_NAME[c]}">${classIcon(c)}</button>`).join('')}</div></div>`}
-    <button class="rforge dstart" type="button"><span></span></button><p class="dmsg" role="status"></p><small class="dfine">${d.state === 'yours' ? 'You accepted this one. Your draft starts over from the same spin.' : 'Accepting holds it for you for an hour.'}</small></div>`, 'invite');
+    <button class="rforge dstart" type="button"><span></span></button><p class="dmsg" role="status"></p><small class="dfine">${d.state === 'yours' ? 'You accepted this one. Your draft starts over from the same spin.' : d.open ? 'Joining saves your spot. Finish within an hour.' : 'Accepting holds it for you for an hour.'}</small></div>`, 'invite');
   const paint = () => {
     for (const b of el.querySelectorAll('[data-cls]')) b.classList.toggle('on', b.dataset.cls === cls);
-    el.querySelector('.dstart span').textContent = `${d.state === 'yours' ? 'Draft' : 'Accept and draft'} a ${C.CLASS_NAME[cls]}`;
+    el.querySelector('.dstart span').textContent = `${d.state === 'yours' ? 'Draft' : d.open ? 'Join and draft' : 'Accept and draft'} a ${C.CLASS_NAME[cls]}`;
   };
   for (const b of el.querySelectorAll('[data-cls]')) b.onclick = () => { cls = b.dataset.cls; paint(); };
   el.querySelector('.dstart').onclick = async () => {
@@ -192,11 +204,77 @@ function invite(d) {
       current = { ...t, myCls: cls };
       lib.draft(current, cls);
     } catch (e) {
-      el.querySelector('.dmsg').textContent = e.code === 'taken' ? 'Someone else just took it.' : e.code === 'waiting' ? 'You cannot answer your own challenge.' : 'The Inn could not be reached. Try again.';
+      el.querySelector('.dmsg').textContent = e.code === 'taken' ? 'Someone else just took it.' : e.code === 'full' ? 'It just filled up.' : e.code === 'closed' ? 'It has just ended.' : e.code === 'waiting' || e.code === 'live' ? 'You cannot answer your own challenge.' : 'The Inn could not be reached. Try again.';
     }
     busy = false;
   };
   paint();
+}
+
+function openDuel(d) {
+  if (d.state === 'open' || d.state === 'yours') {
+    if (d.state === 'open') write(INBOX, [d.id, ...read(INBOX, []).filter((x) => x !== d.id)].slice(0, 20));
+    return invite(d);
+  }
+  if (d.state === 'new') {
+    const el = overlay(`<small class="dkick">Open challenge</small><h2>Not ready yet</h2><p class="dlead">${d.role === 'a' ? 'You have not finished your own draft for this one.' : 'The host has not finished drafting yet. Open the link again once they have.'}</p>`);
+    return el;
+  }
+  if (d.state === 'full') {
+    const el = overlay(`<small class="dkick">Open challenge</small><h2>It is full</h2><p class="dlead">${esc(d.from)}'s open challenge already has ${d.cap} players. Start your own and see who turns up.</p><button class="rforge" type="button" data-mine><span>Challenge a friend</span></button>`);
+    el.querySelector('[data-mine]').onclick = () => openSheet();
+    return;
+  }
+  if (!d.board) {
+    const el = overlay(`<small class="dkick">Open challenge</small><h2>It has ended</h2><p class="dlead">${esc(d.from)}'s open challenge is over.</p><button class="rforge" type="button" data-mine><span>Challenge a friend</span></button>`);
+    el.querySelector('[data-mine]').onclick = () => openSheet();
+    return;
+  }
+  board(d);
+}
+
+function board(d, fresh = false) {
+  const live = d.state === 'live' || d.state === 'entered', me = d.board.findIndex((r) => r.me), n = d.board.length, share = link(d.id);
+  if (!live) { const seen = read(SEEN, []); if (!seen.includes(d.id)) write(SEEN, [...seen, d.id].slice(-60)); drawRow(); }
+  const title = !live && me === 0 ? 'You won' : !live ? 'Final standings' : d.role === 'a' && n === 1 ? 'Your challenge is live' : 'Standings';
+  const place = me >= 0 && n > 1 ? `<div class="dplace ${me === 0 ? 'top' : ''}"><b>${me + 1}<sup>${nth(me + 1).slice(-2)}</sup></b><small>of ${n}${live ? ' so far' : ''}</small></div>` : '';
+  const lead = live ? `${d.joined} of ${d.cap} joined · ${left(d.ends)}. ${d.role === 'a' ? 'Share the link and see who can beat you.' : 'Scores keep coming in until it ends.'}` : `Ended with ${n} player${n > 1 ? 's' : ''}.`;
+  const rows = d.board.map((r, i) => `<li class="${r.me ? 'me' : ''}"><i>${i + 1}</i><span><b>${r.me ? 'You' : esc(r.name)}${r.host ? '<em>Host</em>' : ''}</b><small>${esc(specOf(d.cls, r.build))}</small></span><s>${r.score.toFixed(1)}</s></li>`).join('');
+  const el = overlay(`<small class="dkick">Open challenge · ${C.CLASS_NAME[d.cls]}</small><h2 class="${!live && me === 0 ? 'dverdict win' : ''}">${title}</h2>${place}<p class="dlead">${lead}</p>
+    <ol class="dboard">${rows}</ol>
+    ${live ? `<div class="dlink"><code>${esc(share.replace(/^https?:\/\//, ''))}</code><button class="spec" type="button" data-copy>Copy</button></div>` : ''}
+    <div class="dacts">${!live ? '<button class="rforge" type="button" data-again><span>New open challenge</span></button>' : navigator.share ? '<button class="rforge" type="button" data-share><span>Share the link</span></button>' : ''}<button class="spec" type="button" data-done>Done</button></div>
+    ${d.role === 'a' && live && d.joined === 0 ? '<button class="ddel" type="button" data-del>Delete this challenge</button>' : ''}<p class="dmsg" role="status"></p>`, `result dstand`);
+  current = { ...d, home: current && current.home };
+  el.querySelector('[data-done]').onclick = () => { close(); if (current && current.home) lib.home(); };
+  const cp = el.querySelector('[data-copy]');
+  if (cp) cp.onclick = async (e) => { try { await navigator.clipboard.writeText(share); e.target.textContent = 'Copied'; } catch { e.target.textContent = 'Copy failed'; } setTimeout(() => { e.target.textContent = 'Copy'; }, 1600); };
+  const sh = el.querySelector('[data-share]');
+  if (sh) sh.onclick = () => navigator.share({ title: 'An open challenge at the Inn', text: `Open DPS check: draft a ${C.CLASS_NAME[d.cls]} and beat the board.`, url: share }).catch(() => {});
+  const ag = el.querySelector('[data-again]');
+  if (ag) ag.onclick = () => create('dps', d.cls, el.querySelector('.dmsg'), true);
+  bindDelete(el, d);
+}
+
+function bindDelete(el, d) {
+  const del = el.querySelector('[data-del]');
+  if (!del) return;
+  del.onclick = async () => {
+    if (!del.classList.contains('sure')) { del.classList.add('sure'); del.textContent = 'Tap again to delete it for good'; return; }
+    del.disabled = true;
+    try {
+      await api('/duel/delete', { id: d.id });
+      close();
+      if (current && current.home) lib.home();
+      current = null;
+      refreshMine();
+    } catch (e) {
+      del.disabled = false;
+      del.classList.remove('sure');
+      del.textContent = 'Delete this challenge';
+      el.querySelector('.dmsg').textContent = e.code === 'answered' ? 'Someone has already answered it, so it stays.' : 'The Inn could not be reached. Try again.';
+    }
+  };
 }
 
 export const active = () => current;
@@ -208,11 +286,12 @@ export async function submit({ cls, moves, build, plan }) {
   current = { ...d, home: true };
   let r;
   try { r = await api('/duel/play', { id: d.id, cls, moves, build, plan, name: nameOk() ? heroName() : '' }); } catch (e) {
-    el.innerHTML = `<button class="dx" type="button" aria-label="Close">&times;</button><small class="dkick">Challenge</small><h2>Not saved</h2><p class="dlead">${e.code === 'taken' ? 'Your hold on this challenge ran out and someone else answered it.' : e.code === 'run' ? 'This page is out of date. Press Ctrl+F5 and try again.' : ['waiting', 'done', 'open'].includes(e.code) ? 'This challenge already has your draft.' : 'The Inn could not be reached, so this draft was not saved.'}</p>`;
+    el.innerHTML = `<button class="dx" type="button" aria-label="Close">&times;</button><small class="dkick">Challenge</small><h2>Not saved</h2><p class="dlead">${e.code === 'taken' ? 'Your hold on this challenge ran out and someone else answered it.' : e.code === 'closed' ? 'This open challenge ended before your draft came in.' : e.code === 'run' ? 'This page is out of date. Press Ctrl+F5 and try again.' : ['waiting', 'done', 'open', 'entered', 'live'].includes(e.code) ? 'This challenge already has your draft.' : 'The Inn could not be reached, so this draft was not saved.'}</p>`;
     return;
   }
   current = { ...r, home: true };
   refreshMine();
+  if (r.open) return board(r, true);
   if (r.state === 'done') return reveal(r, true);
   waiting(r);
 }
@@ -224,7 +303,8 @@ function waiting(d) {
     <p class="dlead">${me && d.mode === 'dps' ? `You set <b>${me.score.toFixed(1)} DPS</b>. ` : me ? `${C.CLASS_NAME[me.cls]}, ${esc(PLANS[me.cls][me.plan].label)}. ` : ''}Send it to a friend. They will not see your result until they have drafted.</p>
     <form class="dto"><input maxlength="20" spellcheck="false" autocomplete="off" placeholder="Player name" aria-label="Player name" value="${esc(d.to || '')}"><button class="spec" type="submit">Send</button></form><small class="dtomsg" role="status">${d.to ? `Sent to <b>${esc(d.to)}</b>. It is waiting on their Draft page.` : 'It shows up on their Draft page.'}</small><small class="dor">or share a link</small>
     <div class="dlink"><code>${esc(share.replace(/^https?:\/\//, ''))}</code><button class="spec" type="button" data-copy>Copy</button></div>
-    ${navigator.share ? '<button class="rforge" type="button" data-share><span>Share the link</span></button>' : ''}<small class="dfine">${d.to ? 'Only they can answer it.' : 'Anyone with the link can answer.'} You will see the result here and on the home page.</small></div>`, 'sent');
+    ${navigator.share ? '<button class="rforge" type="button" data-share><span>Share the link</span></button>' : ''}<small class="dfine">${d.to ? 'Only they can answer it.' : 'Anyone with the link can answer.'} You will see the result here and on the home page.</small><button class="ddel" type="button" data-del>Delete this challenge</button><p class="dmsg" role="status"></p></div>`, 'sent');
+  bindDelete(el, d);
   const form = el.querySelector('.dto'), msg = el.querySelector('.dtomsg');
   form.onsubmit = async (e) => {
     e.preventDefault();

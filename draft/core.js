@@ -244,11 +244,11 @@ function roll(pool, cls, slot, picks, r, taken) {
 export const remaining = (run) => SLOTS.map((s) => s[0]).filter((s) => !(s in run.picks));
 
 export function newRun(seed, cls, branch = false) {
-  return { seed: seed >>> 0, cls, picks: {}, round: 0, mulligan: 1, moves: [], ...(branch ? { branch: 1 } : {}) };
+  return { seed: seed >>> 0, cls, picks: {}, round: 0, mulligan: 1, moves: [], ...(branch ? { branch: 1 } : {}), ...(typeof branch === 'string' ? { salt: branch } : {}) };
 }
 
 export function offers(pool, run) {
-  const r = rng(run.branch ? hash(run.seed, run.cls, run.round, ...run.moves) : hash(run.seed, run.cls, run.round));
+  const r = rng(run.branch ? hash(run.seed, run.cls, run.round, ...(run.salt && run.round ? [run.salt] : []), ...run.moves) : hash(run.seed, run.cls, run.round));
   const out = {};
   const taken = new Set(Object.values(run.picks).filter(Boolean).map((i) => item(pool, i)[0]));
   for (const slot of remaining(run)) {

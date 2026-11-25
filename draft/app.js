@@ -1,4 +1,4 @@
-import * as C from './core.js?v=20261125170451';
+import * as C from './core.js?v=20261125221600';
 import { Stage } from './stage.js?v=20261123145643';
 import { titleOf } from './paths.js';
 import { askFeedback, askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
@@ -49,7 +49,7 @@ let sharedRows = [], sharedOpen = 0, replayRun = null, replayStep = 0, replayBac
 let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true, duelCtx = null, duelMod = null, duelWait = /^#duel=/.test(location.hash) ? Date.now() + 15000 : 0;
 const duelBusy = () => !!document.querySelector('.duelover') || (duelCtx ? ['draft', 'talents', 'fight'].includes(document.body.dataset.view) : Date.now() < duelWait);
 const duelDone = () => new Promise((r) => { const t = () => (duelBusy() ? setTimeout(t, 800) : r()); t(); });
-const duelLib = () => (duelMod ||= import('./duel.js?v=20261125212058'));
+const duelLib = () => (duelMod ||= import('./duel.js?v=20261125221600'));
 
 const row = (id) => pool.items[id] || retired[id];
 const taltip = (id, build) => {
@@ -238,6 +238,7 @@ async function spin() {
     strip[s] = ids.length ? ids : [offer[s]];
     $('s_' + s).className = 'slot spin';
   }
+  const final = !calm && slots.filter((s) => offer[s]).length === 1 ? slots.find((s) => offer[s]) : null;
   let live = new Set(slots);
   const timer = calm ? 0 : setInterval(() => {
     for (const s of live) {
@@ -252,11 +253,18 @@ async function spin() {
   await wait(420);
   const order = [...slots];
   for (const s of order) {
+    if (s === final) continue;
     await wait(Math.max(45, 150 - order.length * 5));
     live.delete(s);
     paint(s, offer[s], offer[s] ? 'offer' : 'blocked');
     const r = offer[s] && row(offer[s]);
     if (r && r[1] >= 4) $('s_' + s).classList.add('flash');
+  }
+  if (final) {
+    live.delete(final);
+    await finale(final, strip[final], offer[final]);
+    paint(final, offer[final], 'offer');
+    $('s_' + final).classList.add('flash');
   }
   clearInterval(timer);
   spinning = false;
@@ -264,6 +272,46 @@ async function spin() {
   $('round').textContent = `${Object.keys(run.picks).length} of 17 slots filled`;
   $('mull').disabled = !run.mulligan;
   $('mull').textContent = run.mulligan ? 'Mulligan (1 left)' : 'Mulligan used';
+}
+
+async function finale(slot, strip, id) {
+  const el = $('s_' + slot), ic = el.querySelector('.ic');
+  let a = ic.getBoundingClientRect();
+  if (a.top < 0 || a.bottom > innerHeight) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); await wait(380); a = ic.getBoundingClientRect(); }
+  const ax = a.left + a.width / 2, ay = a.top + a.height / 2, m = 96;
+  const tx = Math.min(innerWidth - m, Math.max(m, ax + (innerWidth / 2 - ax) * 0.55)), ty = Math.min(innerHeight - m, Math.max(m, ay + (innerHeight / 2 - ay) * 0.55));
+  const veil = document.createElement('div'), st = document.createElement('div');
+  veil.className = 'lrveil';
+  veil.style.setProperty('--x', `${tx}px`);
+  veil.style.setProperty('--y', `${ty}px`);
+  st.className = 'lrstage lrspin';
+  st.style.left = `${ax}px`;
+  st.style.top = `${ay}px`;
+  st.style.setProperty('--dx', `${tx - ax}px`);
+  st.style.setProperty('--dy', `${ty - ay}px`);
+  st.innerHTML = '<i class="lrrays"></i><i class="lrglow"></i><i class="lrring"></i><img alt="">';
+  const img = st.querySelector('img'), roll = () => { img.src = icon(strip[Math.floor(Math.random() * strip.length)]); };
+  img.src = ic.querySelector('img').src;
+  document.body.append(veil, st);
+  ic.style.visibility = 'hidden';
+  requestAnimationFrame(() => requestAnimationFrame(() => { veil.classList.add('lrup'); st.classList.add('lrup'); }));
+  for (let i = 0; i < 15; i++) { roll(); await wait(70); }
+  veil.classList.add('lrtense');
+  st.classList.add('lrtense');
+  for (let t = 80; t < 420; t *= 1.17) { roll(); await wait(t); }
+  img.src = icon(id);
+  st.style.setProperty('--fq', QUALITY[row(id)[1]] || '#f8d36b');
+  veil.style.setProperty('--fq', QUALITY[row(id)[1]] || '#f8d36b');
+  st.classList.replace('lrspin', 'lrland');
+  veil.classList.add('lrland');
+  await wait(1000);
+  st.classList.remove('lrtense');
+  st.classList.add('lrhome');
+  veil.classList.add('lrout');
+  await wait(460);
+  ic.style.visibility = '';
+  st.remove();
+  veil.remove();
 }
 
 function statRow(label, key, s, unit = '') {
@@ -962,7 +1010,7 @@ async function startClass(cls, duel = null) {
     seed = s.seed;
     sig = s.sig;
   } catch { online = false; }
-  run = C.newRun(seed, cls, !!duel);
+  run = C.newRun(seed, cls, duel ? duel.salt || true : false);
   sheet();
   if (!stage) stage = new Stage($('stage'), gear);
   stage.reset();

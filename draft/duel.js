@@ -60,7 +60,7 @@ function tell() {
 }
 
 function badge() {
-  const seen = read(SEEN, []), turn = mine.filter((d) => d.state === 'yours' || d.state === 'invite').length, asked = mine.filter((d) => d.state === 'invite' && d.direct), fresh = mine.filter((d) => ((d.state === 'done' && d.role === 'a') || d.state === 'closed') && !seen.includes(d.id)).length;
+  const seen = read(SEEN, []), turn = mine.filter((d) => d.state === 'yours' || d.state === 'invite').length, asked = mine.filter((d) => d.state === 'invite' && d.direct), fresh = mine.filter((d) => d.fresh && !seen.includes(d.id)).length;
   if (asked.length) return `<em class="dbadge hot">${asked.length === 1 ? 'New challenge' : `${asked.length} challenges`}</em>`;
   if (fresh) return `<em class="dbadge hot">${fresh === 1 ? 'New result' : `${fresh} new results`}</em>`;
   if (turn) return `<em class="dbadge hot">Your turn</em>`;

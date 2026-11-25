@@ -4,7 +4,7 @@ import { askName, heroName, nameOk } from '../pvp/name.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const SEEN = 'duelSeen', LAST = 'duelLast';
+const SEEN = 'duelSeen', LAST = 'duelLast', INBOX = 'duelInbox', TOLD = 'duelTold';
 const MODES = {
   dps: { name: 'DPS check', icon: 'assets/icons/135358.png', line: 'Same class, same first spin. Highest DPS wins.' },
   duel: { name: 'Arena duel', icon: 'assets/icons/132349.png', line: 'Any class, same seed. Your heroes fight it out.' },
@@ -35,12 +35,30 @@ export function mountDuel(host, opts) {
 }
 
 export async function refreshMine() {
-  try { ({ duels: mine = [], stats = null } = await api('/duel/mine')); } catch { mine = []; stats = null; }
+  try { ({ duels: mine = [], stats = null } = await api('/duel/mine', { seen: read(INBOX, []) })); } catch { mine = []; stats = null; }
   drawRow();
+  tell();
+}
+
+function tell() {
+  const told = read(TOLD, []), fresh = mine.filter((d) => d.state === 'invite' && d.direct && !told.includes(d.id));
+  if (!fresh.length || document.querySelector('.dtoast')) return;
+  if (box || document.querySelector('.omen, .prvbox, .nmask, .codenudge') || ['draft', 'talents', 'fight', 'hearth'].includes(document.body.dataset.view)) return void setTimeout(tell, 2000);
+  write(TOLD, [...told, ...fresh.map((d) => d.id)].slice(-50));
+  const d = fresh[0], t = document.createElement('div');
+  t.className = 'dtoast';
+  t.setAttribute('role', 'status');
+  t.innerHTML = `<span class="demb"><img src="assets/icons/132147.png" alt=""></span><span class="dsay"><b>${fresh.length > 1 ? `${fresh.length} new challenges` : 'New challenge'}</b><small>${fresh.length > 1 ? 'Waiting on your Draft page' : `${esc(d.them)} · ${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''}`}</small></span><button type="button" class="dtplay">${fresh.length > 1 ? 'See' : 'Play'}</button><button type="button" class="dtx" aria-label="Close">&times;</button>`;
+  const gone = () => { t.classList.remove('in'); setTimeout(() => t.remove(), 250); };
+  t.querySelector('.dtx').onclick = gone;
+  t.querySelector('.dtplay').onclick = () => { gone(); if (fresh.length > 1) openSheet(); else open(d.id); };
+  document.body.append(t);
+  requestAnimationFrame(() => t.classList.add('in'));
 }
 
 function badge() {
-  const seen = read(SEEN, []), turn = mine.filter((d) => d.state === 'yours').length, fresh = mine.filter((d) => d.state === 'done' && d.role === 'a' && !seen.includes(d.id)).length;
+  const seen = read(SEEN, []), turn = mine.filter((d) => d.state === 'yours' || d.state === 'invite').length, asked = mine.filter((d) => d.state === 'invite' && d.direct), fresh = mine.filter((d) => d.state === 'done' && d.role === 'a' && !seen.includes(d.id)).length;
+  if (asked.length) return `<em class="dbadge hot">${asked.length === 1 ? 'New challenge' : `${asked.length} challenges`}</em>`;
   if (fresh) return `<em class="dbadge hot">${fresh === 1 ? 'New result' : `${fresh} new results`}</em>`;
   if (turn) return `<em class="dbadge hot">Your turn</em>`;
   const wait = mine.filter((d) => d.state === 'waiting').length;
@@ -49,7 +67,7 @@ function badge() {
 
 function drawRow() {
   if (!row) return;
-  row.innerHTML = `<button class="duelrow" type="button"><span class="demb"><img src="assets/icons/132147.png" alt=""></span><span class="dsay"><b>Challenge a friend</b><small>Same spins, your choices. Send a link and see who drafts better.</small></span>${badge()}<i class="dgo" aria-hidden="true">&rsaquo;</i></button>`;
+  row.innerHTML = `<button class="duelrow" type="button"><span class="demb"><img src="assets/icons/132147.png" alt=""></span><span class="dsay"><b>Challenge a friend</b><small>Same spins, your choices. Send it to a friend and see who drafts better.</small></span>${badge()}<i class="dgo" aria-hidden="true">&rsaquo;</i></button>`;
   row.querySelector('.duelrow').onclick = () => openSheet();
 }
 
@@ -73,8 +91,8 @@ function close() {
 }
 
 const ago = (t) => { const m = Math.max(0, (Date.now() - t) / 60000); return m < 60 ? `${Math.max(1, Math.round(m))}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`; };
-const tag = (d) => (d.state === 'done' ? (d.won > 0 ? 'Won' : d.won < 0 ? 'Lost' : 'Draw') : d.state === 'yours' ? 'Play' : 'Share');
-const rowHtml = (d, extra = '') => `<li class="${extra}"><button type="button" data-open="${d.id}" class="${d.state} ${d.won > 0 ? 'won' : d.won < 0 ? 'lost' : d.won === 0 ? 'draw' : ''}"><img src="${MODES[d.mode].icon}" alt="" class="dmi ${d.mode}"><span>${d.state === 'waiting' ? `<b>${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''}</b><small>Sent ${ago(d.at)}</small>` : `<b>vs ${esc(d.them || 'Unnamed')}</b><small>${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''} · ${ago(d.at)}</small>`}</span><em>${tag(d)}</em></button></li>`;
+const tag = (d) => (d.state === 'done' ? (d.won > 0 ? 'Won' : d.won < 0 ? 'Lost' : 'Draw') : d.state === 'yours' || d.state === 'invite' ? 'Play' : 'Share');
+const rowHtml = (d, extra = '') => `<li class="${extra}"><button type="button" data-open="${d.id}" class="${d.state} ${d.won > 0 ? 'won' : d.won < 0 ? 'lost' : d.won === 0 ? 'draw' : ''}"><img src="${MODES[d.mode].icon}" alt="" class="dmi ${d.mode}"><span>${d.state === 'waiting' ? `<b>${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''}</b><small>Sent ${d.to ? `to ${esc(d.to)} ` : ''}${ago(d.at)}</small>` : d.state === 'invite' ? `<b>${esc(d.them)} challenges you</b><small>${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''} · ${ago(d.at)}</small>` : `<b>vs ${esc(d.them || 'Unnamed')}</b><small>${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''} · ${ago(d.at)}</small>`}</span><em>${tag(d)}</em></button></li>`;
 const RECENT = 5;
 function recordHtml() {
   const n = stats ? stats.w + stats.l + stats.d : 0;
@@ -83,14 +101,14 @@ function recordHtml() {
   return `<div class="drec"><div class="drecn"><small>Record</small><b><i class="w">${stats.w}</i>–<i class="l">${stats.l}</i>${stats.d ? `<s>${stats.d} draw${stats.d > 1 ? 's' : ''}</s>` : ''}</b></div><div class="drecbar" style="--w:${(stats.w / n) * 100}%;--d:${(stats.d / n) * 100}%" title="${pct}% won"></div><small class="drecp">${pct}% won${r ? ` · Rival <b>${esc(r.name)}</b> ${r.w}–${r.l}` : ''}</small></div>`;
 }
 function listHtml() {
-  const turn = mine.filter((d) => d.state === 'yours'), wait = mine.filter((d) => d.state === 'waiting'), done = mine.filter((d) => d.state === 'done');
+  const turn = mine.filter((d) => d.state === 'invite' || d.state === 'yours'), wait = mine.filter((d) => d.state === 'waiting'), done = mine.filter((d) => d.state === 'done');
   const part = (title, rows, more = false) => (rows.length ? `<h4 class="dsub">${title}${rows.length > 1 && !more ? ` <span>${rows.length}</span>` : ''}</h4><ul class="dlist">${rows.map((d, i) => rowHtml(d, more && i >= RECENT ? 'dextra' : '')).join('')}</ul>${more && rows.length > RECENT ? `<button type="button" class="dmore">Show ${rows.length - RECENT} more</button>` : ''}` : '');
   return recordHtml() + part('Your turn', turn) + part('Waiting on them', wait) + part('Recent', done, true);
 }
 
 function openSheet() {
   current = null;
-  const el = overlay(`<small class="dkick">Challenge</small><h2>Challenge a friend</h2><p class="dlead">You draft first, then send a link. They get the same first spin, and nobody sees your result until they finish.</p>
+  const el = overlay(`<small class="dkick">Challenge</small><h2>Challenge a friend</h2><p class="dlead">You draft first, then send it to a player by name or as a link. They get the same first spin, and nobody sees your result until they finish.</p>
     <div class="dmodes" role="radiogroup">${Object.entries(MODES).map(([id, m]) => `<button type="button" role="radio" data-mode="${id}" aria-checked="${id === pickMode}" class="${id === pickMode ? 'on' : ''}"><img src="${m.icon}" alt="" class="dmi ${id}"><b>${m.name}</b><small>${m.line}</small></button>`).join('')}</div>
     <div class="dclsrow"><small class="dclslab"></small><div class="dclasses">${Object.keys(C.BUILDS).map((c) => `<button type="button" data-cls="${c}" style="--cc:${C.CLASS_COLOR[c]}" aria-label="${C.CLASS_NAME[c]}">${classIcon(c)}</button>`).join('')}</div></div>
     <button class="rforge dstart" type="button"><span></span></button><p class="dmsg" role="status"></p>${listHtml()}`, 'sheet');
@@ -133,10 +151,16 @@ export async function open(id) {
     return;
   }
   current = d;
+  if (d.state === 'open') write(INBOX, [d.id, ...read(INBOX, []).filter((x) => x !== d.id)].slice(0, 20));
   if (d.state === 'done') return reveal(d);
   if (d.state === 'waiting') return waiting(d);
   if (d.state === 'new') {
     el.innerHTML = `<button class="dx" type="button" aria-label="Close">&times;</button><small class="dkick">Challenge</small><h2>Not ready yet</h2><p class="dlead">${d.role === 'a' ? 'You have not finished your own draft for this one.' : 'Your friend has not finished drafting yet. Open the link again once they have.'}</p>`;
+    return;
+  }
+  if (d.state === 'private') {
+    el.innerHTML = `<button class="dx" type="button" aria-label="Close">&times;</button><small class="dkick">Challenge</small><h2>Not for you</h2><p class="dlead">${esc(d.from)} sent this challenge to someone else. Ask for your own, or send one yourself.</p><button class="rforge" type="button" data-mine><span>Challenge a friend</span></button>`;
+    el.querySelector('[data-mine]').onclick = () => openSheet();
     return;
   }
   if (d.state === 'taken') {
@@ -197,9 +221,27 @@ function waiting(d) {
   const share = link(d.id), me = d.a;
   current = { ...d, home: current && current.home };
   const el = overlay(`<div class="dinv"><span class="demb big"><img src="assets/icons/132147.png" alt=""></span><small class="dkick">${MODES[d.mode].name}${d.cls ? ` · ${C.CLASS_NAME[d.cls]}` : ''}</small><h2>Your challenge is ready</h2>
-    <p class="dlead">${me && d.mode === 'dps' ? `You set <b>${me.score.toFixed(1)} DPS</b>. ` : me ? `${C.CLASS_NAME[me.cls]}, ${esc(PLANS[me.cls][me.plan].label)}. ` : ''}Send this link to a friend. They will not see your result until they have drafted.</p>
+    <p class="dlead">${me && d.mode === 'dps' ? `You set <b>${me.score.toFixed(1)} DPS</b>. ` : me ? `${C.CLASS_NAME[me.cls]}, ${esc(PLANS[me.cls][me.plan].label)}. ` : ''}Send it to a friend. They will not see your result until they have drafted.</p>
+    <form class="dto"><input maxlength="20" spellcheck="false" autocomplete="off" placeholder="Player name" aria-label="Player name" value="${esc(d.to || '')}"><button class="spec" type="submit">Send</button></form><small class="dtomsg" role="status">${d.to ? `Sent to <b>${esc(d.to)}</b>. It is waiting on their Draft page.` : 'It shows up on their Draft page.'}</small><small class="dor">or share a link</small>
     <div class="dlink"><code>${esc(share.replace(/^https?:\/\//, ''))}</code><button class="spec" type="button" data-copy>Copy</button></div>
-    ${navigator.share ? '<button class="rforge" type="button" data-share><span>Share the link</span></button>' : ''}<small class="dfine">Anyone with the link can answer. You will see the result here and on the home page.</small></div>`, 'sent');
+    ${navigator.share ? '<button class="rforge" type="button" data-share><span>Share the link</span></button>' : ''}<small class="dfine">${d.to ? 'Only they can answer it.' : 'Anyone with the link can answer.'} You will see the result here and on the home page.</small></div>`, 'sent');
+  const form = el.querySelector('.dto'), msg = el.querySelector('.dtomsg');
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const to = form.querySelector('input').value.trim();
+    if (!to) return;
+    form.querySelector('button').disabled = true;
+    try {
+      const r = await api('/duel/send', { id: d.id, to });
+      current = { ...current, to: r.to };
+      msg.innerHTML = `Sent to <b>${esc(r.to)}</b>. It is waiting on their Draft page.`;
+      el.querySelector('.dfine').textContent = 'Only they can answer it. You will see the result here and on the home page.';
+      refreshMine();
+    } catch (x) {
+      msg.textContent = x.code === 'who' ? 'Nobody at the Inn goes by that name.' : x.code === 'self' ? 'That is you.' : x.code === 'state' ? 'Someone has already taken this challenge.' : 'The Inn could not be reached. Try again.';
+    }
+    form.querySelector('button').disabled = false;
+  };
   el.querySelector('[data-copy]').onclick = async (e) => { try { await navigator.clipboard.writeText(share); e.target.textContent = 'Copied'; } catch { e.target.textContent = 'Copy failed'; } setTimeout(() => { e.target.textContent = 'Copy'; }, 1600); };
   const sh = el.querySelector('[data-share]');
   if (sh) sh.onclick = () => navigator.share({ title: 'A challenge at the Inn', text: `${MODES[d.mode].name}: can you out-draft me?`, url: share }).catch(() => {});

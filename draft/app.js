@@ -1,6 +1,6 @@
 import * as C from './core.js?v=20261125221600';
 import { Stage } from './stage.js?v=20261123145643';
-import { titleOf } from './paths.js';
+import { titleOf, glowOf } from './paths.js';
 import { askFeedback, askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
@@ -670,6 +670,7 @@ async function watch(id, back) {
   stage.reset();
   stage.resize();
   await stage.setClass(x.cls);
+  stage.setGlow(glowOf(x.glow || ''));
   if (replayRun === x) dress(replayWorn);
 }
 
@@ -942,6 +943,7 @@ async function openPeek(el) {
     $('pkStage').style.opacity = 0;
     await peekStage.setClass(x.cls);
     if (peekId !== id) return;
+    peekStage.setGlow(glowOf(x.glow || ''));
     await peekStage.outfit(C.SLOTS.filter(([s]) => x.picks[s] && row(x.picks[s])).map(([s]) => [s, x.picks[s], row(x.picks[s])]), () => { $('pkStage').style.opacity = 1; });
   }).catch(() => {});
 }

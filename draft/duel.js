@@ -162,6 +162,7 @@ export async function open(id) {
     return;
   }
   current = d;
+  if (d.state === 'new' && d.role === 'a') return goOn(d, await progOf(d));
   if (d.open) return openDuel(d);
   if (d.state === 'open') write(INBOX, [d.id, ...read(INBOX, []).filter((x) => x !== d.id)].slice(0, 20));
   if (d.state === 'done') return reveal(d);
@@ -184,11 +185,12 @@ export async function open(id) {
 }
 
 function invite(d) {
+  if (d.state === 'yours' && !('prog' in d)) return progOf(d).then((p) => (p ? goOn(d, p) : invite({ ...d, prog: null })));
   const m = MODES[d.mode];
   let cls = d.mode === 'dps' ? d.cls : (C.BUILDS[pickCls] ? pickCls : 'WARRIOR');
   const el = overlay(`<div class="dinv"><span class="demb big"><img src="assets/icons/132147.png" alt=""></span><small class="dkick">${esc(m.name)}</small><h2>${d.open ? `<span>${esc(d.from)}</span>'s open challenge` : `<span>${esc(d.from)}</span> challenges you`}</h2><p class="dlead">${d.open ? `Draft a ${C.CLASS_NAME[d.cls]}. Everyone starts from the same first spin, then the rolls are yours. ${d.joined} of ${d.cap} joined · ${left(d.ends)}.` : d.mode === 'dps' ? `Draft a ${C.CLASS_NAME[d.cls]} from the same first spin. Whoever does more damage wins.` : 'Draft any class from the same seed and pick a tactic. Then your heroes fight.'}</p>
     ${d.mode === 'dps' ? `<div class="dfixed" style="--cc:${C.CLASS_COLOR[d.cls]}">${classIcon(d.cls)}<b>${C.CLASS_NAME[d.cls]}</b></div>` : `<div class="dclsrow"><small class="dclslab">Your class</small><div class="dclasses">${Object.keys(C.BUILDS).map((c) => `<button type="button" data-cls="${c}" style="--cc:${C.CLASS_COLOR[c]}" aria-label="${C.CLASS_NAME[c]}">${classIcon(c)}</button>`).join('')}</div></div>`}
-    <button class="rforge dstart" type="button"><span></span></button><p class="dmsg" role="status"></p><small class="dfine">${d.state === 'yours' ? 'You accepted this one. Your draft starts over from the same spin.' : d.open ? 'Joining saves your spot. Finish within an hour.' : 'Accepting holds it for you for an hour.'}</small></div>`, 'invite');
+    <button class="rforge dstart" type="button"><span></span></button><p class="dmsg" role="status"></p><small class="dfine">${d.state === 'yours' ? 'You accepted this one. Pick up your draft here.' : d.open ? 'Joining saves your spot. Finish within an hour.' : 'Accepting holds it for you for an hour.'}</small></div>`, 'invite');
   const paint = () => {
     for (const b of el.querySelectorAll('[data-cls]')) b.classList.toggle('on', b.dataset.cls === cls);
     el.querySelector('.dstart span').textContent = `${d.state === 'yours' ? 'Draft' : d.open ? 'Join and draft' : 'Accept and draft'} a ${C.CLASS_NAME[cls]}`;
@@ -278,6 +280,19 @@ function bindDelete(el, d) {
 }
 
 export const active = () => current;
+let stepping = Promise.resolve();
+export function step(run) {
+  const id = current && current.id, cls = run.cls, moves = [...run.moves];
+  if (id) stepping = stepping.then(() => api('/duel/step', { id, cls, moves })).catch(() => {});
+}
+
+function goOn(d, p) {
+  close();
+  current = { ...d, prog: p ? p.moves : null, myCls: p ? p.cls : d.cls || 'WARRIOR' };
+  lib.draft(current, current.myCls);
+}
+
+const progOf = (d) => api('/duel/step', { id: d.id }).then((r) => r.prog, () => null);
 export const tactics = (cls) => Object.entries(PLANS[cls]).map(([id, p]) => ({ id, ...p }));
 
 export async function submit({ cls, moves, build, plan }) {

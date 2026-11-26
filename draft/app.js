@@ -49,7 +49,7 @@ let sharedRows = [], sharedOpen = 0, replayRun = null, replayStep = 0, replayBac
 let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true, duelCtx = null, duelMod = null, duelWait = /^#duel=/.test(location.hash) ? Date.now() + 15000 : 0;
 const duelBusy = () => !!document.querySelector('.duelover') || (duelCtx ? ['draft', 'talents', 'fight'].includes(document.body.dataset.view) : Date.now() < duelWait);
 const duelDone = () => new Promise((r) => { const t = () => (duelBusy() ? setTimeout(t, 800) : r()); t(); });
-const duelLib = () => (duelMod ||= import('./duel.js?v=20261125222504'));
+const duelLib = () => (duelMod ||= import('./duel.js?v=20261126140000'));
 
 const row = (id) => pool.items[id] || retired[id];
 const taltip = (id, build) => {
@@ -373,6 +373,7 @@ async function choose(slot, to) {
   const before = new Set(Object.keys(run.picks));
   const from = $('s_' + slot).querySelector('.ic');
   const id = C.pick(pool, run, slot, to);
+  saveStep();
   paint(to, id, 'kept');
   fillPane(to, id, from);
   $('tip').hidden = true;
@@ -387,6 +388,7 @@ function mulligan() {
   if (spinning || !run || !run.mulligan) return;
   closeSheet();
   C.mulligan(pool, run);
+  saveStep();
   spin();
 }
 
@@ -1013,14 +1015,22 @@ async function startClass(cls, duel = null) {
     sig = s.sig;
   } catch { online = false; }
   run = C.newRun(seed, cls, duel ? duel.salt || true : false);
+  if (duel && duel.prog) try { for (const m of duel.prog) { if (m === '!') C.mulligan(pool, run); else { const [s, to = s] = String(m).split('>'); C.pick(pool, run, s, to); } } } catch { run = C.newRun(seed, cls, duel.salt || true); }
+  if (duel) saveStep();
   sheet();
   if (!stage) stage = new Stage($('stage'), gear);
   stage.reset();
   $('status').textContent = 'Dressing your character...';
   await stage.setClass(cls);
   await dressLook();
+  const kept = Object.entries(run.picks);
+  for (const [s, id] of kept) { paint(s, id, id ? 'kept' : 'blocked'); if (id) fillPane(s, id); }
+  if (kept.length) stage.outfit(kept.filter(([, id]) => id).map(([s, id]) => [s, id, row(id)]), () => {});
+  if (C.finished(run)) return talentsStep();
   spin();
 }
+
+const saveStep = () => { if (duelCtx) duelLib().then((D) => D.step(run)).catch(() => {}); };
 
 const STEPS = [['Spin', 'Every open slot rolls an item for your class.'], ['Keep one', 'The rest roll again. You get one mulligan.'], ['Talents', 'Pick one of three Forever builds.'], ['Hit the dummy', 'Your DPS goes on the board.']];
 let gearCls = (() => { try { const c = localStorage.getItem('gearClass'); return C.BUILDS[c] ? c : 'WARRIOR'; } catch { return 'WARRIOR'; } })(), gearShown = '';

@@ -389,6 +389,7 @@ export class Stage {
         if (this.shinePulse) this.shinePulse.opacity = .45 + .55 * (.5 + .5 * Math.sin(this.shineT.value * 3.4));
         const pool = [];
         if (this.attached) for (const k of ['att1', 'att2']) if (this.attached[k]) this.attached[k].traverse((o) => { if (o.userData.shine) pool.push(o); });
+        if (this.rig && !this.rig.visible) return false;
         const n = style ? style.rate * dt : 9 * dt;
         for (let k = Math.floor(n) + (Math.random() < n % 1 ? 1 : 0); k > 0; k--) {
           let m = null;
@@ -550,9 +551,31 @@ export class Stage {
     this.dummy = d;
   }
 
-  async fight(kind, two) {
+  async shift(on) {
+    if (on && !this.form) {
+      const g = await this.loader.loadAsync(ROOT + 'gear/summon_druidcat.glb').catch(() => null);
+      if (g && !this.form) {
+        const mixer = new THREE.AnimationMixer(g.scene), clips = {}, box = new THREE.Box3().setFromObject(g.scene);
+        for (const c of g.animations) clips[c.name] = mixer.clipAction(c);
+        g.scene.traverse((o) => { if (o.isMesh) o.frustumCulled = false; });
+        g.scene.scale.setScalar(1.15 / Math.max(.1, box.max.y - box.min.y));
+        const root = new THREE.Group();
+        root.add(g.scene);
+        root.visible = false;
+        this.scene.add(root);
+        this.form = { root, mixer, clips, current: null };
+      }
+    }
+    const f = on && this.form;
+    if (this.form) this.form.root.visible = !!f;
+    if (this.rig) this.rig.visible = !f;
+    return f;
+  }
+
+  async fight(kind, two, cat) {
     this.unride();
     await this.buildDummy();
+    const f = await this.shift(cat);
     this.kind = kind;
     const gap = kind === 'melee' ? 1.7 : 3.6;
     this.rig.position.set(-gap / 2 - .1, 0, 0);
@@ -568,11 +591,17 @@ export class Stage {
     }
     this.two = two;
     this.fightOn = true;
+    if (f) {
+      f.root.position.copy(this.rig.position);
+      f.root.rotation.y = this.rig.rotation.y;
+      this.play(f, 'attack', 1.6);
+    }
     this.pose(kind === 'melee' ? (two ? 'attack2h' : 'attack1h') : kind === 'ranged' ? 'attackbow' : 'castdirected', kind === 'melee' ? 2.6 : 1.8);
   }
 
   stopFight() {
     this.fightOn = false;
+    if (this.form && this.form.root.visible) this.play(this.form, 'idle', 1);
     this.pose(this.kind === 'melee' ? (this.two ? 'ready2h' : 'ready1h') : 'idle');
     for (const m of Object.values(this.minions)) this.play(m, 'idle', 1);
   }
@@ -645,6 +674,7 @@ export class Stage {
     this.fightOn = false;
     this.clearEffects();
     this.clearMinions();
+    if (this.form) this.shift(false);
     if (this.dummy) this.dummy.visible = false;
     if (this.rig) { this.rig.position.set(0, 0, 0); this.rig.rotation.y = 0; }
     this.ring.visible = true;
@@ -891,6 +921,7 @@ export class Stage {
   frame() {
     const dt = Math.min(.05, this.clock.getDelta()) * (this.timeScale ?? 1);
     if (this.mixer) this.mixer.update(dt);
+    if (this.form && this.form.root.visible) this.form.mixer.update(dt);
     for (const m of Object.values(this.minions)) {
       if (!m.root.visible) continue;
       m.mixer.update(dt);

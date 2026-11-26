@@ -1,6 +1,6 @@
 import * as C from './core.js?v=20261125221600';
 import './roundicons.js?v=20261126180000';
-import { Stage } from './stage.js?v=20261126180000';
+import { Stage } from './stage.js?v=20261126200000';
 import { titleOf, glowOf } from './paths.js';
 import { askFeedback, askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
 
@@ -446,7 +446,7 @@ async function fight(buildId) {
   stage.resize();
   const kind = build.kit.kind;
   const main = run.picks.main ? row(run.picks.main) : null;
-  await stage.fight(kind, !!main && main[3] === 17);
+  await stage.fight(kind, !!main && main[3] === 17, run.cls === 'DRUID' && /^cat/.test(buildId));
   const marks = res.summons.map(([summon, from, to]) => ({ summon, from, to, on: false, off: false }));
   const cat = run.cls === 'HUNTER' && !!build.kit.pet;
   await stage.prepare([...new Set(marks.map((m) => m.summon)), ...(cat ? ['cat'] : [])]);

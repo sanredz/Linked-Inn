@@ -146,6 +146,10 @@ body:has(.duelover) #sheet { z-index: 980; }
 .dto { display: flex; gap: 8px; margin: 0; }
 .dto input { flex: 1; min-width: 0; padding: 9px 12px; font: 15px "Friz", serif; color: var(--ink); background: rgba(0, 0, 0, .5); border: 1px solid var(--gold-dim); border-radius: 8px; }
 .dto input:focus { outline: none; border-color: var(--gold); }
+.dto { position: relative; }
+.dtolist { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 5; display: grid; padding: 4px; text-align: left; background: #120c07; border: 1px solid var(--gold-dim); border-radius: 8px; box-shadow: 0 10px 24px rgba(0, 0, 0, .7); }
+.dtolist button { padding: 9px 10px; font: 15px "Friz", serif; color: var(--ink); text-align: left; cursor: pointer; background: none; border: 0; border-radius: 6px; }
+.dtolist button:hover, .dtolist button.on { color: #fff; background: rgba(248, 211, 107, .14); }
 .dtomsg { display: block; margin: 6px 0 0; font: 13px "Friz", serif; color: var(--muted); }
 .dtomsg b { font-weight: normal; color: var(--gold); }
 .dor { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; font: 11px "Friz", serif; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }

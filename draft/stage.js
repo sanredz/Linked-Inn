@@ -374,13 +374,17 @@ export class Stage {
       g.frustumCulled = false;
       m.add(g);
     }
+    this.shineLoop();
+  }
+
+  shineLoop() {
     if (!this.shineOn) {
       this.shineOn = true;
       const at = new THREE.Vector3();
       this.fx.push((dt) => {
-        this.shineT.value += dt;
         const glow = this.glowFx;
-        if (!glow) { this.shineOn = false; return true; }
+        if (!glow || dt >= 99) { this.shineOn = false; return true; }
+        this.shineT.value += dt;
         const style = ENCHANT[glow.fx];
         if (this.shinePulse) this.shinePulse.opacity = .45 + .55 * (.5 + .5 * Math.sin(this.shineT.value * 3.4));
         const pool = [];
@@ -634,6 +638,7 @@ export class Stage {
     }
     for (const p of this.parts) { this.scene.remove(p.s); this.spares.push(p.s); }
     this.parts = [];
+    if (this.glowFx && this.shineT) this.shineLoop();
   }
 
   reset() {

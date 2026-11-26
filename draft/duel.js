@@ -321,8 +321,10 @@ function waiting(d) {
     ${navigator.share ? '<button class="rforge" type="button" data-share><span>Share the link</span></button>' : ''}<small class="dfine">${d.to ? 'Only they can answer it.' : 'Anyone with the link can answer.'} You will see the result here and on the home page.</small><button class="ddel" type="button" data-del>Delete this challenge</button><p class="dmsg" role="status"></p></div>`, 'sent');
   bindDelete(el, d);
   const form = el.querySelector('.dto'), msg = el.querySelector('.dtomsg');
+  const list = suggest(form.querySelector('input'));
   form.onsubmit = async (e) => {
     e.preventDefault();
+    if (list.pick()) return;
     const to = form.querySelector('input').value.trim();
     if (!to) return;
     form.querySelector('button').disabled = true;
@@ -340,6 +342,34 @@ function waiting(d) {
   el.querySelector('[data-copy]').onclick = async (e) => { try { await navigator.clipboard.writeText(share); e.target.textContent = 'Copied'; } catch { e.target.textContent = 'Copy failed'; } setTimeout(() => { e.target.textContent = 'Copy'; }, 1600); };
   const sh = el.querySelector('[data-share]');
   if (sh) sh.onclick = () => navigator.share({ title: 'A challenge at the Inn', text: `${MODES[d.mode].name}: can you out-draft me?`, url: share }).catch(() => {});
+}
+
+function suggest(input) {
+  const box = document.createElement('div');
+  box.className = 'dtolist';
+  box.hidden = true;
+  input.after(box);
+  let at = -1, ask = 0, timer = 0;
+  const show = (names) => {
+    at = -1;
+    box.innerHTML = names.map((n) => `<button type="button" tabindex="-1">${esc(n)}</button>`).join('');
+    box.hidden = !names.length || (names.length === 1 && names[0].toLowerCase() === input.value.trim().toLowerCase());
+    for (const b of box.children) b.onmousedown = (e) => { e.preventDefault(); input.value = b.textContent; box.hidden = true; };
+  };
+  const mark = () => { [...box.children].forEach((b, i) => b.classList.toggle('on', i === at)); };
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = input.value.trim(), me = ++ask;
+    if (!q) return show([]);
+    timer = setTimeout(() => api('/duel/who', { q }).then((r) => { if (me === ask) show(r.names || []); }, () => {}), 150);
+  });
+  input.addEventListener('keydown', (e) => {
+    if (box.hidden) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = box.children.length; at = e.key === 'ArrowDown' ? (at + 1 >= n ? -1 : at + 1) : (at < 0 ? n - 1 : at - 1); mark(); }
+    if (e.key === 'Escape') { e.stopPropagation(); box.hidden = true; }
+  });
+  input.addEventListener('blur', () => { box.hidden = true; });
+  return { pick: () => { if (box.hidden || at < 0) return false; input.value = box.children[at].textContent; box.hidden = true; return true; } };
 }
 
 function splitHtml(d, me) {

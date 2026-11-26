@@ -1,5 +1,6 @@
 import * as C from './core.js?v=20261125221600';
-import { Stage } from './stage.js?v=20261123145643';
+import './roundicons.js?v=20261126180000';
+import { Stage } from './stage.js?v=20261126180000';
 import { titleOf, glowOf } from './paths.js';
 import { askFeedback, askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
 
@@ -49,7 +50,7 @@ let sharedRows = [], sharedOpen = 0, replayRun = null, replayStep = 0, replayBac
 let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true, duelCtx = null, duelMod = null, duelWait = /^#duel=/.test(location.hash) ? Date.now() + 15000 : 0;
 const duelBusy = () => !!document.querySelector('.duelover') || (duelCtx ? ['draft', 'talents', 'fight'].includes(document.body.dataset.view) : Date.now() < duelWait);
 const duelDone = () => new Promise((r) => { const t = () => (duelBusy() ? setTimeout(t, 800) : r()); t(); });
-const duelLib = () => (duelMod ||= import('./duel.js?v=20261126140000'));
+const duelLib = () => (duelMod ||= import('./duel.js?v=20261126180000'));
 
 const row = (id) => pool.items[id] || retired[id];
 const taltip = (id, build) => {

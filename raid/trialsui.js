@@ -1,9 +1,9 @@
-import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127170000';
-import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127170000';
-import { TREES } from './dream.js?v=20261127170000';
-import { TWIST } from './daily.js?v=20261127170000';
-import { dreamCss, vision } from './dreamfx.js?v=20261127170000';
-import { audio, bell, boom } from './wloot.js?v=20261127170000';
+import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127173000';
+import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127173000';
+import { TREES } from './dream.js?v=20261127173000';
+import { TWIST } from './daily.js?v=20261127173000';
+import { dreamCss, vision } from './dreamfx.js?v=20261127173000';
+import { audio, bell, boom } from './wloot.js?v=20261127173000';
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const QUALITY = ['#9d9d9d', '#ffffff', '#1eff00', '#0070dd', '#a335ee', '#ff8000'];
@@ -50,7 +50,7 @@ export async function openTrial(tree, ctx) {
   requestAnimationFrame(() => box.classList.add('on'));
   const panel = box.querySelector('.dtpanel');
   const close = () => { document.documentElement.style.overflow = scrollWas; removeEventListener('keydown', onKey); box.classList.remove('on'); setTimeout(() => box.remove(), 400); if ((done || daily) && ctx.after) ctx.after(done); };
-  const onKey = (e) => { if (e.key === 'Escape' && !busy) close(); };
+  const onKey = (e) => { const pop = box.querySelector('.dtrevpop'); if (pop) { if ((e.key === 'Escape' || e.key === 'Enter') && !pop.querySelector('.dtrevok').disabled) { e.preventDefault(); pop.querySelector('.dtrevok').click(); } return; } if (e.key === 'Escape' && !busy) close(); };
   addEventListener('keydown', onKey);
   const head = () => `<header class="dthead"><img src="assets/icons/${info.icon}.png" alt=""><div><small>${daily ? `Daily Draft · Day ${daily.day - daily.epoch + 1}${cls ? ` · ${CLASS_NAME[cls]}` : ''}` : `${esc(info.mode)} · ${esc(info.name)}, ${esc(info.zone)}`}</small><b>${esc(T.name)}</b></div><button type="button" class="dtx" aria-label="Close">&times;</button></header>`;
   const bind = () => { const x = panel.querySelector('.dtx'); if (x) x.onclick = () => { if (!busy) close(); }; };
@@ -258,7 +258,7 @@ export async function openTrial(tree, ctx) {
     if (last && last.redream) { const c = panel.querySelector('.dthero:not(.shade) .hv.fresh'); if (c) c.classList.add('redreamed'); }
     const rv = panel.querySelector('.dtreveal');
     if (rv) {
-      if (!last.shown) { last.shown = 1; const r = rv.getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) rv.scrollIntoView({ block: 'center', behavior: reduced() ? 'auto' : 'smooth' }); }
+      if (!last.shown) { last.shown = 1; const r = rv.getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) rv.scrollIntoView({ block: 'center', behavior: reduced() ? 'auto' : 'smooth' }); revealPop(revId); }
       rv.querySelector('[data-revx]').onclick = () => { last.hide = 1; rv.classList.add('gone'); setTimeout(() => rv.remove(), 220); };
     }
     const rb = panel.querySelector('[data-redream]');
@@ -331,7 +331,23 @@ export async function openTrial(tree, ctx) {
     last = { slot: to || slot, grew: r.grew, shade: r.shade };
     roll = true;
     chime(r.grew ? 'grow' : 'keep');
-    if (finished(run) && !(run.rule === 'veil' && redreamOf(pool, run))) finish(); else draw();
+    if (finished(run) && run.rule !== 'veil') finish(); else draw();
+  }
+
+  function revealPop(id) {
+    const old = box.querySelector('.dtrevpop');
+    if (old) old.remove();
+    const it = pool.items[id], q = QUALITY[it[1]], lines = stats(id).slice(0, 4).map(([k, v]) => `<li>+${v}${PCT.has(k) ? '%' : ''} ${statName(k)}</li>`).join('');
+    const pop = document.createElement('div');
+    pop.className = 'dtrevpop';
+    pop.style.setProperty('--q', q);
+    pop.innerHTML = `<div class="dtrevbox" role="dialog" aria-label="Revealed item"><small>${last.redream ? `The Dream reshaped your ${NAME[last.redream.slot]}` : `The mist parts · your ${NAME[last.slot]}`}</small><button type="button" class="dtrevbig" data-item="${id}"><img src="assets/icons/${it[4]}.png" alt=""></button><b style="color:${q}">${esc(it[0])}</b><span class="dtrevmeta">${RARE[it[1]]} · item level ${it[2]}</span>${lines ? `<ul>${lines}</ul>` : ''}<button type="button" class="dtrevok" disabled>Walk on</button><span class="dtrevtip">Tap the item for its full tooltip</span></div>`;
+    box.append(pop);
+    const ok = pop.querySelector('.dtrevok');
+    const shut = () => { if (ok.disabled) return; pop.classList.add('out'); setTimeout(() => pop.remove(), 260); };
+    setTimeout(() => { ok.disabled = false; }, reduced() ? 0 : 750);
+    ok.onclick = shut;
+    pop.onclick = (e) => { if (e.target === pop) shut(); };
   }
 
   function redream() {

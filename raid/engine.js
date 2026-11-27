@@ -1,5 +1,5 @@
-import { rng, hash, FIGHT, BUILDS } from '../draft/core.js?v=20261127170000';
-import { SCALE } from './bosses.js?v=20261127170000';
+import { rng, hash, FIGHT, BUILDS } from '../draft/core.js?v=20261127173000';
+import { SCALE } from './bosses.js?v=20261127173000';
 
 const STEP = .1, MAX_TIME = 420, DUMMY_ARMOR = 3731, ARMOR_K = 400 + 85 * 60, CRUSH = 15, DUMMY_RESIST = .94, SWAP = .7, STAND_DAMAGE = .8, STAND_AVOID = .1, STAND_AGILE = .25, STAND_TAKEN = .85, FALLEN_BASE = 1.5, FALLEN_RAMP = .3;
 const CAST_SPELLS = new Set(Object.values(BUILDS).flat().flatMap((b) => b.kit.abilities.filter((a) => a.cast).map((a) => a.n)));

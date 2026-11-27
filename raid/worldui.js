@@ -1,19 +1,19 @@
-import { titleOf } from '../draft/paths.js?v=20261127170000';
-import { variance, WORLD, SLOTS, newWorld, addHero, gearOffers, handsFor, takeGear, mulligan, worldParty, pullWorld, dayOf, resetAt, dropsOf } from './world.js?v=20261127170000';
-import * as W from './world.js?v=20261127170000';
-import { ROLES, ROLE_NAME, CLASS_NAME, classesFor, specsFor } from './run.js?v=20261127170000';
-import { BONUS, choiceOf, partyBonuses, stacks } from './roles.js?v=20261127170000';
-import { bossHealth, explain, fight } from './engine.js?v=20261127170000';
-import { resultHtml } from '../pvp/arena.js?v=20261127170000';
-import { CLASS_COLOR, TIER_NAME } from '../draft/core.js?v=20261127170000';
-import { walkout } from './wloot.js?v=20261127170000';
-import { KEY as DARK_KEY } from './worldloot.js?v=20261127170000';
-import { PIECES, LIGHT, WHISPERS, CHANCE } from './attune.js?v=20261127170000';
-import { breakSeals, whisper, whisperSeen } from './seals.js?v=20261127170000';
-import { CONSUMABLE, TIERS } from './consumables.js?v=20261127170000';
-import { openSatchel, openDropList, setOpen } from './satchel.js?v=20261127170000';
-import { DRAGONS, DRAGON_IDS, dragonOf, TREES, VISIONS } from './dream.js?v=20261127170000';
-import { dreamCss, summonDragon, enterDream, vision, visionSeen } from './dreamfx.js?v=20261127170000';
+import { titleOf } from '../draft/paths.js?v=20261127173000';
+import { variance, WORLD, SLOTS, newWorld, addHero, gearOffers, handsFor, takeGear, mulligan, worldParty, pullWorld, dayOf, resetAt, dropsOf } from './world.js?v=20261127173000';
+import * as W from './world.js?v=20261127173000';
+import { ROLES, ROLE_NAME, CLASS_NAME, classesFor, specsFor } from './run.js?v=20261127173000';
+import { BONUS, choiceOf, partyBonuses, stacks } from './roles.js?v=20261127173000';
+import { bossHealth, explain, fight } from './engine.js?v=20261127173000';
+import { resultHtml } from '../pvp/arena.js?v=20261127173000';
+import { CLASS_COLOR, TIER_NAME } from '../draft/core.js?v=20261127173000';
+import { walkout } from './wloot.js?v=20261127173000';
+import { KEY as DARK_KEY } from './worldloot.js?v=20261127173000';
+import { PIECES, LIGHT, WHISPERS, CHANCE } from './attune.js?v=20261127173000';
+import { breakSeals, whisper, whisperSeen } from './seals.js?v=20261127173000';
+import { CONSUMABLE, TIERS } from './consumables.js?v=20261127173000';
+import { openSatchel, openDropList, setOpen } from './satchel.js?v=20261127173000';
+import { DRAGONS, DRAGON_IDS, dragonOf, TREES, VISIONS } from './dream.js?v=20261127173000';
+import { dreamCss, summonDragon, enterDream, vision, visionSeen } from './dreamfx.js?v=20261127173000';
 
 const PREVIEW = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || /^(life-preview|azeroth-preview)\./.test(location.hostname);
 const PRETEND = PREVIEW ? new URLSearchParams(location.search).get('seals') : null;
@@ -40,8 +40,8 @@ const RES_NAME = { shadow: 'Shadow res', nature: 'Nature res', arcane: 'Arcane r
 
 export function makeWorld(ctx) {
   const { root, scene, pool, API } = ctx;
-  if (!document.querySelector('link[href*="raid/world.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/world.css?v=20261127170000">');
-  if (!document.querySelector('link[href*="raid/satchel.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/satchel.css?v=20261127170000">');
+  if (!document.querySelector('link[href*="raid/world.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/world.css?v=20261127173000">');
+  if (!document.querySelector('link[href*="raid/satchel.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/satchel.css?v=20261127173000">');
   dreamCss();
   let rolled = '', fresh = '', justTook = '', run = null, status = {}, chosenCls = '', chosenSpec = '', chosenPick = '', viewing = 0, hands = '', busy = false, verdict = null, pulled = null, error = '', shownRole = -1, board = null, pasts = [], pastResult = null, pastMine = [], pastAll = null, pastScope = 'mine';
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -518,7 +518,7 @@ export function makeWorld(ctx) {
     }).join('')}</ul>`;
   }
 
-  const openInn = (id) => import('../draft/hearth.js?v=20261127170000').then((m) => m.openInn(id)).catch(() => {});
+  const openInn = (id) => import('../draft/hearth.js?v=20261127173000').then((m) => m.openInn(id)).catch(() => {});
 
   function toOver() {
     run.step = 'over';
@@ -679,7 +679,7 @@ export function makeWorld(ctx) {
     await refresh(id);
   }
 
-  const trial = (tree) => import('./trialsui.js?v=20261127170000').then((m) => m.openTrial(tree, { API, who: ctx.who, attune: () => status.dream && status.dream.attune, after: (a) => { if (a && status.dream) status.dream.attune = a; ctx.redraw(); } }));
+  const trial = (tree) => import('./trialsui.js?v=20261127173000').then((m) => m.openTrial(tree, { API, who: ctx.who, attune: () => status.dream && status.dream.attune, after: (a) => { if (a && status.dream) status.dream.attune = a; ctx.redraw(); } }));
   const dropList = () => openDropList((status.dream || status.kazzak || {}).satchel || {});
   return { cardHtml, dropList, trial, begin, past: openPast, useKey: (id) => begin(id, 'key'), reset: resetLock, seal: sealAct, attune: (id = 'kazzak') => (status[id] && status[id].attune) || null, active: () => !!run, render, showHero, loadBoard, boardHtml, refresh, resume: () => { const s = load(); if (s) { run = s; afterLoad(); } } };
 }

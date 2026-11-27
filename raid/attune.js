@@ -1,5 +1,5 @@
-import { hash, rng } from '../draft/core.js?v=20261127153000';
-import { RAIDS } from './bosses.js?v=20261127153000';
+import { hash, rng } from '../draft/core.js?v=20261127163000';
+import { RAIDS } from './bosses.js?v=20261127163000';
 
 export const ATTUNE_BOSS = 'kazzak';
 export const CHANCE = .25;

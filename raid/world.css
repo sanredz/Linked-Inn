@@ -513,3 +513,16 @@ body[data-view="raid"]:has(#sheet:not([hidden])) .chatfab { display: none; }
 .rpickhead .wrest li > small { text-transform: uppercase; letter-spacing: .14em; }
 .rpickhead .wrest { max-width: 640px; margin: 0 auto 10px; }
 @media (max-width: 760px) { body:has(.wmull:not(:disabled)) .chatfab { right: auto; left: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); } }
+.wbfoldrow { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; }
+.wbfold { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; padding: 5px 12px 5px 14px; font: 12.5px "Friz", serif; color: #d9cfb8; cursor: pointer; border: 1px solid rgba(201, 169, 97, .35); border-radius: 999px; background: rgba(0, 0, 0, .45); transition: border-color .15s ease, color .15s ease; }
+.wbfold:hover { color: #f8d36b; border-color: #c9a961; }
+.wbfold i { width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(1px) rotate(-135deg); transition: transform .2s ease; }
+.folded .wbfold i { transform: translateY(-2px) rotate(45deg); }
+.wbmore { display: grid; gap: 10px; animation: wbopen .3s ease; }
+.wbcard.folded { min-height: 0; padding-top: 14px; padding-bottom: 14px; }
+.wbcard.folded .wbmore, .rcons.folded .rconsrow { display: none; }
+.wbcard.folded .wbname, .wbcard.folded .dbsleep { font-size: 26px; }
+@keyframes wbopen { from { opacity: 0; transform: translateY(-4px); } }
+.rconshead .wbfold { align-self: center; }
+@media (max-width: 640px) { .wbfold { margin-left: 0; } .rconshead { flex-wrap: wrap; } .rconshead .wbfold { margin-left: auto; } }
+@media (prefers-reduced-motion: reduce) { .wbmore { animation: none; } }

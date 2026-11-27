@@ -1,22 +1,22 @@
-import { MILESTONES, RAIDS, tierOf } from './bosses.js?v=20261127153000';
-import { titleOf } from '../draft/paths.js?v=20261127153000';
-import { BONUS, choiceOf, makeParty, partyBonuses, stacks } from './roles.js?v=20261127153000';
-import { bossHealth, enrageTime, explain, fight } from './engine.js?v=20261127153000';
-import { boonById } from './boons.js?v=20261127153000';
-import { RaidScene } from './scene.js?v=20261127153000';
-import { resultHtml } from '../pvp/arena.js?v=20261127153000';
-import { CLASS_COLOR } from '../draft/core.js?v=20261127153000';
-import { bindName, heroName, nameField, nameOk } from '../pvp/name.js?v=20261127153000';
+import { MILESTONES, RAIDS, tierOf } from './bosses.js?v=20261127163000';
+import { titleOf } from '../draft/paths.js?v=20261127163000';
+import { BONUS, choiceOf, makeParty, partyBonuses, stacks } from './roles.js?v=20261127163000';
+import { bossHealth, enrageTime, explain, fight } from './engine.js?v=20261127163000';
+import { boonById } from './boons.js?v=20261127163000';
+import { RaidScene } from './scene.js?v=20261127163000';
+import { resultHtml } from '../pvp/arena.js?v=20261127163000';
+import { CLASS_COLOR } from '../draft/core.js?v=20261127163000';
+import { bindName, heroName, nameField, nameOk } from '../pvp/name.js?v=20261127163000';
 import { goalsHtml, loadWar } from '../gates.js?v=20261123145643';
-import { shouldShow, playOpening } from './aqopen.js?v=20261127153000';
-import { makeWorld } from './worldui.js?v=20261127153000';
-import { WORLD } from './world.js?v=20261127153000';
-import { PIECES, LIGHT, earned } from './attune.js?v=20261127153000';
-import { walkout } from './wloot.js?v=20261127153000';
-import { consumeDrops, TIERS as CTIERS, CONSUMABLES } from './consumables.js?v=20261127153000';
-import { dropsIn, dropBosses, setOpen, known } from './satchel.js?v=20261127153000';
-import { LOOT as WLOOT, KEY as WKEY } from './worldloot.js?v=20261127153000';
-import { HEROIC, CLASS_NAME, DRAFT_PICKS, FORGE, INGOT, INGOTS, SCEPTER, SHARDS, collect, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, receivers, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js?v=20261127153000';
+import { shouldShow, playOpening } from './aqopen.js?v=20261127163000';
+import { makeWorld } from './worldui.js?v=20261127163000';
+import { WORLD } from './world.js?v=20261127163000';
+import { PIECES, LIGHT, earned } from './attune.js?v=20261127163000';
+import { walkout } from './wloot.js?v=20261127163000';
+import { consumeDrops, TIERS as CTIERS, CONSUMABLES } from './consumables.js?v=20261127163000';
+import { dropsIn, dropBosses, setOpen, known } from './satchel.js?v=20261127163000';
+import { LOOT as WLOOT, KEY as WKEY } from './worldloot.js?v=20261127163000';
+import { HEROIC, CLASS_NAME, DRAFT_PICKS, FORGE, INGOT, INGOTS, SCEPTER, SHARDS, collect, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, receivers, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js?v=20261127163000';
 
 const KEY = 'raidRun', WHO = 'gauntletWho';
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
@@ -310,7 +310,7 @@ function sealDemo() {
 
 function gongFirst() {
   openingShown = true;
-  if (!document.querySelector('link[href$="aqopen.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/aqopen.css">');
+  if (!document.querySelector('link[href$="aqopen.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/aqopen.css?v=20261127163000">');
   playOpening(war, { onEnter: () => begin('aq20') });
 }
 
@@ -318,8 +318,24 @@ function maybeOpening() {
   const forced = new URLSearchParams(location.search).has('aqopen');
   if (openingShown || !root || !warDone || !forced) return;
   openingShown = true;
-  if (!document.querySelector('link[href$="aqopen.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/aqopen.css">');
+  if (!document.querySelector('link[href$="aqopen.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/aqopen.css?v=20261127163000">');
   setTimeout(() => playOpening(war || { goals: [] }, { onEnter: () => { const b = root && root.querySelector('[data-act="begin"][data-raid="aq20"]'); if (b) b.click(); } }), 500);
+}
+
+const foldOf = (k, def) => { try { const v = localStorage.getItem(`fold:${k}`); return v === null ? def : v === '1'; } catch { return def; } };
+if (!window.foldWired) {
+  window.foldWired = 1;
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('[data-fold]');
+    if (!b) return;
+    e.stopPropagation();
+    const box = b.closest('[data-foldbox]');
+    if (!box) return;
+    const on = box.classList.toggle('folded'), what = b.dataset.what || (b.dataset.fold === 'dream' ? 'the trees' : 'the seals'), label = b.querySelector('span');
+    if (label) label.textContent = `${on ? 'Show' : 'Hide'} ${what}`;
+    b.setAttribute('aria-expanded', String(!on));
+    try { localStorage.setItem(`fold:${b.dataset.fold}`, on ? '1' : '0'); } catch {}
+  }, true);
 }
 
 function introHtml() {
@@ -328,7 +344,8 @@ function introHtml() {
   const soon = SOON().map(([id, name]) => `<div class="rraid soon ${id}" aria-disabled="true"><i class="rraidart" style="background-image:url(assets/draft/arena/raid-${id}.jpg)"></i><div class="rraidsay"><h3>${name}</h3>${RAIDS[id] ? `<span class="rraidtext">${RAIDS[id].blurb}</span>` : ''}${war && war.raid === id ? `<div class="rsoon"><small>The gates open when all three are reached</small>${goalsHtml(war.goals)}</div>` : '<p>Coming soon</p>'}${(TEST || (war && war.early)) && RAIDS[id] ? `<button class="gmini rearly" data-act="begin" data-raid="${id}">Play early (test only)</button>` : ''}</div></div>`).join('');
   const bosses = world ? `<div class="wbsection"><h3 class="wbtitle"><span>World Bosses</span><small>One attempt a day · full gear draft · rare collectibles · raid consumables</small></h3>${world.cardHtml()}</div>` : '';
   setOpen({ any: unsealed(), dream: forgedOf('dream') });
-  const cons = `<h3 class="rconshead">Raid consumables<small>${unsealed() ? 'rare drops for World Boss fights' : 'start dropping once you free a world boss'}</small></h3><div class="rconsrow">${['mc', 'zg', 'aq20'].map((r) => `<div class="rconsraid"><small>${esc(RAIDS[r].name)}</small><span>${dropsIn(r).map(({ c, at }) => (known(c) ? `<img src="assets/icons/${c.icon}.png" alt="${esc(c.name)}" title="${esc(`${c.name} · ${dropBosses(r, at)} · ${c.line}`)}" style="--q:${CTIERS[c.tier].color}">` : `<span class="rconsq" title="${esc(`Unknown consumable · ${dropBosses(r, at)}`)}">?</span>`)).join('')}</span></div>`).join('')}<button type="button" class="rconsgo" data-act="dreamloot">Where each one drops</button></div>`;
+  const cf = foldOf('cons', !unsealed());
+  const cons = `<div class="rcons ${cf ? 'folded' : ''}" data-foldbox><h3 class="rconshead">Raid consumables<small>${unsealed() ? 'rare drops for World Boss fights' : 'start dropping once you free a world boss'}</small><button type="button" class="wbfold" data-fold="cons" data-what="drops" aria-expanded="${!cf}"><span>${cf ? 'Show drops' : 'Hide drops'}</span><i aria-hidden="true"></i></button></h3><div class="rconsrow">${['mc', 'zg', 'aq20'].map((r) => `<div class="rconsraid"><small>${esc(RAIDS[r].name)}</small><span>${dropsIn(r).map(({ c, at }) => (known(c) ? `<img src="assets/icons/${c.icon}.png" alt="${esc(c.name)}" title="${esc(`${c.name} · ${dropBosses(r, at)} · ${c.line}`)}" style="--q:${CTIERS[c.tier].color}">` : `<span class="rconsq" title="${esc(`Unknown consumable · ${dropBosses(r, at)}`)}">?</span>`)).join('')}</span></div>`).join('')}<button type="button" class="rconsgo" data-act="dreamloot">Where each one drops</button></div></div>`;
   return `<div class="rraids">${open}${soon}</div>${cons}${saved ? '<button class="gresume" data-act="resume">Continue your run</button>' : ''}<ul class="rrules"><li>Draft a tank, a healer and a damage dealer</li><li>Each hero starts in their class Dungeon Set and gets ${DRAFT_PICKS} picks</li><li>Every boss killed drops a choice of new gear</li><li>One wipe ends the run</li></ul>${bosses}`;
 }
 

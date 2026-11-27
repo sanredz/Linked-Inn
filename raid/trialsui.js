@@ -1,9 +1,9 @@
-import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127153000';
-import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127153000';
-import { TREES } from './dream.js?v=20261127153000';
-import { TWIST } from './daily.js?v=20261127153000';
-import { dreamCss, vision } from './dreamfx.js?v=20261127153000';
-import { audio, bell, boom } from './wloot.js?v=20261127153000';
+import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127163000';
+import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127163000';
+import { TREES } from './dream.js?v=20261127163000';
+import { TWIST } from './daily.js?v=20261127163000';
+import { dreamCss, vision } from './dreamfx.js?v=20261127163000';
+import { audio, bell, boom } from './wloot.js?v=20261127163000';
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const QUALITY = ['#9d9d9d', '#ffffff', '#1eff00', '#0070dd', '#a335ee', '#ff8000'];

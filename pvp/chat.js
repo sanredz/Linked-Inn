@@ -1,6 +1,6 @@
-import { CLASS_COLOR } from '../draft/core.js?v=20261127153000';
-import { askName, nameOk } from './name.js?v=20261127153000';
-import { REWARD } from '../draft/paths.js?v=20261127153000';
+import { CLASS_COLOR } from '../draft/core.js?v=20261127163000';
+import { askName, nameOk } from './name.js?v=20261127163000';
+import { REWARD } from '../draft/paths.js?v=20261127163000';
 
 const AWAY = 180e3, ROOMS = 20, NO = { name: 'Pick a name to chat.', fast: 'Easy there, one message every few seconds.', burst: 'That is a lot of messages. Take a short breather.', repeat: 'You just said that.', empty: 'Links are not allowed in chat.', rest: 'The tavern is closed for the night. Back tomorrow.', muted: 'You are muted in chat for now.' };
 const ACTIONS = [['del', 0, 'Delete'], ['mute', 60, 'Mute 1 hour'], ['mute', 1440, 'Mute 1 day'], ['mute', 0, 'Ban and remove messages']];
@@ -35,7 +35,7 @@ function row(m) {
   if (seen.has(m.id)) return '';
   seen.add(m.id);
   const color = CLASS_COLOR[m.cls] || '#e8d5a8', self = m.name === me;
-  if (m.frame && !document.querySelector('link[href$="draft/frames.css"]')) document.head.insertAdjacentHTML('beforeend', `<link rel="stylesheet" href="${new URL('../draft/frames.css', import.meta.url).href}">`);
+  if (m.frame && !document.querySelector('link[href*="draft/frames.css"]')) document.head.insertAdjacentHTML('beforeend', `<link rel="stylesheet" href="${new URL('../draft/frames.css', import.meta.url).href}">`);
   const title = REWARD[m.title] && REWARD[m.title].kind === 'title' ? REWARD[m.title].name : '', frame = REWARD[m.frame] && REWARD[m.frame].kind === 'frame' ? REWARD[m.frame].color : '';
   return `<li class="${self ? 'me' : ''}" data-id="${m.id}">${face(m) ? `<img src="${face(m)}" alt=""${frame ? ` data-frame="${esc(m.frame)}"` : ''}>` : '<i class="noicon"></i>'}<div><b style="color:${color}">${esc(m.name)}</b>${title ? `<em class="ctitle">${esc(title)}</em>` : ''}<time>${clock(m.at)}</time><p>${esc(m.text)}</p></div>${mod ? '<button class="chatmod" aria-label="Moderate">&#8943;</button>' : ''}</li>`;
 }

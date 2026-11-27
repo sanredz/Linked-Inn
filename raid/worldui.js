@@ -1,19 +1,19 @@
-import { titleOf } from '../draft/paths.js?v=20261127153000';
-import { variance, WORLD, SLOTS, newWorld, addHero, gearOffers, handsFor, takeGear, mulligan, worldParty, pullWorld, dayOf, resetAt, dropsOf } from './world.js?v=20261127153000';
-import * as W from './world.js?v=20261127153000';
-import { ROLES, ROLE_NAME, CLASS_NAME, classesFor, specsFor } from './run.js?v=20261127153000';
-import { BONUS, choiceOf, partyBonuses, stacks } from './roles.js?v=20261127153000';
-import { bossHealth, explain, fight } from './engine.js?v=20261127153000';
-import { resultHtml } from '../pvp/arena.js?v=20261127153000';
-import { CLASS_COLOR, TIER_NAME } from '../draft/core.js?v=20261127153000';
-import { walkout } from './wloot.js?v=20261127153000';
-import { KEY as DARK_KEY } from './worldloot.js?v=20261127153000';
-import { PIECES, LIGHT, WHISPERS, CHANCE } from './attune.js?v=20261127153000';
-import { breakSeals, whisper, whisperSeen } from './seals.js?v=20261127153000';
-import { CONSUMABLE, TIERS } from './consumables.js?v=20261127153000';
-import { openSatchel, openDropList, setOpen } from './satchel.js?v=20261127153000';
-import { DRAGONS, DRAGON_IDS, dragonOf, TREES, VISIONS } from './dream.js?v=20261127153000';
-import { dreamCss, summonDragon, enterDream, vision, visionSeen } from './dreamfx.js?v=20261127153000';
+import { titleOf } from '../draft/paths.js?v=20261127163000';
+import { variance, WORLD, SLOTS, newWorld, addHero, gearOffers, handsFor, takeGear, mulligan, worldParty, pullWorld, dayOf, resetAt, dropsOf } from './world.js?v=20261127163000';
+import * as W from './world.js?v=20261127163000';
+import { ROLES, ROLE_NAME, CLASS_NAME, classesFor, specsFor } from './run.js?v=20261127163000';
+import { BONUS, choiceOf, partyBonuses, stacks } from './roles.js?v=20261127163000';
+import { bossHealth, explain, fight } from './engine.js?v=20261127163000';
+import { resultHtml } from '../pvp/arena.js?v=20261127163000';
+import { CLASS_COLOR, TIER_NAME } from '../draft/core.js?v=20261127163000';
+import { walkout } from './wloot.js?v=20261127163000';
+import { KEY as DARK_KEY } from './worldloot.js?v=20261127163000';
+import { PIECES, LIGHT, WHISPERS, CHANCE } from './attune.js?v=20261127163000';
+import { breakSeals, whisper, whisperSeen } from './seals.js?v=20261127163000';
+import { CONSUMABLE, TIERS } from './consumables.js?v=20261127163000';
+import { openSatchel, openDropList, setOpen } from './satchel.js?v=20261127163000';
+import { DRAGONS, DRAGON_IDS, dragonOf, TREES, VISIONS } from './dream.js?v=20261127163000';
+import { dreamCss, summonDragon, enterDream, vision, visionSeen } from './dreamfx.js?v=20261127163000';
 
 const PREVIEW = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || /^(life-preview|azeroth-preview)\./.test(location.hostname);
 const PRETEND = PREVIEW ? new URLSearchParams(location.search).get('seals') : null;
@@ -40,8 +40,8 @@ const RES_NAME = { shadow: 'Shadow res', nature: 'Nature res', arcane: 'Arcane r
 
 export function makeWorld(ctx) {
   const { root, scene, pool, API } = ctx;
-  if (!document.querySelector('link[href$="raid/world.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/world.css">');
-  if (!document.querySelector('link[href$="raid/satchel.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/satchel.css">');
+  if (!document.querySelector('link[href*="raid/world.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/world.css?v=20261127163000">');
+  if (!document.querySelector('link[href*="raid/satchel.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/satchel.css?v=20261127163000">');
   dreamCss();
   let rolled = '', fresh = '', justTook = '', run = null, status = {}, chosenCls = '', chosenSpec = '', chosenPick = '', viewing = 0, hands = '', busy = false, verdict = null, pulled = null, error = '', shownRole = -1, board = null, pasts = [], pastResult = null, pastMine = [], pastAll = null, pastScope = 'mine';
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -70,6 +70,8 @@ export function makeWorld(ctx) {
   }
 
   const sealed = (id) => { const a = status[id] && status[id].attune; return a && !a.forged ? a : null; };
+  const folded = (k, def) => { try { const v = localStorage.getItem(`fold:${k}`); return v === null ? def : v === '1'; } catch { return def; } };
+  const foldBtn = (k, what, on) => `<button type="button" class="wbfold" data-fold="${k}" aria-expanded="${!on}"><span>${on ? `Show ${what}` : `Hide ${what}`}</span><i aria-hidden="true"></i></button>`;
   const SCRAMBLE = (t) => [...t].map((c, i) => (c === ' ' ? ' ' : '▒▓░▓▒'[i % 5])).join('');
   function sealedHtml(b, a) {
     const sigil = (on, icon, name, need, kind) => `<li class="wbsigil ${kind} ${on ? 'on' : ''}"><img src="assets/icons/${icon}.png" alt=""><span><b>${esc(name)}</b><small>${on ? (kind === 'piece' ? 'Found' : 'The Light answered') : esc(need)}</small></span><i aria-hidden="true">${on ? '✓' : ''}</i></li>`;
@@ -79,11 +81,12 @@ export function makeWorld(ctx) {
     const st = status[b.id] || {};
     const prev = st.early ? `<span class="wbprevs"><button class="wbprev" data-act="worldseal" data-how="stock" data-raid="${b.id}">Fill satchel (preview)</button><button class="wbprev" data-act="worldseal" data-how="grant" data-raid="${b.id}">Grant next seal (preview only)</button><button class="wbprev" data-act="worldseal" data-how="grantall" data-raid="${b.id}">Grant all</button><button class="wbprev" data-act="worldseal" data-how="reset" data-raid="${b.id}">Reset attunement</button></span>` : '';
     const note = a.pretend ? '<span class="wbpretend">Preview pretend mode: nothing is saved</span>' : '';
-    return `${note}<div class="wbwrap"><div class="wbcard wbsealed ${a.ready ? 'ready' : ''}" data-raid="${b.id}"><i class="wbart" style="background-image:url(assets/draft/arena/raid-${b.id}.jpg)"></i><i class="wbfel" aria-hidden="true"></i>
+    const fold = !a.ready && folded(b.id, !a.steps);
+    return `${note}<div class="wbwrap"><div class="wbcard wbsealed ${a.ready ? 'ready' : ''} ${fold ? 'folded' : ''}" data-foldbox data-raid="${b.id}"><i class="wbart" style="background-image:url(assets/draft/arena/raid-${b.id}.jpg)"></i><i class="wbfel" aria-hidden="true"></i>
       <span class="wbsay"><small class="wbkick">World Boss · Sealed</small><b class="wbname wbglitch" data-text="${esc(SCRAMBLE(b.name))}" aria-label="A sealed world boss">${esc(SCRAMBLE(b.name))}</b><span class="wbwhis">“${esc(said)}”</span>
-      <span class="wbprog"><b>${a.steps}</b> of 6 seals broken</span>
-      <ul class="wbsigils">${pieces}${light}</ul>
-      ${a.ready ? `<button class="wbbreak" data-act="worldforge" data-raid="${b.id}">Break the seals</button>` : '<span class="wbhint">Quest pieces drop from the final boss of each raid. The Light trials need three Paladins. Once he is free, rare raid consumables help you fight him.</span>'}</span></div>${prev}</div>`;
+      <span class="wbfoldrow"><span class="wbprog"><b>${a.steps}</b> of 6 seals broken</span>${a.ready ? '' : foldBtn(b.id, 'the seals', fold)}</span>
+      <span class="wbmore"><ul class="wbsigils">${pieces}${light}</ul>
+      ${a.ready ? `<button class="wbbreak" data-act="worldforge" data-raid="${b.id}">Break the seals</button>` : '<span class="wbhint">Quest pieces drop from the final boss of each raid. The Light trials need three Paladins. Once he is free, rare raid consumables help you fight him.</span>'}</span></span></div>${prev}</div>`;
   }
 
   async function sealAct(id, how) {
@@ -134,11 +137,12 @@ export function makeWorld(ctx) {
     const said = a.steps ? VISIONS[Math.min(VISIONS.length, a.steps) - 1] : 'Somewhere in the Emerald Dream, four of Ysera\'s chosen have stopped answering.';
     const prev = st.early ? `<span class="wbprevs"><button class="wbprev" data-act="worldseal" data-how="grant" data-raid="${b.id}">Wake next tree (preview only)</button><button class="wbprev" data-act="worldseal" data-how="grantall" data-raid="${b.id}">Wake all</button><button class="wbprev" data-act="worldseal" data-how="reset" data-raid="${b.id}">Reset trees</button></span>` : '';
     const note = a.pretend ? '<span class="wbpretend">Preview pretend mode: nothing is saved</span>' : '';
-    return `${note}<div class="wbwrap"><div class="wbcard wbsealed dreamseal ${a.ready ? 'ready' : ''}" data-raid="${b.id}"><i class="wbart" style="background-image:url(assets/draft/arena/raid-${b.id}.jpg)"></i><i class="dbmist" aria-hidden="true"></i>
+    const fold = !a.ready && folded(b.id, !a.steps && !(a.echo && Object.values(a.echo).some(Boolean)));
+    return `${note}<div class="wbwrap"><div class="wbcard wbsealed dreamseal ${a.ready ? 'ready' : ''} ${fold ? 'folded' : ''}" data-foldbox data-raid="${b.id}"><i class="wbart" style="background-image:url(assets/draft/arena/raid-${b.id}.jpg)"></i><i class="dbmist" aria-hidden="true"></i>
       <span class="wbsay"><small class="wbkick">World Boss · The Emerald Dream</small><b class="dbsleep">The Great Trees sleep</b><span class="dbvis">“${esc(said)}”</span>
-      <span class="dbprog"><b>${a.steps}</b> of ${TREES.length} Great Trees awake</span>
-      <div class="dbmap">${TREES.map(cell).join('')}<div class="dbheart" aria-hidden="true" style="--p:${a.steps / TREES.length}"><svg viewBox="0 0 100 100" preserveAspectRatio="none">${roots}</svg><i class="dbcore"></i></div></div>
-      ${a.ready ? `<button class="wbbreak dbenter" data-act="worldforge" data-raid="${b.id}">Enter the Dream</button>` : '<span class="dbhint">Each Great Tree is guarded by a Dream Trial: a Gear Draft with a twist and a DPS mark for your class. Walk them in order, as often as you like.</span>'}</span></div>${prev}</div>`;
+      <span class="wbfoldrow"><span class="dbprog"><b>${a.steps}</b> of ${TREES.length} Great Trees awake</span>${a.ready ? '' : foldBtn(b.id, 'the trees', fold)}</span>
+      <span class="wbmore"><div class="dbmap">${TREES.map(cell).join('')}<div class="dbheart" aria-hidden="true" style="--p:${a.steps / TREES.length}"><svg viewBox="0 0 100 100" preserveAspectRatio="none">${roots}</svg><i class="dbcore"></i></div></div>
+      ${a.ready ? `<button class="wbbreak dbenter" data-act="worldforge" data-raid="${b.id}">Enter the Dream</button>` : '<span class="dbhint">Each Great Tree is guarded by a Dream Trial: a Gear Draft with a twist and a DPS mark for your class. Walk them in order, as often as you like.</span>'}</span></span></div>${prev}</div>`;
   }
 
   function dreamCardHtml(b) {
@@ -514,7 +518,7 @@ export function makeWorld(ctx) {
     }).join('')}</ul>`;
   }
 
-  const openInn = (id) => import('../draft/hearth.js?v=20261127153000').then((m) => m.openInn(id)).catch(() => {});
+  const openInn = (id) => import('../draft/hearth.js?v=20261127163000').then((m) => m.openInn(id)).catch(() => {});
 
   function toOver() {
     run.step = 'over';
@@ -675,7 +679,7 @@ export function makeWorld(ctx) {
     await refresh(id);
   }
 
-  const trial = (tree) => import('./trialsui.js?v=20261127153000').then((m) => m.openTrial(tree, { API, who: ctx.who, attune: () => status.dream && status.dream.attune, after: (a) => { if (a && status.dream) status.dream.attune = a; ctx.redraw(); } }));
+  const trial = (tree) => import('./trialsui.js?v=20261127163000').then((m) => m.openTrial(tree, { API, who: ctx.who, attune: () => status.dream && status.dream.attune, after: (a) => { if (a && status.dream) status.dream.attune = a; ctx.redraw(); } }));
   const dropList = () => openDropList((status.dream || status.kazzak || {}).satchel || {});
   return { cardHtml, dropList, trial, begin, past: openPast, useKey: (id) => begin(id, 'key'), reset: resetLock, seal: sealAct, attune: (id = 'kazzak') => (status[id] && status[id].attune) || null, active: () => !!run, render, showHero, loadBoard, boardHtml, refresh, resume: () => { const s = load(); if (s) { run = s; afterLoad(); } } };
 }

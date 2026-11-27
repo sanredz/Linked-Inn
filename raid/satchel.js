@@ -1,5 +1,5 @@
-import { CONSUMABLES, CONSUMABLE, TIERS, SOURCES, CAP, fits, whyNot } from './consumables.js?v=20261127153000';
-import { RAIDS } from './bosses.js?v=20261127153000';
+import { CONSUMABLES, CONSUMABLE, TIERS, SOURCES, CAP, fits, whyNot } from './consumables.js?v=20261127163000';
+import { RAIDS } from './bosses.js?v=20261127163000';
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const SLOTS = 20;
@@ -11,7 +11,7 @@ export const mysteryIcon = (cls = 'consq') => `<span class="${cls}" aria-hidden=
 const CLASS = { WARRIOR: 'Warrior', PALADIN: 'Paladin', HUNTER: 'Hunter', ROGUE: 'Rogue', PRIEST: 'Priest', SHAMAN: 'Shaman', MAGE: 'Mage', WARLOCK: 'Warlock', DRUID: 'Druid' };
 
 export function satchelCss() {
-  if (!document.querySelector('link[href$="raid/satchel.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/satchel.css">');
+  if (!document.querySelector('link[href*="raid/satchel.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/satchel.css?v=20261127163000">');
 }
 
 const whereFrom = (c) => {
@@ -50,7 +50,7 @@ const where = (c) => {
 
 export function openDropList(have = {}, opts = {}) {
   satchelCss();
-  if (!document.querySelector('link[href$="raid/dream.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/dream.css">');
+  if (!document.querySelector('link[href*="raid/dream.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/dream.css?v=20261127163000">');
   const chance = (c) => (c.src ? 'rare' : c.tier === 'minor' ? 'rare' : c.tier === 'major' ? 'rare' : 'very rare');
   const row = (r) => ({ c, at }) => (!known(c, have) ? `<li class="mystery">${mysteryIcon()}<span><i class="dlboss">${esc(dropBosses(r, at))} · ${chance(c)}</i><b>Unknown consumable</b><small>${esc(hint(c))}</small></span><em></em></li>` : `<li style="--q:${TIERS[c.tier].color}"><img src="assets/icons/${c.icon}.png" alt=""><span><i class="dlboss">${esc(dropBosses(r, at))} · ${chance(c)}</i><b>${esc(c.name)}</b><small>${esc(c.line)}</small></span><em class="${have[c.id] ? 'has' : ''}">${have[c.id] ? `${have[c.id]} held` : ''}</em></li>`);
   const groups = Object.keys(LIST_NAME).filter((r) => !opts.raid || r === opts.raid).map((r) => [`${LIST_NAME[r]}<small>drops once a world boss is freed</small>`, dropsIn(r).map(row(r))]);

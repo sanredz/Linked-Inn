@@ -1,4 +1,4 @@
-import { hash, rng } from '../draft/core.js?v=20261127153000';
+import { hash, rng } from '../draft/core.js?v=20261127163000';
 
 const NATURE = 'nature', SHADOW = 'shadow', ARCANE = 'arcane', PHYS = 'phys';
 

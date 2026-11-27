@@ -1,5 +1,5 @@
-import { bannerThumb, loadEmblems } from './banners.js?v=20261127180000';
-import { PATHS, PATH, REWARDS, REWARD, POINTS, TIER_COLOR, RANKS, RENOWN_MAX, REWARD_MOUNT, rewardFor } from './paths.js?v=20261127180000';
+import { bannerThumb, loadEmblems } from './banners.js?v=20261127183000';
+import { PATHS, PATH, REWARDS, REWARD, POINTS, TIER_COLOR, RANKS, RENOWN_MAX, REWARD_MOUNT, rewardFor } from './paths.js?v=20261127183000';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const num = (n) => Math.round(n || 0).toLocaleString('en-US');
@@ -8,8 +8,8 @@ const KIND = { title: 'Title', frame: 'Portrait frame', glow: 'Weapon glow', mou
 
 export function pathsCss() {
   loadEmblems();
-  if (!document.querySelector('link[href*="draft/frames.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="draft/frames.css?v=20261127180000">');
-  if (!document.querySelector('link[href*="draft/paths.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="draft/paths.css?v=20261127180000">');
+  if (!document.querySelector('link[href*="draft/frames.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="draft/frames.css?v=20261127183000">');
+  if (!document.querySelector('link[href*="draft/paths.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="draft/paths.css?v=20261127183000">');
 }
 
 const rewardsAt = (pid, rank) => REWARDS.filter((r) => r.path === pid && r.rank === rank);

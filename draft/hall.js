@@ -1,6 +1,6 @@
-import { PORTRAIT } from './feats.js?v=20261127180000';
-import { titleOf } from './paths.js?v=20261127180000';
-import { seasonOf } from './seasons.js?v=20261127180000';
+import { PORTRAIT } from './feats.js?v=20261127183000';
+import { titleOf } from './paths.js?v=20261127183000';
+import { seasonOf } from './seasons.js?v=20261127183000';
 
 const CLASSES = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];
 const CLASS_NAME = Object.fromEntries(CLASSES.map((c) => [c, c[0] + c.slice(1).toLowerCase()]));

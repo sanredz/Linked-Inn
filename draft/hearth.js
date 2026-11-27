@@ -1,13 +1,13 @@
 import * as THREE from 'three';
-import { MODES, MOUNTS, PORTRAIT, PORTRAITS, RELICS, count, forgeReady, forgeSteps, owned, usedIn } from './feats.js?v=20261127180000';
-import { askName, claimName, heroName, nameOk } from '../pvp/name.js?v=20261127180000';
-import { SEASON, SEASONS, seasonOf } from './seasons.js?v=20261127180000';
-import { honorsOf, titleHtml, honorCards, unseen, revealHonor, plaqueHtml, HONORS } from './honors.js?v=20261127180000';
-import { LOOT, KEY } from '../raid/worldloot.js?v=20261127180000';
-import { satchelHtml, bindSatchel, satchelCss, setOpen } from '../raid/satchel.js?v=20261127180000';
-import { CONSUMABLES } from '../raid/consumables.js?v=20261127180000';
-import { standing, bannerProgress, REWARDS, REWARD, REWARD_MOUNT, RENOWN_MAX, portraitNeeds, rewardFor, titleOf, glowOf } from './paths.js?v=20261127180000';
-import { pathsCss, pathsPanel, pathDetail, bindPaths, lookHtml, bindLook, frameAttr, revealPaths as revealPathsUI } from './pathsui.js?v=20261127180000';
+import { MODES, MOUNTS, PORTRAIT, PORTRAITS, RELICS, count, forgeReady, forgeSteps, owned, usedIn } from './feats.js?v=20261127183000';
+import { askName, claimName, heroName, nameOk } from '../pvp/name.js?v=20261127183000';
+import { SEASON, SEASONS, seasonOf } from './seasons.js?v=20261127183000';
+import { honorsOf, titleHtml, honorCards, unseen, revealHonor, plaqueHtml, HONORS } from './honors.js?v=20261127183000';
+import { LOOT, KEY } from '../raid/worldloot.js?v=20261127183000';
+import { satchelHtml, bindSatchel, satchelCss, setOpen } from '../raid/satchel.js?v=20261127183000';
+import { CONSUMABLES } from '../raid/consumables.js?v=20261127183000';
+import { standing, bannerProgress, REWARDS, REWARD, REWARD_MOUNT, RENOWN_MAX, portraitNeeds, rewardFor, titleOf, glowOf } from './paths.js?v=20261127183000';
+import { pathsCss, pathsPanel, pathDetail, bindPaths, lookHtml, bindLook, frameAttr, revealPaths as revealPathsUI } from './pathsui.js?v=20261127183000';
 
 const WHO = 'gauntletWho', CLASSES = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];
 const CLASS_NAME = Object.fromEntries(CLASSES.map((c) => [c, c[0] + c.slice(1).toLowerCase()]));
@@ -143,7 +143,7 @@ function innFab() {
   if (!b) {
     b = document.createElement('button');
     b.className = 'innfab';
-    b.onclick = () => import('./trophy.js?v=20261127180000').then((m) => m.openTrophyHall(trophyItems(), plaqueHtml(myHonors()), innOpts()));
+    b.onclick = () => import('./trophy.js?v=20261127183000').then((m) => m.openTrophyHall(trophyItems(), plaqueHtml(myHonors()), innOpts()));
     document.body.append(b);
   }
   const n = TROPHIES.filter((x) => has(data.stats, x)).length;
@@ -334,7 +334,7 @@ function bindBody() {
   const sat = root.querySelector('.hsatchel');
   if (sat) { satchelCss(); bindSatchel(sat, sv().satchel || {}); }
   for (const b of root.querySelectorAll('[data-inn]')) b.onclick = () => openInn(+b.dataset.inn);
-  for (const b of root.querySelectorAll('[data-trophy]')) b.onclick = () => import('./trophy.js?v=20261127180000').then((m) => m.openTrophyHall(trophyItems(), plaqueHtml(myHonors()), innOpts()));
+  for (const b of root.querySelectorAll('[data-trophy]')) b.onclick = () => import('./trophy.js?v=20261127183000').then((m) => m.openTrophyHall(trophyItems(), plaqueHtml(myHonors()), innOpts()));
   for (const b of root.querySelectorAll('[data-more]')) b.onclick = () => { expanded[b.dataset.more] = !expanded[b.dataset.more]; drawBody(); };
 }
 
@@ -475,7 +475,7 @@ export async function openInn(focus) {
   if (!ctx) return;
   try { await loadHearth(); } catch {}
   if (!data) return;
-  const m = await import('./trophy.js?v=20261127180000');
+  const m = await import('./trophy.js?v=20261127183000');
   m.openTrophyHall(trophyItems(), plaqueHtml(myHonors()), { ...innOpts(), focus });
 }
 

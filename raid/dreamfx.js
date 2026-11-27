@@ -1,5 +1,5 @@
-import { audio, bell, boom } from './wloot.js?v=20261127180000';
-import { DRAGONS, DRAGON_IDS, TREES, VISIONS, AWAKE } from './dream.js?v=20261127180000';
+import { audio, bell, boom } from './wloot.js?v=20261127183000';
+import { DRAGONS, DRAGON_IDS, TREES, VISIONS, AWAKE } from './dream.js?v=20261127183000';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -7,8 +7,8 @@ const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SEEN = 'dreamSeen';
 
 export function dreamCss() {
-  if (!document.querySelector('link[href*="raid/dream.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/dream.css?v=20261127180000">');
-  if (!document.querySelector('link[href*="raid/trials.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/trials.css?v=20261127180000">');
+  if (!document.querySelector('link[href*="raid/dream.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/dream.css?v=20261127183000">');
+  if (!document.querySelector('link[href*="raid/trials.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/trials.css?v=20261127183000">');
 }
 
 const clips = {};

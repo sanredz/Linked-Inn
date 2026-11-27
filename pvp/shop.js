@@ -1,4 +1,4 @@
-import { boonsOf } from './boons.js?v=20261127193000';
+import { boonsOf } from './boons.js?v=20261127200000';
 
 const CASTER = ['PRIEST', 'MAGE', 'WARLOCK'];
 const MANA = ['PALADIN', 'HUNTER', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];

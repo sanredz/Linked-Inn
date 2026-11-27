@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { Stage } from '../draft/stage.js?v=20261127193000';
-import { PRESETS } from './engine.js?v=20261127193000';
-import { SLOTS } from './gear.js?v=20261127193000';
-import { Scenery } from './scenery.js?v=20261127193000';
+import { Stage } from '../draft/stage.js?v=20261127200000';
+import { PRESETS } from './engine.js?v=20261127200000';
+import { SLOTS } from './gear.js?v=20261127200000';
+import { Scenery } from './scenery.js?v=20261127200000';
 
 const SCHOOL = { fire: '#ff8a3c', frost: '#8fd0ff', arcane: '#d59bff', shadow: '#b18cff', nature: '#7dff8a', holy: '#ffe680', phys: '#ffffff' };
 const TONE = { fire: 0xff7a2a, frost: 0x7fd4ff, arcane: 0xd27dff, shadow: 0x9a5cff, nature: 0x7dff8a, holy: 0xffe680 };
@@ -40,7 +40,7 @@ function runeTexture() {
 
 export const CALM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-import { boonsOf } from './boons.js?v=20261127193000';
+import { boonsOf } from './boons.js?v=20261127200000';
 
 export const resultHtml = ({ title, stats = [], note = '', extra = '', action, badge = '' }) => `<div class="bresult"><i class="brays"></i>${badge ? `<img class="bbadge" src="${badge}" alt="">` : ''}<h1>${title}</h1>${stats.length ? `<div class="bstats">${stats.map(([value, name], i) => `<span style="--i:${i}"><b>${value}</b><small>${name}</small></span>`).join('')}</div>` : ''}${note ? `<p class="bnote">${note}</p>` : ''}${extra}<button class="rforge" data-next="1"><span>${action}</span></button></div>`;
 

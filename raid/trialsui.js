@@ -1,10 +1,10 @@
-import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127193000';
-import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127193000';
-import { TREES } from './dream.js?v=20261127193000';
-import { TWIST } from './daily.js?v=20261127193000';
-import { dreamCss, vision } from './dreamfx.js?v=20261127193000';
-import { audio, bell, boom } from './wloot.js?v=20261127193000';
-import { askName, heroName, nameOk } from '../pvp/name.js?v=20261127193000';
+import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127200000';
+import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127200000';
+import { TREES } from './dream.js?v=20261127200000';
+import { TWIST } from './daily.js?v=20261127200000';
+import { dreamCss, vision } from './dreamfx.js?v=20261127200000';
+import { audio, bell, boom } from './wloot.js?v=20261127200000';
+import { askName, heroName, nameOk } from '../pvp/name.js?v=20261127200000';
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const QUALITY = ['#9d9d9d', '#ffffff', '#1eff00', '#0070dd', '#a335ee', '#ff8000'];
@@ -60,6 +60,7 @@ export async function openTrial(tree, ctx) {
   const pips = (n, of) => (of > 1 ? `<span class="dtpips" aria-label="${n} of ${of} walks">${Array.from({ length: of }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span>` : '');
 
   function intro(error = '') {
+    box.scrollTop = 0;
     if (daily) return dailyIntro(error);
     const goal = duel
       ? '<b>Draft a hero that out-damages the Shade</b><small>You both draft from the same offers, one item a round, and the Shade always chooses first. It wants the item that helps its own hero most. When both heroes are done, they fight. One mulligan.</small>'
@@ -372,6 +373,7 @@ export async function openTrial(tree, ctx) {
   const count = (el, to, dur) => new Promise((res) => { const t0 = performance.now(); const step = (now) => { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = (to * e).toFixed(1); if (p < 1) requestAnimationFrame(step); else res(); }; requestAnimationFrame(step); });
 
   async function finish() {
+    box.scrollTop = 0;
     if (daily) return dailyFinish();
     busy = true;
     const local = judge(pool, run);

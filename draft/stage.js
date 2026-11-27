@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { glowOf } from './paths.js?v=20261127193000';
+import { glowOf } from './paths.js?v=20261127200000';
 
 const ROOT = 'assets/draft/';
 const RACE = { WARRIOR: 'human', PALADIN: 'human', HUNTER: 'orc', ROGUE: 'human', PRIEST: 'human', SHAMAN: 'orc', MAGE: 'human', WARLOCK: 'human', DRUID: 'nightelf' };

@@ -1,5 +1,5 @@
-import { sheet } from '../draft/core.js?v=20261127193000';
-import { PRESETS, PLANS } from './engine.js?v=20261127193000';
+import { sheet } from '../draft/core.js?v=20261127200000';
+import { PRESETS, PLANS } from './engine.js?v=20261127200000';
 
 export const CLASSES = Object.keys(PRESETS);
 export const SLOTS = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist', 'hands', 'waist', 'legs', 'feet', 'finger1', 'finger2', 'trinket1', 'trinket2', 'main', 'off', 'ranged'];

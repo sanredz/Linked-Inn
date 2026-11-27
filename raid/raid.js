@@ -1,22 +1,22 @@
-import { MILESTONES, RAIDS, tierOf } from './bosses.js?v=20261127163000';
-import { titleOf } from '../draft/paths.js?v=20261127163000';
-import { BONUS, choiceOf, makeParty, partyBonuses, stacks } from './roles.js?v=20261127163000';
-import { bossHealth, enrageTime, explain, fight } from './engine.js?v=20261127163000';
-import { boonById } from './boons.js?v=20261127163000';
-import { RaidScene } from './scene.js?v=20261127163000';
-import { resultHtml } from '../pvp/arena.js?v=20261127163000';
-import { CLASS_COLOR } from '../draft/core.js?v=20261127163000';
-import { bindName, heroName, nameField, nameOk } from '../pvp/name.js?v=20261127163000';
+import { MILESTONES, RAIDS, tierOf } from './bosses.js?v=20261127170000';
+import { titleOf } from '../draft/paths.js?v=20261127170000';
+import { BONUS, choiceOf, makeParty, partyBonuses, stacks } from './roles.js?v=20261127170000';
+import { bossHealth, enrageTime, explain, fight } from './engine.js?v=20261127170000';
+import { boonById } from './boons.js?v=20261127170000';
+import { RaidScene } from './scene.js?v=20261127170000';
+import { resultHtml } from '../pvp/arena.js?v=20261127170000';
+import { CLASS_COLOR } from '../draft/core.js?v=20261127170000';
+import { bindName, heroName, nameField, nameOk } from '../pvp/name.js?v=20261127170000';
 import { goalsHtml, loadWar } from '../gates.js?v=20261123145643';
-import { shouldShow, playOpening } from './aqopen.js?v=20261127163000';
-import { makeWorld } from './worldui.js?v=20261127163000';
-import { WORLD } from './world.js?v=20261127163000';
-import { PIECES, LIGHT, earned } from './attune.js?v=20261127163000';
-import { walkout } from './wloot.js?v=20261127163000';
-import { consumeDrops, TIERS as CTIERS, CONSUMABLES } from './consumables.js?v=20261127163000';
-import { dropsIn, dropBosses, setOpen, known } from './satchel.js?v=20261127163000';
-import { LOOT as WLOOT, KEY as WKEY } from './worldloot.js?v=20261127163000';
-import { HEROIC, CLASS_NAME, DRAFT_PICKS, FORGE, INGOT, INGOTS, SCEPTER, SHARDS, collect, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, receivers, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js?v=20261127163000';
+import { shouldShow, playOpening } from './aqopen.js?v=20261127170000';
+import { makeWorld } from './worldui.js?v=20261127170000';
+import { WORLD } from './world.js?v=20261127170000';
+import { PIECES, LIGHT, earned } from './attune.js?v=20261127170000';
+import { walkout } from './wloot.js?v=20261127170000';
+import { consumeDrops, TIERS as CTIERS, CONSUMABLES } from './consumables.js?v=20261127170000';
+import { dropsIn, dropBosses, setOpen, known } from './satchel.js?v=20261127170000';
+import { LOOT as WLOOT, KEY as WKEY } from './worldloot.js?v=20261127170000';
+import { HEROIC, CLASS_NAME, DRAFT_PICKS, FORGE, INGOT, INGOTS, SCEPTER, SHARDS, collect, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, receivers, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js?v=20261127170000';
 
 const KEY = 'raidRun', WHO = 'gauntletWho';
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
@@ -310,7 +310,7 @@ function sealDemo() {
 
 function gongFirst() {
   openingShown = true;
-  if (!document.querySelector('link[href$="aqopen.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/aqopen.css?v=20261127163000">');
+  if (!document.querySelector('link[href$="aqopen.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/aqopen.css?v=20261127170000">');
   playOpening(war, { onEnter: () => begin('aq20') });
 }
 
@@ -318,7 +318,7 @@ function maybeOpening() {
   const forced = new URLSearchParams(location.search).has('aqopen');
   if (openingShown || !root || !warDone || !forced) return;
   openingShown = true;
-  if (!document.querySelector('link[href$="aqopen.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/aqopen.css?v=20261127163000">');
+  if (!document.querySelector('link[href$="aqopen.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/aqopen.css?v=20261127170000">');
   setTimeout(() => playOpening(war || { goals: [] }, { onEnter: () => { const b = root && root.querySelector('[data-act="begin"][data-raid="aq20"]'); if (b) b.click(); } }), 500);
 }
 

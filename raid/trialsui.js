@@ -1,9 +1,9 @@
-import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127163000';
-import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127163000';
-import { TREES } from './dream.js?v=20261127163000';
-import { TWIST } from './daily.js?v=20261127163000';
-import { dreamCss, vision } from './dreamfx.js?v=20261127163000';
-import { audio, bell, boom } from './wloot.js?v=20261127163000';
+import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127170000';
+import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127170000';
+import { TREES } from './dream.js?v=20261127170000';
+import { TWIST } from './daily.js?v=20261127170000';
+import { dreamCss, vision } from './dreamfx.js?v=20261127170000';
+import { audio, bell, boom } from './wloot.js?v=20261127170000';
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const QUALITY = ['#9d9d9d', '#ffffff', '#1eff00', '#0070dd', '#a335ee', '#ff8000'];
@@ -245,15 +245,22 @@ export async function openTrial(tree, ctx) {
     const note = last && last.reached ? `<p class="dtnote grow">You reached into the mist and pulled out <b style="color:${QUALITY[pool.items[last.reached][1]]}">${esc(pool.items[last.reached][0])}</b> for your ${NAME[last.slot]}.</p>` : last && last.grew ? `<p class="dtnote grow">The Dream grew into your ${NAME[last.grew.slot]}: <b style="color:${QUALITY[pool.items[last.grew.id][1]]}">${esc(pool.items[last.grew.id][0])}</b></p>` : '';
     const fresh = last ? [last.slot, last.grew && last.grew.slot].filter(Boolean) : [], rd = redreamOf(pool, run), done = finished(run);
     const dreamBtn = run.rule === 'veil' ? `<button type="button" class="dtredream" data-redream ${rd ? '' : 'disabled'} title="Re-roll your latest pick into an item of the same item level or higher"><span>${[0, 1, 2].map((i) => `<i class="${i < run.redreams ? 'on' : ''}"></i>`).join('')}</span>${rd ? `Redream your ${NAME[rd.slot]}` : run.redreams ? 'Redream your latest pick' : 'No redreams left'}</button>` : '';
+    const revId = run.rule === 'veil' && last && !last.hide ? (last.redream ? last.redream.to : run.picks[last.slot]) : 0;
+    const reveal = revId ? `<div class="dtreveal ${last.shown ? 'seen' : ''}" style="--q:${QUALITY[pool.items[revId][1]]}"><button type="button" class="dtrevcard" data-item="${revId}">${icon(pool.items[revId])}<span class="tx"><small>${last.redream ? `The Dream reshaped your ${NAME[last.redream.slot]}` : `The mist parts · your ${NAME[last.slot]}`}</small><b style="color:${QUALITY[pool.items[revId][1]]}">${esc(pool.items[revId][0])}</b><small>${statLine(revId) || RARE[pool.items[revId][1]]}</small></span></button><button type="button" class="dtrevx" data-revx aria-label="Dismiss">&times;</button></div>` : '';
     const dreamNote = last && last.redream ? `<p class="dtnote dream">The Dream reshaped <s>${esc(pool.items[last.redream.from][0])}</s> into <b style="color:${QUALITY[pool.items[last.redream.to][1]]}">${esc(pool.items[last.redream.to][0])}</b>.</p>` : '';
     panel.innerHTML = `${head()}<div class="dtbar">${meter || `<div class="dtstage"><b>${left} ${left === 1 ? 'round' : 'rounds'} ${daily ? 'left' : 'to the fight'}</b></div>`}${run.rule === 'fade' ? `<button type="button" class="dtlamp" data-lamp ${run.lanterns && run.lit !== run.round ? '' : 'disabled'} title="See every slot this round"><span>${[0, 1, 2].map((i) => `<i class="${i < run.lanterns ? 'on' : ''}"></i>`).join('')}</span>${run.lit === run.round ? 'Lantern lit' : run.lanterns ? 'Light a lantern' : 'No lanterns left'}</button>` : ''}${dreamBtn}<button type="button" class="dtmull" data-mull ${run.mulligan && !done ? '' : 'disabled'}>${run.mulligan ? 'Mulligan' : 'Mulligan used'}</button></div>
       ${shadeNote}${dreamNote || note}
       <div class="dtheroes">${heroHtml(run.picks, cls, fresh)}${duel ? heroHtml(v.stolen && v.keep ? { ...run.shade.picks, [v.to]: v.put, ...(v.to === 'main' && pool.items[v.put][3] === 17 ? { off: 0 } : {}) } : run.shade.picks, cls, v.stolen && v.keep ? [v.to] : [], true) : ''}</div>
-      ${done ? `<section class="dtoffer dtready"><h4>Your hero is complete<small>${run.redreams ? `${run.redreams} ${run.redreams === 1 ? 'redream' : 'redreams'} left` : 'no redreams left'}</small></h4><p>${rd ? `You can still redream your ${NAME[rd.slot]} before ${daily ? 'your hero is weighed' : 'the tree weighs your hero'}.` : daily ? 'Your hero is ready to be weighed.' : 'The tree is ready to weigh your hero.'}</p><button type="button" class="dtgo" data-wake>${daily ? 'Weigh my hero' : 'Wake the tree'}</button></section>` : `<section class="dtoffer ${run.rule === 'grow' && withered.length < withersFor(pool, run) ? 'withering' : ''}">${run.rule === 'grow' && withered.length < withersFor(pool, run) ? witherHead() : '<h4>On offer<small>Keep one</small></h4>'}<div class="dtslots">${open.map((s) => offerHtml(s, v)).join('')}${reachHtml()}</div>${fog.length && run.rule === 'fade' ? `<p class="dtfog">Lost in the fog: ${fog.map((s) => NAME[s]).join(', ')}</p>` : ''}</section>`}
+      ${done ? `<section class="dtoffer dtready"><h4>Your hero is complete<small>${run.redreams ? `${run.redreams} ${run.redreams === 1 ? 'redream' : 'redreams'} left` : 'no redreams left'}</small></h4><p>${rd ? `You can still redream your ${NAME[rd.slot]} before ${daily ? 'your hero is weighed' : 'the tree weighs your hero'}.` : daily ? 'Your hero is ready to be weighed.' : 'The tree is ready to weigh your hero.'}</p><button type="button" class="dtgo" data-wake>${daily ? 'Weigh my hero' : 'Wake the tree'}</button></section>` : `<section class="dtoffer ${run.rule === 'grow' && withered.length < withersFor(pool, run) ? 'withering' : ''}">${reveal}${run.rule === 'grow' && withered.length < withersFor(pool, run) ? witherHead() : '<h4>On offer<small>Keep one</small></h4>'}<div class="dtslots">${open.map((s) => offerHtml(s, v)).join('')}${reachHtml()}</div>${fog.length && run.rule === 'fade' ? `<p class="dtfog">Lost in the fog: ${fog.map((s) => NAME[s]).join(', ')}</p>` : ''}</section>`}
       <p class="dtleft">${left} ${left === 1 ? 'slot' : 'slots'} left${duel ? '' : ` · ${CLASS_NAME[cls]}`}</p>`;
     bind();
     for (const b of panel.querySelectorAll('[data-take]')) b.onclick = () => { if (!rolling) take(b.dataset.take); };
     if (last && last.redream) { const c = panel.querySelector('.dthero:not(.shade) .hv.fresh'); if (c) c.classList.add('redreamed'); }
+    const rv = panel.querySelector('.dtreveal');
+    if (rv) {
+      if (!last.shown) { last.shown = 1; const r = rv.getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) rv.scrollIntoView({ block: 'center', behavior: reduced() ? 'auto' : 'smooth' }); }
+      rv.querySelector('[data-revx]').onclick = () => { last.hide = 1; rv.classList.add('gone'); setTimeout(() => rv.remove(), 220); };
+    }
     const rb = panel.querySelector('[data-redream]');
     if (rb) rb.onclick = () => redream();
     const wake = panel.querySelector('[data-wake]');

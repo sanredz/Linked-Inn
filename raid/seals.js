@@ -1,5 +1,5 @@
-import { audio, bell, boom } from './wloot.js?v=20261127163000';
-import { PIECES, LIGHT, KEYSTONE, WHISPERS } from './attune.js?v=20261127163000';
+import { audio, bell, boom } from './wloot.js?v=20261127170000';
+import { PIECES, LIGHT, KEYSTONE, WHISPERS } from './attune.js?v=20261127170000';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -26,7 +26,7 @@ function speak(buf) {
 }
 
 function css() {
-  if (!document.querySelector('link[href*="raid/seals.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/seals.css?v=20261127163000">');
+  if (!document.querySelector('link[href*="raid/seals.css"]')) document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="raid/seals.css?v=20261127170000">');
 }
 
 function hiss(ctx, t, dur, vol = .2) {

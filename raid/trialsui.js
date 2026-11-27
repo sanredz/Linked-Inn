@@ -52,7 +52,7 @@ export async function openTrial(tree, ctx) {
   const close = () => { document.documentElement.style.overflow = scrollWas; removeEventListener('keydown', onKey); box.classList.remove('on'); setTimeout(() => box.remove(), 400); if ((done || daily) && ctx.after) ctx.after(done); };
   const onKey = (e) => { if (e.key === 'Escape' && !busy) close(); };
   addEventListener('keydown', onKey);
-  const head = () => `<header class="dthead"><img src="assets/icons/${info.icon}.png" alt=""><div><small>${daily ? `Daily Draft · Day ${daily.day - daily.epoch + 1} · ${CLASS_NAME[daily.cls]}` : `${esc(info.mode)} · ${esc(info.name)}, ${esc(info.zone)}`}</small><b>${esc(T.name)}</b></div><button type="button" class="dtx" aria-label="Close">&times;</button></header>`;
+  const head = () => `<header class="dthead"><img src="assets/icons/${info.icon}.png" alt=""><div><small>${daily ? `Daily Draft · Day ${daily.day - daily.epoch + 1}${cls ? ` · ${CLASS_NAME[cls]}` : ''}` : `${esc(info.mode)} · ${esc(info.name)}, ${esc(info.zone)}`}</small><b>${esc(T.name)}</b></div><button type="button" class="dtx" aria-label="Close">&times;</button></header>`;
   const bind = () => { const x = panel.querySelector('.dtx'); if (x) x.onclick = () => { if (!busy) close(); }; };
   const echo = () => (attune && attune.echo && attune.echo[tree]) || 0;
   const pips = (n, of) => (of > 1 ? `<span class="dtpips" aria-label="${n} of ${of} walks">${Array.from({ length: of }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span>` : '');
@@ -73,7 +73,7 @@ export async function openTrial(tree, ctx) {
   function dailyIntro(error) {
     const back = daily.moves && daily.moves.length;
     panel.innerHTML = `${head()}<p class="dtrule">${esc(T.text)}</p>
-      <div class="dtgoal"><span>Today's Daily Draft</span><b>${duel ? `Out-damage the Shade by as much as you can` : `Draft the strongest ${CLASS_NAME[daily.cls]} you can`}</b><small>Everyone gets the same class and the same offers today, with one mulligan. Your best spec counts${duel ? ', and every hero is ranked by DPS over (or under) the Shade' : ''}. You get one walk, and it counts as soon as you begin.</small></div>
+      <div class="dtgoal"><span>Today's Daily Draft</span><b>${duel ? `Out-damage the Shade by as much as you can` : `Draft the strongest hero you can`}</b><small>The Dream picks one class for everyone today, with the same offers and one mulligan. Your best spec counts${duel ? ', and every hero is ranked by DPS over (or under) the Shade' : ''}. You get one walk, and it counts as soon as you begin.</small></div>
       <div class="dtwheel idle" aria-hidden="true"><div class="dtreel">${CLASSES.map((c) => `<span style="--cc:${CLASS_COLOR[c]}"><img src="assets/classes/${c}.png" alt=""></span>`).join('')}</div></div>
       ${error ? `<p class="dterr">${esc(error)}</p>` : ''}<button type="button" class="dtgo" data-go>${back ? 'Continue your draft' : 'Begin today\'s draft'}</button>`;
     bind();

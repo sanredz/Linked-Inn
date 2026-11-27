@@ -7,6 +7,7 @@ const QUALITY = ['#9d9d9d', '#ffffff', '#1eff00', '#0070dd', '#a335ee', '#ff8000
 const specOf = (cls, b) => (BUILDS[cls].find((x) => x.id === b) || {}).name || '';
 const until = (t) => { const m = Math.max(1, Math.ceil((t - Date.now()) / 60000)); return m < 60 ? `${m}m` : `${Math.floor(m / 60)}h ${m % 60}m`; };
 const dayNo = (d) => d - DAILY_EPOCH + 1;
+const known = () => !!(info && info.you);
 const signed = (v) => `${v > 0 ? '+' : v < 0 ? '\u2212' : ''}${Math.abs(v).toFixed(1)}`;
 const val = (r) => (r.rule === 'duel' && r.shade != null ? `<b class="${r.score > 0 ? 'up' : 'down'}" title="${r.dps.toFixed(1)} DPS vs the Shade's ${r.shade.toFixed(1)}">${signed(r.score)}</b>` : `<b>${r.dps.toFixed(1)}</b>`);
 
@@ -52,7 +53,7 @@ function drawRow() {
   const t = TWIST[info.rule], st = state();
   row.innerHTML = `<button type="button" class="dailyrow" style="--tw:${t.color}">
     <span class="dyemb"><img src="assets/icons/${t.icon}.png" alt=""></span>
-    <span class="dysay"><small>Daily Draft · Day ${dayNo(info.day)}</small><b>${esc(t.name)}</b><span><i style="color:${CLASS_COLOR[info.cls]}">${CLASS_NAME[info.cls]}</i> for everyone · ${info.played} ${info.played === 1 ? 'hero' : 'heroes'} so far</span></span>
+    <span class="dysay"><small>Daily Draft · Day ${dayNo(info.day)}</small><b>${esc(t.name)}</b><span>${known() ? `<i style="color:${CLASS_COLOR[info.cls]}">${CLASS_NAME[info.cls]}</i> for everyone` : '<i class="dyq">?</i> Hidden class'} · ${info.played} ${info.played === 1 ? 'hero' : 'heroes'} so far</span></span>
     <span class="dyright">${dial(info.rule)}<small>Next twist in ${until(info.next)}</small></span>
     ${st.badge}<em class="dgo">&rsaquo;</em>
   </button>`;
@@ -103,7 +104,7 @@ async function drawSheet() {
   const t = TWIST[info.rule], y = info.yesterday;
   const gear = (picks) => SLOTS.map(([s]) => picks[s]).filter((id) => id && it[id]).map((id) => `<img src="assets/icons/${it[id][4]}.png" alt="${esc(it[id][0])}" data-item="${id}" style="--q:${QUALITY[it[id][1]]}">`).join('');
   const gears = new Map();
-  const line = (r, key) => { gears.set(key, r.picks); return `<li class="${r.mine ? 'me' : ''}" data-row="${key}"><button type="button" aria-expanded="false"><span class="dypos">${r.pos <= 3 ? `<i class="m${r.pos}">${r.pos}</i>` : r.pos}</span><span class="dyname">${esc(r.name)}${titleOf(r.t) ? `<small>${esc(titleOf(r.t))}</small>` : ''}</span><span class="dyspec">${r.rule === 'duel' && r.shade != null ? `${r.dps.toFixed(1)} vs ${r.shade.toFixed(1)}` : esc(specOf(r.cls, r.build))}</span>${val(r)}</button></li>`; };
+  const line = (r, key) => { gears.set(key, r.picks); return `<li class="${r.mine ? 'me' : ''}" data-row="${key}"><button type="button" aria-expanded="false"><span class="dypos">${r.pos <= 3 ? `<i class="m${r.pos}">${r.pos}</i>` : r.pos}</span><span class="dyname">${esc(r.name)}${titleOf(r.t) ? `<small>${esc(titleOf(r.t))}</small>` : ''}</span><span class="dyspec">${r.rule === 'duel' && r.shade != null ? `${r.dps.toFixed(1)} vs ${r.shade.toFixed(1)}` : known() ? esc(specOf(r.cls, r.build)) : ''}</span>${val(r)}</button></li>`; };
   const board = (rows, me, pre, played) => {
     const inList = rows.find((r) => r.mine);
     if (me) gears.set('me', me.picks);
@@ -116,10 +117,10 @@ async function drawSheet() {
       ${dial(info.rule, true)}${info.test ? '<p class="dytest">Preview only: tap any twist to start it fresh, even mid-walk.</p>' : ''}
       <h2>${esc(t.name)}</h2>
       <p class="dyrule">${esc(t.text)}</p>
-      <p class="dymeta"><span style="--cc:${CLASS_COLOR[info.cls]}"><img src="assets/classes/${info.cls}.png" alt="">${CLASS_NAME[info.cls]} for everyone</span><span>Same offers for every hero</span><span>Next twist in ${until(info.next)}</span></p>
+      <p class="dymeta">${known() ? `<span style="--cc:${CLASS_COLOR[info.cls]}"><img src="assets/classes/${info.cls}.png" alt="">${CLASS_NAME[info.cls]} for everyone</span>` : '<span class="dyhid"><i class="dyq">?</i>The Dream picks the class when you begin</span>'}<span>Same offers for every hero</span><span>Next twist in ${until(info.next)}</span></p>
       ${cta}
     </div>
-    <h4 class="dyh">Today's heroes<small>${info.played} ${info.played === 1 ? 'has' : 'have'} walked · tap a hero to see their gear</small></h4>
+    <h4 class="dyh">Today's heroes<small>${info.played} ${info.played === 1 ? 'has' : 'have'} walked${known() ? ' · tap a hero to see their gear' : ''}</small></h4>
     ${info.rows.length ? board(info.rows, you && you.state === 'done' ? you : null, 't', info.played) : '<p class="dyempty">No one has walked today\'s Dream yet. Be the first.</p>'}`;
   const past = y ? `<div class="dyhero small" style="--tw:${TWIST[y.rule].color}">${dial(y.rule)}<h2>${esc(TWIST[y.rule].name)}</h2><p class="dymeta"><span style="--cc:${CLASS_COLOR[y.cls]}"><img src="assets/classes/${y.cls}.png" alt="">${CLASS_NAME[y.cls]}</span><span>${y.played} ${y.played === 1 ? 'hero' : 'heroes'}</span>${y.you ? `<span>You placed #${y.you.pos}</span>` : ''}</p></div>
     ${y.rows.length ? `<h4 class="dyh">Top heroes</h4>${board(y.rows, y.you, 'y', y.played)}` : '<p class="dyempty">No heroes walked that day.</p>'}` : '<p class="dyempty">The first Daily Draft is today.</p>';
@@ -138,7 +139,7 @@ async function drawSheet() {
     (after ? host : host.firstElementChild).setAttribute('aria-expanded', 'true');
     return true;
   };
-  for (const b of sheet.querySelectorAll('[data-row] > button')) b.onclick = () => toggle(b.parentElement, b.parentElement.dataset.row);
+  for (const b of sheet.querySelectorAll('[data-row] > button')) b.onclick = () => { if (tab === 'today' && !known()) return; toggle(b.parentElement, b.parentElement.dataset.row); };
   for (const b of sheet.querySelectorAll('[data-me]')) b.onclick = () => {
     const li = b.dataset.me !== 'me' && sheet.querySelector(`[data-row="${b.dataset.me}"]`);
     if (!li) { toggle(b, 'me', true); return; }

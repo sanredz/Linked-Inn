@@ -1,7 +1,7 @@
-import { PLANS, PRESETS } from './engine.js?v=20261127190000';
-import { CLASSES, SLOTS, gear, isTwoHand, offers, rand, side, suited, worth } from './gear.js?v=20261127190000';
-import { CONSUMES, ENCHANTS, ENCHANT, extraOf } from './shop.js?v=20261127190000';
-import { BOON, BOONS, BOON_CHOICES, BOON_WINS, boonSum } from './boons.js?v=20261127190000';
+import { PLANS, PRESETS } from './engine.js?v=20261127193000';
+import { CLASSES, SLOTS, gear, isTwoHand, offers, rand, side, suited, worth } from './gear.js?v=20261127193000';
+import { CONSUMES, ENCHANTS, ENCHANT, extraOf } from './shop.js?v=20261127193000';
+import { BOON, BOONS, BOON_CHOICES, BOON_WINS, boonSum } from './boons.js?v=20261127193000';
 
 export const GOLD = 10, REROLL_PRICE = 2, MAX_WINS = 10, LIVES = 3, ARMORER_SLOTS = 4;
 const SLOT_PRICES = { head: 3, chest: 3, legs: 3, shoulder: 3, hands: 3, feet: 3, waist: 3, wrist: 2, back: 3, neck: 3, finger1: 3, finger2: 3, trinket1: 2, trinket2: 2 };

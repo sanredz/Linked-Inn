@@ -1,4 +1,4 @@
-import { BUILDS, gearStats, sheet, simulate } from '../draft/core.js?v=20261127190000';
+import { BUILDS, gearStats, sheet, simulate } from '../draft/core.js?v=20261127193000';
 
 const BASE_HP = { WARRIOR: 1689, PALADIN: 1381, HUNTER: 1467, ROGUE: 1523, PRIEST: 1387, SHAMAN: 1280, MAGE: 1360, WARLOCK: 1414, DRUID: 1483 };
 const AGI_DODGE = { WARRIOR: 20, PALADIN: 19.8, HUNTER: 52.9, ROGUE: 29, PRIEST: 20, SHAMAN: 19.7, MAGE: 19.5, WARLOCK: 20, DRUID: 20 };

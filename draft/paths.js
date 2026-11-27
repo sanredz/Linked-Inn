@@ -1,5 +1,5 @@
-import { RELICS, MOUNTS, forged, count } from './feats.js?v=20261127190000';
-import { LOOT } from '../raid/worldloot.js?v=20261127190000';
+import { RELICS, MOUNTS, forged, count } from './feats.js?v=20261127193000';
+import { LOOT } from '../raid/worldloot.js?v=20261127193000';
 
 const DPS_MARKS = { WARRIOR: [260, 280, 310], PALADIN: [215, 230, 245], HUNTER: [255, 270, 285], ROGUE: [270, 285, 310], PRIEST: [370, 385, 405], SHAMAN: [265, 290, 315], MAGE: [400, 425, 455], WARLOCK: [365, 390, 415], DRUID: [240, 255, 280] };
 const CLASS_LIST = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID'];

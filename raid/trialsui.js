@@ -1,10 +1,10 @@
-import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127190000';
-import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127190000';
-import { TREES } from './dream.js?v=20261127190000';
-import { TWIST } from './daily.js?v=20261127190000';
-import { dreamCss, vision } from './dreamfx.js?v=20261127190000';
-import { audio, bell, boom } from './wloot.js?v=20261127190000';
-import { askName, heroName, nameOk } from '../pvp/name.js?v=20261127190000';
+import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127193000';
+import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127193000';
+import { TREES } from './dream.js?v=20261127193000';
+import { TWIST } from './daily.js?v=20261127193000';
+import { dreamCss, vision } from './dreamfx.js?v=20261127193000';
+import { audio, bell, boom } from './wloot.js?v=20261127193000';
+import { askName, heroName, nameOk } from '../pvp/name.js?v=20261127193000';
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const QUALITY = ['#9d9d9d', '#ffffff', '#1eff00', '#0070dd', '#a335ee', '#ff8000'];
@@ -56,6 +56,7 @@ export async function openTrial(tree, ctx) {
   const head = () => `<header class="dthead"><img src="assets/icons/${info.icon}.png" alt=""><div><small>${daily ? `Daily Draft · Day ${daily.day - daily.epoch + 1}${cls ? ` · ${CLASS_NAME[cls]}` : ''}` : `${esc(info.mode)} · ${esc(info.name)}, ${esc(info.zone)}`}</small><b>${esc(T.name)}</b></div><button type="button" class="dtx" aria-label="Close">&times;</button></header>`;
   const bind = () => { const x = panel.querySelector('.dtx'); if (x) x.onclick = () => { if (!busy) close(); }; };
   const echo = () => (attune && attune.echo && attune.echo[tree]) || 0;
+  const mixed = () => CLASSES.map((c) => [c, Math.random()]).sort((x, y) => x[1] - y[1]).map(([c]) => c);
   const pips = (n, of) => (of > 1 ? `<span class="dtpips" aria-label="${n} of ${of} walks">${Array.from({ length: of }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span>` : '');
 
   function intro(error = '') {
@@ -65,7 +66,7 @@ export async function openTrial(tree, ctx) {
       : `<b>Draft a hero strong enough to wake the tree</b><small>Every slot is drafted from nothing, with one mulligan. The Dream chooses your class each walk. Your best spec counts. Wake the tree on ${T.times} separate walks.</small>`;
     panel.innerHTML = `${head()}<p class="dtrule">${esc(T.text)}</p>
       <div class="dtgoal"><span>To wake ${esc(info.name)} ${pips(echo(), T.times)}</span>${goal}</div>
-      <div class="dtwheel idle" aria-hidden="true"><div class="dtreel">${CLASSES.map((c) => `<span style="--cc:${CLASS_COLOR[c]}"><img src="assets/classes/${c}.png" alt=""></span>`).join('')}</div></div>
+      <div class="dtwheel idle" aria-hidden="true"><div class="dtreel">${mixed().map((c) => `<span style="--cc:${CLASS_COLOR[c]}"><img src="assets/classes/${c}.png" alt=""></span>`).join('')}</div></div>
       ${error ? `<p class="dterr">${esc(error)}</p>` : ''}<button type="button" class="dtgo" data-go>Walk the Dream</button>`;
     bind();
     panel.querySelector('[data-go]').onclick = begin;
@@ -75,7 +76,7 @@ export async function openTrial(tree, ctx) {
     const back = daily.moves && daily.moves.length;
     panel.innerHTML = `${head()}<p class="dtrule">${esc(T.text)}</p>
       <div class="dtgoal"><span>Today's Daily Draft</span><b>${duel ? `Out-damage the Shade by as much as you can` : `Draft the strongest hero you can`}</b><small>The Dream picks one class for everyone today, with the same offers and one mulligan. Your best spec counts${duel ? ', and every hero is ranked by DPS over (or under) the Shade' : ''}. You get one walk, and it counts as soon as you begin.</small></div>
-      <div class="dtwheel idle" aria-hidden="true"><div class="dtreel">${CLASSES.map((c) => `<span style="--cc:${CLASS_COLOR[c]}"><img src="assets/classes/${c}.png" alt=""></span>`).join('')}</div></div>
+      <div class="dtwheel idle" aria-hidden="true"><div class="dtreel">${mixed().map((c) => `<span style="--cc:${CLASS_COLOR[c]}"><img src="assets/classes/${c}.png" alt=""></span>`).join('')}</div></div>
       ${error ? `<p class="dterr">${esc(error)}</p>` : ''}<button type="button" class="dtgo" data-go>${back ? 'Continue your draft' : 'Begin today\'s draft'}</button>`;
     bind();
     panel.querySelector('[data-go]').onclick = begin;

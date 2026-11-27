@@ -298,3 +298,4 @@ button.dtslot.wphase:hover .dtrot img { filter: saturate(1.1) brightness(1.1); }
 .dtrial:has(.dtrevpop) .dtmull, .dtrial:has(.dtrevpop) .dtredream { visibility: hidden; }
 .dtreveal { position: sticky; top: 8px; z-index: 6; }
 .dtrevcard { background-color: #0b0f14; }
+.dtwheel.idle::after { opacity: .18; }

@@ -1,9 +1,10 @@
-import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127183000';
-import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127183000';
-import { TREES } from './dream.js?v=20261127183000';
-import { TWIST } from './daily.js?v=20261127183000';
-import { dreamCss, vision } from './dreamfx.js?v=20261127183000';
-import { audio, bell, boom } from './wloot.js?v=20261127183000';
+import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127190000';
+import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127190000';
+import { TREES } from './dream.js?v=20261127190000';
+import { TWIST } from './daily.js?v=20261127190000';
+import { dreamCss, vision } from './dreamfx.js?v=20261127190000';
+import { audio, bell, boom } from './wloot.js?v=20261127190000';
+import { askName, heroName, nameOk } from '../pvp/name.js?v=20261127190000';
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const QUALITY = ['#9d9d9d', '#ffffff', '#1eff00', '#0070dd', '#a335ee', '#ff8000'];
@@ -90,10 +91,10 @@ export async function openTrial(tree, ctx) {
 
   async function post(body) {
     if (daily) {
-      const d = await ctx.post(body.act === 'start' ? '/daily/start' : '/daily/finish', { day: daily.day, moves: body.moves, name: ctx.name && ctx.name() }).catch(() => null);
+      const d = await ctx.post(body.act === 'start' ? '/daily/start' : '/daily/finish', { day: daily.day, moves: body.moves, name: nameOk() ? heroName() : '' }).catch(() => null);
       return d && d.ok ? d : { error: (d && d.error) || 'down' };
     }
-    const r = await fetch(`${ctx.API}/dream/trial`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: ctx.who(), tree, ...body }) });
+    const r = await fetch(`${ctx.API}/dream/trial`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: ctx.who(), tree, name: nameOk() ? heroName() : '', ...body }) });
     const d = await r.json().catch(() => null);
     return r.ok && d ? d : { error: (d && d.error) || 'down', attune: d && d.attune };
   }
@@ -126,6 +127,7 @@ export async function openTrial(tree, ctx) {
 
   async function begin() {
     if (busy) return;
+    if (!nameOk() && !(await askName())) return;
     busy = true;
     const go = panel.querySelector('[data-go]');
     if (go) go.disabled = true;
@@ -133,7 +135,7 @@ export async function openTrial(tree, ctx) {
     if (!d.ok) {
       busy = false;
       if (d.attune) attune = d.attune;
-      intro(d.error === 'played' ? 'You have already walked today\'s Dream. A new one comes at the daily reset.' : d.error === 'ip' ? 'Today\'s Dream was already walked from this connection on another Hearthstone. One walk per connection each day.' : d.error === 'order' ? 'Wake the trees before this one first.' : d.error === 'awake' ? 'This tree is already awake.' : d.error === 'slow down' ? 'The Dream needs a moment. Try again shortly.' : 'The Dream could not be reached. Try again.');
+      intro(d.error === 'name' ? 'Choose a name for your hero first.' : d.error === 'played' ? 'You have already walked today\'s Dream. A new one comes at the daily reset.' : d.error === 'ip' ? 'Today\'s Dream was already walked from this connection on another Hearthstone. One walk per connection each day.' : d.error === 'order' ? 'Wake the trees before this one first.' : d.error === 'awake' ? 'This tree is already awake.' : d.error === 'slow down' ? 'The Dream needs a moment. Try again shortly.' : 'The Dream could not be reached. Try again.');
       return;
     }
     if (go) go.remove();

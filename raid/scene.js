@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { Arena, CALM } from '../pvp/arena.js?v=20261127183000';
-import { Stage } from '../draft/stage.js?v=20261127183000';
-import { MILESTONES, tierOf } from './bosses.js?v=20261127183000';
-import { bossHealth } from './engine.js?v=20261127183000';
-import { sound } from './wloot.js?v=20261127183000';
+import { Arena, CALM } from '../pvp/arena.js?v=20261127190000';
+import { Stage } from '../draft/stage.js?v=20261127190000';
+import { MILESTONES, tierOf } from './bosses.js?v=20261127190000';
+import { bossHealth } from './engine.js?v=20261127190000';
+import { sound } from './wloot.js?v=20261127190000';
 
 const SIZE = { jeklik: 4.6, venoxis: 5.6, marli: 3.8, mandokir: 5.4, grilek: 5.4, hazzarah: 5.4, renataki: 5.4, wushoolay: 5.4, gahzranka: 7.6, thekal: 4.2, arlokk: 4.2, jindo: 5, hakkar: 10.5, lucifron: 5, magmadar: 4.6, gehennas: 5, garr: 5.4, geddon: 6.4, shazzrah: 5, sulfuron: 5.4, golemagg: 7.5, majordomo: 4.6, ragnaros: 11, kurinnaxx: 5.8, rajaxx: 4.4, moam: 6.6, buru: 6, ayamiss: 6.4, ossirian: 9, kazzak: 9.5, ysondre: 8.6, lethon: 8.6, emeriss: 8.6, taerar: 8.6 };
 const TONE = { fire: 0xff7a2a, frost: 0x7fd4ff, arcane: 0xd27dff, shadow: 0x9a5cff, nature: 0x7dff8a, holy: 0xffe680, phys: 0xffffff };

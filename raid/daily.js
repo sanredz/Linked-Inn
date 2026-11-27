@@ -1,4 +1,4 @@
-import { hash, rng, BUILDS } from '../draft/core.js?v=20261127183000';
+import { hash, rng, BUILDS } from '../draft/core.js?v=20261127190000';
 
 export const DAILY_EPOCH = 20784;
 export const DAILY_BOARD = 100;

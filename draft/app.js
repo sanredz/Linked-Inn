@@ -1,6 +1,6 @@
 import * as C from './core.js?v=20261125221600';
 import './roundicons.js?v=20261126180000';
-import { Stage } from './stage.js?v=20261126200000';
+import { Stage } from './stage.js?v=20261127143000';
 import { titleOf, glowOf } from './paths.js';
 import { askFeedback, askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
 
@@ -92,7 +92,7 @@ function tooltip(id, owned, enchant) {
   if (s.sp && !lines.some((l) => /damage/.test(l))) h += `<div class="eq">Equip: Increases damage and healing done by magical spells and effects by up to ${s.sp}.</div>`;
   const set = setId && pool.sets[setId];
   if (set) {
-    const have = set.i.filter((i) => Object.values(owned || (document.body.dataset.view === 'raid' && raidOwned ? raidOwned() : document.body.dataset.view === 'gauntlet' && gauntletOwned ? gauntletOwned() : ['pick', 'shared', 'replay'].includes(document.body.dataset.view) ? openPicks : run ? run.picks : {})).includes(i)).length;
+    const have = set.i.filter((i) => Object.values(owned || (window.dreamPicks && document.querySelector('.dtrial') ? window.dreamPicks() : document.body.dataset.view === 'raid' && raidOwned ? raidOwned() : document.body.dataset.view === 'gauntlet' && gauntletOwned ? gauntletOwned() : ['pick', 'shared', 'replay'].includes(document.body.dataset.view) ? openPicks : run ? run.picks : {})).includes(i)).length;
     h += `<div class="set">${esc(set.n)} (${have}/${set.i.length})</div>`;
     for (const [need, , text] of set.b) if (text) h += `<div class="${have >= need ? 'eq' : 'off'}">(${need}) Set: ${esc(text)}</div>`;
   }
@@ -126,7 +126,7 @@ document.addEventListener('click', (e) => {
     openSheet(taltip(tal.dataset.tal, tal.dataset.build));
     return;
   }
-  const dit = e.target.closest('.duelover [data-item]');
+  const dit = e.target.closest('.duelover [data-item], .dtrial .hv[data-item], .dtrial .dtsteal[data-item]');
   if (dit && +dit.dataset.item) { openSheet(tooltip(dit.dataset.item)); return; }
   const worn = e.target.closest('.ps');
   if (worn && +worn.dataset.item) openSheet(tooltip(worn.dataset.item, undefined, worn.dataset.extra));
@@ -825,7 +825,7 @@ function useCode(input = 'sIn', msg = 'sMsg') {
 let hearthLib = null;
 const hearthMod = async () => {
   if (!hearthLib) {
-    hearthLib = await import('./hearth.js?v=20261123145643');
+    hearthLib = await import('./hearth.js?v=20261127143000');
     hearthLib.setupHearth({ API, key: () => playerKey, Stage, gear, row: (id) => row(id), onChange: () => hearthLib.hearthBar($('hearthBar')) });
   }
   return hearthLib;
@@ -1152,6 +1152,7 @@ async function boot() {
   $('modeDraft').onclick = modes.pick;
   $('modeArena').onclick = modes.gauntlet;
   $('modeRaid').onclick = modes.raid;
+  import('./daily.js').then((D) => D.mountDaily($('dailyRow'), { API, key: () => playerKey, name: () => (nameOk() ? heroName() : '') })).catch(() => {});
   duelLib().then((D) => D.mountDuel($('duelRow'), { API, key: () => playerKey, pool: () => pool, gear: () => gear, draft: (ctx, cls) => startClass(cls, ctx), home: () => { duelCtx = null; restart(); go('home'); } })).catch(() => {});
   for (const b of document.querySelectorAll('[data-mode]')) b.onclick = modes[b.dataset.mode];
   if (location.search.includes('gauntlet')) openArena();

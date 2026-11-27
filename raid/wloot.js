@@ -1,7 +1,7 @@
 const LEVEL = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5 };
 const COLOR = { Common: '#f4ead8', Uncommon: '#1eff00', Rare: '#3a9bff', Epic: '#b45cff', Legendary: '#ff8000', Mythic: '#3dffb0' };
 const LADDER = ['#f4ead8', '#1eff00', '#3a9bff', '#b45cff', '#ff8000', '#3dffb0'];
-const KIND = { painting: 'painting', jar: 'curio', rack: 'weapon', steed: 'mount', trophy: 'trophy', key: 'key' };
+const KIND = { painting: 'painting', jar: 'curio', rack: 'weapon', steed: 'mount', trophy: 'trophy', key: 'key', consumable: 'consumable', relic: 'relic' };
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -60,8 +60,8 @@ export function sound(kind, level = 0) {
 }
 
 function card(d, i, n, keys) {
-  const kind = KIND[d.kind] || 'collectible', lv = LEVEL[d.rarity] || 0, key = d.kind === 'key';
-  const where = key ? `<div class="wlinn wlkey">${keys > 1 ? `You now hold ${keys} keys` : 'You now hold a key'} · use it from the World Boss card</div>` : `<div class="wlinn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V10l9-6 9 6v11h-5v-6a4 4 0 0 0-8 0v6Z"/></svg>Added to the Cellar of your Lion's Pride Inn</div>`;
+  const kind = KIND[d.kind] || 'collectible', lv = LEVEL[d.rarity] || 0, key = d.kind === 'key', sip = d.kind === 'consumable';
+  const where = sip ? '<div class="wlinn wlkey">Added to your satchel · pick it for a hero before a World Boss pull</div>' : key ? `<div class="wlinn wlkey">${keys > 1 ? `You now hold ${keys} keys` : 'You now hold a key'} · use it from the World Boss card</div>` : `<div class="wlinn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V10l9-6 9 6v11h-5v-6a4 4 0 0 0-8 0v6Z"/></svg>Added to the ${d.area === 'loft' ? 'Dreaming Loft' : 'Cellar'} of your Lion's Pride Inn</div>`;
   return `<div class="wloot r${lv} ${key ? 'key' : ''}" style="--rc:${COLOR[d.rarity]}" role="dialog" aria-modal="true" aria-label="${esc(d.name)}">
     <div class="wlflash"></div><div class="wlembers">${'<i></i>'.repeat(Math.min(26, 10 + lv * 4))}</div>
     <div class="wlorb"><i></i><b></b></div>
@@ -72,7 +72,7 @@ function card(d, i, n, keys) {
       <h2 data-text="${esc(d.name)}">${esc(d.name)}</h2>
       <p>${esc(d.text)}</p>
       ${where}
-      <div class="wlgo">${key ? '' : '<button class="wlsee">See it in the Inn</button>'}<button class="wlnext ${key ? 'solo' : ''}">${i < n - 1 ? 'Next' : 'Continue'}</button></div>
+      <div class="wlgo">${key || sip ? '' : '<button class="wlsee">See it in the Inn</button>'}<button class="wlnext ${key || sip ? 'solo' : ''}">${i < n - 1 ? 'Next' : 'Continue'}</button></div>
       ${n > 1 ? `<small class="wlcount">${i + 1} of ${n}</small>` : ''}
     </div></div>`;
 }

@@ -4,6 +4,7 @@ import { makeParty, choiceOf } from './roles.js';
 import { ROLES, classesFor, specsFor, list, targetsOf } from './run.js';
 import { boostOf, drink } from './consumables.js';
 import { LOOT, KEY } from './worldloot.js';
+import { DRAGONS, dragonOf } from './dream.js';
 
 const SHADOW = 'shadow', PHYS = 'phys';
 export const SLOTS = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist', 'hands', 'waist', 'legs', 'feet', 'finger1', 'finger2', 'trinket1', 'trinket2', 'main', 'off', 'ranged'];
@@ -37,12 +38,23 @@ export const WORLD = {
     ],
     loot: LOOT.filter((l) => l.boss === 'kazzak'),
   },
+  dream: {
+    id: 'dream', name: 'Dragons of Nightmare', short: 'the Dragons', zone: 'The Emerald Dream', dragons: 1,
+    blurb: "Four of Ysera's chosen, twisted by the Nightmare. Which one answers your call is never the same twice.",
+    loot: LOOT.filter((l) => l.boss === 'dream'),
+  },
 };
-for (const b of Object.values(WORLD)) { b.step = 0; b.hit = 1; b.enrageBy = 1; b.enrageBy = b.supreme / enrageTime(b, null); }
+for (const d of Object.values(DRAGONS)) Object.assign(d, { loot: WORLD.dream.loot.filter((l) => !l.dragon || l.dragon === d.id), dragon: 1, clock: 'Nightmare', clockLine: 'is swallowed by the Nightmare', clockAt: 'the Nightmare takes hold', lost: 'the Nightmare took hold', theme: { zone: 'dream' } });
+Object.assign(WORLD.kazzak, { clock: 'Supreme Mode', clockAt: 'Supreme Mode', lost: 'Kazzak entered Supreme Mode', res: 'shadow', title: 'Highlord of the Burning Legion', theme: { zone: 'blasted' } });
+WORLD.dream.theme = { zone: 'dream' };
+for (const b of [WORLD.kazzak, ...Object.values(DRAGONS)]) { b.step = 0; b.hit = 1; b.enrageBy = 1; b.enrageBy = b.supreme / enrageTime(b, null); }
 
 export const WORLD_IDS = Object.keys(WORLD);
 export { LOOT, KEY };
 export const keyRoll = (salt) => rng(hash(salt, 'key'))() < KEY.chance;
+export const COMP_START = 1795789800000;
+export const restingComps = (rows, boss) => rows.filter((r) => r.boss === boss).slice(-2).reverse().map((r) => JSON.parse(r.party).map((h) => h.cls));
+export const isResting = (comp, rest) => rest.some((c) => c.join() === comp.join());
 export const dayOf = (at = Date.now()) => Math.floor((at - RESET_HOUR * 36e5) / DAY);
 export const resetAt = (day) => (day + 1) * DAY + RESET_HOUR * 36e5;
 export const daySeed = (boss, day) => hash('world', boss, day);
@@ -131,7 +143,8 @@ export function mulligan(run) {
   return true;
 }
 
-export const bossOf = (run) => WORLD[run.raid];
+export const bossOf = (run) => (WORLD[run.raid] && WORLD[run.raid].dragons ? DRAGONS[dragonOf(run.seed)] : WORLD[run.raid]);
+export { DRAGONS, dragonOf };
 
 export function tuneParty(party, boss) {
   const t = boss.balance || {};
@@ -143,7 +156,7 @@ export function tuneParty(party, boss) {
   });
 }
 
-export const worldParty = (pool, run, iterations = ITERATIONS) => drink(tuneParty(makeParty(pool, run.heroes.map((h, i) => { const b = boostOf(run.consume && run.consume[i]); return b ? { ...h, boost: b } : h; }), iterations, [], run.raid), bossOf(run)), run.consume);
+export const worldParty = (pool, run, iterations = ITERATIONS) => drink(tuneParty(makeParty(pool, run.heroes.map((h, i) => { const b = boostOf(run.consume && run.consume[i]); return b ? { ...h, boost: b } : h; }), iterations, [], run.raid), bossOf(run)), run.consume, bossOf(run).id);
 export const fightSeed = (run) => hash(run.salt, 'fight', run.raid);
 export const ROLL = 2;
 export const variance = (seed, roll = 1) => {

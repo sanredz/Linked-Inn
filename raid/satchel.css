@@ -2,7 +2,10 @@
 .satbag { position: relative; padding: 22px 14px 14px; border-radius: 14px 14px 18px 18px; background: radial-gradient(120% 90% at 30% 10%, #6b4426, #3a2312 60%, #24150a); border: 2px dashed rgba(214, 168, 110, .45); outline: 3px solid #1a0f06; box-shadow: inset 0 2px 10px rgba(0, 0, 0, .6), 0 8px 24px rgba(0, 0, 0, .5); }
 .satflap { position: absolute; left: 50%; top: -10px; width: 56%; height: 22px; transform: translateX(-50%); border-radius: 12px 12px 4px 4px; background: linear-gradient(#7a4e2c, #4a2c16); border: 1px solid #1a0f06; box-shadow: 0 3px 6px rgba(0, 0, 0, .5); }
 .satflap::after { content: ""; position: absolute; left: 50%; bottom: -7px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe39a, #a8741c 70%); box-shadow: 0 1px 2px #000; }
-.satgrid { display: grid; grid-template-columns: repeat(4, 46px); gap: 6px; }
+.satgrid { display: grid; grid-template-columns: repeat(5, 46px); gap: 6px; }
+.satlist { grid-column: 1 / -1; justify-self: start; padding: 6px 12px; font: inherit; font-size: 12.5px; color: #e9dfcb; border: 1px solid #5a4520; border-radius: 999px; background: rgba(0, 0, 0, .35); cursor: pointer; }
+.satlist:hover { color: #ffe39a; border-color: #c9a24a; }
+.satlist:focus-visible { outline: 2px solid #ffe39a; outline-offset: 2px; }
 .satslot { position: relative; width: 46px; height: 46px; padding: 0; border-radius: 6px; border: 1px solid #120a04; background: radial-gradient(circle at 50% 40%, #2a1a0e, #140b05); box-shadow: inset 0 2px 6px rgba(0, 0, 0, .8); cursor: pointer; }
 .satslot.empty { cursor: default; }
 .satslot img { width: 100%; height: 100%; border-radius: 5px; display: block; filter: grayscale(1) brightness(.35); }
@@ -11,7 +14,7 @@
 .satslot b { position: absolute; right: 2px; bottom: 0; font: 13px "Friz", serif; color: #fff; text-shadow: 0 0 2px #000, 0 1px 1px #000, 0 0 4px #000; }
 .satslot.dim { opacity: .4; }
 .satslot.sel { outline: 2px solid #ffe39a; outline-offset: 1px; }
-.satslot.pick { transform: translateY(-2px); box-shadow: 0 0 0 2px #ffe39a, 0 0 14px color-mix(in srgb, var(--q) 70%, transparent); }
+.satslot.chosen { transform: translateY(-2px); box-shadow: 0 0 0 2px #ffe39a, 0 0 14px color-mix(in srgb, var(--q) 70%, transparent); }
 .satslot:focus-visible { outline: 2px solid #ffe39a; outline-offset: 2px; }
 .satinfo { min-width: 0; }
 .satnone { margin: 4px 0 0; font: 14px/1.45 "Friz", serif; color: #a89c88; }
@@ -40,7 +43,7 @@
   .satinfo { width: 100%; }
 }
 .wvial { border-radius: 50% !important; background-image: none !important; background: radial-gradient(circle at 50% 40%, #2a1a0e, #120a04) !important; border: 1px dashed #8a6a3a !important; display: grid; place-items: center; cursor: pointer; }
-.wvial i { font: 22px/1 "Friz", serif; font-style: normal; color: #c9a24a; }
+.wvial i { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; font: 700 22px/1 Georgia, "Times New Roman", serif; font-style: normal; color: #c9a24a; }
 .wvial.on { border: 2px solid var(--q) !important; box-shadow: 0 0 12px color-mix(in srgb, var(--q) 60%, transparent); }
 .wvial.on img { border-radius: 50%; }
 .wvial.drink { animation: wvialdrink .8s cubic-bezier(.2, 1.4, .4, 1); }
@@ -50,8 +53,12 @@
 .wcons { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
 .wcons button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 5px; font: 12.5px "Friz", serif; color: #e9dfcb; cursor: pointer; background: rgba(0, 0, 0, .45); border: 1px dashed #6d5222; border-radius: 999px; }
 .wcons button.on { border-style: solid; border-color: var(--q); color: #9dff7a; }
-.wcons button img, .wcons button i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-style: normal; color: #c9a24a; background: #1a0f06; }
+.wcons button img, .wcons button i { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 700 15px/1 Georgia, serif; font-style: normal; color: #c9a24a; background: #1a0f06; }
 .wconsh { margin: 14px 0 0; font: 13px "Friz", serif; font-weight: normal; letter-spacing: .14em; text-transform: uppercase; color: #c9a24a; }
 .wvial:not(.on) { border: 1px solid #c9a24a !important; animation: wvialpulse 2.2s ease-in-out infinite; }
 @keyframes wvialpulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 106, 0); } 50% { box-shadow: 0 0 0 4px rgba(255, 215, 106, .25), 0 0 14px rgba(255, 215, 106, .55); } }
 @media (prefers-reduced-motion: reduce) { .wvial:not(.on) { animation: none; } }
+.consq { display: flex; align-items: center; justify-content: center; box-sizing: border-box; flex: none; width: 100%; height: 100%; font: 700 19px/1 Georgia, "Times New Roman", serif; color: rgba(255, 233, 184, .55); border-radius: 5px; border: 1px dashed #5a4a2e; background: radial-gradient(circle at 50% 40%, rgba(255, 215, 106, .1), rgba(0, 0, 0, .5) 70%); }
+.satcard.mystery .consq { width: 48px; height: 48px; font-size: 28px; }
+.dlistgrp li.mystery .consq { width: 30px; height: 30px; }
+.dlistgrp li.mystery b { color: #a8987c; }

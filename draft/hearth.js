@@ -4,7 +4,7 @@ import { askName, claimName, heroName, nameOk } from '../pvp/name.js';
 import { SEASON, SEASONS, seasonOf } from './seasons.js';
 import { honorsOf, titleHtml, honorCards, unseen, revealHonor, plaqueHtml, HONORS } from './honors.js';
 import { LOOT, KEY } from '../raid/worldloot.js';
-import { satchelHtml, bindSatchel, satchelCss } from '../raid/satchel.js';
+import { satchelHtml, bindSatchel, satchelCss, setOpen } from '../raid/satchel.js';
 import { CONSUMABLES } from '../raid/consumables.js';
 import { standing, bannerProgress, REWARDS, REWARD, REWARD_MOUNT, RENOWN_MAX, portraitNeeds, rewardFor, titleOf, glowOf } from './paths.js';
 import { pathsCss, pathsPanel, pathDetail, bindPaths, lookHtml, bindLook, frameAttr, revealPaths as revealPathsUI } from './pathsui.js';
@@ -43,7 +43,8 @@ function showcase(st) {
   st.forge.ingots = Math.max(st.forge.ingots || 0, 8);
   st.world = st.world || {};
   for (const it of LOOT) { const w = st.world[it.boss] = st.world[it.boss] || { tries: 0, kills: 0, best: 0, drops: {} }; w.drops = w.drops || {}; w.drops[it.id] = 1; st.found[it.id] = st.found[it.id] || now; }
-  st.attune = { kazzak: { forged: now } };
+  if (st.world.dream) st.world.dream.slain = { ysondre: 1, lethon: 1, emeriss: 1, taerar: 1, ...st.world.dream.slain };
+  st.attune = { kazzak: { forged: now }, dream: { forged: now } };
   st.gear.bestOf = st.gear.bestOf || {};
   for (const c of CLASSES) st.gear.bestOf[c] ||= { dps: 0, build: '', picks: { main: 19019 } };
   st.satchel = Object.fromEntries(CONSUMABLES.map((c, i) => [c.id, 1 + (i % 3)]));
@@ -161,7 +162,7 @@ function trophyItems() {
   return TROPHIES.map((x) => {
     if (x.boss) {
       const have = has(s, x), got = have && s.found && s.found[x.id];
-      return { id: x.id, kind: x.kind, area: 'cellar', name: x.name, icon: x.icon, have, rarity: x.rarity, text: x.text, line: have ? `Dropped by ${x.from}${got ? ` · ${day(got)}` : ''}` : `${x.rarity} drop from ${x.from}`, model: x.kind === 'steed' ? `assets/raid/gear/${x.model}.glb` : x.model ? `assets/draft/gear/${x.model}` : '', scale: x.scale };
+      return { id: x.id, kind: x.kind, area: x.area || 'cellar', art: x.art, inside: x.inside, dome: x.dome, glow: x.glow, glowColor: x.glowColor, color: x.color, dragon: x.dragon, name: x.name, icon: x.icon, have, rarity: x.rarity, text: x.text, line: have ? `Dropped by ${x.from}${got ? ` · ${day(got)}` : ''}` : `${x.rarity} drop from ${x.from}`, model: x.kind === 'steed' ? `assets/raid/gear/${x.model}.glb` : x.model ? `assets/draft/gear/${x.model}` : '', scale: x.scale };
     }
     const have = owned(s, x), mount = MOUNTS.includes(x), drop = mount || !x.forged, row = !drop && ctx.gear.items[x.id];
     const done = !drop && s.forge && s.forge[x.id] && s.forge[x.id].done;
@@ -264,11 +265,11 @@ function modeCard(m) {
 function tabHtml() {
   const s = sv();
   if (tab === 'overview') {
-    return `${honorCards(myHonors())}<h3 class="hh3">Paths <em>five roads, five ranks each</em></h3>${pathsPanel(st)}
+    return `${honorCards(myHonors())}<h3 class="hh3">Paths <em>seven roads, five ranks each</em></h3>${pathsPanel(st)}
       <h3 class="hh3">Your look <em>tap one to change it</em></h3><div class="hlook">${lookHtml(st, data.profile, rideList())}</div>
       <div class="hmodes">${MODES.map(modeCard).join('')}</div>
       <h3 class="hh3">Collection</h3>${collectionHtml('')}
-      <h3 class="hh3">Your satchel <em>consumables for World Boss fights, one per hero</em></h3><div class="hsatchel">${satchelHtml(s.satchel || {}, { sealed: !(s.attune && s.attune.kazzak && s.attune.kazzak.forged) })}</div>`;
+      <h3 class="hh3">Your satchel <em>consumables for World Boss fights, one per hero</em></h3><div class="hsatchel">${(setOpen({ any: s.attune && ((s.attune.kazzak && s.attune.kazzak.forged) || (s.attune.dream && s.attune.dream.forged)), dream: s.attune && s.attune.dream && s.attune.dream.forged, have: s.satchel || {} }), satchelHtml(s.satchel || {}, { sealed: !(s.attune && ((s.attune.kazzak && s.attune.kazzak.forged) || (s.attune.dream && s.attune.dream.forged))) }))}</div>`;
   }
   const feats = `<h3 class="hh3">${tab === 'gear' ? 'Drafter' : tab === 'arena' ? 'Gladiator' : 'Raider'} Path</h3><div class="hpathin">${pathDetail(st, PATH_OF[tab])}</div>`;
   if (tab === 'gear') {
@@ -417,6 +418,7 @@ function rideList() {
   return [
     ...MOUNTS.map((m) => ({ id: m.id, name: m.name.replace(/^Swift /, ''), icon: m.icon, file: `assets/raid/gear/${m.model}.glb`, scale: m.scale, have: count(s, m.id) > 0, need: `${m.from} in Zul'Gurub` })),
     { id: 990204, name: 'Dreadsteed', icon: 132238, file: 'assets/raid/gear/mount_dreadsteed.glb', scale: 1, have: !!w[990204], need: 'a rare drop from Lord Kazzak' },
+    { id: 990214, name: 'Emerald Drake', icon: 134153, file: 'assets/raid/gear/mount_emeralddrake.glb', scale: .48, have: !!(s.world && s.world.dream && s.world.dream.drops && s.world.dream.drops[990214]), need: 'a rare drop from the Dragons of Nightmare' },
     ...REWARD_MOUNT.map((m) => ({ id: m.id, name: m.name, icon: m.icon, file: `assets/raid/gear/${m.model}.glb`, scale: m.scale, have: st.open.has(m.reward), need: rewardFor(REWARD[m.reward]) })),
   ];
 }
@@ -460,9 +462,13 @@ function dressStage() {
 }
 
 const CELLAR_SHUT = 'Something stirs beneath the floorboards. Break the seals to open the cellar.';
+const LOFT_SHUT = 'A green mist seeps under the loft door. Wake the four Great Trees to open it.';
 function innOpts() {
-  const a = data && data.stats && data.stats.attune && data.stats.attune.kazzak, decor = st ? { open: [...st.open], tiers: st.tiers, pick: data.profile.decor, save: saveDecor, progress: (id) => bannerProgress(id, data.stats, st.ctx) } : null;
-  return a && !a.forged ? { locked: { cellar: CELLAR_SHUT }, decor } : { decor };
+  const at = (data && data.stats && data.stats.attune) || {}, dw = (data && data.stats && data.stats.world && data.stats.world.dream) || {}, heads = dw.drops && dw.drops[990215] ? ['ysondre', 'lethon', 'emeriss', 'taerar'].filter((id) => dw.slain && dw.slain[id]) : [], decor = st ? { open: [...st.open], tiers: st.tiers, pick: data.profile.decor, save: saveDecor, heads, progress: (id) => bannerProgress(id, data.stats, st.ctx) } : null;
+  const locked = {};
+  if (at.kazzak && !at.kazzak.forged) locked.cellar = CELLAR_SHUT;
+  if (!(at.dream && at.dream.forged)) locked.loft = LOFT_SHUT;
+  return Object.keys(locked).length ? { locked, decor } : { decor };
 }
 
 export async function openInn(focus) {

@@ -1,9 +1,11 @@
 import { hash, rng } from '../draft/core.js';
 import { RAIDS } from './bosses.js';
+import { DREAM_START } from './dream.js';
 
 export const CONSUME_START = 1795329976802;
 export const CAP = 5;
 export const DROP_CHANCE = .1;
+export const dreamChance = (c) => (c.src[1] <= 2 ? .05 : .08);
 export const OLD_CHANCE = .06;
 export const RATE_UP = 1795427812515;
 export const TIER_ROLL = [['minor', .6], ['major', .3], ['superior', .1]];
@@ -13,8 +15,10 @@ const FITS = {
   any: () => true,
   dps: (h) => h.role === 'dps',
   heal: (h) => h.role === 'heal',
+  tank: (h) => h.role === 'tank',
 };
-const NOPE = { dps: 'Only for damage dealers', heal: 'Only for healers' };
+const NOPE = { dps: 'Only for damage dealers', heal: 'Only for healers', tank: 'Only for tanks' };
+const oil = (id, src, name, icon, school, vs) => ({ id, src, tier: 'major', name, icon, fit: 'dps', coat: { school, vs, power: 1.01, strong: 1.04 }, line: `+1% damage as bonus ${school} damage, +4% against foes weak to ${school}` });
 
 export const CONSUMABLES = [
   { id: 990401, raid: 'mc', tier: 'minor', name: 'Juju Might', icon: 134309, fit: 'dps', power: 1.01, line: '+1% damage' },
@@ -26,8 +30,17 @@ export const CONSUMABLES = [
   { id: 990407, raid: 'aq20', tier: 'minor', name: 'Elixir of Fortitude', icon: 134823, fit: 'any', stats: { sta: 18 }, line: '+18 Stamina (+180 health)' },
   { id: 990408, raid: 'aq20', tier: 'major', name: 'Greater Shadow Protection Potion', icon: 134803, fit: 'any', stats: { rshadow: 35 }, line: '+35 shadow resistance' },
   { id: 990409, raid: 'aq20', tier: 'superior', name: 'Flask of the Titans', icon: 134842, fit: 'any', stats: { sta: 30, rshadow: 15 }, line: '+30 Stamina (+300 health), +15 shadow resistance' },
+  oil(990410, ['mc', 1], 'Fire Oil', 134818, 'fire', 'ysondre'),
+  oil(990411, ['zg', 6], 'Blessed Wizard Oil', 134806, 'holy', 'lethon'),
+  oil(990412, ['aq20', 1], 'Frost Oil', 134800, 'frost', 'emeriss'),
+  oil(990413, ['zg', 8], 'Shadow Oil', 134726, 'shadow', 'taerar'),
+  { id: 990414, src: ['zg', 1], tier: 'minor', name: 'Greater Nature Protection Potion', icon: 134802, fit: 'any', stats: { rnature: 45 }, line: '+45 nature resistance' },
+  { id: 990415, src: ['mc', 0], tier: 'major', name: 'Brilliant Mana Oil', icon: 134722, fit: 'heal', heal: 1.03, stats: { mp5: 12 }, line: '+3% healing, +12 mana every 5 sec' },
+  { id: 990416, src: ['mc', 7], tier: 'major', name: 'Greater Stoneshield Potion', icon: 134849, fit: 'tank', taken: .95, line: 'Your tank takes 5% less damage' },
+  { id: 990417, src: ['aq20', 2], tier: 'minor', name: 'Greater Arcane Protection Potion', icon: 134863, fit: 'any', stats: { rarcane: 45 }, line: '+45 arcane resistance' },
 ];
 export const CONSUMABLE = Object.fromEntries(CONSUMABLES.map((c) => [c.id, c]));
+export const DREAM_ITEMS = CONSUMABLES.filter((c) => c.src);
 
 export const SOURCES = { mc: { mid: 5, final: 9 }, zg: { mid: 5, final: 9 }, aq20: { mid: 3, final: 5 } };
 export const bossName = (raid, i) => RAIDS[raid].bosses[i].name;
@@ -49,6 +62,7 @@ export function consumeDrops(raid, kills, seed, at = Date.now()) {
     const c = CONSUMABLES.find((k) => k.raid === raid && k.tier === tier);
     out.push({ ...c, boss: i });
   }
+  if (at >= DREAM_START) for (const c of DREAM_ITEMS) if (c.src[0] === raid && kills > c.src[1] && rng(hash(seed, 'dreamcons', c.id))() < dreamChance(c)) out.push({ ...c, boss: c.src[1] });
   return out;
 }
 
@@ -70,11 +84,13 @@ export function satchelOf(raidRows, usedRows = [], grants = [], unsealed = 0) {
 
 export const boostOf = (id) => (CONSUMABLE[id] && CONSUMABLE[id].stats) || null;
 
-export function drink(party, consume) {
+export function drink(party, consume, foe) {
   if (!consume) return party;
   return party.map((h, i) => {
     const c = CONSUMABLE[consume[i]];
     if (!c) return h;
+    if (c.coat && h.role === 'dps') { const k = foe === c.coat.vs ? c.coat.strong : c.coat.power; return { ...h, power: h.power * k, dps: h.dps * k }; }
+    if (c.taken && h.role === 'tank') return { ...h, k: { ...h.k, taken: (h.k.taken || 1) * c.taken } };
     if (c.power && h.role === 'dps') return { ...h, power: h.power * c.power, dps: h.dps * c.power };
     if (c.heal && h.role === 'heal') return { ...h, k: { ...h.k, heal: h.k.heal * c.heal } };
     return h;

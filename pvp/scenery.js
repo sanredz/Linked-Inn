@@ -14,6 +14,8 @@ const ZONES = {
     kinds: { rock: [26, 20, 60, 7, 16], bush: [14, 16, 50, 1.5, 4], grass: [120, 6, 40, .3, .6], prop: [2, 21, 27, 0, 0] } },
   ahnqiraj: { floor: 'terrain_sand', alt: 'terrain_dirt', sky: [0x7a5a2c, 0xf2cf8e], fog: 0xc9a466, hills: 7, worn: .45, mote: 0xffdc9a, models: 'barrens',
     kinds: { rock: [34, 14, 60, 2, 7], bush: [10, 16, 50, 1, 2], grass: [160, 4, 40, .4, .8], prop: [3, 21, 27, 0, 0] } },
+  dream: { floor: 'terrain_grass2', alt: 'terrain_dirt', sky: [0x06120d, 0x2c6a4c], fog: 0x173326, hills: 9, worn: .75, mote: 0x8dffb5, models: 'jungle', tint: [.13, .3, .27],
+    kinds: { tree: [26, 20, 60, 12, 19], bush: [54, 11, 50, 1.1, 2.4], grass: [420, 1, 40, .5, .9], rock: [8, 22, 60, 5, 10], prop: [3, 21, 27, 0, 0] } },
   blasted: { floor: 'terrain_dirt', alt: 'terrain_sand', sky: [0x24090a, 0xa8401c], fog: 0x6a2614, hills: 11, worn: .5, mote: 0xff7a3a, models: 'barrens',
     kinds: { rock: [36, 14, 60, 2, 8], bush: [6, 16, 50, 1, 2], grass: [90, 4, 40, .3, .6], prop: [2, 21, 27, 0, 0] } },
 };
@@ -67,7 +69,8 @@ export class Scenery {
       const worn = (1 - smooth(FLAT * .45, FLAT * .95, d)) * def.worn;
       blend.push(Math.min(1, Math.max(worn * (.75 + patch * .25), smooth(.5, 1.2, slope), patch > .86 ? (patch - .86) * 4 : 0)));
       const s = .82 + patch * .22 + (r() - .5) * .06 - smooth(.6, 1.6, slope) * .15;
-      color.push(s, s, s);
+      const k = def.tint || [1, 1, 1];
+      color.push(s * k[0], s * k[1], s * k[2]);
     }
     geo.setAttribute('color', new THREE.Float32BufferAttribute(color, 3));
     geo.setAttribute('blend', new THREE.Float32BufferAttribute(blend, 1));
@@ -168,7 +171,9 @@ export class Scenery {
       models.forEach((mdl, k) => {
         if (!spots[k].length) return;
         for (const part of mdl.parts) {
-          const inst = new THREE.InstancedMesh(part.geometry, part.material, spots[k].length);
+          let mat = part.material;
+          if (def.tint) { mat = mat.clone(); mat.color.setRGB(...def.tint); if (SWAY[kind]) this.sway(mat, SWAY[kind]); }
+          const inst = new THREE.InstancedMesh(part.geometry, mat, spots[k].length);
           spots[k].forEach((m, j) => inst.setMatrixAt(j, m4.multiplyMatrices(m, part.matrix)));
           inst.frustumCulled = false;
           group.add(inst);

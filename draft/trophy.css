@@ -119,3 +119,4 @@ body.trophyopen { overflow: hidden; }
 .trban.t3 img { filter: drop-shadow(0 0 6px rgba(255, 215, 106, .55)) drop-shadow(0 2px 3px rgba(0, 0, 0, .6)); }
 .trdneed strong { display: inline-block; min-width: 22px; font: 12px "Morpheus", serif; color: #c9a24a; }
 .trdneed em.held { color: #9dff7a; }
+.trhead img { border-color: #6dffb0; border-radius: 50%; object-fit: cover; }

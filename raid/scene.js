@@ -5,7 +5,7 @@ import { MILESTONES, tierOf } from './bosses.js';
 import { bossHealth } from './engine.js';
 import { sound } from './wloot.js';
 
-const SIZE = { jeklik: 4.6, venoxis: 5.6, marli: 3.8, mandokir: 5.4, grilek: 5.4, hazzarah: 5.4, renataki: 5.4, wushoolay: 5.4, gahzranka: 7.6, thekal: 4.2, arlokk: 4.2, jindo: 5, hakkar: 10.5, lucifron: 5, magmadar: 4.6, gehennas: 5, garr: 5.4, geddon: 6.4, shazzrah: 5, sulfuron: 5.4, golemagg: 7.5, majordomo: 4.6, ragnaros: 11, kurinnaxx: 5.8, rajaxx: 4.4, moam: 6.6, buru: 6, ayamiss: 6.4, ossirian: 9, kazzak: 9.5 };
+const SIZE = { jeklik: 4.6, venoxis: 5.6, marli: 3.8, mandokir: 5.4, grilek: 5.4, hazzarah: 5.4, renataki: 5.4, wushoolay: 5.4, gahzranka: 7.6, thekal: 4.2, arlokk: 4.2, jindo: 5, hakkar: 10.5, lucifron: 5, magmadar: 4.6, gehennas: 5, garr: 5.4, geddon: 6.4, shazzrah: 5, sulfuron: 5.4, golemagg: 7.5, majordomo: 4.6, ragnaros: 11, kurinnaxx: 5.8, rajaxx: 4.4, moam: 6.6, buru: 6, ayamiss: 6.4, ossirian: 9, kazzak: 9.5, ysondre: 8.6, lethon: 8.6, emeriss: 8.6, taerar: 8.6 };
 const TONE = { fire: 0xff7a2a, frost: 0x7fd4ff, arcane: 0xd27dff, shadow: 0x9a5cff, nature: 0x7dff8a, holy: 0xffe680, phys: 0xffffff };
 const COLOR = { fire: '#ff8a3c', frost: '#8fd0ff', arcane: '#d59bff', shadow: '#b18cff', nature: '#7dff8a', holy: '#ffe680', phys: '#ffffff' };
 const TIME = 3, BOSS_Z = -6, CAST = /^(moon|ele|shadow|shadowd|shock|fire|frost|arcane|afflic|demo|destro)$/;
@@ -146,6 +146,8 @@ export class RaidScene extends Arena {
     this.miles = raid.milestones || MILESTONES;
     this.worldBoss = !!raid.world;
     this.supreme = boss.supreme || 0;
+    this.clockName = boss.clock || 'Supreme Mode';
+    this.clockLine = boss.clockLine || 'stops holding back';
     this.bossMax = this.worldBoss ? bossHealth(boss, null) : 0;
     this.bossShown = this.bossMax;
     this.bossLag = 1;
@@ -162,7 +164,7 @@ export class RaidScene extends Arena {
     const box = this.q('.rframes');
     if (!box.firstChild || box.querySelectorAll('.rmember').length !== this.team.length) {
       if (this.worldBoss) {
-        box.innerHTML = `<div class="rworld"><div class="rwname"><b>${this.bossName}</b>${this.bossTitle ? `<small>${this.bossTitle}</small>` : ''}</div><div class="rwbar"><i class="rwlag"></i><i class="rwfill"></i>${[.75, .5, .25].map((m) => `<span class="rwmark" style="left:${m * 100}%"></span>`).join('')}<b class="rwnum">${Math.round(this.bossMax).toLocaleString('en-US')}</b></div><div class="rwclock">Supreme Mode in <b>${this.clock(this.supreme)}</b></div></div><div class="rmiles"></div><div class="rteam">${this.team.map((m, i) => `<div class="rmember" data-m="${i}"><img src="assets/classes/${m.hero.cls}.png" alt=""><div><div class="ubar hp"><i></i><b></b></div><div class="ubar res"><i></i></div></div></div>`).join('')}</div>`;
+        box.innerHTML = `<div class="rworld"><div class="rwname"><b>${this.bossName}</b>${this.bossTitle ? `<small>${this.bossTitle}</small>` : ''}</div><div class="rwbar"><i class="rwlag"></i><i class="rwfill"></i>${[.75, .5, .25].map((m) => `<span class="rwmark" style="left:${m * 100}%"></span>`).join('')}<b class="rwnum">${Math.round(this.bossMax).toLocaleString('en-US')}</b></div><div class="rwclock">${this.clockName} in <b>${this.clock(this.supreme)}</b></div></div><div class="rmiles"></div><div class="rteam">${this.team.map((m, i) => `<div class="rmember" data-m="${i}"><img src="assets/classes/${m.hero.cls}.png" alt=""><div><div class="ubar hp"><i></i><b></b></div><div class="ubar res"><i></i></div></div></div>`).join('')}</div>`;
       } else box.innerHTML = `${this.endless ? `<div class="rfinal t-1"><span>Final Stand</span><b>0</b><em>Damage to ${this.finale}</em></div><div class="rmiles"></div>` : '<div class="rboss"><span class="rbname"></span><div class="ubar hp"><i></i><b></b></div></div>'}<div class="rteam">${this.team.map((m, i) => `<div class="rmember" data-m="${i}"><img src="assets/classes/${m.hero.cls}.png" alt=""><div><div class="ubar hp"><i></i><b></b></div><div class="ubar res"><i></i></div></div></div>`).join('')}</div>`;
       if (!this.endless) box.querySelector('.rbname').textContent = this.bossName;
     }
@@ -197,17 +199,17 @@ export class RaidScene extends Arena {
     box.querySelector('.rwfill').style.width = `${frac * 100}%`;
     this.bossTarget = frac;
     const left = this.supreme - f.t, clock = box.querySelector('.rwclock');
-    if (left > 0) { clock.innerHTML = `Supreme Mode in <b>${this.clock(left)}</b>`; clock.classList.toggle('near', left <= 30); }
+    if (left > 0) { clock.innerHTML = `${this.clockName} in <b>${this.clock(left)}</b>`; clock.classList.toggle('near', left <= 30); }
     else if (!clock.classList.contains('on')) {
       clock.className = 'rwclock on';
-      clock.innerHTML = '<b>Supreme Mode</b>';
+      clock.innerHTML = `<b>${this.clockName}</b>`;
       this.fx.shake = Math.max(this.fx.shake, .9);
       this.q('.rframes').classList.add('supreme');
       if (!(this.playing && this.playing.t >= 1e4)) {
         sound('supreme');
         const mile = document.createElement('div');
         mile.className = 'rmile rwmile rwsup';
-        mile.innerHTML = `<b>Supreme Mode</b><span>${this.bossName} stops holding back</span>`;
+        mile.innerHTML = `<b>${this.clockName}</b><span>${this.bossName} ${this.clockLine}</span>`;
         this.q('.rmiles').append(mile);
         setTimeout(() => mile.remove(), 1700);
       }

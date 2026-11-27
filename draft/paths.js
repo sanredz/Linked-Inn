@@ -10,6 +10,9 @@ const raid = (s, id) => (s.raids && s.raids[id]) || {};
 const raids = (s) => Object.values(s.raids || {});
 const sum = (s, k) => raids(s).reduce((n, r) => n + (r[k] || 0), 0);
 const world = (s) => (s.world && s.world.kazzak) || {};
+const dream = (s) => (s.world && s.world.dream) || {};
+const worlds = (s) => Object.values(s.world || {});
+const wsum = (s, k) => worlds(s).reduce((n, w) => n + (w[k] || 0), 0);
 const bestDps = (s, c) => (s.gear.bestOf[c] && s.gear.bestOf[c].dps) || 0;
 const classesAt = (s, i) => CLASS_LIST.filter((c) => bestDps(s, c) >= DPS_MARKS[c][i]).length;
 const arenaAt = (s, n) => CLASS_LIST.filter((c) => ((s.arena.bestBy || {})[c] || 0) >= n).length;
@@ -77,6 +80,32 @@ export const PATHS = [
     ],
   },
   {
+    id: 'dreamwalker', name: 'Dreamwalker', mode: 'world', icon: 'assets/icons/134157.png', color: '#5dffb0', blurb: 'Dragons of Nightmare',
+    marks: [5, 38, 102, 186, 275],
+    ranks: ['Dreamer', 'Treewaker', 'Nightmare Hunter', 'Dragonbane', 'Keeper of the Dream'],
+    deeds: [
+      d('n_trees', 'Great Trees awake', 132123, (s) => (s.attune && s.attune.dream ? (s.attune.dream.forged ? 4 : s.attune.dream.steps || 0) : 0), [[1, 'bronze'], [2, 'silver'], [4, 'gold']], { of: 4, hint: 'Pass the four Dream Trials' }),
+      d('n_tries', 'Dragon attempts', 136224, (s) => dream(s).tries || 0, [[1, 'bronze'], [10, 'silver'], [30, 'gold']]),
+      d('n_kills', 'Dragon kills', 134157, (s) => dream(s).kills || 0, [[1, 'gold'], [5, 'gold'], [10, 'legend']]),
+      d('n_four', 'Dragons slain', 136116, (s) => Object.keys(dream(s).slain || {}).length, [[1, 'silver'], [2, 'silver'], [4, 'legend']], { of: 4, hint: 'Ysondre, Lethon, Emeriss and Taerar' }),
+      d('n_relics', 'Shrine of the Four', 134123, (s) => [990216, 990217, 990218, 990219].filter((id) => dream(s).drops && dream(s).drops[id]).length, [[1, 'silver'], [2, 'gold'], [4, 'legend']], { of: 4, hint: 'One relic from each dragon' }),
+      d('n_bare', 'Dreamless', 132334, (s) => dream(s).bare || 0, [[1, 'legend']], { text: 'Kill a dragon without any consumables' }),
+    ],
+  },
+  {
+    id: 'slayer', name: 'Slayer', mode: 'world', icon: 'assets/icons/136224.png', color: '#7fc8ff', blurb: 'Every World Boss',
+    marks: [5, 37, 99, 180, 267],
+    ranks: ['Hunter', 'Challenger', 'Giantsbane', 'Kingslayer', 'Worldslayer'],
+    deeds: [
+      d('s_tries', 'World boss attempts', 136224, (s) => wsum(s, 'tries'), [[1, 'bronze'], [10, 'silver'], [30, 'gold'], [100, 'legend']]),
+      d('s_kills', 'World boss kills', 237558, (s) => wsum(s, 'kills'), [[1, 'gold'], [5, 'legend'], [20, 'legend']]),
+      d('s_bosses', 'World bosses defeated', 136122, (s) => worlds(s).filter((w) => w.kills > 0).length, [[1, 'silver'], [2, 'gold']], { of: 2, hint: 'Lord Kazzak and the Dragons of Nightmare' }),
+      d('s_drank', 'Consumables used', 134842, (s) => wsum(s, 'drank'), [[1, 'bronze'], [10, 'silver'], [30, 'gold']]),
+      d('s_comps', 'Winning party comps', 132090, (s) => wsum(s, 'comps'), [[3, 'silver'], [6, 'gold']], { hint: 'Different class trios that killed a world boss' }),
+      d('s_bare', 'Bare-handed', 132334, (s) => wsum(s, 'bare'), [[2, 'legend']], { text: 'Kill world bosses twice without any consumables' }),
+    ],
+  },
+  {
     id: 'collector', name: 'Collector', mode: 'inn', icon: 'assets/icons/133062.png', color: '#c07dff', blurb: 'The Inn',
     marks: [5, 32, 85, 154, 228],
     ranks: ['Curious', 'Hoarder', 'Curator', 'Keeper', 'Lorekeeper'],
@@ -116,13 +145,25 @@ export const REWARDS = [
   { id: 't_conqueror', kind: 'title', path: 'raider', rank: 5, name: 'the Conqueror' },
   { id: 'p_onyxia', kind: 'portrait', path: 'raider', rank: 5, name: 'Onyxia portrait', portrait: 'hero:onyxia' },
 
-  { id: 't_sealbreaker', kind: 'title', path: 'doomslayer', rank: 2, name: 'Sealbreaker' },
   { id: 'g_fel', kind: 'glow', path: 'doomslayer', rank: 1, name: 'Felfire', color: '#3aff2a', sparks: '#c8ffb0', fx: 'fel' },
+  { id: 't_sealbreaker', kind: 'title', path: 'doomslayer', rank: 2, name: 'Sealbreaker' },
   { id: 'i_felbrazier', kind: 'decor', path: 'doomslayer', rank: 3, name: 'Fel Brazier', slot: 'brazier' },
   { id: 'i_felfire', kind: 'decor', path: 'doomslayer', rank: 3, name: 'Felfire', slot: 'fire', color: '#4aff2a' },
   { id: 'p_kelthuzad', kind: 'portrait', path: 'doomslayer', rank: 4, name: "Kel'Thuzad portrait", portrait: 'hero:kelthuzad' },
   { id: 't_doomslayer', kind: 'title', path: 'doomslayer', rank: 5, name: 'Doomslayer' },
   { id: 'm_felsteed', kind: 'mount', path: 'doomslayer', rank: 5, name: 'Felsteed', mount: 990602 },
+
+  { id: 't_dreamer', kind: 'title', path: 'dreamwalker', rank: 1, name: 'the Dreamer' },
+  { id: 't_dreamwalker', kind: 'title', path: 'dreamwalker', rank: 2, name: 'Dreamwalker' },
+  { id: 'g_dream', kind: 'glow', path: 'dreamwalker', rank: 3, name: 'Emerald Dream', color: '#5dff9a', sparks: '#d8ffe8', fx: 'dream' },
+  { id: 'i_dreamfire', kind: 'decor', path: 'dreamwalker', rank: 4, name: 'Dreamfire', slot: 'fire', color: '#3dffb0' },
+  { id: 't_nightmare', kind: 'title', path: 'dreamwalker', rank: 5, name: 'Bane of the Nightmare' },
+
+  { id: 't_bold', kind: 'title', path: 'slayer', rank: 1, name: 'the Bold' },
+  { id: 'g_storm', kind: 'glow', path: 'slayer', rank: 3, name: 'Stormforged', color: '#7fc8ff', sparks: '#e8f6ff', fx: 'storm' },
+  { id: 'i_spiritfire', kind: 'decor', path: 'slayer', rank: 4, name: 'Spiritfire', slot: 'fire', color: '#bfe8ff' },
+  { id: 't_worldslayer', kind: 'title', path: 'slayer', rank: 5, name: 'Worldslayer' },
+  { id: 'm_kodo', kind: 'mount', path: 'slayer', rank: 5, name: 'Black War Kodo', mount: 990603 },
 
   { id: 'p_mekkatorque', kind: 'portrait', path: 'collector', rank: 1, name: 'Mekkatorque portrait', portrait: 'hero:mekkatorque' },
   { id: 't_collector', kind: 'title', path: 'collector', rank: 2, name: 'the Collector' },
@@ -194,6 +235,8 @@ export const FIRES = [
   { id: 'frost', name: 'Frostfire', need: 'i_frostfire', flame: ['#3aa8ff', '#d8f4ff'], bed: '#1a5aff', spark: 0xa8e0ff, light: 0x6ab8ff },
   { id: 'fel', name: 'Felfire', need: 'i_felfire', flame: ['#3aff2a', '#d8ffb0'], bed: '#1ac80a', spark: 0x9aff7a, light: 0x5aff3a },
   { id: 'arcane', name: 'Arcane fire', need: 'i_arcanefire', flame: ['#8a5aff', '#d8c8ff'], bed: '#5a2aff', spark: 0xc8a8ff, light: 0x9a7aff },
+  { id: 'spirit', name: 'Spiritfire', need: 'i_spiritfire', flame: ['#bfe8ff', '#ffffff'], bed: '#5a8aff', spark: 0xe0f4ff, light: 0xa8d8ff },
+  { id: 'dream', name: 'Dreamfire', need: 'i_dreamfire', flame: ['#3dffb0', '#e0fff0'], bed: '#0a9a6a', spark: 0x9dffd0, light: 0x4dffb0 },
 ];
 export const BANNER_HOOKS = 4;
 
@@ -204,7 +247,8 @@ export function decorOf(saved, open) {
   const fire = d && FIRES.find((f) => f.id === d.fire && has(f.need));
   const banners = d && Array.isArray(d.banners) ? [...new Set(d.banners)].filter((id) => BANNERS.some((b) => b.id === id && has(b.need))).slice(0, BANNER_HOOKS) : [...BANNERS].reverse().filter((b) => has(b.need)).map((b) => b.id).slice(0, BANNER_HOOKS);
   const brazier = open.has('i_felbrazier') && (d && 'brazier' in d ? !!d.brazier : true);
-  return { fire: fire ? fire.id : 'classic', banners, brazier };
+  const head = d && ['ysondre', 'lethon', 'emeriss', 'taerar'].includes(d.head) ? d.head : '';
+  return { fire: fire ? fire.id : 'classic', banners, brazier, head };
 }
 export const RANKS = 5;
 export const RENOWN_MAX = PATHS.length * RANKS;
@@ -212,6 +256,7 @@ export const RENOWN_MAX = PATHS.length * RANKS;
 export const REWARD_MOUNT = [
   { id: 990601, name: 'Black War Wolf', icon: 132224, model: 'mount_warwolf', scale: 1, reward: 'm_wolf' },
   { id: 990602, name: 'Felsteed', icon: 136103, model: 'mount_felsteed', scale: 1, reward: 'm_felsteed' },
+  { id: 990603, name: 'Black War Kodo', icon: 132243, model: 'mount_warkodo', scale: .62, reward: 'm_kodo' },
 ];
 
 const safe = (f, s) => { try { return +f(s) || 0; } catch { return 0; } };
@@ -246,7 +291,7 @@ export function standing(s) {
 }
 
 const DEED = Object.fromEntries(PATHS.flatMap((p) => p.deeds.map((x) => [x.id, x])));
-export const rewardFor = (r) => (r.how ? r.how : r.deed ? `${DEED[r.deed].steps[r.step - 1].label} on a class board` : r.renown ? `Renown ${r.renown}` : `${PATH[r.path].ranks[r.rank - 1]} ${PATH[r.path].name}`);
+export const rewardFor = (r) => (r.how ? r.how : r.deed === 'd_board' ? `${DEED[r.deed].steps[r.step - 1].label} on a class board` : r.deed ? `${DEED[r.deed].name}: ${DEED[r.deed].steps[r.step - 1].at}${DEED[r.deed].of ? ` of ${DEED[r.deed].of}` : ''}` : r.renown ? `Renown ${r.renown}` : `${PATH[r.path].ranks[r.rank - 1]} ${PATH[r.path].name}`);
 export const portraitNeeds = Object.fromEntries(REWARDS.filter((r) => r.kind === 'portrait').map((r) => [r.portrait, r.id]));
 export const titleOf = (id) => (REWARD[id] && REWARD[id].kind === 'title' ? REWARD[id].name : '');
 export const frameOf = (id) => (REWARD[id] && REWARD[id].kind === 'frame' ? REWARD[id] : null);

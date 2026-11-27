@@ -8,8 +8,10 @@ const ROOT = 'assets/draft/hall/';
 const AREAS = [
   { id: 'hall', name: 'The Common Room', note: 'Legendaries, mounts and raid trophies', home: { target: [-2.2, 1.5, 0], yaw: 1.4, pitch: .13, dist: 9 }, swing: 1.15 },
   { id: 'cellar', name: 'The Cellar', note: 'World Boss trophies', home: { target: [2.2, -4.3, -33.4], yaw: 0, pitch: .1, dist: 7.2 }, swing: .42, min: 3, max: 7.4, wide: 72 },
+  { id: 'loft', name: 'The Dreaming Loft', note: 'Dragons of Nightmare trophies', home: { target: [-4.3, 9.3, -27], yaw: 0, pitch: .14, dist: 8.2 }, swing: .55, min: 3, max: 8.8, wide: 72 },
 ];
 const AREA = Object.fromEntries(AREAS.map((a) => [a.id, a]));
+const REACH = { hall: 13, cellar: 9, loft: 8 };
 const homeOf = (id) => { const h = AREA[id].home; return { target: new THREE.Vector3(...h.target), yaw: h.yaw, pitch: h.pitch, dist: h.dist }; };
 const HOME = homeOf('hall');
 const SPOTS = {
@@ -24,12 +26,24 @@ const SPOTS = {
   17112: { at: [7.1, -3.7, -36.6], look: 0, clear: 1.2, y: -3.7, dist: 4.2 },
   990204: { at: [-1.5, -6.73, -34.1], yaw: .85, look: .2, clear: 2.4, y: -5.1, dist: 5.6 },
   990202: { at: [6.1, -6.73, -34.2], look: -.15, clear: 2.2, y: -5.3, dist: 3.4 },
+  990215: { at: [-9.4, 9.9, -29.4], look: Math.PI / 2, clear: 1.6, y: 9.8, dist: 4.2, size: 1.3 },
+  990211: { at: [-9.38, 9.2, -23.4], yaw: Math.PI / 2, look: Math.PI / 2, clear: 1.4, y: 9.1, dist: 4.4 },
+  20577: { at: [.86, 9.0, -26.5], yaw: -Math.PI / 2, look: -Math.PI / 2, clear: 1.4, y: 9, dist: 4.2 },
+  990214: { at: [-4.3, 7.29, -27.4], yaw: .6, look: .25, clear: 3, y: 9.2, dist: 6.4 },
+  990212: { at: [-7.6, 7.29, -30.6], look: .35, clear: 1.4, y: 9.1, dist: 3.4 },
+  990216: { at: [-.98, 7.29, -31.28], look: -1.35, clear: 1.6, y: 8.5, dist: 3 },
+  990217: { at: [-.22, 7.29, -31.28], look: -1.35, clear: 1.6, y: 8.5, dist: 3 },
+  990218: { at: [-.98, 7.29, -30.52], look: -1.35, clear: 1.6, y: 8.5, dist: 3 },
+  990219: { at: [-.22, 7.29, -30.52], look: -1.35, clear: 1.6, y: 8.5, dist: 3 },
 };
+const SHRINE = [-.6, 7.29, -30.9];
+const HEAD_IDS = [['ysondre', 'Ysondre'], ['lethon', 'Lethon'], ['emeriss', 'Emeriss'], ['taerar', 'Taerar']];
 const HEADS = {
   21220: { model: 'assets/raid/gear/ossirian.glb', cut: 6.3, scale: .56, tilt: .22, at: [.54, -.5, 0] },
   990205: { model: 'assets/raid/gear/kazzak.glb', cut: 5.9, scale: .37, tilt: .2, at: [.5, -.36, 0], half: 1.9, back: -.4, top: 8.8, ring: 0x3a8a2a, glow: 0x7dff5a },
+  990215: { model: 'assets/raid/gear/lethon.glb', cut: 3.2, scale: .22, tilt: .12, at: [.05, -.3, 0], half: 2.4, back: 4.6, shift: 4.6, top: 9.3, ring: 0x2f8a5c, glow: 0x6dffb0 },
 };
-const KIND = { weapon: 'Legendary', head: 'Trophy', mount: 'Mount', trophy: 'Trophy', painting: 'Painting', jar: 'Curio', rack: 'Weapon', steed: 'Mount' };
+const KIND = { weapon: 'Legendary', head: 'Trophy', mount: 'Mount', trophy: 'Trophy', painting: 'Painting', jar: 'Curio', rack: 'Weapon', steed: 'Mount', relic: 'Relic' };
 const RARITY = { Common: '#ffffff', Uncommon: '#1eff00', Rare: '#0070dd', Epic: '#a335ee', Legendary: '#ff8000' };
 const pulse = { value: 0 };
 const veil = new THREE.MeshBasicMaterial({ colorWrite: false });
@@ -153,6 +167,7 @@ class Hall {
     this.decorOpen = new Set((opts && opts.decor && opts.decor.open) || []);
     this.tiers = (opts && opts.decor && opts.decor.tiers) || {};
     this.look = decorOf(opts && opts.decor ? opts.decor.pick : null, this.decorOpen);
+    this.heads = (opts && opts.decor && opts.decor.heads) || [];
     this.hung = [];
     this.canvas = box.querySelector('canvas');
     this.loader = new GLTFLoader();
@@ -207,7 +222,7 @@ class Hall {
     const spots = Object.values(SPOTS);
     for (const d of plan.doodads) {
       const g = byFile.get(d.f);
-      if (!g || (d.p[1] < 2 && spots.some((p) => Math.hypot(d.p[0] - p.at[0], d.p[2] - p.at[2]) < p.clear))) continue;
+      if (!g || spots.some((p) => (d.p[1] < 2 || (p.at[1] > 6 && Math.abs(d.p[1] - p.at[1]) < 3.5)) && Math.hypot(d.p[0] - p.at[0], d.p[2] - p.at[2]) < p.clear)) continue;
       const o = g.scene.clone();
       o.position.fromArray(d.p);
       o.quaternion.fromArray(d.q);
@@ -222,6 +237,7 @@ class Hall {
     }
     this.embers();
     this.cellar();
+    this.loft();
     await loadEmblems();
     this.decorate();
     await Promise.all(this.items.map((x) => this.place(x)));
@@ -259,6 +275,41 @@ class Hall {
     this.paintFire(look.fire);
     this.hangBanners(look.banners);
     this.setBrazier(look.brazier);
+    if (this.headOf() !== this.shownHead) this.setHead();
+  }
+
+  headOf() {
+    return this.heads.includes(this.look.head) ? this.look.head : this.heads[0] || 'lethon';
+  }
+
+  async setHead() {
+    const entry = this.spots.find((e) => e.x.id === 990215);
+    if (!entry) return;
+    const ticket = (this.headTicket = (this.headTicket || 0) + 1), next = new THREE.Group();
+    next.position.copy(entry.group.position);
+    next.rotation.copy(entry.group.rotation);
+    next.scale.copy(entry.group.scale);
+    const keep = entry.lights;
+    entry.lights = keep ? [...keep] : null;
+    await this.head(entry, next);
+    if (ticket !== this.headTicket) return;
+    if (this.renderer.compileAsync) await this.renderer.compileAsync(next, this.camera, this.scene).catch(() => {});
+    if (ticket !== this.headTicket) return;
+    this.pick = this.pick.filter((m) => m.userData.trophy !== entry);
+    for (const c of [...entry.group.children]) if (!c.isLight) entry.group.remove(c);
+    for (const c of [...next.children]) { if (c.isLight) { if (c.parent !== entry.group) entry.group.add(c); continue; } entry.group.add(c); }
+    entry.group.updateMatrixWorld(true);
+    entry.group.traverse((m) => { if (m.isMesh && !m.userData.skip) { m.userData.trophy = entry; this.pick.push(m); } });
+  }
+
+  lightArea(id) {
+    const v = new THREE.Vector3(), c = new THREE.Vector3(...AREA[id].home.target);
+    this.scene.updateMatrixWorld(true);
+    this.scene.traverse((o) => {
+      if (!o.isPointLight && !o.isSpotLight) return;
+      o.getWorldPosition(v);
+      o.visible = !o.distance || v.distanceTo(c) < o.distance + REACH[id];
+    });
   }
 
   banner(b, at) {
@@ -365,6 +416,27 @@ class Hall {
     this.fx.push((t) => { fel.intensity = 1.5 + Math.sin(t * 2.3) * .4 + Math.sin(t * 7.1) * .15; });
   }
 
+  loft() {
+    const owned = this.items.some((x) => areaOf(x) === 'loft' && x.have);
+    const moon = new THREE.PointLight(owned ? 0x7dffc0 : 0x9fb8d8, 14, 14, 1.4);
+    moon.position.set(-4.3, 12.6, -30.5);
+    const fill = new THREE.PointLight(0xffc88a, 7, 12, 1.5);
+    fill.position.set(-4.3, 11.2, -19.5);
+    const lamp = new THREE.PointLight(0xffb070, 5, 7, 1.6);
+    lamp.position.set(-7.6, 9.6, -30.4);
+    this.scene.add(moon, fill, lamp);
+    if (!owned) return;
+    const n = 36, motes = sparks(n, 0x8dffc0, .05);
+    this.scene.add(motes);
+    const seed = motes.userData.seed, pos = motes.geometry.attributes.position;
+    this.fx.push((t) => {
+      for (let i = 0; i < n; i++) { const k = (t * (.03 + seed[i] * .04) + seed[i]) % 1; pos.setXYZ(i, -9 + seed[i] * 9.5 + Math.sin(t * .35 + seed[i] * 30) * .5, 7.4 + k * 5.2, -32 + ((seed[i] * 7.3) % 1) * 14); }
+      pos.needsUpdate = true;
+      motes.material.opacity = .5;
+      moon.intensity = 13 + Math.sin(t * .7) * 2;
+    });
+  }
+
   dress(o) {
     o.traverse((m) => {
       if (!m.isMesh) return;
@@ -424,6 +496,7 @@ class Hall {
     else if (x.kind === 'painting') await this.painting(entry);
     else if (x.kind === 'jar') await this.jar(entry);
     else if (x.kind === 'rack') await this.rack(entry);
+    else if (x.kind === 'relic') this.relic(entry);
     else await this.mount(entry);
     group.traverse((m) => { if (m.isMesh && !m.userData.skip) { m.userData.trophy = entry; this.pick.push(m); } });
   }
@@ -488,8 +561,9 @@ class Hall {
     });
   }
 
-  async head(entry) {
-    const { x, group, spot } = entry, HEAD = { ...HEADS[x.id], ...((window.HEADTUNE || {})[x.id] || {}) };
+  async head(entry, into) {
+    const { x, spot } = entry, group = into || entry.group, HEAD = { ...HEADS[x.id], ...((window.HEADTUNE || {})[x.id] || {}) };
+    if (x.id === 990215) { this.shownHead = this.headOf(); HEAD.model = `assets/raid/gear/${this.shownHead}.glb`; }
     const board = new THREE.Mesh(new THREE.CylinderGeometry(.66, .7, .1, 40), new THREE.MeshStandardMaterial({ color: 0x4a2a12, roughness: .8 }));
     board.rotation.z = Math.PI / 2;
     const ring = new THREE.Mesh(new THREE.TorusGeometry(.67, .035, 8, 64), new THREE.MeshStandardMaterial({ color: HEAD.ring || 0xb08a3e, roughness: .4, metalness: .6, ...(HEAD.ring && { emissive: HEAD.ring, emissiveIntensity: .35 }) }));
@@ -507,6 +581,7 @@ class Hall {
     turn.rotation.y = Math.PI / 2;
     body.scale.setScalar(HEAD.scale);
     body.position.y = -HEAD.cut * HEAD.scale;
+    if (HEAD.shift) body.position.z = -HEAD.shift * HEAD.scale;
     turn.add(body);
     hold.add(turn);
     group.add(hold);
@@ -521,11 +596,14 @@ class Hall {
     const cap = new THREE.MeshBasicMaterial({ color: 0x4a2c14, side: THREE.BackSide, clippingPlanes: planes }), skins = [];
     body.traverse((m) => { if (m.isMesh) skins.push(m); });
     for (const m of skins) { const c = m.clone(); c.material = cap; c.userData.skip = true; m.parent.add(c); }
-    const light = new THREE.SpotLight(0xffe0b0, 14, 5, .6, .6, 1.3);
-    light.position.set(2.6, 1.4, 0);
-    light.target = hold;
-    group.add(light);
-    if (HEAD.glow) { const g = new THREE.PointLight(HEAD.glow, 1, 2.6, 1.6); g.position.set(.9, .2, 0); group.add(g); this.fx.push((t) => { g.intensity = .9 + Math.sin(t * 2.7) * .3; }); }
+    if (!entry.lights) {
+      const light = new THREE.SpotLight(0xffe0b0, 14, 5, .6, .6, 1.3);
+      light.position.set(2.6, 1.4, 0);
+      entry.lights = [light];
+      if (HEAD.glow) { const g = new THREE.PointLight(HEAD.glow, 1, 2.6, 1.6); g.position.set(.9, .2, 0); entry.lights.push(g); this.fx.push((t) => { g.intensity = .9 + Math.sin(t * 2.7) * .3; }); }
+    }
+    entry.lights[0].target = hold;
+    for (const l of entry.lights) if (!into || !l.parent) group.add(l);
   }
 
   frameBox(w, h, depth, color) {
@@ -562,7 +640,7 @@ class Hall {
     group.add(back);
     entry.look = { yaw: spot.look, pitch: .02, dist: spot.dist, y: spot.y };
     if (!x.have) { const sheen = new THREE.Mesh(new THREE.PlaneGeometry(w, h), spirit); sheen.position.z = .01; sheen.renderOrder = 10; group.add(sheen); return; }
-    const tex = await new THREE.TextureLoader().loadAsync(ROOT + 'blasted.webp').catch(() => null);
+    const tex = await new THREE.TextureLoader().loadAsync(ROOT + (x.art || 'blasted.webp')).catch(() => null);
     if (!tex) return;
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = 4;
@@ -582,35 +660,108 @@ class Hall {
     group.add(light);
   }
 
+  shrine() {
+    if (this.shrineBase) return;
+    const stone = new THREE.MeshStandardMaterial({ color: this.stoneMap ? 0xb8a890 : 0x4a3d30, map: this.stoneMap || null, roughness: .85 }), trim = new THREE.MeshStandardMaterial({ color: 0xb08a3e, roughness: .4, metalness: .6 });
+    const g = new THREE.Group();
+    g.position.fromArray(SHRINE);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(.78, .9, .34, 8), stone);
+    base.position.y = .17;
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(.72, .76, .1, 8), stone);
+    top.position.y = .39;
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(.74, .022, 8, 48), trim);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = .44;
+    g.add(base, top, ring);
+    for (const [dx, dz] of [[-.38, -.38], [.38, -.38], [-.38, .38], [.38, .38]]) {
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(.06, .08, .28, 10), stone);
+      col.position.set(dx, .58, dz);
+      const cup = new THREE.Mesh(new THREE.CylinderGeometry(.12, .06, .06, 12), trim);
+      cup.position.set(dx, .75, dz);
+      g.add(col, cup);
+    }
+    this.scene.add(g);
+    this.shrineBase = g;
+    const owned = this.items.filter((x) => x.kind === 'relic' && x.have).length;
+    if (owned < 4) return;
+    const heart = new THREE.PointLight(0x6dffb0, 6, 4, 1.5);
+    heart.position.set(SHRINE[0], SHRINE[1] + 1.5, SHRINE[2]);
+    this.scene.add(heart);
+    const n = 24, motes = sparks(n, 0x9dffd0, .04);
+    this.scene.add(motes);
+    const seed = motes.userData.seed, pos = motes.geometry.attributes.position;
+    this.fx.push((t) => {
+      for (let i = 0; i < n; i++) { const a = t * (.4 + seed[i] * .5) + seed[i] * 20, k = (t * .12 + seed[i]) % 1; pos.setXYZ(i, SHRINE[0] + Math.cos(a) * (.25 + seed[i] * .4), SHRINE[1] + 1 + k * 1.6, SHRINE[2] + Math.sin(a) * (.25 + seed[i] * .4)); }
+      pos.needsUpdate = true;
+      motes.material.opacity = .8;
+      heart.intensity = 5 + Math.sin(t * 1.3) * 1.5;
+    });
+  }
+
+  relic(entry) {
+    const { x, group, spot } = entry, c = x.color || 0x9dffd0;
+    this.shrine();
+    entry.look = { yaw: spot.look, pitch: .25, dist: spot.dist, y: spot.y };
+    const mat = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: .55, roughness: .22, metalness: .25 });
+    let gem;
+    if (x.dragon === 'ysondre') { const pts = []; for (let i = 0; i <= 12; i++) { const a = i / 12; pts.push(new THREE.Vector2(Math.sin(a * Math.PI) * .1 * (1 - a * .55) + .001, a * .3)); } gem = new THREE.Mesh(new THREE.LatheGeometry(pts, 20), mat); gem.rotation.x = Math.PI; gem.position.y = .3; }
+    else if (x.dragon === 'lethon') { gem = new THREE.Mesh(new THREE.CylinderGeometry(.13, .13, .035, 6), mat); gem.rotation.x = 1.1; }
+    else if (x.dragon === 'emeriss') { gem = new THREE.Mesh(new THREE.IcosahedronGeometry(.12, 0), mat); gem.scale.set(1, 1.15, .9); }
+    else { gem = new THREE.Mesh(new THREE.SphereGeometry(.1, 20, 14), mat); const iris = new THREE.Mesh(new THREE.TorusGeometry(.065, .018, 8, 24), new THREE.MeshStandardMaterial({ color: 0x0a1a3a, roughness: .4 })); iris.position.z = .085; gem.add(iris); }
+    const hold = new THREE.Group();
+    hold.position.y = .96;
+    hold.add(gem);
+    group.add(hold);
+    if (!x.have) { ghost(hold); return; }
+    const glow = new THREE.PointLight(c, 1.6, 1.8, 1.6);
+    glow.position.y = 1;
+    group.add(glow);
+    const k = (x.id % 7) * .9;
+    this.fx.push((t) => { hold.rotation.y = t * .6 + k; hold.position.y = .96 + Math.sin(t * 1.4 + k) * .03; glow.intensity = 1.4 + Math.sin(t * 2.3 + k) * .4; });
+  }
+
   async jar(entry) {
     const { x, group, spot } = entry, stone = new THREE.MeshStandardMaterial({ color: this.stoneMap ? 0xb8a890 : 0x4a3d30, map: this.stoneMap || null, roughness: .85 }), trim = new THREE.MeshStandardMaterial({ color: 0xb08a3e, roughness: .4, metalness: .6 });
     const base = new THREE.Mesh(new THREE.CylinderGeometry(.42, .5, 1.05, 24), stone);
     base.position.y = .52;
     const lip = new THREE.Mesh(new THREE.CylinderGeometry(.5, .46, .08, 24), trim);
     lip.position.y = 1.08;
-    const glass = new THREE.Mesh(new THREE.CylinderGeometry(.34, .34, .92, 32, 1, true), new THREE.MeshStandardMaterial({ color: 0xbfffd0, transparent: true, opacity: .16, roughness: .05, metalness: .1, side: THREE.DoubleSide, depthWrite: false }));
-    glass.position.y = 1.58;
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(.37, .37, .08, 24), trim);
-    cap.position.y = 2.07;
-    const knob = new THREE.Mesh(new THREE.SphereGeometry(.07, 12, 8), trim);
-    knob.position.y = 2.16;
-    group.add(base, lip, glass, cap, knob);
+    const pane = new THREE.MeshStandardMaterial({ color: 0xbfffd0, transparent: true, opacity: .16, roughness: .05, metalness: .1, side: THREE.DoubleSide, depthWrite: false });
+    let glass;
+    if (x.dome) {
+      const cushion = new THREE.Mesh(new THREE.CylinderGeometry(.4, .44, .1, 28), new THREE.MeshStandardMaterial({ color: 0x1f5a3a, roughness: .9 }));
+      cushion.position.y = 1.17;
+      glass = new THREE.Mesh(new THREE.SphereGeometry(.47, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), pane);
+      glass.position.y = 1.12;
+      const knob = new THREE.Mesh(new THREE.SphereGeometry(.06, 12, 8), trim);
+      knob.position.y = 1.62;
+      group.add(base, lip, cushion, glass, knob);
+    } else {
+      glass = new THREE.Mesh(new THREE.CylinderGeometry(.34, .34, .92, 32, 1, true), pane);
+      glass.position.y = 1.58;
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(.37, .37, .08, 24), trim);
+      cap.position.y = 2.07;
+      const knob = new THREE.Mesh(new THREE.SphereGeometry(.07, 12, 8), trim);
+      knob.position.y = 2.16;
+      group.add(base, lip, glass, cap, knob);
+    }
     glass.userData.skip = true;
     entry.look = { yaw: spot.look, pitch: .12, dist: spot.dist, y: spot.y };
-    const g = await this.load('assets/raid/gear/imp.glb');
+    const g = await this.load(x.inside || 'assets/raid/gear/imp.glb');
     if (!g) return;
-    const imp = g.scene, box = new THREE.Box3().setFromObject(imp), k = .72 / Math.max(.1, box.max.y - box.min.y);
+    const imp = g.scene, box = new THREE.Box3().setFromObject(imp), size = box.getSize(new THREE.Vector3()), k = x.dome ? Math.min(.36 / Math.max(.1, size.y), .66 / Math.max(.1, size.x, size.z)) : .72 / Math.max(.1, size.y);
     imp.scale.setScalar(k);
-    imp.position.y = 1.13;
+    imp.position.y = x.dome ? 1.22 - box.min.y * k : 1.13;
+    if (x.dome) { const c = box.getCenter(new THREE.Vector3()); imp.position.x = -c.x * k; imp.position.z = -c.z * k; }
     imp.rotation.y = .3;
     group.add(imp);
     const mixer = new THREE.AnimationMixer(imp), idle = g.animations.find((a) => a.name === 'idle');
     if (idle) mixer.clipAction(idle).play();
     mixer.update(.3);
     if (!x.have) { ghost(imp); return; }
-    this.fx.push((t, dt) => { mixer.update(dt); imp.rotation.y = .3 + Math.sin(t * .6) * .5; });
-    const glow = new THREE.PointLight(0xff8a3a, 2.4, 2.4, 1.6);
-    glow.position.y = 1.6;
+    this.fx.push((t, dt) => { mixer.update(dt * (x.dome ? .35 : 1)); if (!x.dome) imp.rotation.y = .3 + Math.sin(t * .6) * .5; });
+    const glow = new THREE.PointLight(x.glow || 0xff8a3a, 2.4, 2.4, 1.6);
+    glow.position.y = x.dome ? 1.4 : 1.6;
     group.add(glow);
     this.fx.push((t) => { glow.intensity = 2 + Math.sin(t * 5.3) * .6 + Math.sin(t * 13) * .3; });
   }
@@ -644,7 +795,7 @@ class Hall {
 
   async mount(entry) {
     const { x, group } = entry;
-    if (x.kind === 'steed' && x.have) { const fel = new THREE.PointLight(0x6dff4a, 4, 5, 1.6); fel.position.set(0, .5, 0); group.add(fel); this.fx.push((t) => { fel.intensity = 3.4 + Math.sin(t * 3.1) * 1.1; }); }
+    if (x.kind === 'steed' && x.have) { const fel = new THREE.PointLight(x.glowColor || 0x6dff4a, 4, 5, 1.6); fel.position.set(0, .5, 0); group.add(fel); this.fx.push((t) => { fel.intensity = 3.4 + Math.sin(t * 3.1) * 1.1; }); }
     const plinth = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.6, .16, 48), new THREE.MeshStandardMaterial({ color: this.stoneMap ? 0xa89880 : 0x3a2e22, map: this.stoneMap || null, roughness: .9 }));
     plinth.position.y = .08;
     const ring = new THREE.Mesh(new THREE.TorusGeometry(1.44, .03, 8, 64), new THREE.MeshStandardMaterial({ color: 0xb08a3e, roughness: .4, metalness: .6 }));
@@ -710,6 +861,7 @@ class Hall {
   enter(id, snap) {
     if (!AREA[id]) return;
     this.area = id;
+    if (this.built) this.lightArea(id);
     const h = homeOf(id);
     this.focus = null;
     this.want = h;
@@ -803,7 +955,7 @@ class Hall {
     return k * (1 + Math.sin(Math.PI * k) * .45);
   }
 
-  start() { this.litAt = this.clock.elapsedTime + .35; this.renderer.setAnimationLoop(() => this.frame()); }
+  start() { this.built = true; this.lightArea(this.area); this.litAt = this.clock.elapsedTime + .35; this.renderer.setAnimationLoop(() => this.frame()); }
 
   dispose() {
     this.renderer.setAnimationLoop(null);
@@ -834,10 +986,12 @@ function decorDrawer(box, hall, decor, locked) {
       <div class="trdrow"><small>Hearthfire</small><div>${FIRES.map((f) => `<button class="trdc ${look.fire === f.id ? 'on' : ''} ${has(f.need) ? '' : 'locked'}" data-fire="${f.id}" ${has(f.need) ? '' : `data-need="${esc(f.need)}"`} aria-pressed="${look.fire === f.id}"><i class="trflame" style="--a:${f.flame[0]};--b:${f.flame[1]}"></i><span>${esc(f.name)}</span></button>`).join('')}</div></div>
       <div class="trdrow"><small>Banners <em>${look.banners.length} of ${BANNER_HOOKS} hooks on the fireplace pillars · ${BANNERS.filter((b) => has(b.need)).length} of ${BANNERS.length} earned</em></small>${[...new Set(BANNERS.map((b) => b.group))].map((grp) => `<div class="trdgroup"><i>${esc(grp)}</i><div class="trdbanners">${BANNERS.filter((b) => b.group === grp).map((b) => `<button class="trban t${tiers[b.id] || 0} ${look.banners.includes(b.id) ? 'on' : ''} ${has(b.need) ? '' : 'locked'}" data-banner="${b.id}" ${has(b.need) ? '' : `data-need="${esc(b.need)}"`} aria-pressed="${look.banners.includes(b.id)}" title="${esc(b.name)}"><img src="${bannerThumb(b.id, tiers[b.id] || 1)}" alt="">${tiers[b.id] ? `<i class="trtier">${BANNER_TIERS[tiers[b.id] - 1]}</i>` : ''}<span>${esc(b.name.replace(/^Banner of (the )?/, ''))}</span>${look.banners.includes(b.id) ? `<b>${look.banners.indexOf(b.id) + 1}</b>` : ''}</button>`).join('')}</div></div>`).join('')}</div>
       <div class="trdrow"><small>Cellar</small><div><button class="trdc ${look.brazier ? 'on' : ''} ${open.has('i_felbrazier') ? '' : 'locked'}" data-brazier ${open.has('i_felbrazier') ? '' : 'data-need="i_felbrazier"'} aria-pressed="${look.brazier}"><i class="trflame" style="--a:#3aff2a;--b:#d8ffb0"></i><span>Fel Brazier</span></button></div></div>
+      ${decor.heads && decor.heads.length ? `<div class="trdrow"><small>Dreaming Loft <em>which head hangs on the wall</em></small><div>${HEAD_IDS.map(([id, name]) => `<button class="trdc trhead ${look.head === id || (!look.head && decor.heads[0] === id) ? 'on' : ''} ${decor.heads.includes(id) ? '' : 'locked'}" data-head="${id}" ${decor.heads.includes(id) ? '' : `data-headlock="${name}"`}><img src="assets/raid/dream/${id}.webp" alt=""><span>${name}</span></button>`).join('')}</div></div>` : ''}
       <p class="trdneed" aria-live="polite"></p>`;
     panel.querySelector('.trdecox').onclick = toggle;
     const say = panel.querySelector('.trdneed');
     for (const b of panel.querySelectorAll('.trdc, .trban')) b.onclick = () => {
+      if (b.dataset.headlock) { say.textContent = `Slay ${b.dataset.headlock} to hang that head instead.`; return; }
       if (b.dataset.need) {
         const list = b.dataset.banner ? tierList(b.dataset.banner) : '';
         if (list) say.innerHTML = list;
@@ -851,7 +1005,8 @@ function decorDrawer(box, hall, decor, locked) {
         else if (look.banners.length < BANNER_HOOKS) look.banners.push(id);
         else { say.innerHTML = `${tierList(id)}<span>All ${BANNER_HOOKS} hooks are taken. Take one down first.</span>`; return; }
         if (hall.area !== 'hall') hall.travel('hall');
-      } else if ('brazier' in b.dataset) { look.brazier = !look.brazier; if (hall.area !== 'cellar' && !locked.cellar) hall.travel('cellar'); }
+      } else if (b.dataset.head) { look.head = b.dataset.head; if (hall.area !== 'loft' && !locked.loft) hall.travel('loft'); }
+      else if ('brazier' in b.dataset) { look.brazier = !look.brazier; if (hall.area !== 'cellar' && !locked.cellar) hall.travel('cellar'); }
       hall.setDecor({ ...look, banners: [...look.banners] });
       clearTimeout(timer);
       timer = setTimeout(() => decor.save({ ...look }), 600);

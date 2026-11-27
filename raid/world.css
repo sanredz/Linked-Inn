@@ -485,3 +485,31 @@ body[data-view="raid"]:has(#sheet:not([hidden])) .chatfab { display: none; }
   .wbptabs .wbpspec { display: none; }
   .wbplog button { padding: 6px 8px; font-size: 13.5px; }
 }
+.wrest { display: grid; gap: 8px; margin: 0 0 10px; padding: 10px 12px; border: 1px solid #6d5222; border-radius: 10px; background: linear-gradient(rgba(255, 190, 90, .08), rgba(0, 0, 0, .55)); text-align: left; }
+.wresthead b { display: block; font: 15px "Friz", serif; font-weight: normal; color: #ffd76a; }
+.wresthead small { display: block; font-size: 12.5px; line-height: 1.4; color: #cdbb98; }
+.wrest ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.wrest li { display: grid; gap: 4px; }
+.wrest li > small { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: #a8987c; }
+.wrest li > span { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.wrest li i { display: grid; grid-template-columns: 26px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 6px; align-items: center; padding: 4px 6px; font-style: normal; border-radius: 7px; border: 1px solid color-mix(in srgb, var(--cc) 40%, #2a2216); background: rgba(0, 0, 0, .45); }
+.wrest li img { grid-row: span 2; width: 26px; height: 26px; border-radius: 5px; filter: grayscale(.5); }
+.wrest li b { font: 13px "Friz", serif; font-weight: normal; color: var(--cc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wrest li em { font-style: normal; font-size: 10.5px; color: #a8987c; }
+.wrestpop { position: fixed; inset: 0; z-index: 9300; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, .72); backdrop-filter: blur(3px); animation: wrestin .35s ease both; }
+.wrestpop .wrest.full { width: min(460px, 100%); margin: 0; padding: 18px 18px 16px; box-shadow: 0 24px 60px rgba(0, 0, 0, .7), 0 0 30px rgba(255, 190, 90, .15); }
+.wrest.full .wresthead b { font: 24px "Morpheus", serif; }
+.wrest.full .wresthead small { font-size: 14px; margin-top: 4px; }
+.wrestok { justify-self: center; margin-top: 6px; padding: 11px 26px; font: 600 15px/1 inherit; font-family: inherit; color: #1a1206; border: 1px solid #f7e3a1; border-radius: 9px; background: linear-gradient(#ffe9a6, #e2b552 55%, #b98a2e); cursor: pointer; }
+@keyframes wrestin { from { opacity: 0; } }
+.rbanner.resting .rbannerface { filter: grayscale(.85) brightness(.6); }
+.wresttag { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); padding: 3px 8px; font: 600 10.5px/1 system-ui, sans-serif; font-style: normal; letter-spacing: .1em; text-transform: uppercase; color: #1a1206; border-radius: 999px; background: #ffd76a; white-space: nowrap; }
+@media (max-width: 760px) {
+  .wmull { position: fixed; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 30; min-height: 48px; padding: 0 18px; font-size: 15px; color: #1a1206; border: 1px solid #f7e3a1; border-radius: 10px; background: linear-gradient(#ffe9a6, #e2b552 55%, #b98a2e); box-shadow: 0 6px 18px rgba(0, 0, 0, .6); }
+  .wmull:disabled { display: none; }
+  .wrest li b { font-size: 12px; }
+}
+.rpickhead .wrest small, .rpickhead .wrest em { text-transform: none; letter-spacing: normal; }
+.rpickhead .wrest li > small { text-transform: uppercase; letter-spacing: .14em; }
+.rpickhead .wrest { max-width: 640px; margin: 0 auto 10px; }
+@media (max-width: 760px) { body:has(.wmull:not(:disabled)) .chatfab { right: auto; left: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); } }

@@ -14,6 +14,7 @@ import { WORLD } from './world.js';
 import { PIECES, LIGHT, earned } from './attune.js';
 import { walkout } from './wloot.js';
 import { consumeDrops, TIERS as CTIERS, CONSUMABLES } from './consumables.js';
+import { dropsIn, dropBosses, setOpen, known } from './satchel.js';
 import { LOOT as WLOOT, KEY as WKEY } from './worldloot.js';
 import { HEROIC, CLASS_NAME, DRAFT_PICKS, FORGE, INGOT, INGOTS, SCEPTER, SHARDS, collect, ROLES, ROLE_NAME, addHero, classesFor, currentBoss, boonOffer, draftOffers, bossAt, effectiveTwist, fightSeed, killed, modsFor, newRun, partyStats, passDraft, receivers, reroll, resolveFight, skipSpoils, specsFor, spoilOffers, starterPicks, take, targetsOf, takeBoon, twistFor, worth } from './run.js';
 
@@ -257,7 +258,8 @@ function compare(o) {
 const hintOf = (m) => (SHARDS.includes(m.id) ? `One of three Scepter Shards. Find all three, then deal ${num(FORGE[SCEPTER].score)} damage to Ossirian to forge the Scepter of the Shifting Sands.` : m.id === INGOT ? `Needed to forge Sulfuras, Hand of Ragnaros. Collect ${INGOTS} of them and the Eye of Sulfuras.` : FORGE[17182].needs.includes(m.id) ? `Needed to forge Sulfuras, Hand of Ragnaros, along with ${INGOTS} Sulfuron Ingots. Once you have it, deal ${num(FORGE[17182].score)} damage to Ragnaros.` : FORGE[19019].needs.includes(m.id) ? `Needed to forge Thunderfury. Find both Bindings, then deal ${num(FORGE[19019].score)} damage to Ragnaros.` : '');
 const mountHtml = (m, tag = 'Dropped this run') => { const hint = hintOf(m); return `<div class="rmount" ${hint ? `tabindex="0" data-hint="${esc(hint)}"` : ''}><img src="assets/icons/${m.icon}.png" alt=""><span><small>${tag}</small><b>${esc(m.name)}</b></span></div>`; };
 
-const unsealed = () => { const a = world && world.attune('kazzak'); return !!(a && a.forged); };
+const forgedOf = (id) => { const a = world && world.attune(id); return !!(a && a.forged); };
+const unsealed = () => ['kazzak', 'dream'].some((id) => { const a = world && world.attune(id); return !!(a && a.forged); });
 const consDrops = (only) => (unsealed() ? consumeDrops(run.raid, killed(run), run.seed).filter((d) => only === undefined || d.boss === only) : []);
 const consumeHtml = (list) => list.map((c) => `<div class="rmount rcons" style="--q:${CTIERS[c.tier].color}" tabindex="0" data-hint="${esc(`${c.line}. Drink it before a World Boss fight; one per hero.`)}"><img src="assets/icons/${c.icon}.png" alt=""><span><small>${CTIERS[c.tier].name} consumable · ${esc(RAIDS[run.raid].bosses[c.boss].name)} dropped</small><b>${esc(c.name)}</b></span></div>`).join('');
 
@@ -325,7 +327,9 @@ function introHtml() {
   const open = LIVE().map((id) => `<button class="rraid live ${id}" data-act="begin" data-raid="${id}"><i class="rraidart" style="background-image:url(assets/draft/arena/raid-${id}.jpg)"></i><span class="rraidsay"><b class="rraidname">${RAIDS[id].name}</b><span class="rraidtext">${RAIDS[id].blurb}</span><span class="rraidgo">Begin the raid</span></span></button>`).join('');
   const soon = SOON().map(([id, name]) => `<div class="rraid soon ${id}" aria-disabled="true"><i class="rraidart" style="background-image:url(assets/draft/arena/raid-${id}.jpg)"></i><div class="rraidsay"><h3>${name}</h3>${RAIDS[id] ? `<span class="rraidtext">${RAIDS[id].blurb}</span>` : ''}${war && war.raid === id ? `<div class="rsoon"><small>The gates open when all three are reached</small>${goalsHtml(war.goals)}</div>` : '<p>Coming soon</p>'}${(TEST || (war && war.early)) && RAIDS[id] ? `<button class="gmini rearly" data-act="begin" data-raid="${id}">Play early (test only)</button>` : ''}</div></div>`).join('');
   const bosses = world ? `<div class="wbsection"><h3 class="wbtitle"><span>World Bosses</span><small>One attempt a day · full gear draft · rare collectibles · raid consumables</small></h3>${world.cardHtml()}</div>` : '';
-  return `<div class="rraids">${open}${soon}</div>${saved ? '<button class="gresume" data-act="resume">Continue your run</button>' : ''}<ul class="rrules"><li>Draft a tank, a healer and a damage dealer</li><li>Each hero starts in their class Dungeon Set and gets ${DRAFT_PICKS} picks</li><li>Every boss killed drops a choice of new gear</li><li>One wipe ends the run</li></ul>${bosses}`;
+  setOpen({ any: unsealed(), dream: forgedOf('dream') });
+  const cons = `<h3 class="rconshead">Raid consumables<small>${unsealed() ? 'rare drops for World Boss fights' : 'start dropping once you free a world boss'}</small></h3><div class="rconsrow">${['mc', 'zg', 'aq20'].map((r) => `<div class="rconsraid"><small>${esc(RAIDS[r].name)}</small><span>${dropsIn(r).map(({ c, at }) => (known(c) ? `<img src="assets/icons/${c.icon}.png" alt="${esc(c.name)}" title="${esc(`${c.name} · ${dropBosses(r, at)} · ${c.line}`)}" style="--q:${CTIERS[c.tier].color}">` : `<span class="rconsq" title="${esc(`Unknown consumable · ${dropBosses(r, at)}`)}">?</span>`)).join('')}</span></div>`).join('')}<button type="button" class="rconsgo" data-act="dreamloot">Where each one drops</button></div>`;
+  return `<div class="rraids">${open}${soon}</div>${cons}${saved ? '<button class="gresume" data-act="resume">Continue your run</button>' : ''}<ul class="rrules"><li>Draft a tank, a healer and a damage dealer</li><li>Each hero starts in their class Dungeon Set and gets ${DRAFT_PICKS} picks</li><li>Every boss killed drops a choice of new gear</li><li>One wipe ends the run</li></ul>${bosses}`;
 }
 
 const artOf = (role, cls) => `assets/game/art-${{ WARRIOR: 'warriorarms', PALADIN: 'priestholy', HUNTER: 'hunterbeastmastery', ROGUE: 'roguecombat', PRIEST: role === 'heal' ? 'priestholy' : 'priestshadow', SHAMAN: 'shamanrestoration', MAGE: 'magefire', WARLOCK: 'magearcane', DRUID: role === 'heal' ? 'druidrestoration' : 'druidferalcombat' }[cls]}.jpg`;
@@ -548,7 +552,7 @@ async function postResult() {
     if (d && d.place && run && run.over) { run.rank = { place: d.place, total: d.total }; render(); }
   } catch {}
   afterRun();
-  if (world && run && run.attune) world.refresh('kazzak');
+  if (world) world.refresh();
   loadBoard();
 }
 
@@ -605,6 +609,8 @@ function action(a, raid, how) {
   else if (a === 'worldpast') { if (world) { boardRaid = raid; world.past(raid); loadBoard(); } }
   else if (a === 'worldforge') { if (world) world.seal(raid, 'forge'); }
   else if (a === 'worldseal') { if (world) world.seal(raid, how); }
+  else if (a === 'dreamloot') { if (world) world.dropList(); }
+  else if (a === 'dreamtrial') { if (world) world.trial(how); }
   else if (a === 'begin') { if (raid === 'aq20' && !openingShown && war && (war.open || (TEST && war.early)) && shouldShow({ ...war, open: true })) gongFirst(); else begin(raid); }
   else if (a === 'resume') { run = load(); viewing = Math.min(run.at, 2); offers = null; boardRaid = run.raid; applyTheme(); loadBoard(); render(); showHero(); }
   else if (a === 'hero') { if (!chosenSpec) return; addHero(pool, run, chosenCls, chosenSpec, undefined, chosenPick); chosenPick = ''; viewing = run.at; offers = null; save(); render(); showHero(); }

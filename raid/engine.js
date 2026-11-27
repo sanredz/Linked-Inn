@@ -154,7 +154,7 @@ export function fight(heroes, boss, seed, twist = null, mods = {}) {
     for (const h of pick(a.to)) {
       if (a.delay) delayed.push({ at: t + a.delay, a, h });
       else if (a.dmg) { const v = hurt(h, between(a.dmg), a.school, a.n); if (a.drain && v && !boss.endless) b.hp = Math.min(b.max, b.hp + v * a.drain); }
-      if (a.dot) h.dots.push({ ...a.dot, next: t + a.dot.every, left: a.dot.ticks });
+      if (a.dot) h.dots.push({ ...a.dot, ...(a.dot.pct && { per: h.max * a.dot.pct / SCALE.damage }), next: t + a.dot.every, left: a.dot.ticks });
       if (a.stun && !h.dead) h.stunned = t + a.stun;
       if (a.knock && h.melee) h.knocked = t + a.knock;
     }

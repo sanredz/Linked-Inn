@@ -1,5 +1,5 @@
 import { bannerThumb, loadEmblems } from './banners.js';
-import { PATHS, PATH, REWARDS, REWARD, POINTS, TIER_COLOR, RANKS, RENOWN_MAX, rewardFor } from './paths.js';
+import { PATHS, PATH, REWARDS, REWARD, POINTS, TIER_COLOR, RANKS, RENOWN_MAX, REWARD_MOUNT, rewardFor } from './paths.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const num = (n) => Math.round(n || 0).toLocaleString('en-US');
@@ -17,7 +17,7 @@ const nextReward = (p) => (p.rank < RANKS ? rewardsAt(p.path.id, p.rank + 1)[0] 
 
 export function rewardIcon(r) {
   if (r.kind === 'portrait') return `<img src="assets/draft/arena/boons/${r.portrait.slice(5)}.jpg" alt="">`;
-  if (r.kind === 'mount') return `<img src="assets/icons/${r.mount === 990601 ? 132224 : 136103}.png" alt="">`;
+  if (r.kind === 'mount') return `<img src="assets/icons/${(REWARD_MOUNT.find((m) => m.id === r.mount) || { icon: 136103 }).icon}.png" alt="">`;
   if (r.kind === 'glow') return `<i class="prglow" style="--g:${r.color}"></i>`;
   if (r.kind === 'frame') return `<i class="prframe" data-frame="${r.id}"></i>`;
   if (r.kind === 'decor' && r.banner && bannerThumb(r.banner)) return `<img class="prban" src="${bannerThumb(r.banner)}" alt="">`;
@@ -62,9 +62,9 @@ export function pathDetail(st, id) {
   return `<div class="pdetail" style="--c:${p.path.color}">
     <div class="pdhead"><span class="pico big"><img src="${p.path.icon}" alt=""><em>${p.rank}</em></span><span><small>${esc(p.path.blurb)}</small><b>${esc(p.path.name)} · ${esc(p.rankName)}</b><em>${num(p.pts)} points${p.rank < RANKS ? ` · ${num(p.toNext)} to the next rank` : ''}</em></span></div>
     ${track(p)}
-    <h4>Ranks and rewards</h4><ol class="pladder">${ladder}</ol>
-    <h4>Deeds <em>each step adds points</em></h4><ul class="pdeeds">${p.deeds.map(deedRow).join('')}</ul>
-    ${hidden ? `<p class="phidden">${hidden} hidden ${hidden === 1 ? 'deed' : 'deeds'} still to discover.</p>` : ''}
+    <div class="ptabs" role="tablist"><button type="button" role="tab" class="on" data-ptab="ranks" aria-selected="true"><b>Ranks</b><small>what you unlock</small></button><button type="button" role="tab" data-ptab="deeds" aria-selected="false"><b>Deeds</b><small>how you earn points · ${num(p.pts)} of ${num(p.max)}</small></button></div>
+    <section class="ppane" data-pane="ranks"><ol class="pladder">${ladder}</ol></section>
+    <section class="ppane" data-pane="deeds" hidden><ul class="pdeeds">${p.deeds.map(deedRow).join('')}</ul>${hidden ? `<p class="phidden">${hidden} hidden ${hidden === 1 ? 'deed' : 'deeds'} still to discover.</p>` : ''}</section>
   </div>`;
 }
 
@@ -82,6 +82,10 @@ export function openPath(st, id) {
   document.addEventListener('keydown', key);
   box.querySelector('.px').onclick = close;
   box.onclick = (e) => { if (e.target === box) close(); };
+  for (const t of box.querySelectorAll('[data-ptab]')) t.onclick = () => {
+    for (const x of box.querySelectorAll('[data-ptab]')) { x.classList.toggle('on', x === t); x.setAttribute('aria-selected', String(x === t)); }
+    for (const pane of box.querySelectorAll('[data-pane]')) pane.hidden = pane.dataset.pane !== t.dataset.ptab;
+  };
 }
 
 export function bindPaths(el, st) {
@@ -161,7 +165,7 @@ export async function revealPaths(st, opts = {}) {
   box.innerHTML = `<div class="prvbox"><i class="prvrays" aria-hidden="true"></i>
     <small>${first ? 'Badges have become Paths' : 'Rank up'}</small>
     <h2>${first ? 'Your deeds have been counted' : up.length === 1 ? `${esc(up[0].path.name)} · ${esc(up[0].rankName)}` : 'You climbed the Paths'}</h2>
-    ${first ? '<p>Five Paths, five ranks each. Everything you have already done counts. Every rank unlocks something to show off.</p>' : ''}
+    ${first ? '<p>Seven Paths, five ranks each. Everything you have already done counts. Every rank unlocks something to show off.</p>' : ''}
     <ul class="prvrows">${rows}</ul>
     ${first ? `<div class="prvrenown"><span class="pring" style="--p:0"><b>0</b></span><span><small>Renown</small><b>${st.renown} of ${RENOWN_MAX}</b></span></div>` : ''}
     ${all.length ? `<h4>Unlocked</h4><div class="prvgifts">${all.map((g) => `<span class="prvgift">${rewardIcon(g)}<span><b>${esc(g.name)}</b><small>${esc(KIND[g.kind])}</small></span></span>`).join('')}</div>` : ''}

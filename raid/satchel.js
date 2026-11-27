@@ -1,5 +1,5 @@
-import { CONSUMABLES, CONSUMABLE, TIERS, SOURCES, CAP, fits, whyNot } from './consumables.js';
-import { RAIDS } from './bosses.js';
+import { CONSUMABLES, CONSUMABLE, TIERS, SOURCES, CAP, fits, whyNot } from './consumables.js?v=20261127153000';
+import { RAIDS } from './bosses.js?v=20261127153000';
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const SLOTS = 20;

@@ -1,8 +1,8 @@
-import { hash, rng } from '../draft/core.js';
-import { RAIDS, SCALE, TWISTS } from './bosses.js';
-import { HEALERS, TANKS, choiceOf, damageBuilds, makeParty } from './roles.js';
-import { fight } from './engine.js';
-import { BOONS, boonById, modsOf } from './boons.js';
+import { hash, rng } from '../draft/core.js?v=20261127153000';
+import { RAIDS, SCALE, TWISTS } from './bosses.js?v=20261127153000';
+import { HEALERS, TANKS, choiceOf, damageBuilds, makeParty } from './roles.js?v=20261127153000';
+import { fight } from './engine.js?v=20261127153000';
+import { BOONS, boonById, modsOf } from './boons.js?v=20261127153000';
 
 export const ROLES = ['tank', 'heal', 'dps'];
 export const ROLE_NAME = { tank: 'Tank', heal: 'Healer', dps: 'Damage' };

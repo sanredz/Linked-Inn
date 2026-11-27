@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { FIRES, BANNERS, BANNER_HOOKS, REWARD, decorOf, rewardFor } from './paths.js';
-import { paintBanner, bannerThumb, loadEmblems } from './banners.js';
-import { BANNER_TIERS } from './paths.js';
+import { FIRES, BANNERS, BANNER_HOOKS, REWARD, decorOf, rewardFor } from './paths.js?v=20261127153000';
+import { paintBanner, bannerThumb, loadEmblems } from './banners.js?v=20261127153000';
+import { BANNER_TIERS } from './paths.js?v=20261127153000';
 
 const ROOT = 'assets/draft/hall/';
 const AREAS = [

@@ -1,6 +1,6 @@
-import { CLASS_NAME, CLASS_COLOR, BUILDS, SLOTS } from './core.js';
-import { TWISTS, TWIST, DAILY_EPOCH, dayNow } from '../raid/daily.js';
-import { titleOf } from './paths.js';
+import { CLASS_NAME, CLASS_COLOR, BUILDS, SLOTS } from './core.js?v=20261127153000';
+import { TWISTS, TWIST, DAILY_EPOCH, dayNow } from '../raid/daily.js?v=20261127153000';
+import { titleOf } from './paths.js?v=20261127153000';
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const QUALITY = ['#9d9d9d', '#ffffff', '#1eff00', '#0070dd', '#a335ee', '#ff8000'];
@@ -61,7 +61,7 @@ function drawRow() {
 }
 
 async function play() {
-  const d = info, m = await import('../raid/trialsui.js');
+  const d = info, m = await import('../raid/trialsui.js?v=20261127153000');
   m.openTrial('daily', {
     API: lib.API,
     daily: { day: d.day, rule: d.rule, cls: d.cls, epoch: DAILY_EPOCH, moves: d.you && d.you.moves },

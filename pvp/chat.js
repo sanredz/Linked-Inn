@@ -1,6 +1,6 @@
-import { CLASS_COLOR } from '../draft/core.js';
-import { askName, nameOk } from './name.js';
-import { REWARD } from '../draft/paths.js';
+import { CLASS_COLOR } from '../draft/core.js?v=20261127153000';
+import { askName, nameOk } from './name.js?v=20261127153000';
+import { REWARD } from '../draft/paths.js?v=20261127153000';
 
 const AWAY = 180e3, ROOMS = 20, NO = { name: 'Pick a name to chat.', fast: 'Easy there, one message every few seconds.', burst: 'That is a lot of messages. Take a short breather.', repeat: 'You just said that.', empty: 'Links are not allowed in chat.', rest: 'The tavern is closed for the night. Back tomorrow.', muted: 'You are muted in chat for now.' };
 const ACTIONS = [['del', 0, 'Delete'], ['mute', 60, 'Mute 1 hour'], ['mute', 1440, 'Mute 1 day'], ['mute', 0, 'Ban and remove messages']];

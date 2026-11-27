@@ -1,4 +1,4 @@
-import { BANNERS } from './paths.js';
+import { BANNERS } from './paths.js?v=20261127153000';
 
 const W = 128, H = 256, CX = 64, CY = 98;
 const ROOT = new URL('../assets/draft/hall/emblems/', import.meta.url).href;

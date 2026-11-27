@@ -1,5 +1,5 @@
-import { bannerThumb, loadEmblems } from './banners.js';
-import { PATHS, PATH, REWARDS, REWARD, POINTS, TIER_COLOR, RANKS, RENOWN_MAX, REWARD_MOUNT, rewardFor } from './paths.js';
+import { bannerThumb, loadEmblems } from './banners.js?v=20261127153000';
+import { PATHS, PATH, REWARDS, REWARD, POINTS, TIER_COLOR, RANKS, RENOWN_MAX, REWARD_MOUNT, rewardFor } from './paths.js?v=20261127153000';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const num = (n) => Math.round(n || 0).toLocaleString('en-US');

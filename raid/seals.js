@@ -1,5 +1,5 @@
-import { audio, bell, boom } from './wloot.js';
-import { PIECES, LIGHT, KEYSTONE, WHISPERS } from './attune.js';
+import { audio, bell, boom } from './wloot.js?v=20261127153000';
+import { PIECES, LIGHT, KEYSTONE, WHISPERS } from './attune.js?v=20261127153000';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

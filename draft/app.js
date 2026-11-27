@@ -1,8 +1,8 @@
-import * as C from './core.js?v=20261125221600';
-import './roundicons.js?v=20261126180000';
-import { Stage } from './stage.js?v=20261127143000';
-import { titleOf, glowOf } from './paths.js';
-import { askFeedback, askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js';
+import * as C from './core.js?v=20261127153000';
+import './roundicons.js?v=20261127153000';
+import { Stage } from './stage.js?v=20261127153000';
+import { titleOf, glowOf } from './paths.js?v=20261127153000';
+import { askFeedback, askName, heroName, nameField, nameOk, notify, onName, syncName } from '../pvp/name.js?v=20261127153000';
 
 const API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:8789' : 'https://azeroth-draft.sanredz.workers.dev';
 const $ = (id) => document.getElementById(id);
@@ -50,7 +50,7 @@ let sharedRows = [], sharedOpen = 0, replayRun = null, replayStep = 0, replayBac
 let viewBuild = null, pool, gear, talents, stage, run, sig, offer = {}, spinning = false, chosenBuild = null, last = null, online = true, duelCtx = null, duelMod = null, duelWait = /^#duel=/.test(location.hash) ? Date.now() + 15000 : 0;
 const duelBusy = () => !!document.querySelector('.duelover') || (duelCtx ? ['draft', 'talents', 'fight'].includes(document.body.dataset.view) : Date.now() < duelWait);
 const duelDone = () => new Promise((r) => { const t = () => (duelBusy() ? setTimeout(t, 800) : r()); t(); });
-const duelLib = () => (duelMod ||= import('./duel.js?v=20261126180000'));
+const duelLib = () => (duelMod ||= import('./duel.js?v=20261127153000'));
 
 const row = (id) => pool.items[id] || retired[id];
 const taltip = (id, build) => {
@@ -126,6 +126,8 @@ document.addEventListener('click', (e) => {
     openSheet(taltip(tal.dataset.tal, tal.dataset.build));
     return;
   }
+  const card = e.target.closest('.dtrial .dtslot.offer[data-item]');
+  if (card && !e.target.closest('em')) { e.stopPropagation(); e.preventDefault(); if (+card.dataset.item) openSheet(tooltip(card.dataset.item)); return; }
   const dit = e.target.closest('.duelover [data-item], .dtrial .hv[data-item], .dtrial .dtsteal[data-item]');
   if (dit && +dit.dataset.item) { openSheet(tooltip(dit.dataset.item)); return; }
   const worn = e.target.closest('.ps');
@@ -825,7 +827,7 @@ function useCode(input = 'sIn', msg = 'sMsg') {
 let hearthLib = null;
 const hearthMod = async () => {
   if (!hearthLib) {
-    hearthLib = await import('./hearth.js?v=20261127143000');
+    hearthLib = await import('./hearth.js?v=20261127153000');
     hearthLib.setupHearth({ API, key: () => playerKey, Stage, gear, row: (id) => row(id), onChange: () => hearthLib.hearthBar($('hearthBar')) });
   }
   return hearthLib;
@@ -1117,19 +1119,25 @@ async function boot() {
     if (gauntletOpen) return dispatchEvent(new Event('resize'));
     gauntletOpen = true;
     $('gauntletRoot').innerHTML = '<div class="gload">Entering the arena</div>';
-    const { openGauntlet } = await import('../pvp/gauntlet.js');
+    const { openGauntlet } = await import('../pvp/gauntlet.js?v=20261127153000');
     await openGauntlet({ pool, gear, tooltip, PANE, QUALITY, ownedBy: (fn) => { gauntletOwned = fn; } }, $('gauntletRoot'));
   };
   const openRaid = async () => {
     go('raid');
     if (raidOpen) {
       dispatchEvent(new Event('resize'));
-      return (await import('../raid/raid.js')).backToRaids();
+      return (await import('../raid/raid.js?v=20261127153000')).backToRaids();
     }
     raidOpen = true;
     $('raidRoot').innerHTML = '<div class="gload">Entering Raid Draft</div>';
-    const raid = raidMod = await import('../raid/raid.js');
-    await raid.openRaid({ pool, gear, tooltip, PANE, QUALITY, ownedBy: (fn) => { raidOwned = fn; }, held: () => (hearthLib ? hearthLib.held() : {}), after: () => refreshHearth() }, $('raidRoot'));
+    try {
+      const raid = raidMod = await import('../raid/raid.js?v=20261127153000');
+      await raid.openRaid({ pool, gear, tooltip, PANE, QUALITY, ownedBy: (fn) => { raidOwned = fn; }, held: () => (hearthLib ? hearthLib.held() : {}), after: () => refreshHearth() }, $('raidRoot'));
+    } catch (err) {
+      raidOpen = false;
+      raidMod = null;
+      $('raidRoot').innerHTML = '<div class="gload" style="animation:none;align-content:center;gap:10px;text-align:center"><b style="font-weight:normal">The raid could not load</b><small style="font:15px Friz,serif;color:#c9b99a">The site was just updated. A reload fetches the new version.</small><button type="button" class="spec" style="justify-self:center" onclick="location.reload()">Reload</button></div>';
+    }
   };
   const openHearth = async () => {
     go('hearth');
@@ -1140,7 +1148,7 @@ async function boot() {
   const modes = { home: () => go('home'), pick: () => go('pick'), gauntlet: openArena, raid: openRaid, hearth: openHearth };
   mainView = 'home';
   loadTally();
-  import('./hall.js').then((m) => { m.mountHall($('hall'), { API, me: () => (nameOk() ? heroName() : ''), colors: C.CLASS_COLOR }); onName(() => m.refreshHall()); }).catch(() => {});
+  import('./hall.js?v=20261127153000').then((m) => { m.mountHall($('hall'), { API, me: () => (nameOk() ? heroName() : ''), colors: C.CLASS_COLOR }); onName(() => m.refreshHall()); }).catch(() => {});
   refreshHearth();
   $('hearthBar').onclick = (e) => { if (e.target.closest('[data-hearth]')) openHearth(); };
   $('sShow').onclick = () => flipCode('sCode', 'sShow');
@@ -1152,7 +1160,7 @@ async function boot() {
   $('modeDraft').onclick = modes.pick;
   $('modeArena').onclick = modes.gauntlet;
   $('modeRaid').onclick = modes.raid;
-  import('./daily.js').then((D) => D.mountDaily($('dailyRow'), { API, key: () => playerKey, name: () => (nameOk() ? heroName() : '') })).catch(() => {});
+  import('./daily.js?v=20261127153000').then((D) => D.mountDaily($('dailyRow'), { API, key: () => playerKey, name: () => (nameOk() ? heroName() : '') })).catch(() => {});
   duelLib().then((D) => D.mountDuel($('duelRow'), { API, key: () => playerKey, pool: () => pool, gear: () => gear, draft: (ctx, cls) => startClass(cls, ctx), home: () => { duelCtx = null; restart(); go('home'); } })).catch(() => {});
   for (const b of document.querySelectorAll('[data-mode]')) b.onclick = modes[b.dataset.mode];
   if (location.search.includes('gauntlet')) openArena();
@@ -1194,5 +1202,5 @@ async function boot() {
 }
 
 boot();
-import('../pvp/chat.js?v=20261123145643').then((m) => m.mountChat()).catch(() => {});
-import('./update.js').then((m) => m.showUpdate()).catch(() => {});
+import('../pvp/chat.js?v=20261127153000').then((m) => m.mountChat()).catch(() => {});
+import('./update.js?v=20261127153000').then((m) => m.showUpdate()).catch(() => {});

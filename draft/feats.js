@@ -1,4 +1,4 @@
-import { BOONS } from '../pvp/boons.js';
+import { BOONS } from '../pvp/boons.js?v=20261127153000';
 
 export const ANY = { id: 'any', name: 'Hearth', art: 'assets/icons/134414.png' };
 export const MODES = [

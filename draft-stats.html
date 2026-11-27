@@ -66,11 +66,43 @@ const CC = { WARRIOR: '#C69B6D', PALADIN: '#F48CBA', HUNTER: '#AAD372', ROGUE: '
 const cls = (c) => `<span class="cls" style="color:${CC[c] || '#d8c8a8'}">${esc((c || '').charAt(0) + (c || '').slice(1).toLowerCase())}</span>`;
 const tile = (v, l) => `<div class="tile"><b>${esc(v)}</b><small>${esc(l)}</small></div>`;
 const table = (head, rows) => (rows.length ? `<div class="wrap"><table><tr>${head.map((h) => `<th${h.startsWith('#') ? ' class="n"' : ''}>${esc(h.replace(/^#/, ''))}</th>`).join('')}</tr>${rows.join('')}</table></div>` : '<p>Nothing in this range.</p>');
-const TABS = [['all', 'Overview'], ['gear', 'Gear Draft'], ['arena', 'Arena'], ['raid', 'Raids'], ['kazzak', 'Kazzak'], ['duel', 'Challenges']];
+const TABS = [['all', 'Overview'], ['gear', 'Gear Draft'], ['arena', 'Arena'], ['raid', 'Raids'], ['kazzak', 'Kazzak'], ['dragons', 'Dragons'], ['trials', 'Dream Trials'], ['daily', 'Daily Draft'], ['duel', 'Challenges']];
 const RANGES = [[24, 'Last 24h'], [168, '7 days'], [720, '30 days'], [0, 'All time']];
 const pref = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
 const keep = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
-let tab = pref('statsTab', 'all'), hours = +pref('statsHours', 24), stats = null, modes = null;
+let tab = pref('statsTab', 'all'), hours = +pref('statsHours', 24), stats = null, modes = null, dream = null;
+const DRAGON = { ysondre: 'Ysondre', lethon: 'Lethon', emeriss: 'Emeriss', taerar: 'Taerar' };
+const TREE = { seradane: 'I · Seradane (Veiled)', bough: 'II · Dream Bough (Overgrowth)', shadow: 'III · Bough Shadow (Fading)', twilight: 'IV · Twilight Grove (The Shade)' };
+const TWISTN = { veil: 'Veiled', grow: 'Overgrowth', fade: 'Fading', duel: 'The Shade' };
+const pct = (a, b) => (b ? `${Math.round((a / b) * 100)}%` : '–');
+const mmss = (t) => `${Math.floor(t / 60)}:${String(Math.round(t % 60)).padStart(2, '0')}`;
+
+function dragons(d) {
+  const kills = d.fights.filter((f) => f.won).length, all = Object.values(d.dragons).reduce((a, x) => a + x.n, 0);
+  return `<div class="tiles">${tile(`${Object.values(d.dragons).reduce((a, x) => a + x.kills, 0)}/${all}`, 'dragon kills')}${tile(pct(Object.values(d.dragons).reduce((a, x) => a + x.kills, 0), all), 'win rate')}${tile(d.forged.length, 'entered the Dream, all time')}${tile(d.open.length, 'fighting now')}</div>
+    ${chart({ step: d.step, since: d.since, at: d.at }, [d.buckets]).replace('Runs per', 'Dragon fights per')}
+    ${d.open.length ? `<h2>Fighting a dragon right now</h2><p>${d.open.map((o) => `<b>${esc(o.name || 'Unnamed')}</b> started ${ago(o.at)}`).join('<br>')}</p>` : ''}
+    <h2>By dragon</h2>${table(['Dragon', '#Fights', '#Kills', '#Win rate'], Object.entries(d.dragons).map(([k, x]) => `<tr><td>${DRAGON[k] || esc(k)}</td><td class="n">${num(x.n)}</td><td class="n">${num(x.kills)}</td><td class="n">${pct(x.kills, x.n)}</td></tr>`))}
+    <h2>Dragon attempts</h2>${table(['When', 'Player', 'Dragon', 'Result', '#Time'], d.fights.map((f) => `<tr><td>${clock(f.at)}</td><td>${esc(f.name || 'Unnamed')}</td><td>${DRAGON[f.dragon] || '?'}</td><td class="${f.won ? 'won' : 'lost'}">${f.won ? 'Killed' : `Lost, ${Math.round(f.health * 1000) / 10}% left`}${f.used ? ' · consumables' : ''}</td><td class="n">${mmss(f.time)}</td></tr>`))}
+    <h2>Entered the Dream</h2>${d.forged.length ? `<p>${d.forged.map((f) => `<b>${esc(f.name || 'Unnamed')}</b> ${clock(f.forged)}`).join('<br>')}</p>` : '<p>Nobody yet.</p>'}`;
+}
+
+function trials(d) {
+  const t = Object.values(d.trees), n = t.reduce((a, x) => a + x.n, 0), ok = t.reduce((a, x) => a + x.ok, 0);
+  const cell = (p, k) => { const x = p.trees[k]; return x ? `<td class="n ${x.ok ? 'won' : ''}">${x.ok}/${x.n}</td>` : '<td class="n">–</td>'; };
+  return `<div class="tiles">${tile(num(n), 'walks')}${tile(num(ok), 'passed')}${tile(pct(ok, n), 'pass rate')}${tile(num(d.people.length), 'players, all time')}</div>
+    <h2>Trials</h2>${table(['Trial', '#Walks', '#Passed', '#Pass rate', '#Players'], Object.keys(TREE).map((k) => { const x = d.trees[k] || { n: 0, ok: 0, p: 0 }; return `<tr><td>${TREE[k]}</td><td class="n">${num(x.n)}</td><td class="n">${num(x.ok)}</td><td class="n">${pct(x.ok, x.n)}</td><td class="n">${num(x.p)}</td></tr>`; }))}
+    <h2>Players (passed / walks per trial)</h2>${table(['Player', '#I', '#II', '#III', '#IV', '#Walks', '#Last'], d.people.map((p) => `<tr><td>${esc(p.name)}</td>${Object.keys(TREE).map((k) => cell(p, k)).join('')}<td class="n">${p.walks}</td><td class="n">${ago(p.last)}</td></tr>`))}
+    <h2>Latest walks</h2>${table(['When', 'Player', 'Trial', 'Class', '#DPS', 'Result'], d.walks.map((w) => `<tr><td>${clock(w.at)}</td><td>${esc(w.name || 'Unnamed')}</td><td>${(TREE[w.tree] || w.tree).split(' (')[0]}</td><td>${cls(w.cls)}</td><td class="n">${Math.round(w.dps)}</td><td class="${w.ok ? 'won' : 'lost'}">${w.ok ? 'Passed' : 'Failed'}</td></tr>`))}`;
+}
+
+function daily(d) {
+  const today = d.days.find((x) => x.day === d.day) || { played: 0, started: 0 }, rows = d.today;
+  const score = (r) => (r.rule === 'duel' && r.shade != null ? `${r.score > 0 ? '+' : ''}${(+r.score).toFixed(1)}` : r.dps != null ? (+r.dps).toFixed(1) : '–');
+  return `<div class="tiles">${tile(`${num(today.played)}/${num(today.started)}`, 'finished / started today')}${tile(today.rule ? TWISTN[today.rule] : '–', 'today\'s twist')}${tile(today.cls ? today.cls.charAt(0) + today.cls.slice(1).toLowerCase() : '–', 'today\'s class')}${tile(num(d.days.reduce((a, x) => a + x.played, 0)), 'walks, last 30 days')}</div>
+    <h2>Days</h2>${table(['Day', 'Twist', 'Class', '#Finished', '#Started', '#Connections'], d.days.map((x) => `<tr><td>${x.day === d.day ? 'Today' : x.day === d.day - 1 ? 'Yesterday' : `Day ${x.day - 20783}`}</td><td>${TWISTN[x.rule] || esc(x.rule)}</td><td>${cls(x.cls)}</td><td class="n">${num(x.played)}</td><td class="n">${num(x.started)}</td><td class="n">${num(x.ips)}</td></tr>`))}
+    <h2>Today and yesterday</h2>${table(['Player', 'Twist', '#Score', 'State', '#Started'], rows.map((r) => `<tr><td>${esc(r.name || 'Unnamed')}</td><td>${TWISTN[r.rule] || esc(r.rule)}</td><td class="n">${score(r)}</td><td class="${r.done === 1 ? 'won' : ''}">${r.done === 1 ? 'Finished' : r.done === -1 ? 'Abandoned' : 'Drafting'}</td><td class="n">${ago(r.at)}</td></tr>`))}`;
+}
 
 function chart(m, lists) {
   const step = m.step, start = Math.floor(m.since / step), end = Math.floor(m.at / step), n = {};
@@ -146,6 +178,7 @@ function draw() {
   document.getElementById('range').innerHTML = RANGES.map(([h, l]) => `<button type="button" data-h="${h}" class="${h === hours ? 'on' : ''}">${l}</button>`).join('');
   const out = document.getElementById('out');
   if (tab === 'kazzak') out.innerHTML = stats ? kazzak(stats, modes) : '<p>Loading…</p>';
+  else if (tab === 'dragons' || tab === 'trials' || tab === 'daily') out.innerHTML = dream ? ({ dragons, trials, daily })[tab](dream) : '<p>Loading…</p>';
   else if (!modes) out.innerHTML = '<p>Loading…</p>';
   else out.innerHTML = ({ all: overview, gear, arena, raid, duel })[tab](modes);
 }
@@ -163,10 +196,11 @@ async function post(path, body) {
 async function load() {
   const key = pref('draftKey', ''), want = hours;
   try {
-    const [s, m] = await Promise.all([post('/admin/stats', { key }), post('/admin/modes', { key, hours: want })]);
+    const [s, m, dr] = await Promise.all([post('/admin/stats', { key }), post('/admin/modes', { key, hours: want }), post('/admin/dream', { key, hours: want }).catch(() => null)]);
     if (want !== hours) return;
     stats = s;
     modes = m;
+    dream = dr;
   } catch (e) { document.getElementById('at').innerHTML = `<span class="err">${esc(e.message)}</span>`; return; }
   document.getElementById('at').textContent = `Updated ${new Date(modes.at).toLocaleTimeString()} · refreshes every minute · from ${clock(modes.since)}`;
   draw();

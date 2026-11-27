@@ -296,3 +296,5 @@ button.dtslot.wphase:hover .dtrot img { filter: saturate(1.1) brightness(1.1); }
 @media (hover: hover) { .dtrevtip { display: none; } }
 @media (prefers-reduced-motion: reduce) { .dtrevpop, .dtrevbox, .dtrevbig img, .dtrevbig::after { animation: none; } .dtrevbig::after { display: none; } }
 .dtrial:has(.dtrevpop) .dtmull, .dtrial:has(.dtrevpop) .dtredream { visibility: hidden; }
+.dtreveal { position: sticky; top: 8px; z-index: 6; }
+.dtrevcard { background-color: #0b0f14; }

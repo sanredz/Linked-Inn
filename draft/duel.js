@@ -1,6 +1,6 @@
-import * as C from './core.js?v=20261127173000';
-import { PLANS, fight as duelFight } from '../pvp/engine.js?v=20261127173000';
-import { askName, heroName, nameOk } from '../pvp/name.js?v=20261127173000';
+import * as C from './core.js?v=20261127180000';
+import { PLANS, fight as duelFight } from '../pvp/engine.js?v=20261127180000';
+import { askName, heroName, nameOk } from '../pvp/name.js?v=20261127180000';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -427,12 +427,12 @@ async function reveal(d, fresh) {
 }
 
 async function watchDuel(d, show) {
-  const { sideOf } = await import('../pvp/run.js?v=20261127173000'), { references } = await import('../pvp/gear.js?v=20261127173000');
+  const { sideOf } = await import('../pvp/run.js?v=20261127180000'), { references } = await import('../pvp/gear.js?v=20261127180000');
   const pool = lib.pool(), REF = (lib.ref ||= references(pool)), snap = (s) => ({ cls: s.cls, plan: s.plan, picks: s.picks, enchants: {}, consumes: [], boons: [] });
   const rec = { events: [], frames: [] }, x = duelFight(sideOf(pool, snap(d.a), REF), sideOf(pool, snap(d.b), REF), d.fseed, rec);
   const info = { time: x.time, dealt: [x.a.dealt, x.b.dealt] };
   if (!show) return info;
-  const [{ Arena, THEMES }, { FightHud, classColor }] = await Promise.all([import('../pvp/arena.js?v=20261127173000'), import('../pvp/hud.js?v=20261127173000')]);
+  const [{ Arena, THEMES }, { FightHud, classColor }] = await Promise.all([import('../pvp/arena.js?v=20261127180000'), import('../pvp/hud.js?v=20261127180000')]);
   const el = overlay('<div class="dstage"></div><div class="dfoot"><button class="spec" type="button" data-skip>Skip to the result</button></div>', 'fight');
   if (!ring) {
     const scene = document.createElement('div');

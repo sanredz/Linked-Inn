@@ -1,4 +1,4 @@
-import { newRun, offers, pick, mulligan, remaining, finished, simulate, hash, rng, BUILDS, candidates } from '../draft/core.js?v=20261127173000';
+import { newRun, offers, pick, mulligan, remaining, finished, simulate, hash, rng, BUILDS, candidates } from '../draft/core.js?v=20261127180000';
 
 export const TRIALS = [
   { id: 'seradane', rule: 'veil', name: 'The Veiled Dream', short: 'Veiled', icon: 132123, times: 2, text: 'Every item on offer is hidden in mist. You see only its slot and its rarity until you keep it.' },

@@ -1,9 +1,9 @@
-import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127173000';
-import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127173000';
-import { TREES } from './dream.js?v=20261127173000';
-import { TWIST } from './daily.js?v=20261127173000';
-import { dreamCss, vision } from './dreamfx.js?v=20261127173000';
-import { audio, bell, boom } from './wloot.js?v=20261127173000';
+import { SLOTS, BUILDS, CLASS_NAME, CLASS_COLOR, remaining, finished, hands, simulate, hash, rng } from '../draft/core.js?v=20261127180000';
+import { TRIAL, TRIALS, CLASSES, trialRun, view, act, judge, reachSlot, fogOf, withersFor, redreamOf } from './trials.js?v=20261127180000';
+import { TREES } from './dream.js?v=20261127180000';
+import { TWIST } from './daily.js?v=20261127180000';
+import { dreamCss, vision } from './dreamfx.js?v=20261127180000';
+import { audio, bell, boom } from './wloot.js?v=20261127180000';
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const QUALITY = ['#9d9d9d', '#ffffff', '#1eff00', '#0070dd', '#a335ee', '#ff8000'];
@@ -258,7 +258,7 @@ export async function openTrial(tree, ctx) {
     if (last && last.redream) { const c = panel.querySelector('.dthero:not(.shade) .hv.fresh'); if (c) c.classList.add('redreamed'); }
     const rv = panel.querySelector('.dtreveal');
     if (rv) {
-      if (!last.shown) { last.shown = 1; const r = rv.getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) rv.scrollIntoView({ block: 'center', behavior: reduced() ? 'auto' : 'smooth' }); revealPop(revId); }
+      if (!last.shown) { last.shown = 1; revealPop(revId); }
       rv.querySelector('[data-revx]').onclick = () => { last.hide = 1; rv.classList.add('gone'); setTimeout(() => rv.remove(), 220); };
     }
     const rb = panel.querySelector('[data-redream]');
